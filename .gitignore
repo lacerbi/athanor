@@ -1,0 +1,23 @@
+# Node modules
+/node_modules
+
+# Build directories
+/dist
+/forge
+/.webpack
+/out
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+
+# AI files
+codebase.md

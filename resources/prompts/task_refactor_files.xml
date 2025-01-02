@@ -1,0 +1,89 @@
+# Target files
+
+{{selected_files_with_info}}
+
+# Task
+
+Analyze and refactor the target file(s) to improve code organization and maintainability:
+
+1. Analysis Phase:
+   - Examine code structure, dependencies, and patterns
+   - Identify opportunities for:
+     * Splitting large files (>300 lines)
+     * Merging related/duplicated functionality
+     * Reorganizing code across files
+     * Improving architectural boundaries
+   - Consider impact on:
+     * Build system
+     * Test coverage
+     * Project conventions
+     * External dependencies
+
+2. Refactoring Guidelines:
+
+   A. File Organization:
+      - Follow language/framework best practices
+      - Maintain clear module boundaries
+      - Keep related files together
+      - Consider package/module organization
+      - Follow project conventions
+      - Preserve build system requirements
+
+   B. Code Structure:
+      - Apply single responsibility principle
+      - Maintain proper scoping and visibility
+      - Handle dependencies correctly
+      - Keep interdependent code together
+      - Target appropriate file sizes
+      - Preserve proper interfaces
+
+   C. Splitting Criteria:
+      - Files over 300 lines are candidates for splitting
+      - Each resulting file should be 50+ lines
+      - Split along clear logical boundaries
+      - Maintain cohesive functionality
+      - Consider common design patterns
+      - Keep related code together
+
+   D. Merging Criteria:
+      - Identify highly coupled files
+      - Look for shared responsibilities
+      - Consider maintenance impact
+      - Evaluate dependency patterns
+      - Assess naming conventions
+      - Check architectural fit
+
+3. Implementation Requirements:
+   - Handle language-specific module systems
+   - Update all cross-references
+   - Maintain proper dependency management
+   - Add clear documentation
+   - Follow project conventions
+   - Preserve build configuration
+   - Handle visibility/access modifiers
+   - Align test files properly
+
+4. Language-Specific Considerations:
+   - Use appropriate file extensions
+   - Follow conventions for:
+     * Module systems (imports/exports)
+     * Namespacing
+     * Class/type definitions
+     * Access modifiers
+     * Package organization
+     * Build integration
+     * Test organization
+
+5. Common Refactoring Patterns:
+   - Extract interfaces from implementations
+   - Split large classes/modules into focused units
+   - Move utility functions to dedicated files
+   - Separate types/interfaces
+   - Break up by functional area
+   - Create focused, single-purpose modules
+   - Consolidate related functionality
+   - Improve code organization
+
+The goal is to improve maintainability while preserving functionality.
+Consider language-specific patterns and project conventions.
+Always maintain proper scoping, visibility, and dependency management.

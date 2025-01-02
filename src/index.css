@@ -1,0 +1,42 @@
+/* AI Summary: Main CSS file that includes Tailwind base styles and custom tooltip timing. */
+/* Configures tooltip pointer events and transitions for consistent UI behavior. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom utilities for flex container height management */
+.min-h-0 {
+  min-height: 0;
+}
+
+/* Custom scrollbar utility */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+
+/* Configure tooltips with proper pointer event handling */
+*[title] {
+  position: relative;
+  --show-delay: 150ms;
+  pointer-events: auto; /* Only apply pointer-events to elements with tooltips */
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  *[title]:hover::before {
+    transition-delay: var(--show-delay);
+  }
+}

@@ -1,0 +1,81 @@
+project_name: 'Athanor - AI Code Nexus'
+project_info: |
+  <app_description>
+  Athanor is a middleware Electron application that assists developers in 
+  building prompts for AI coding assistants and applying code changes based on 
+  AI outputs.
+
+  ## Features
+
+  - **Dynamic File Explorer:** Navigate and select/deselect files or folders with real-time file system updates.
+  - **Action Panel:** Perform various actions, manage prompts, and handle AI responses.
+  - **Clipboard Operations:** Seamlessly copy and paste code snippets.
+  - **Project Management:** Exclude/include files and folders from the project scope.
+  - **File System Monitoring:** Automatically detect and reflect file system changes.
+
+  ## Interface
+
+  The application is divided into two main panels:
+
+  Left Panel (File Explorer):
+  * Shows a dynamic view of the current project directory
+  * Files and folders can be selected/deselected using checkboxes
+  * Right-click context menu for file/folder operations
+  * Excluded items are shown greyed out without checkboxes
+  * Real-time updates when files change on disk
+
+  Right Panel (Actions):
+  * Various actions and functionalities (to be implemented)
+  * Text inputs and outputs for AI interactions
+  * Project-wide operations
+
+  The application monitors the file system and automatically updates its view when:
+  - Files are added or removed
+  - Files are modified
+  - Directories are created or deleted
+  </app_description>
+
+  <tech_stack>
+  ## Technical Stack Specification
+
+  ### Core Technologies
+
+  1. Base Framework
+    - Electron (latest stable)
+    - React 18 (latest stable)
+    - TypeScript (latest stable)
+    - Node.js (latest LTS)
+
+  2. Build System
+    - electron-forge (latest stable)
+    - Webpack (included with electron-forge)
+
+  3. UI & Styling
+    - Material-UI (MUI) v5
+    - TailwindCSS v3
+    - Lucide Icons
+
+  4. State Management
+    - Zustand (lightweight state management)
+
+  5. File System
+    - Chokidar (file watching)
+    - Node.js fs/promises API
+
+  6. Development Tools
+    - ESLint (code quality)
+    - Prettier (code formatting)
+    - TypeScript compiler
+    - Webpack Dev Server
+
+  ### Future Considerations
+
+  These can be added later if needed:
+  1. Testing Tools (Jest, React Testing Library)
+  2. Database Integration
+  3. Custom Themes Support
+  4. Keyboard Shortcuts
+  5. Search/Filter Capabilities
+  </tech_stack>
+system_prompt: |
+  None

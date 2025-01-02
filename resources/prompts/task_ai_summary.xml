@@ -1,0 +1,79 @@
+# Target files
+
+{{selected_files}}
+
+# Task
+
+Create or update AI Summaries for the target files specified above by:
+1. Adding or rewriting the AI Summary comment at the beginning of each file
+2. Skipping files that don't support comment syntax
+3. Writing clear, focused descriptions that:
+   - Explain the file's main purpose
+   - List key interfaces/functions (especially non-obvious ones)
+   - Highlight any surprising or complex behaviors
+   - Note important dependencies or integrations
+4. Keep summaries concise but informative enough that programmers can:
+   - Quickly understand what's in the file
+   - Know the main interfaces available
+   - Be aware of any non-intuitive aspects
+   - Decide if they need to read the full implementation
+5. Maintaining consistent style across all summaries
+
+The goal is to provide a "smart overview" - more detailed than a one-liner, 
+but not full documentation. The summary should help developers quickly 
+understand what's in the file and highlight anything that might surprise them.
+
+## Action points
+
+1. File Type Handling:
+   - First check if file supports comments (e.g., .ts, .tsx, .js, .jsx, .py, etc.)
+   - Skip files like .json, .prettierrc, etc.
+   - Use appropriate comment syntax for each file type
+
+2. Summary Content Focus:
+   - Start with "AI Summary:" prefix for consistency
+   - Lead with clear purpose statement
+   - List main interfaces/functions when not obvious from the name
+   - Highlight non-intuitive behaviors or requirements
+   - Note key dependencies and interactions
+   - Keep it concise unless complexity demands more detail
+   - Aim for 1-5 lines if possible, and no more than 10 lines
+
+3. Task Details:
+  - Only add or change the AI summaries, nothing else
+  - You will most likely only need UPDATE_DIFF
+
+## Examples
+
+<example>
+Simple store with intuitive interface:
+```
+// AI Summary: Manages application logs with functionality to add and retrieve log messages
+```
+</example>
+
+<example>
+Complex component with important behaviors:
+```
+// AI Summary: File explorer component with recursive selection handling, file system browsing,
+// and context menu support for ignore operations with improved menu dismissal.
+// Handles both file and folder selection with parent/child relationship maintenance.
+```
+</example>
+   
+<example>
+Utility with non-obvious features:
+```
+// AI Summary: Provides token counting functionality using js-tiktoken with efficient encoder caching.
+// Handles edge cases like empty input and maintains singleton tokenizer instance.
+```  
+</example>
+
+<example>
+Complex manager with important interfaces:
+```
+// AI Summary: Manages file system operations, ignore rules, and file watchers with cross-platform path handling.
+// Key functions handle ignore rule loading, path normalization, and watcher lifecycle.
+// Requires initialization before use and proper cleanup of watchers.
+```
+</example>
