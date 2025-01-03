@@ -1,7 +1,7 @@
 // AI Summary: Handles core IPC operations for file system functionality including folder selection,
 // path conversion, directory access, and ignore rule management. Manages folder dialogs,
 // path normalization, and .athignore file operations with proper error handling.
-import { ipcMain, dialog } from 'electron';
+import { ipcMain, dialog, app } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import { mainWindow } from '../windowManager';
@@ -19,6 +19,15 @@ import {
 } from '../fileSystemManager';
 
 export function setupCoreHandlers() {
+  // Add handler for getting app version
+  ipcMain.handle('app:version', () => {
+    try {
+      return app.getVersion();
+    } catch (error) {
+      handleError(error, 'getting app version');
+    }
+  });
+
   // Add handler for getting current directory
   ipcMain.handle('fs:getCurrentDirectory', () => {
     try {

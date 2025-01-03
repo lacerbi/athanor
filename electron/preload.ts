@@ -20,6 +20,11 @@ contextBridge.exposeInMainWorld('electron', {
   },
 });
 
+// Expose app version
+contextBridge.exposeInMainWorld('app', {
+  getVersion: () => ipcRenderer.invoke('app:version'),
+});
+
 // Expose file system methods
 contextBridge.exposeInMainWorld('fileSystem', {
   openFolder: () => ipcRenderer.invoke('fs:openFolder'),

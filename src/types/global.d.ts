@@ -6,6 +6,9 @@ export {};
 
 declare global {
   interface Window {
+    app: {
+      getVersion: () => Promise<string>;
+    };
     fileSystem: {
       openFolder: () => Promise<string | null>;
       readDirectory: (path: string) => Promise<string[]>;

@@ -27,6 +27,7 @@ const AthanorApp: React.FC = () => {
   const [filesData, setFilesData] = useState<FileItem | null>(null);
   const [currentDirectory, setCurrentDirectory] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [appVersion, setAppVersion] = useState<string>('');
 
   // Refs
   const resizeRef = useRef<HTMLDivElement | null>(null);
@@ -163,6 +164,21 @@ const AthanorApp: React.FC = () => {
   }, [activeTab, lastTabChangeTime, refreshFileSystem]);
 
   // Initial file system load
+  // Fetch app version
+  useEffect(() => {
+    const fetchVersion = async () => {
+      try {
+        const version = await window.app.getVersion();
+        setAppVersion(`v${version}`);
+      } catch (error) {
+        console.error('Error fetching app version:', error);
+        setAppVersion(''); // Clear version on error
+        addLog('Failed to fetch app version');
+      }
+    };
+    fetchVersion();
+  }, [addLog]);
+
   useEffect(() => {
     const loadInitialDirectory = async () => {
       try {
@@ -272,20 +288,28 @@ const AthanorApp: React.FC = () => {
         </div>
 
         {/* Fixed bottom section */}
-        <div className="border-t p-2 bg-gray-50 text-sm text-gray-600 flex items-center gap-4 flex-none">
-          <div
-            className="flex items-center gap-1"
-            title="Number of selected files"
-          >
-            <File size={14} />
-            <span>{selectedFileCount}</span>
+        <div className="border-t p-2 bg-gray-50 text-sm text-gray-600 flex items-center justify-between flex-none">
+          <div className="flex items-center gap-4">
+            <div
+              className="flex items-center gap-1"
+              title="Number of selected files"
+            >
+              <File size={14} />
+              <span>{selectedFileCount}</span>
+            </div>
+            <div
+              className="flex items-center gap-1"
+              title="Total lines across selected files"
+            >
+              <FileText size={14} />
+              <span>{selectedLinesTotal}</span>
+            </div>
           </div>
-          <div
-            className="flex items-center gap-1"
-            title="Total lines across selected files"
+          <div 
+            className="text-gray-500"
+            title="Athanor application version"
           >
-            <FileText size={14} />
-            <span>{selectedLinesTotal}</span>
+            {appVersion}
           </div>
         </div>
       </div>
