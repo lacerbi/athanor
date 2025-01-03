@@ -4,6 +4,14 @@
 // file system methods.
 export {};
 
+// Custom error for file detection operations
+export class FileTextDetectionError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = 'FileTextDetectionError';
+  }
+}
+
 declare global {
   interface Window {
     app: {
