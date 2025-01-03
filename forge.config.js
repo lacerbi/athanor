@@ -29,12 +29,22 @@ module.exports = {
               preload: {
                 js: './electron/preload.ts',
                 config: './webpack.preload.config.js',
-                // Add this to ensure correct path resolution
-                name: 'preload',
+              },
+              // Add these configurations
+              prefixNamespace: false, // This should prevent the extra nesting
+              outputTarget: {
+                // Specify where files should go in the final structure
+                html: 'index.html',
+                js: 'index.js',
+                preload: 'preload.js',
               },
             },
           ],
         },
+        // Add this to ensure consistent paths
+        port: 3000,
+        loggerPort: 9000,
+        nodeIntegration: false,
       },
     },
   ],

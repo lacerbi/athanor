@@ -1,13 +1,13 @@
 {
   "name": "athanor",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
-    "dev": "concurrently \"webpack serve --config webpack.renderer.config.js\" \"webpack --config webpack.preload.config.js --watch\" \"npm run start\"",
-    "package": "electron-forge package",
-    "make": "electron-forge make",
-    "build:win": "electron-forge make --platform win32",
+    "dev": "cross-env NODE_ENV=development concurrently \"webpack serve --config webpack.renderer.config.js\" \"webpack --config webpack.preload.config.js --watch\" \"npm run start\"",
+    "package": "cross-env NODE_ENV=production electron-forge package",
+    "make": "cross-env NODE_ENV=production electron-forge make",
+    "build:win": "cross-env NODE_ENV=production electron-forge make --platform win32",
     "lint": "eslint ./src --ext .ts,.tsx"
   },
   "keywords": [],
@@ -34,6 +34,7 @@
     "@typescript-eslint/parser": "^8.18.2",
     "autoprefixer": "^10.4.20",
     "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
     "css-loader": "^7.1.2",
     "electron": "^33.2.1",
     "electron-squirrel-startup": "^1.0.1",

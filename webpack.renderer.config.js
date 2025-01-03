@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const isEnvDevelopment = process.env.NODE_ENV === 'development';
 
 module.exports = {
   mode: 'development',
@@ -26,14 +27,16 @@ module.exports = {
     },
   },
   output: {
-    path: path.resolve(__dirname, '.webpack'),
-    filename: 'renderer.js',
-    publicPath: '/',
+    path: path.resolve(__dirname, '.webpack/renderer/main_window'), // Match the actual output structure
+    filename: 'index.js',
+    publicPath: isEnvDevelopment ? '/' : '../', // Conditional path
   },
   target: 'web',
   plugins: [
     new HtmlWebpackPlugin({
       template: './public/index.html',
+      filename: 'index.html',
+      publicPath: isEnvDevelopment ? '/' : '../', // Conditional path
     }),
   ],
   devServer: {

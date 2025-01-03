@@ -10,7 +10,10 @@ const DEV_SERVER_URL = 'http://localhost:8080';
 export let mainWindow: BrowserWindow | null = null;
 
 export async function createWindow() {
-  const preloadPath = path.join(__dirname, 'main_window', 'preload.js');
+  const preloadPath = isDev
+    ? //    ? path.join(__dirname, 'main_window', 'preload.js') // Dev path
+      path.join(__dirname, 'renderer', 'main_window', 'preload.js') // Dev path
+    : path.join(__dirname, 'renderer', 'main_window', 'preload.js'); // Production path
 
   // Create the browser window
   mainWindow = new BrowserWindow({
@@ -32,11 +35,16 @@ export async function createWindow() {
     });
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow
-      .loadFile(path.join(__dirname, '../dist/index.html'))
-      .catch((error) => {
-        console.error('Failed to load index.html:', error);
-      });
+    const prodHtmlPath = path.join(
+      __dirname,
+      'renderer',
+      'main_window',
+      'index.html'
+    );
+    console.log('Loading production html from:', prodHtmlPath);
+    mainWindow.loadFile(prodHtmlPath).catch((error) => {
+      console.error('Failed to load index.html:', error);
+    });
   }
 
   // Handle window failures
