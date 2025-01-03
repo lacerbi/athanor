@@ -1,7 +1,7 @@
 // AI Summary: Handles IPC communication for file system operations including reading, writing,
 // and deleting files with proper path normalization. Manages template path resolution,
 // directory reading with ignore rules, and file content operations with error handling.
-import { ipcMain } from 'electron';
+import { app, ipcMain } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
@@ -19,22 +19,36 @@ import { getAppBasePath } from '../main';
 
 export function setupFileOperationHandlers() {
   // Handle getting template path
-  ipcMain.handle('fs:getTemplatePath', async (_, templateName: string) => {
-    try {
-      const normalizedName = normalizePath(templateName);
-      const templatePath = toPlatformPath(
-        path.join(
-          normalizePath(getAppBasePath()),
-          'resources',
-          'prompts',
-          normalizedName
-        )
-      );
-      return templatePath;
-    } catch (error) {
-      handleError(error, 'getting template path');
+  ipcMain.handle(
+    'fs:getPromptTemplatePath',
+    async (_, templateName: string) => {
+      try {
+        const normalizedName = normalizePath(templateName);
+        let baseFolder;
+
+        if (app.isPackaged) {
+          // In production, get the directory where the .exe resides
+          baseFolder = path.dirname(app.getPath('exe'));
+        } else {
+          // In development, resources are in the project root
+          baseFolder = getAppBasePath();
+        }
+
+        const templatePath = toPlatformPath(
+          path.join(
+            normalizePath(baseFolder),
+            'resources',
+            'prompts',
+            normalizedName
+          )
+        );
+
+        return templatePath;
+      } catch (error) {
+        handleError(error, 'getting template path');
+      }
     }
-  });
+  );
 
   // Handle reading directory contents with ignore rules
   ipcMain.handle('fs:readDirectory', async (_, dirPath: string) => {

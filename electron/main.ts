@@ -9,13 +9,7 @@ import { setupIpcHandlers } from './ipcHandlers';
 
 // Get the base directory of the Athanor application
 export function getAppBasePath(): string {
-  if (app.isPackaged) {
-    // In production, use the resources path
-    return process.resourcesPath;
-  } else {
-    // In development, use the project root
-    return app.getAppPath();
-  }
+  return app.getAppPath();
 }
 
 // App lifecycle handlers

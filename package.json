@@ -14,6 +14,18 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "build": {
+    "asarUnpack": [
+      "resources/prompts/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/prompts",
+        "to": "prompts",
+        "filter": ["**/*"]
+      }
+    ]
+  },
   "devDependencies": {
     "@electron-forge/cli": "^7.6.0",
     "@electron-forge/maker-deb": "^7.6.0",

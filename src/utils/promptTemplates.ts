@@ -9,7 +9,8 @@ export async function loadTemplateContent(
   templateName: string
 ): Promise<string> {
   try {
-    const templatePath = await window.fileSystem.getTemplatePath(templateName);
+    const templatePath =
+      await window.fileSystem.getPromptTemplatePath(templateName);
     const content = await window.fileSystem.readFile(templatePath, {
       encoding: 'utf8',
     });

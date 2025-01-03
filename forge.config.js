@@ -3,6 +3,10 @@ module.exports = {
     name: 'Athanor',
     asar: true,
     prune: true,
+    // Ensure prompts directory is not packed into asar
+    asarUnpack: ['resources/prompts/**/*'],
+    // Copy resources to the final package
+    extraResource: ['resources/prompts'],
   },
   makers: [
     {
@@ -30,10 +34,8 @@ module.exports = {
                 js: './electron/preload.ts',
                 config: './webpack.preload.config.js',
               },
-              // Add these configurations
-              prefixNamespace: false, // This should prevent the extra nesting
+              prefixNamespace: false,
               outputTarget: {
-                // Specify where files should go in the final structure
                 html: 'index.html',
                 js: 'index.js',
                 preload: 'preload.js',
@@ -41,7 +43,6 @@ module.exports = {
             },
           ],
         },
-        // Add this to ensure consistent paths
         port: 3000,
         loggerPort: 9000,
         nodeIntegration: false,
