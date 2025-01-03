@@ -14,6 +14,7 @@ declare global {
       readDirectory: (path: string) => Promise<string[]>;
       isDirectory: (path: string) => Promise<boolean>;
       getCurrentDirectory: () => Promise<string>;
+      getResourcesPath: () => Promise<string>;
       getPromptTemplatePath: (templateName: string) => Promise<string>;
       reloadIgnoreRules: () => Promise<boolean>;
       toOSPath: (path: string) => Promise<string>;

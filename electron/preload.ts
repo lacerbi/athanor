@@ -31,6 +31,7 @@ contextBridge.exposeInMainWorld('fileSystem', {
   readDirectory: (path: string) => ipcRenderer.invoke('fs:readDirectory', path),
   isDirectory: (path: string) => ipcRenderer.invoke('fs:isDirectory', path),
   getCurrentDirectory: () => ipcRenderer.invoke('fs:getCurrentDirectory'),
+  getResourcesPath: () => ipcRenderer.invoke('fs:getResourcesPath'),
   getPromptTemplatePath: (templateName: string) =>
     ipcRenderer.invoke('fs:getPromptTemplatePath', templateName),
   reloadIgnoreRules: () => ipcRenderer.invoke('fs:reloadIgnoreRules'),

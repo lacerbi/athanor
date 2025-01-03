@@ -1,6 +1,8 @@
-// AI Summary: Handles IPC communication for file system operations including reading, writing,
-// and deleting files with proper path normalization. Manages template path resolution,
-// directory reading with ignore rules, and file content operations with error handling.
+// AI Summary: Handles IPC communication for file system operations with comprehensive error handling
+// and path normalization. Provides unified interface for reading/writing files, resolving template
+// paths, and directory traversal with ignore rules. Key functions manage resource path resolution
+// in both dev/prod environments and ensure proper directory structure. Integrates with fileSystemManager
+// for path handling and ignore rule application.
 import { app, ipcMain } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -17,30 +19,41 @@ import {
 } from '../fileSystemManager';
 import { getAppBasePath } from '../main';
 
+// Get resources path based on environment
+async function getResourcesPath(): Promise<string> {
+  let baseFolder;
+
+  if (app.isPackaged) {
+    // In production, get the directory where the .exe resides
+    baseFolder = path.dirname(app.getPath('exe'));
+  } else {
+    // In development, resources are in the project root
+    baseFolder = getAppBasePath();
+  }
+
+  return toPlatformPath(path.join(normalizePath(baseFolder), 'resources'));
+}
+
 export function setupFileOperationHandlers() {
+  // Handle getting resources path
+  ipcMain.handle('fs:getResourcesPath', async () => {
+    try {
+      return await getResourcesPath();
+    } catch (error) {
+      handleError(error, 'getting resources path');
+    }
+  });
+
   // Handle getting template path
   ipcMain.handle(
     'fs:getPromptTemplatePath',
     async (_, templateName: string) => {
       try {
         const normalizedName = normalizePath(templateName);
-        let baseFolder;
-
-        if (app.isPackaged) {
-          // In production, get the directory where the .exe resides
-          baseFolder = path.dirname(app.getPath('exe'));
-        } else {
-          // In development, resources are in the project root
-          baseFolder = getAppBasePath();
-        }
+        const resourcesPath = await getResourcesPath();
 
         const templatePath = toPlatformPath(
-          path.join(
-            normalizePath(baseFolder),
-            'resources',
-            'prompts',
-            normalizedName
-          )
+          path.join(resourcesPath, 'prompts', normalizedName)
         );
 
         return templatePath;

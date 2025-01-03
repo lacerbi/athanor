@@ -2,10 +2,21 @@
 // Validates XML structure, extracts command types and content with proper error handling.
 // Provides functions for processing file operations and handling diff updates.
 import { parseStringPromise } from 'xml2js';
-import { FileOperation, FileOperationType, FileBlock, AthCommand } from '../types/global';
-import { processFileUpdate, normalizeLineEndings } from '../utils/fileOperations';
+import {
+  FileOperation,
+  FileOperationType,
+  FileBlock,
+  AthCommand,
+} from '../types/global';
+import {
+  processFileUpdate,
+  normalizeLineEndings,
+} from '../utils/fileOperations';
 
-export async function parseXmlContent(clipboardContent: string, addLog: (message: string) => void): Promise<FileOperation[]> {
+export async function parseXmlContent(
+  clipboardContent: string,
+  addLog: (message: string) => void
+): Promise<FileOperation[]> {
   const operations: FileOperation[] = [];
 
   try {
@@ -65,10 +76,7 @@ export async function parseXmlContent(clipboardContent: string, addLog: (message
           processedNewCode = '';
         } else if (operation === 'CREATE') {
           processedNewCode = normalizeLineEndings(newCode);
-        } else if (
-          operation === 'UPDATE_FULL' ||
-          operation === 'UPDATE_DIFF'
-        ) {
+        } else if (operation === 'UPDATE_FULL' || operation === 'UPDATE_DIFF') {
           try {
             processedNewCode = await processFileUpdate(
               operation,
