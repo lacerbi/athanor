@@ -1,13 +1,7 @@
-// AI Summary: Provides robust text file detection using both extension and MIME type analysis.
-// Integrates with existing file system utilities for consistent path handling and error management.
-import { FileTextDetectionError } from '../types/global';
-import {
-  normalizePath,
-  toPlatformPath,
-  pathExists,
-  getStats,
-  handleError,
-} from '../../electron/fileSystemManager';
+// AI Summary: Provides robust text file detection using Electron's preload API for file system access.
+// Handles file reading and analysis through Electron's IPC system with proper error handling.
+// Maintains compatibility with existing text detection logic while using Electron's Buffer handling.
+
 import { FILE_SYSTEM } from './constants';
 
 // File detection configuration
@@ -84,48 +78,36 @@ function isTextFileExtension(filePath: string): boolean {
 }
 
 /**
- * Checks if a MIME type indicates a text file
- * @param mimeType MIME type string
- * @returns boolean indicating if the MIME type matches text patterns
- */
-function isTextMimeType(mimeType: string): boolean {
-  return TEXT_MIME_PATTERNS.some((pattern) => pattern.test(mimeType));
-}
-
-/**
- * Detects if a file is a text file using extension and MIME type analysis
+ * Detects if a file is a text file using extension and content analysis
  * @param filePath Path to the file to check
  * @returns Promise<boolean> indicating if the file is a text file
- * @throws FileTextDetectionError if file access or analysis fails
+ * @throws Error if file access or analysis fails
  */
 export async function isTextFile(filePath: string): Promise<boolean> {
   try {
-    // Normalize and validate path
-    const normalizedPath = normalizePath(filePath);
-    const platformPath = toPlatformPath(normalizedPath);
-
-    // Check if file exists and is accessible
-    const exists = await pathExists(platformPath);
-    if (!exists) {
-      throw new FileTextDetectionError(`File does not exist: ${platformPath}`);
-    }
-
-    // Get file stats
-    const stats = await getStats(platformPath);
-    if (!stats?.isFile()) {
-      throw new FileTextDetectionError(`Path is not a file: ${platformPath}`);
-    }
-
     // Quick check based on extension
-    if (isTextFileExtension(platformPath)) {
+    if (isTextFileExtension(filePath)) {
       return true;
     }
 
-    // Read file buffer for analysis
-    const buffer = (await window.fileSystem.readFile(platformPath)) as Buffer;
+    // Read file buffer through Electron's preload API
+    const buffer = await window.fileSystem.readFile(filePath, {
+      encoding: null,
+    });
+
+    // Ensure we have an ArrayBuffer
+    const arrayBuffer =
+      buffer instanceof ArrayBuffer
+        ? buffer
+        : typeof buffer === 'string'
+          ? new TextEncoder().encode(buffer).buffer
+          : buffer;
+
+    // Convert to Uint8Array for analysis
+    const uint8Array = new Uint8Array(arrayBuffer);
 
     // Analyze only the first portion of the file
-    const analysisBuffer = buffer.slice(0, FILE_DETECTION.maxBufferSize);
+    const analysisBuffer = uint8Array.slice(0, FILE_DETECTION.maxBufferSize);
 
     // Check if file contains mostly printable ASCII characters
     const printableChars = analysisBuffer.filter(
@@ -139,6 +121,9 @@ export async function isTextFile(filePath: string): Promise<boolean> {
       printableChars / analysisBuffer.length >= FILE_DETECTION.textThreshold
     );
   } catch (error) {
-    return handleError(error, `analyzing file ${filePath}`);
+    if (error instanceof Error) {
+      throw new Error(`Error analyzing file ${filePath}: ${error.message}`);
+    }
+    throw new Error(`Unknown error analyzing file ${filePath}`);
   }
 }

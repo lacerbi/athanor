@@ -6,6 +6,7 @@ import { FileItem, sortItems, isEmptyFolder, getBaseName } from './fileTree';
 import { AthanorConfig } from '../types/global';
 import { areAllDescendantsSelected } from './fileSelection';
 import { FILE_SYSTEM } from './constants';
+import { isTextFile } from './fileTextDetection';
 
 // Get the appropriate language for code block formatting
 export function getFileLanguage(filename: string): string {
@@ -139,9 +140,15 @@ export async function generateCodebaseDocumentation(
       const isSelected = selectedItems.has(item.id);
 
       try {
+        const isText = await isTextFile(item.path);
+        if (!isText) {
+          console.log('Skipping non-text file: \${item.path}');
+          return;
+        }
         const content = await window.fileSystem.readFile(item.path, {
           encoding: 'utf8',
         });
+
         // Ensure content is treated as string since we specified utf8 encoding
         const contentString = content.toString();
         const processedContent = isSelected

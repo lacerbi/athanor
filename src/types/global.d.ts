@@ -4,14 +4,6 @@
 // file system methods.
 export {};
 
-// Custom error for file detection operations
-export class FileTextDetectionError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
-    super(message, options);
-    this.name = 'FileTextDetectionError';
-  }
-}
-
 declare global {
   interface Window {
     app: {
@@ -29,11 +21,12 @@ declare global {
       watchDirectory: (
         path: string,
         callback: (event: string, filename: string) => void
-      ) => void;
+      ) => Promise<void>;
+      isTextFile: (path: string) => Promise<boolean>;
       readFile: (
         path: string,
-        options?: { encoding?: BufferEncoding } | BufferEncoding
-      ) => Promise<string | Buffer>;
+        options?: { encoding?: BufferEncoding | null } | BufferEncoding | null
+      ) => Promise<string | ArrayBuffer>;
       writeFile: (path: string, data: string) => Promise<void>;
       deleteFile: (path: string) => Promise<void>;
       addToIgnore: (itemPath: string) => Promise<boolean>;
