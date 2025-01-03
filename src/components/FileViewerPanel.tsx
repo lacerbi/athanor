@@ -1,11 +1,11 @@
-// AI Summary: Displays file content in a read-only viewer with line count and path information.
-// Provides raw and formatted copy options with proper error handling.
-// Handles file loading, error states, and directory detection.
+// AI Summary: Displays file content with text file detection. Handles both text and binary files
+// with appropriate feedback. Maintains line count and path display for valid text files.
 import React, { useEffect, useState } from 'react';
 import { Copy, FileCode } from 'lucide-react';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { copyToClipboard } from '../actions/ManualCopyAction';
+import { isTextFile } from '../utils/fileTextDetection';
 
 const FileViewerPanel: React.FC = () => {
   const { previewedFilePath } = useFileSystemStore();
@@ -15,6 +15,7 @@ const FileViewerPanel: React.FC = () => {
   const [lineCount, setLineCount] = useState<number>(0);
   const [osPath, setOsPath] = useState<string>('');
   const [currentDir, setCurrentDir] = useState<string>('');
+  const [isText, setIsText] = useState<boolean>(true);
 
   useEffect(() => {
     const loadFile = async () => {
@@ -38,6 +39,17 @@ const FileViewerPanel: React.FC = () => {
         if (isDirectory) {
           setFileContent('');
           setError('Cannot display folder contents.');
+          setLineCount(0);
+          return;
+        }
+
+        // Check if file is text-based
+        const isTextFileResult = await isTextFile(previewedFilePath);
+        setIsText(isTextFileResult);
+
+        if (!isTextFileResult) {
+          setFileContent('');
+          setError('Cannot preview file content (binary or unsupported format)');
           setLineCount(0);
           return;
         }
@@ -71,44 +83,46 @@ const FileViewerPanel: React.FC = () => {
                 <span className="text-gray-500 ml-2">({lineCount} lines)</span>
               )}
             </div>
-            <div className="flex gap-2">
-              <button
-                className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
-                onClick={() => {
-                  if (fileContent) {
-                    void copyToClipboard({
-                      content: fileContent,
-                      addLog,
-                      isFormatted: false
-                    });
-                  }
-                }}
-                title="Copy raw content"
-                disabled={!fileContent}
-              >
-                <Copy className="w-4 h-4" />
-                <span>Copy</span>
-              </button>
-              <button
-                className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
-                onClick={() => {
-                  if (fileContent && previewedFilePath) {
-                    void copyToClipboard({
-                      content: fileContent,
-                      filePath: previewedFilePath,
-                      rootPath: currentDir,
-                      addLog,
-                      isFormatted: true
-                    });
-                  }
-                }}
-                title="Copy with file path and code formatting"
-                disabled={!fileContent}
-              >
-                <FileCode className="w-4 h-4" />
-                <span>Formatted Copy</span>
-              </button>
-            </div>
+            {isText && (
+              <div className="flex gap-2">
+                <button
+                  className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+                  onClick={() => {
+                    if (fileContent) {
+                      void copyToClipboard({
+                        content: fileContent,
+                        addLog,
+                        isFormatted: false
+                      });
+                    }
+                  }}
+                  title="Copy raw content"
+                  disabled={!fileContent}
+                >
+                  <Copy className="w-4 h-4" />
+                  <span>Copy</span>
+                </button>
+                <button
+                  className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+                  onClick={() => {
+                    if (fileContent && previewedFilePath) {
+                      void copyToClipboard({
+                        content: fileContent,
+                        filePath: previewedFilePath,
+                        rootPath: currentDir,
+                        addLog,
+                        isFormatted: true
+                      });
+                    }
+                  }}
+                  title="Copy with file path and code formatting"
+                  disabled={!fileContent}
+                >
+                  <FileCode className="w-4 h-4" />
+                  <span>Formatted Copy</span>
+                </button>
+              </div>
+            )}
           </div>
           {error && (
             <div className="text-red-600 text-sm border p-2 rounded bg-red-50 mb-2">
@@ -125,7 +139,7 @@ const FileViewerPanel: React.FC = () => {
         className="w-full h-full p-2 border rounded font-mono text-sm resize-none overflow-auto"
         value={fileContent}
         readOnly
-        placeholder="File content will appear here..."
+        placeholder={isText ? "File content will appear here..." : "Cannot preview file content"}
       />
     </div>
   );
