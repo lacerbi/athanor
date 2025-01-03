@@ -135,12 +135,14 @@ const FileViewerPanel: React.FC = () => {
           No file selected for preview
         </div>
       )}
-      <textarea
-        className="w-full h-full p-2 border rounded font-mono text-sm resize-none overflow-auto"
-        value={fileContent}
-        readOnly
-        placeholder={isText ? "File content will appear here..." : "Cannot preview file content"}
-      />
+      {isText && !error && (
+        <textarea
+          className="w-full h-full p-2 border rounded font-mono text-sm resize-none overflow-auto"
+          value={fileContent}
+          readOnly
+          placeholder="File content will appear here..."
+        />
+      )}
     </div>
   );
 };
