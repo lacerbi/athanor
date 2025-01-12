@@ -2,7 +2,7 @@
 // Handles panel resizing and content switching with proper state management.
 import React, { useRef } from 'react';
 import { File, FileText, FolderOpen, RefreshCw } from 'lucide-react';
-import FileExplorer from './FileExplorer';
+import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
 import FileViewerPanel from './FileViewerPanel';
 import ApplyChangesPanel from './ApplyChangesPanel';
@@ -38,7 +38,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   logsRef,
   logs,
 }) => {
-  const { leftPanelWidth, isResizing, resizeRef, startResize } = usePanelResize();
+  const { leftPanelWidth, isResizing, resizeRef, startResize } =
+    usePanelResize();
   const { selectedFileCount, selectedLinesTotal } = useFileSystemStore();
 
   const handleFileView = () => {
@@ -72,7 +73,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 <RefreshCw
                   size={20}
                   className={`${
-                    isRefreshing ? 'animate-spin text-gray-400' : 'text-gray-600'
+                    isRefreshing
+                      ? 'animate-spin text-gray-400'
+                      : 'text-gray-600'
                   }`}
                 />
               </button>

@@ -1,7 +1,6 @@
-// AI Summary: File explorer component with recursive file tree navigation and selection.
-// Handles file/folder selection, context menus, and ignore operations.
-// Manages tree expansion state and integrates with file system monitoring.
-import React, { useState, useRef, useCallback } from 'react';
+// AI Summary: Handles rendering of individual file/folder items in the explorer tree.
+// Manages item selection, expansion toggling, and context menu integration.
+import React from 'react';
 import {
   ChevronRight,
   ChevronDown,
@@ -10,14 +9,13 @@ import {
   Scissors,
   Book,
 } from 'lucide-react';
-import { FileItem, getBaseName, isEmptyFolder } from '../utils/fileTree';
-import { FILE_SYSTEM } from '../utils/constants';
+import { FileItem, getBaseName, isEmptyFolder } from '../../utils/fileTree';
+import { FILE_SYSTEM } from '../../utils/constants';
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
-} from '../utils/fileSelection';
-import { useFileSystemStore } from '../stores/fileSystemStore';
-import FileContextMenu from './FileContextMenu';
+} from '../../utils/fileSelection';
+import { useFileSystemStore } from '../../stores/fileSystemStore';
 
 interface FileExplorerItemProps {
   item: FileItem;
@@ -27,12 +25,6 @@ interface FileExplorerItemProps {
   onToggleFolder: (itemId: string) => void;
   onViewFile: () => void;
   onContextMenu: (e: React.MouseEvent, item: FileItem) => void;
-}
-
-interface ContextMenuState {
-  x: number;
-  y: number;
-  item: FileItem;
 }
 
 const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
@@ -86,7 +78,6 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   };
 
   const handleFileClick = (e: React.MouseEvent) => {
-    // Only trigger file view if clicking the name or icon
     const target = e.target as HTMLElement;
     const isNameOrIcon =
       target.classList.contains('file-name') ||
@@ -99,17 +90,12 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
     }
   };
 
-  const handleItemContextMenu = (e: React.MouseEvent) => {
-    e.preventDefault();
-    onContextMenu(e, item);
-  };
-
   return (
     <div className="select-none" style={{ marginLeft: `${level * 20}px` }}>
       <div
         className={`flex items-center py-1 hover:bg-gray-100`}
         onClick={handleFileClick}
-        onContextMenu={handleItemContextMenu}
+        onContextMenu={(e) => onContextMenu(e, item)}
       >
         {/* Checkbox or placeholder */}
         <div className="w-5 flex-shrink-0" onClick={handleCheckboxClick}>
@@ -176,6 +162,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
         )}
       </div>
 
+      {/* Render children recursively if expanded */}
       {item.type === 'folder' &&
         isExpanded &&
         item.children &&
@@ -198,138 +185,4 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   );
 };
 
-interface FileExplorerProps {
-  items: FileItem[];
-  level?: number;
-  onViewFile?: () => void;
-  onRefresh?: () => void;
-}
-
-const FileExplorer: React.FC<FileExplorerProps> = ({
-  items,
-  level = 0,
-  onViewFile = () => {},
-  onRefresh = () => {},
-}) => {
-  // Initialize with root folder expanded
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(() => {
-    if (items.length === 1 && items[0].type === 'folder') {
-      return new Set([items[0].id]);
-    }
-    return new Set();
-  });
-
-  const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null);
-  const [currentDirectory, setCurrentDirectory] = useState<string>('');
-  const explorerRef = useRef<HTMLDivElement>(null);
-  const { validateSelections } = useFileSystemStore();
-
-  // Load current directory
-  React.useEffect(() => {
-    const loadCurrentDirectory = async () => {
-      const dir = await window.fileSystem.getCurrentDirectory();
-      setCurrentDirectory(dir);
-    };
-    loadCurrentDirectory();
-  }, []);
-
-  const handleCloseContextMenu = useCallback(() => {
-    setContextMenu(null);
-  }, []);
-
-  const handleIgnoreItem = async (itemPath: string, ignoreAll: boolean) => {
-    try {
-      const success = await window.fileSystem.addToIgnore(itemPath);
-      if (success) {
-        // Trigger refresh using the parent's refresh handler
-        onRefresh();
-      }
-      handleCloseContextMenu();
-    } catch (error) {
-      console.error('Error adding item to ignore:', error);
-    }
-  };
-
-  // Handle mouse leave for the entire explorer
-  const handleMouseLeave = () => {
-    handleCloseContextMenu();
-  };
-
-  // Handle new context menu
-  const handleContextMenu = (e: React.MouseEvent, item: FileItem) => {
-    e.preventDefault();
-    // Close any existing menu first
-    handleCloseContextMenu();
-    // Open new menu
-    setContextMenu({
-      x: e.clientX,
-      y: e.clientY,
-      item: item,
-    });
-  };
-
-  const toggleFolder = (itemId: string) => {
-    setExpandedFolders((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else {
-        newSet.add(itemId);
-      }
-      return newSet;
-    });
-  };
-
-  // Add document-level click handler
-  React.useEffect(() => {
-    const handleDocumentClick = (e: MouseEvent) => {
-      // Close menu if clicking outside the explorer
-      if (
-        explorerRef.current &&
-        !explorerRef.current.contains(e.target as Node)
-      ) {
-        handleCloseContextMenu();
-      }
-    };
-
-    document.addEventListener('click', handleDocumentClick);
-    return () => {
-      document.removeEventListener('click', handleDocumentClick);
-    };
-  }, [handleCloseContextMenu]);
-
-  return (
-    <div
-      ref={explorerRef}
-      className="select-none relative h-full overflow-y-auto scrollbar-thin"
-      onMouseLeave={handleMouseLeave}
-    >
-      {items.map((item) => (
-        <FileExplorerItem
-          key={item.id}
-          item={item}
-          level={level}
-          isRoot={level === 0}
-          expandedFolders={expandedFolders}
-          onToggleFolder={toggleFolder}
-          onViewFile={onViewFile}
-          onContextMenu={handleContextMenu}
-        />
-      ))}
-
-      {contextMenu && (
-        <FileContextMenu
-          type={contextMenu.item.type}
-          name={contextMenu.item.name}
-          path={contextMenu.item.path}
-          x={contextMenu.x}
-          y={contextMenu.y}
-          onClose={handleCloseContextMenu}
-          onIgnoreItem={handleIgnoreItem}
-        />
-      )}
-    </div>
-  );
-};
-
-export default FileExplorer;
+export default FileExplorerItem;
