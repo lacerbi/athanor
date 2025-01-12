@@ -18,13 +18,12 @@ let baseDir = process.cwd();
 // Track last error for recovery
 let lastError: Error | null = null;
 
-// Get resources directory path - used for storing application resources
-// like prompt templates, configuration files, and cached data
+// Get external resources directory path
 export function getResourcesDir(): string {
   return path.join(getBaseDir(), resourcesDir);
 }
 
-// Ensure resources directory exists
+// Ensure extrenal resources directory exists
 export async function ensureResourcesDir(): Promise<void> {
   const resourcesPath = toPlatformPath(getResourcesDir());
   try {
