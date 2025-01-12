@@ -1,14 +1,7 @@
 // AI Summary: Handles rendering of individual file/folder items in the explorer tree.
 // Manages item selection, expansion toggling, and context menu integration.
 import React from 'react';
-import {
-  ChevronRight,
-  ChevronDown,
-  File,
-  Folder,
-  Scissors,
-  Book,
-} from 'lucide-react';
+import { ChevronRight, ChevronDown, File, Scissors, Book } from 'lucide-react';
 import { FileItem, getBaseName, isEmptyFolder } from '../../utils/fileTree';
 import { FILE_SYSTEM } from '../../utils/constants';
 import {
@@ -91,7 +84,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   };
 
   return (
-    <div className="select-none" style={{ marginLeft: `${level * 20}px` }}>
+    <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
         className={`flex items-center py-1 hover:bg-gray-100`}
         onClick={handleFileClick}
@@ -110,33 +103,30 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           )}
         </div>
 
-        {/* Folder expand/collapse button or spacer */}
-        {item.type === 'folder' ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggleFolder(item.id);
-            }}
-            className="p-1 hover:bg-gray-200 rounded flex-shrink-0"
-          >
-            {isExpanded ? (
-              <ChevronDown size={16} className="flex-shrink-0" />
-            ) : (
-              <ChevronRight size={16} className="flex-shrink-0" />
-            )}
-          </button>
-        ) : (
-          <span className="w-6 flex-shrink-0" />
-        )}
-
-        {/* File/Folder icon */}
-        <div className="flex-shrink-0 mr-2 file-icon-wrapper cursor-pointer">
-          {level === 0 && item.name === 'External Resources' ? (
-            <Book size={16} className="text-purple-600" />
-          ) : item.type === 'folder' ? (
-            <Folder size={16} />
+        {/* Folder expand/collapse button or file icon */}
+        <div className="flex-shrink-0">
+          {item.type === 'folder' ? (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleFolder(item.id);
+              }}
+              className="p-1 hover:bg-gray-200 rounded flex-shrink-0"
+            >
+              {isExpanded ? (
+                <ChevronDown size={16} className="flex-shrink-0" />
+              ) : (
+                <ChevronRight size={16} className="flex-shrink-0" />
+              )}
+            </button>
+          ) : level === 0 && item.name === 'External Resources' ? (
+            <div className="p-1">
+              <Book size={16} className="text-purple-600" />
+            </div>
           ) : (
-            <File size={16} className="file-icon" />
+            <div className="p-1">
+              <File size={16} className="file-icon" />
+            </div>
           )}
         </div>
 
