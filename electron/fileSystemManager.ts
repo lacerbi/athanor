@@ -3,9 +3,13 @@
 // Provides utility functions for directory existence checking, stats retrieval, and path validation.
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import { Stats } from 'fs';
+import { Stats, constants } from 'fs';
 import * as chokidar from 'chokidar';
 import ignore from 'ignore';
+import { FILE_SYSTEM } from '../src/utils/constants';
+
+// Constants for resource directory management
+const resourcesDir = FILE_SYSTEM.resourcesDirName;
 
 // Initialize ignore instance
 export let ig = ignore();
@@ -13,6 +17,23 @@ let baseDir = process.cwd();
 
 // Track last error for recovery
 let lastError: Error | null = null;
+
+// Get resources directory path - used for storing application resources
+// like prompt templates, configuration files, and cached data
+export function getResourcesDir(): string {
+  return path.join(getBaseDir(), resourcesDir);
+}
+
+// Ensure resources directory exists
+export async function ensureResourcesDir(): Promise<void> {
+  const resourcesPath = toPlatformPath(getResourcesDir());
+  try {
+    await fs.access(resourcesPath, constants.F_OK);
+  } catch {
+    await fs.mkdir(resourcesPath, { recursive: true });
+    console.log('Created resources directory:', resourcesPath);
+  }
+}
 
 // Clear all file system state
 export function clearFileSystemState() {
@@ -62,6 +83,9 @@ export const activeWatchers = new Map<string, chokidar.FSWatcher>();
 export async function loadIgnoreRules() {
   // Clear existing rules first
   ig = ignore();
+
+  // Always ignore resources directory in main tree
+  ig.add(`${resourcesDir}/`);
 
   const currentBaseDir = getBaseDir();
   const platformBaseDir = toPlatformPath(currentBaseDir);

@@ -8,16 +8,16 @@ import {
   File,
   Folder,
   Scissors,
+  Book,
 } from 'lucide-react';
 import { FileItem, getBaseName, isEmptyFolder } from '../utils/fileTree';
+import { FILE_SYSTEM } from '../utils/constants';
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
 } from '../utils/fileSelection';
 import { useFileSystemStore } from '../stores/fileSystemStore';
-import { FILE_SYSTEM } from '../utils/constants';
 import FileContextMenu from './FileContextMenu';
-import { buildFileTree } from '../services/fileSystemService';
 
 interface FileExplorerItemProps {
   item: FileItem;
@@ -72,8 +72,13 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
     }
   }, [hasSelectedDescendants, allDescendantsSelected]);
 
-  // Get the display name - for root level, use just the folder name
-  const displayName = isRoot ? getBaseName(item.path) : item.name;
+  // Get the display name - for root level, handle resources directory specially
+  const displayName =
+    isRoot && item.path.endsWith(FILE_SYSTEM.resourcesDirName)
+      ? 'External Resources'
+      : isRoot
+        ? getBaseName(item.path)
+        : item.name;
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -140,7 +145,9 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
 
         {/* File/Folder icon */}
         <div className="flex-shrink-0 mr-2 file-icon-wrapper cursor-pointer">
-          {item.type === 'folder' ? (
+          {level === 0 && item.name === 'External Resources' ? (
+            <Book size={16} className="text-purple-600" />
+          ) : item.type === 'folder' ? (
             <Folder size={16} />
           ) : (
             <File size={16} className="file-icon" />

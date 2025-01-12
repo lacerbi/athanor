@@ -9,6 +9,7 @@ import {
   setBaseDir,
   loadIgnoreRules,
   normalizePath,
+  ensureResourcesDir,
   toPlatformPath,
   cleanupWatchers,
   handleError,
@@ -127,6 +128,9 @@ export function setupCoreHandlers() {
         // Update directory and base path
         process.chdir(toPlatformPath(selectedPath));
         setBaseDir(selectedPath);
+
+        // Ensure resources directory exists
+        await ensureResourcesDir();
 
         // Load new ignore rules
         await loadIgnoreRules();

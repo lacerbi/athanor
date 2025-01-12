@@ -13,6 +13,7 @@ import { buildFileTree } from '../services/fileSystemService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
+import { FILE_SYSTEM } from '../utils/constants';
 
 type TabType = 'workbench' | 'viewer' | 'apply-changes';
 
@@ -25,6 +26,7 @@ const AthanorApp: React.FC = () => {
 
   // File System State
   const [filesData, setFilesData] = useState<FileItem | null>(null);
+  const [resourcesData, setResourcesData] = useState<FileItem | null>(null);
   const [currentDirectory, setCurrentDirectory] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [appVersion, setAppVersion] = useState<string>('');
@@ -61,10 +63,16 @@ const AthanorApp: React.FC = () => {
       setIsRefreshing(true);
       try {
         await window.fileSystem.reloadIgnoreRules();
+        // Build main project tree
         const fileTree = await buildFileTree(currentDirectory);
-        useFileSystemStore.getState().setFileTree([fileTree]);
+        // Build resources tree
+        const resourcesPath = `${currentDirectory}/${FILE_SYSTEM.resourcesDirName}`;
+        const resourcesTree = await buildFileTree(resourcesPath, '', true);
+
+        useFileSystemStore.getState().setFileTree([fileTree, resourcesTree]);
         validateSelections(fileTree);
         setFilesData(fileTree);
+        setResourcesData(resourcesTree);
         if (!silent) {
           addLog('File system refreshed');
         }
@@ -105,10 +113,16 @@ const AthanorApp: React.FC = () => {
 
       try {
         setCurrentDirectory(dir);
+        // Build main project tree
         const fileTree = await buildFileTree(dir);
-        useFileSystemStore.getState().setFileTree([fileTree]);
+        // Build resources tree
+        const resourcesPath = `${dir}/${FILE_SYSTEM.resourcesDirName}`;
+        const resourcesTree = await buildFileTree(resourcesPath, '', true);
+
+        useFileSystemStore.getState().setFileTree([fileTree, resourcesTree]);
         validateSelections(fileTree);
         setFilesData(fileTree);
+        setResourcesData(resourcesTree);
         await setupWatcher(dir);
         addLog(`Loaded directory: ${dir}`);
       } catch (error) {
@@ -281,7 +295,7 @@ const AthanorApp: React.FC = () => {
         {/* Scrollable file explorer section */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4">
           <FileExplorer
-            items={[filesData]}
+            items={[filesData, ...(resourcesData ? [resourcesData] : [])]}
             onViewFile={handleFileView}
             onRefresh={refreshFileSystem}
           />
@@ -305,10 +319,7 @@ const AthanorApp: React.FC = () => {
               <span>{selectedLinesTotal}</span>
             </div>
           </div>
-          <div 
-            className="text-gray-500"
-            title="Athanor application version"
-          >
+          <div className="text-gray-500" title="Athanor application version">
             {appVersion}
           </div>
         </div>

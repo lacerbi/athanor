@@ -8,6 +8,7 @@ import {
   isEmptyFolder,
   getFileItemById,
 } from '../utils/fileTree';
+import { FILE_SYSTEM } from '../utils/constants';
 
 // Function to normalize content with consistent line endings
 function normalizeContent(content: string): string {
@@ -38,14 +39,22 @@ async function countFileLines(path: string): Promise<number> {
 
 export async function buildFileTree(
   basePath: string,
-  currentPath: string = ''
+  currentPath: string = '',
+  isResourcesTree: boolean = false
 ): Promise<FileItem> {
   const fullPath = currentPath || basePath;
-  const name = currentPath.split('/').pop() || basePath.split('/').pop() || '';
+  let name = currentPath.split('/').pop() || basePath.split('/').pop() || '';
+  
+  // Set root name for resources tree
+  if (isResourcesTree && !currentPath) {
+    name = 'External Resources';
+  }
 
   try {
     const isDir = await window.fileSystem.isDirectory(fullPath);
-    const id = fullPath.replace(basePath, '') || '/';
+    const id = isResourcesTree
+      ? `resources:${fullPath.replace(basePath, '')}`
+      : fullPath.replace(basePath, '') || '/';
 
     if (!isDir) {
       const lineCount = await countFileLines(fullPath);
@@ -62,12 +71,16 @@ export async function buildFileTree(
     const children: FileItem[] = [];
 
     for (const entry of entries) {
+      // Skip resources directory in main tree to avoid recursion
+      if (!isResourcesTree && entry === FILE_SYSTEM.resourcesDirName) {
+        continue;
+      }
       const childPath = `${fullPath}/${entry}`.replace('//', '/');
       if (childPath === fullPath) {
         console.warn('Skipping recursive path for', childPath);
         continue;
       }
-      const child = await buildFileTree(basePath, childPath);
+      const child = await buildFileTree(basePath, childPath, isResourcesTree);
       children.push(child);
     }
 

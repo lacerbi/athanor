@@ -68,6 +68,85 @@ project_info: |
     - TypeScript compiler
     - Webpack Dev Server
 
+  ## File System Considerations
+
+  The Athanor application implements a secure two-layer file system architecture 
+  that respects Electron's security model:
+
+  ### fileSystemManager.ts (Main Process Layer)
+  - Located in the electron/ directory
+  - Runs in the main process with full Node.js access
+  - Provides core file system operations using Node's fs/promises
+  - Manages global state like base directory and ignore rules
+  - Handles low-level operations like path normalization and validation
+  - Maintains watcher instances and cleanup
+
+  Key responsibilities:
+  1. Direct file system access via Node.js fs/promises
+  2. Path normalization and validation
+  3. Ignore rule management (.athignore/.gitignore)
+  4. File watcher lifecycle management
+  5. Error handling and state recovery
+  6. Base directory management
+
+  ### fileSystemService.ts (Renderer Process Layer)
+  - Located in the src/services/ directory
+  - Runs in the renderer process without direct fs access
+  - Communicates with main process via IPC bridge
+  - Provides high-level operations for the React application
+  - Handles file tree construction and management
+  - Focuses on data transformation and organization
+
+  Key responsibilities:
+  1. Building and managing file tree structure
+  2. Content normalization for display
+  3. File line counting and analysis
+  4. Tree traversal utilities
+  5. Item lookup and path resolution
+  6. Integration with React components
+
+  ### Interface Patterns
+
+  1. Main Process (fileSystemManager.ts):
+    - Exports utility functions used by IPC handlers
+    - Maintains global state (base directory, ignore rules)
+    - Provides error handling and recovery mechanisms
+    - Manages system resources (watchers, file handles)
+
+  2. Renderer Process (fileSystemService.ts):
+    - Uses window.fileSystem interface defined in preload.ts
+    - Provides React-friendly data structures
+    - Handles content formatting and normalization
+    - Manages file tree state and operations
+
+  ### Action points
+
+  1. When working with direct file system operations:
+    - Use fileSystemManager.ts functions in main process code
+    - Access through IPC handlers defined in handlers/ directory
+    - Handle errors appropriately at each layer
+
+  2. When building UI features:
+    - Use fileSystemService.ts for file tree operations
+    - Access through React hooks and components
+    - Handle loading states and error conditions
+
+  3. For new file system features:
+    - Add core functionality to fileSystemManager.ts
+    - Create corresponding IPC handlers
+    - Add interface methods to preload.ts
+    - Implement high-level operations in fileSystemService.ts
+
+  4. When debugging:
+    - Check main process logs for fileSystemManager.ts issues
+    - Verify IPC communication through preload bridge
+    - Inspect renderer process state for fileSystemService.ts
+
+  5. Security considerations:
+    - Never bypass the IPC bridge for file operations
+    - Validate all paths and operations in main process
+    - Handle sensitive data appropriately at each layer
+
   ### Future Considerations
 
   These can be added later if needed:
