@@ -4,6 +4,13 @@
 // file system methods.
 export {};
 
+// Panel resizing types
+export interface PanelResizeState {
+  leftPanelWidth: number;
+  isResizing: boolean;
+  startResize: (e: React.MouseEvent<HTMLDivElement>) => void;
+}
+
 declare global {
   interface Window {
     app: {
