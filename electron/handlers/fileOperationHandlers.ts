@@ -15,8 +15,8 @@ import {
   ensureDirectoryExists,
   normalizePath,
   toPlatformPath,
-  ig,
 } from '../fileSystemManager';
+import { ignoreRulesManager } from '../ignoreRulesManager';
 import { getAppBasePath } from '../main';
 
 // Get resources path based on environment
@@ -86,7 +86,7 @@ export function setupFileOperationHandlers() {
         const isDir = entryStats?.isDirectory() ?? false;
 
         const normalizedForIgnore = normalizePathForIgnore(fullPath, isDir);
-        if (normalizedForIgnore && !ig.ignores(normalizedForIgnore)) {
+        if (normalizedForIgnore && !ignoreRulesManager.ignores(normalizedForIgnore)) {
           filteredEntries.push(entry);
         }
       }

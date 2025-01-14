@@ -18,6 +18,7 @@ import {
   pathExists,
   clearFileSystemState
 } from '../fileSystemManager';
+import { ignoreRulesManager } from '../ignoreRulesManager';
 
 export function setupCoreHandlers() {
   // Add handler for getting app version
@@ -60,45 +61,7 @@ export function setupCoreHandlers() {
   // Handle adding items to ignore file
   ipcMain.handle('fs:addToIgnore', async (_, itemPath: string) => {
     try {
-      // Check if path ends with slash before normalization
-      const hadTrailingSlash =
-        itemPath.endsWith('/') || itemPath.endsWith('\\');
-
-      // Normalize the path
-      const normalizedPath = normalizePath(itemPath);
-
-      // Restore the trailing slash if it was present
-      const finalPath = hadTrailingSlash
-        ? normalizedPath + '/'
-        : normalizedPath;
-
-      const ignorePath = toPlatformPath(path.join(getBaseDir(), '.athignore'));
-
-      // Create .athignore if it doesn't exist
-      if (!(await pathExists(ignorePath))) {
-        await fs.writeFile(ignorePath, '', 'utf8');
-      }
-
-      // Read current content
-      const currentContent = await fs.readFile(ignorePath, 'utf8');
-      const lines = currentContent.split('\n').filter((line) => line.trim());
-
-      // Add new item if it's not already in the file
-      if (!lines.includes(finalPath)) {
-        lines.push(finalPath);
-
-        // Write back with normalized line endings
-        const newContent = lines.join('\n') + '\n';
-        await fs.writeFile(ignorePath, newContent, 'utf8');
-
-        // Reload ignore rules
-        await loadIgnoreRules();
-
-        // Return true to indicate success
-        return true;
-      }
-
-      return false;
+      return await ignoreRulesManager.addIgnorePattern(itemPath);
     } catch (error) {
       handleError(error, `adding to ignore file: ${itemPath}`);
     }

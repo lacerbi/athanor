@@ -9,8 +9,8 @@ import {
   normalizePathForIgnore,
   normalizePath,
   toPlatformPath,
-  ig,
 } from '../fileSystemManager';
+import { ignoreRulesManager } from '../ignoreRulesManager';
 
 export function setupFileWatchHandlers() {
   // Handle directory watching with ignore rules
@@ -35,7 +35,7 @@ export function setupFileWatchHandlers() {
               filePath,
               stats.isDirectory()
             );
-            return normalizedForIgnore ? ig.ignores(normalizedForIgnore) : true;
+            return normalizedForIgnore ? ignoreRulesManager.ignores(normalizedForIgnore) : true;
           } catch (error) {
             return true;
           }
