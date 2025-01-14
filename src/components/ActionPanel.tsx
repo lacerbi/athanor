@@ -22,7 +22,7 @@ import { copyToClipboard } from '../actions/ManualCopyAction';
 import { buildSoftwareEngineerPromptAction } from '../actions/BuildSoftwareEngineerPromptAction';
 import { buildAiSummaryPromptAction } from '../actions/BuildAiSummaryAction';
 import { buildRefactorPromptAction } from '../actions/BuildRefactorAction';
-import { getActionTooltip } from '../utils/actionDescriptions';
+import { getActionTooltip } from '../actions';
 
 interface ActionPanelProps {
   rootItems: FileItem[];

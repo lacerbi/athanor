@@ -11,6 +11,9 @@ export interface PanelResizeState {
   startResize: (e: React.MouseEvent<HTMLDivElement>) => void;
 }
 
+// Re-export action types from actions folder
+export type { ActionType, ActionState } from '../actions';
+
 declare global {
   interface Window {
     app: {

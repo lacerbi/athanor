@@ -1,16 +1,12 @@
 // AI Summary: Provides tooltips and human-readable names for UI action buttons.
-// Handles state-based tooltip generation for file highlighting and other actions.
+// Handles state-based tooltip generation with proper typing for actions and states.
+import { ActionType, ActionState } from './types';
 
 // Get tooltip based on action button state
 export function getActionTooltip(
-  action:
-    | 'fileHighlighter'
-    | 'softwareEngineer'
-    | 'developer'
-    | 'aiSummaries'
-    | 'refactorCode',
+  action: ActionType,
   isDisabled: boolean,
-  reason: 'loading' | 'noTask' | 'noSelection' | null
+  reason: ActionState | null
 ): string {
   if (!isDisabled) {
     switch (action) {
@@ -41,7 +37,7 @@ export function getActionTooltip(
 }
 
 // Helper to get human-readable action names
-function getActionName(action: string): string {
+function getActionName(action: ActionType): string {
   switch (action) {
     case 'fileHighlighter':
       return 'Autoselect';
