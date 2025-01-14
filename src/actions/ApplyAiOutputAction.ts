@@ -1,64 +1,13 @@
-// AI Summary: Parses and applies AI output from clipboard content, handling multiple command types including file operations.
-// Processes SELECT, TASK, and APPLY CHANGES commands with proper state management and error handling.
-// Integrates with workbench and file system stores for selection tracking and change application.
-import { parseCommand, Command } from '../utils/commandParser';
+// AI Summary: Orchestrates command execution from clipboard content using dedicated command handlers.
+// Processes SELECT, TASK, and APPLY CHANGES commands through modular command system.
+import { parseCommand } from '../utils/commandParser';
 import { FileOperation } from '../types/global';
-import { parseXmlContent } from '../services/xmlParsingService';
-import { countTokens, formatTokenCount } from '../utils/tokenCount';
-import { useFileSystemStore } from '../stores/fileSystemStore';
-import { useWorkbenchStore } from '../stores/workbenchStore';
 import {
-  processFileUpdate,
-  normalizeLineEndings,
-} from '../utils/fileOperations';
-
-async function executeCommand(
-  command: Command,
-  addLog: (message: string) => void
-): Promise<boolean> {
-  const fileSystemStore = useFileSystemStore.getState();
-
-  switch (command.type) {
-    case 'select':
-      // Clear existing selections
-      fileSystemStore.clearSelections();
-
-      // Split content on whitespace to get file paths
-      const filePaths = command.content
-        .trim()
-        .split(/\s+/)
-        .map((path) => '/' + path);
-
-      // Select all specified files
-      fileSystemStore.selectItems(filePaths);
-
-      // Log success message with all selected files
-      addLog(
-        `Selected ${filePaths.length} files based on command: ${filePaths.join(
-          ' '
-        )}`
-      );
-      return true;
-
-    default:
-      if (command.type === 'task') {
-        const workbenchStore = useWorkbenchStore.getState();
-        const taskContent = command.content.trim();
-
-        if (!taskContent) {
-          addLog('Task command contains no content');
-          return false;
-        }
-
-        workbenchStore.resetTaskDescription(taskContent);
-        addLog('Updated task description from command');
-        return true;
-      }
-
-      addLog(`Unknown command type: ${command.type}`);
-      return false;
-  }
-}
+  COMMAND_TYPES,
+  executeSelectCommand,
+  executeTaskCommand,
+  executeApplyChangesCommand,
+} from '../commands';
 
 export async function applyAiOutput(params: {
   addLog: (message: string) => void;
@@ -79,40 +28,41 @@ export async function applyAiOutput(params: {
 
     // Process all commands sequentially
     for (const command of commands) {
-      if (command.type === 'apply changes') {
-        addLog(
-          `Processing apply changes command (${formatTokenCount(
-            countTokens(command.fullContent || command.content)
-          )})`
-        );
-        try {
-          const operations = await parseXmlContent(
-            command.fullContent || command.content,
-            addLog
-          );
-          if (operations.length) {
-            clearOperations();
-            setOperations(operations);
-            if (setActiveTab) {
-              setActiveTab('apply-changes');
-            }
-            addLog(`Found ${operations.length} file operations`);
-          } else {
-            addLog('No valid file operations found in command');
-          }
-        } catch (error) {
-          console.error('Error processing XML content:', error);
-          addLog(
-            error instanceof Error
-              ? error.message
-              : 'Failed to process XML content'
-          );
-        }
-      } else {
-        const success = await executeCommand(command, addLog);
-        if (!success) {
-          addLog(`Failed to execute ${command.type} command`);
-        }
+      let success = false;
+
+      switch (command.type) {
+        case COMMAND_TYPES.SELECT:
+          success = await executeSelectCommand({
+            content: command.content,
+            addLog,
+          });
+          break;
+
+        case COMMAND_TYPES.TASK:
+          success = await executeTaskCommand({
+            content: command.content,
+            addLog,
+          });
+          break;
+
+        case COMMAND_TYPES.APPLY_CHANGES:
+          success = await executeApplyChangesCommand({
+            content: command.content,
+            fullContent: command.fullContent,
+            addLog,
+            setOperations,
+            clearOperations,
+            setActiveTab,
+          });
+          break;
+
+        default:
+          addLog(`Unknown command type: ${command.type}`);
+          continue;
+      }
+
+      if (!success) {
+        addLog(`Failed to execute ${command.type} command`);
       }
     }
   } catch (err) {

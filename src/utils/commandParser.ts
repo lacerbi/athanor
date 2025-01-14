@@ -1,7 +1,9 @@
-// Extracts command blocks from XML-formatted clipboard input, preserving full XML for
-// apply changes commands while extracting content for other command types.
+// AI Summary: Extracts command blocks from XML-formatted clipboard input. 
+// Handles both single and multiple commands with proper content normalization.
+import { CommandType, COMMAND_TYPES } from '../commands';
+
 export interface Command {
-  type: string;
+  type: CommandType;
   content: string;
   fullContent?: string; // Stores complete XML for apply changes commands
 }
@@ -24,18 +26,21 @@ export function extractAllCommandBlocks(content: string): Command[] {
   while ((match = regex.exec(normalizedContent)) !== null) {
     const [fullMatch, commandType, commandContent] = match;
     if (commandType && commandContent) {
-      if (commandType === 'apply changes') {
-        // For apply changes commands, preserve the full XML
-        commands.push({
-          type: commandType,
-          content: commandContent.trim(),
-          fullContent: fullMatch,
-        });
-      } else {
-        commands.push({
-          type: commandType,
-          content: commandContent.trim(),
-        });
+      // Validate command type
+      if (Object.values(COMMAND_TYPES).includes(commandType as CommandType)) {
+        if (commandType === COMMAND_TYPES.APPLY_CHANGES) {
+          // For apply changes commands, preserve the full XML
+          commands.push({
+            type: commandType as CommandType,
+            content: commandContent.trim(),
+            fullContent: fullMatch,
+          });
+        } else {
+          commands.push({
+            type: commandType as CommandType,
+            content: commandContent.trim(),
+          });
+        }
       }
     }
   }
