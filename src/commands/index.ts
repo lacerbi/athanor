@@ -18,4 +18,4 @@ export { parseCommand } from './parser';
 export type { Command } from './parser';
 
 // Command descriptions
-export { getCommandDescription } from './descriptions';
+export { getCommandDescription } from './commandDescriptions';
