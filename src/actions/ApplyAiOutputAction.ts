@@ -1,13 +1,7 @@
 // AI Summary: Orchestrates command execution from clipboard content using dedicated command handlers.
 // Processes SELECT, TASK, and APPLY CHANGES commands through modular command system.
-import { parseCommand } from '../utils/commandParser';
-import { FileOperation } from '../types/global';
-import {
-  COMMAND_TYPES,
-  executeSelectCommand,
-  executeTaskCommand,
-  executeApplyChangesCommand,
-} from '../commands';
+import type { FileOperation } from '../types/global';
+import * as commands from '../commands';
 
 export async function applyAiOutput(params: {
   addLog: (message: string) => void;
@@ -19,34 +13,34 @@ export async function applyAiOutput(params: {
 
   try {
     const clipboardContent = await navigator.clipboard.readText();
-    const commands = parseCommand(clipboardContent);
+    const parsedCommands = commands.parseCommand(clipboardContent);
 
-    if (!commands) {
+    if (!parsedCommands) {
       addLog('No valid commands found in clipboard');
       return;
     }
 
     // Process all commands sequentially
-    for (const command of commands) {
+    for (const command of parsedCommands) {
       let success = false;
 
       switch (command.type) {
-        case COMMAND_TYPES.SELECT:
-          success = await executeSelectCommand({
+        case commands.COMMAND_TYPES.SELECT:
+          success = await commands.executeSelectCommand({
             content: command.content,
             addLog,
           });
           break;
 
-        case COMMAND_TYPES.TASK:
-          success = await executeTaskCommand({
+        case commands.COMMAND_TYPES.TASK:
+          success = await commands.executeTaskCommand({
             content: command.content,
             addLog,
           });
           break;
 
-        case COMMAND_TYPES.APPLY_CHANGES:
-          success = await executeApplyChangesCommand({
+        case commands.COMMAND_TYPES.APPLY_CHANGES:
+          success = await commands.executeApplyChangesCommand({
             content: command.content,
             fullContent: command.fullContent,
             addLog,

@@ -4,7 +4,7 @@
 import React, { useEffect } from 'react';
 import { Hammer } from 'lucide-react';
 import { useCommandStore } from '../stores/commandStore';
-import { getCommandDescription } from '../utils/commandDescriptions';
+import { getCommandDescription } from '../commands';
 import { applyAiOutput } from '../actions/ApplyAiOutputAction';
 
 interface CommandButtonProps {

@@ -1,36 +1,5 @@
-// AI Summary: Provides tooltip descriptions for commands and actions, including invalid states.
-// Supports both single and multiple command scenarios with appropriate descriptions.
-import { parseCommand } from './commandParser';
-
-// Get tooltip for clipboard command state
-export function getCommandDescription(clipboardContent: string | null): string {
-  if (!clipboardContent) {
-    return 'Copy AI output to clipboard to enable changes';
-  }
-
-  const commands = parseCommand(clipboardContent);
-  if (!commands) {
-    return 'No valid AI commands found in clipboard';
-  }
-
-  if (commands.length === 1) {
-    // Single command description
-    const command = commands[0];
-    switch (command.type) {
-      case 'apply changes':
-        return 'Review and apply file changes from clipboard';
-      case 'select':
-        return 'Select files based on selection command';
-      case 'task':
-        return 'Update task description with content from clipboard';
-      default:
-        return `Execute ${command.type} command from clipboard`;
-    }
-  } else {
-    // Multiple commands description
-    return `Execute ${commands.length} commands from clipboard`;
-  }
-}
+// AI Summary: Provides tooltips and human-readable names for UI action buttons.
+// Handles state-based tooltip generation for file highlighting and other actions.
 
 // Get tooltip based on action button state
 export function getActionTooltip(

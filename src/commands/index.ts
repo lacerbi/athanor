@@ -1,5 +1,7 @@
-// AI Summary: Centralizes command exports and provides command type constants.
-// Acts as the main interface for accessing command functionality.
+// AI Summary: Centralizes exports for all command-related functionality.
+// Provides a single entry point for command handling capabilities.
+
+// Command executors
 export { executeSelectCommand } from './selectCommand';
 export { executeTaskCommand } from './taskCommand';
 export { executeApplyChangesCommand } from './applyChangesCommand';
@@ -7,11 +9,13 @@ export type { SelectCommandParams } from './selectCommand';
 export type { TaskCommandParams } from './taskCommand';
 export type { ApplyChangesParams } from './applyChangesCommand';
 
-// Command type constants
-export const COMMAND_TYPES = {
-  SELECT: 'select',
-  TASK: 'task',
-  APPLY_CHANGES: 'apply changes',
-} as const;
+// Command types and constants
+export { COMMAND_TYPES } from './types';
+export type { CommandType } from './types';
 
-export type CommandType = typeof COMMAND_TYPES[keyof typeof COMMAND_TYPES];
+// Command parsing
+export { parseCommand } from './parser';
+export type { Command } from './parser';
+
+// Command descriptions
+export { getCommandDescription } from './descriptions';

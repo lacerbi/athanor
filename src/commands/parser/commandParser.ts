@@ -1,6 +1,6 @@
-// AI Summary: Extracts command blocks from XML-formatted clipboard input. 
+// AI Summary: Parses command blocks from XML-formatted clipboard input.
 // Handles both single and multiple commands with proper content normalization.
-import { CommandType, COMMAND_TYPES } from '../commands';
+import { CommandType, COMMAND_TYPES } from '../types';
 
 export interface Command {
   type: CommandType;

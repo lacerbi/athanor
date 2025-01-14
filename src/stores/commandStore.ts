@@ -1,8 +1,7 @@
 // AI Summary: Manages clipboard content state and command validation with periodic updates.
 // Handles both single and multiple command scenarios while maintaining backward compatibility.
 import { create } from 'zustand';
-import { parseCommand } from '../utils/commandParser';
-import { Command } from '../utils/commandParser';
+import { parseCommand, Command } from '../commands';
 
 interface CommandState {
   clipboardContent: string | null;
