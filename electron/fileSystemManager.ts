@@ -15,7 +15,9 @@ export function getResourcesDir(): string {
 
 // Ensure external resources directory exists
 export async function ensureResourcesDir(): Promise<void> {
-  const resourcesPath = filePathManager.toPlatformPath(getResourcesDir());
+  const resourcesPath = filePathManager.toPlatformPath(
+    filePathManager.resolveFromBase(FILE_SYSTEM.resourcesDirName)
+  );
   try {
     await fs.access(resourcesPath, constants.F_OK);
   } catch {
@@ -98,7 +100,8 @@ export function cleanupWatchers() {
   activeWatchers.clear();
 }
 
-// Export path-related functions from filePathManager
+// Export core file system utilities that use proper path resolution
 export const normalizePath = filePathManager.normalizeToUnix.bind(filePathManager);
 export const toPlatformPath = filePathManager.toPlatformPath.bind(filePathManager);
+export const resolveFromBase = filePathManager.resolveFromBase.bind(filePathManager);
 export const normalizePathForIgnore = filePathManager.normalizeForIgnore.bind(filePathManager);

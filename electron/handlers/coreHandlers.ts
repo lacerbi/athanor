@@ -40,7 +40,9 @@ export function setupCoreHandlers() {
   // Add handler for converting to OS path
   ipcMain.handle('fs:toOSPath', async (_, inputPath: string) => {
     try {
-      return filePathManager.toPlatformPath(filePathManager.resolveFromBase(inputPath));
+      const normalizedPath = filePathManager.normalizeToUnix(inputPath);
+      const resolvedPath = filePathManager.resolveFromBase(normalizedPath);
+      return filePathManager.toPlatformPath(resolvedPath);
     } catch (error) {
       handleError(error, 'converting to OS path');
     }
@@ -120,7 +122,7 @@ export function setupCoreHandlers() {
   ipcMain.handle('fs:isDirectory', async (_, filePath: string) => {
     try {
       const normalizedPath = filePathManager.toPlatformPath(
-        filePathManager.normalizeToUnix(filePath)
+        filePathManager.resolveFromBase(filePathManager.normalizeToUnix(filePath))
       );
       const stats = await getStats(normalizedPath);
       return stats?.isDirectory() ?? false;

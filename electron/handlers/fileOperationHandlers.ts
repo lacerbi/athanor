@@ -17,18 +17,11 @@ import { getAppBasePath } from '../main';
 
 // Get resources path based on environment
 async function getResourcesPath(): Promise<string> {
-  let baseFolder: string;
-
-  if (app.isPackaged) {
-    // In production, get the directory where the .exe resides
-    baseFolder = filePathManager.normalizeToUnix(app.getPath('exe'));
-    baseFolder = filePathManager.getParentDir(baseFolder);
-  } else {
-    // In development, resources are in the project root
-    baseFolder = filePathManager.normalizeToUnix(getAppBasePath());
-  }
-
-  return filePathManager.joinUnixPaths(baseFolder, 'resources');
+  const baseFolder = app.isPackaged
+    ? filePathManager.getParentDir(filePathManager.normalizeToUnix(app.getPath('exe')))
+    : filePathManager.normalizeToUnix(getAppBasePath());
+    
+  return filePathManager.resolveUnixPath(baseFolder, 'resources');
 }
 
 export function setupFileOperationHandlers() {

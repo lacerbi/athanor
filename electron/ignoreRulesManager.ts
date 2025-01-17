@@ -86,11 +86,12 @@ class IgnoreRulesManager {
   async addIgnorePattern(itemPath: string): Promise<boolean> {
     try {
       // Check if path ends with slash before normalization
-      const hadTrailingSlash =
-        itemPath.endsWith('/') || itemPath.endsWith('\\');
+      const hadTrailingSlash = itemPath.endsWith('/') || itemPath.endsWith('\\');
 
-      // Normalize the path
-      const normalizedPath = filePathManager.normalizeToUnix(itemPath);
+      // Normalize and ensure path is relative to base directory
+      const normalizedPath = filePathManager.relativeToCwd(
+        filePathManager.resolveFromBase(filePathManager.normalizeToUnix(itemPath))
+      );
 
       // Restore the trailing slash if it was present
       const finalPath = hadTrailingSlash
