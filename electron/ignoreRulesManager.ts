@@ -1,20 +1,19 @@
 // AI Summary: Manages ignore rules including loading from .athignore/.gitignore files,  
-// rule application, and path normalization. Provides singleton instance for consistent 
-// rule state across the application.
+// rule application, and path normalization. Integrates with filePathManager for path operations.
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import ignore from 'ignore';
 import { FILE_SYSTEM } from '../src/utils/constants';
+import { filePathManager } from './filePathManager';
 
 class IgnoreRulesManager {
   private ig = ignore();
-  private baseDir: string = process.cwd();
   private lastError: Error | null = null;
   private resourcesDir = FILE_SYSTEM.resourcesDirName;
 
   // Update base directory and reload rules
   setBaseDir(newDir: string) {
-    this.baseDir = this.normalizePath(newDir);
+    filePathManager.setBaseDir(newDir);
     this.clearRules();
     this.loadIgnoreRules().catch((error) => {
       console.error('Error reloading ignore rules:', error);
@@ -23,24 +22,13 @@ class IgnoreRulesManager {
 
   // Get current base directory
   getBaseDir(): string {
-    return this.baseDir;
+    return filePathManager.getBaseDir();
   }
 
   // Clear existing ignore rules
   clearRules() {
     this.ig = ignore();
     console.log('Ignore rules cleared.');
-  }
-
-  // Normalize path for cross-platform consistency
-  normalizePath(inputPath: string): string {
-    const normalized = inputPath.split(path.sep).join(path.posix.sep);
-    return normalized.replace(/\/+$/, '');
-  }
-
-  // Convert normalized path to platform-specific format
-  toPlatformPath(normalizedPath: string): string {
-    return normalizedPath.split(path.posix.sep).join(path.sep);
   }
 
   // Check if a path should be ignored
@@ -57,7 +45,7 @@ class IgnoreRulesManager {
     this.ig.add(`${this.resourcesDir}/`);
 
     const currentBaseDir = this.getBaseDir();
-    const platformBaseDir = this.toPlatformPath(currentBaseDir);
+    const platformBaseDir = filePathManager.toPlatformPath(currentBaseDir);
 
     // Try .athignore first
     const athignorePath = path.join(platformBaseDir, '.athignore');
@@ -102,14 +90,14 @@ class IgnoreRulesManager {
         itemPath.endsWith('/') || itemPath.endsWith('\\');
 
       // Normalize the path
-      const normalizedPath = this.normalizePath(itemPath);
+      const normalizedPath = filePathManager.normalizeToUnix(itemPath);
 
       // Restore the trailing slash if it was present
       const finalPath = hadTrailingSlash
         ? normalizedPath + '/'
         : normalizedPath;
 
-      const ignorePath = this.toPlatformPath(
+      const ignorePath = filePathManager.toPlatformPath(
         path.join(this.getBaseDir(), '.athignore')
       );
 
@@ -142,31 +130,6 @@ class IgnoreRulesManager {
     } catch (error) {
       this.handleError(error, `adding to ignore file: ${itemPath}`);
       return false;
-    }
-  }
-
-  // Helper function to normalize path for ignore rules
-  normalizePathForIgnore(
-    filePath: string,
-    isDirectory: boolean
-  ): string | null {
-    if (!filePath) return null;
-
-    try {
-      const relativePath = path
-        .relative(this.getBaseDir(), filePath)
-        .split(path.sep)
-        .join('/');
-
-      if (!relativePath || relativePath.startsWith('..')) {
-        return null;
-      }
-
-      // Append trailing slash for directories
-      return isDirectory ? `${relativePath}/` : relativePath;
-    } catch (error) {
-      console.error('Error normalizing path:', error);
-      return null;
     }
   }
 

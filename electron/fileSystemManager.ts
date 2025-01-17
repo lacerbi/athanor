@@ -1,26 +1,21 @@
 // AI Summary: Manages file system operations with path normalization and watcher lifecycle.
-// Delegates ignore rule management to ignoreRulesManager and provides clean interface
-// for file system operations.
-import * as path from 'path';
+// Delegates path handling to filePathManager and provides clean interface for file system operations.
+// Integrates with ignoreRulesManager for rule application.
 import * as fs from 'fs/promises';
 import { Stats, constants } from 'fs';
 import * as chokidar from 'chokidar';
 import { FILE_SYSTEM } from '../src/utils/constants';
 import { ignoreRulesManager } from './ignoreRulesManager';
-
-// Constants for resource directory management
-const resourcesDir = FILE_SYSTEM.resourcesDirName;
-
-let baseDir = process.cwd();
+import { filePathManager } from './filePathManager';
 
 // Get external resources directory path
 export function getResourcesDir(): string {
-  return path.join(getBaseDir(), resourcesDir);
+  return filePathManager.getResourcesDir();
 }
 
 // Ensure external resources directory exists
 export async function ensureResourcesDir(): Promise<void> {
-  const resourcesPath = toPlatformPath(getResourcesDir());
+  const resourcesPath = filePathManager.toPlatformPath(getResourcesDir());
   try {
     await fs.access(resourcesPath, constants.F_OK);
   } catch {
@@ -40,13 +35,14 @@ export function clearFileSystemState() {
 
 // Export function to update base directory
 export function setBaseDir(newDir: string) {
-  baseDir = ignoreRulesManager.normalizePath(newDir);
+  const normalizedDir = filePathManager.normalizeToUnix(newDir);
+  filePathManager.setBaseDir(normalizedDir);
   clearFileSystemState();
   ignoreRulesManager.setBaseDir(newDir);
 }
 
 export function getBaseDir() {
-  return baseDir;
+  return filePathManager.getBaseDir();
 }
 
 // Store active file watchers
@@ -102,7 +98,7 @@ export function cleanupWatchers() {
   activeWatchers.clear();
 }
 
-// Export functions from ignoreRulesManager
-export const normalizePath = ignoreRulesManager.normalizePath.bind(ignoreRulesManager);
-export const toPlatformPath = ignoreRulesManager.toPlatformPath.bind(ignoreRulesManager);
-export const normalizePathForIgnore = ignoreRulesManager.normalizePathForIgnore.bind(ignoreRulesManager);
+// Export path-related functions from filePathManager
+export const normalizePath = filePathManager.normalizeToUnix.bind(filePathManager);
+export const toPlatformPath = filePathManager.toPlatformPath.bind(filePathManager);
+export const normalizePathForIgnore = filePathManager.normalizeForIgnore.bind(filePathManager);
