@@ -4,19 +4,17 @@
 import { ipcMain } from 'electron';
 import { statSync } from 'fs';
 import * as chokidar from 'chokidar';
-import {
-  activeWatchers,
-  normalizePathForIgnore,
-  normalizePath,
-  toPlatformPath,
-} from '../fileSystemManager';
+import { activeWatchers } from '../fileSystemManager';
 import { ignoreRulesManager } from '../ignoreRulesManager';
+import { filePathManager } from '../filePathManager';
 
 export function setupFileWatchHandlers() {
   // Handle directory watching with ignore rules
   ipcMain.handle('fs:watch', (event, dirPath: string) => {
     try {
-      const normalizedPath = toPlatformPath(normalizePath(dirPath));
+      const normalizedPath = filePathManager.toPlatformPath(
+        filePathManager.normalizeToUnix(dirPath)
+      );
 
       // Clean up existing watcher if any
       if (activeWatchers.has(normalizedPath)) {
@@ -31,7 +29,7 @@ export function setupFileWatchHandlers() {
 
           try {
             const stats = statSync(filePath);
-            const normalizedForIgnore = normalizePathForIgnore(
+            const normalizedForIgnore = filePathManager.normalizeForIgnore(
               filePath,
               stats.isDirectory()
             );

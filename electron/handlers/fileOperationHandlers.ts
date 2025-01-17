@@ -1,37 +1,34 @@
 // AI Summary: Handles IPC communication for file system operations with comprehensive error handling
 // and path normalization. Provides unified interface for reading/writing files, resolving template
 // paths, and directory traversal with ignore rules. Key functions manage resource path resolution
-// in both dev/prod environments and ensure proper directory structure. Integrates with fileSystemManager
-// for path handling and ignore rule application.
+// in both dev/prod environments and ensure proper directory structure.
 import { app, ipcMain } from 'electron';
-import * as path from 'path';
 import * as fs from 'fs/promises';
 import {
   getBaseDir,
   handleError,
   pathExists,
   getStats,
-  normalizePathForIgnore,
   ensureDirectoryExists,
-  normalizePath,
-  toPlatformPath,
 } from '../fileSystemManager';
 import { ignoreRulesManager } from '../ignoreRulesManager';
+import { filePathManager } from '../filePathManager';
 import { getAppBasePath } from '../main';
 
 // Get resources path based on environment
 async function getResourcesPath(): Promise<string> {
-  let baseFolder;
+  let baseFolder: string;
 
   if (app.isPackaged) {
     // In production, get the directory where the .exe resides
-    baseFolder = path.dirname(app.getPath('exe'));
+    baseFolder = filePathManager.normalizeToUnix(app.getPath('exe'));
+    baseFolder = filePathManager.getParentDir(baseFolder);
   } else {
     // In development, resources are in the project root
-    baseFolder = getAppBasePath();
+    baseFolder = filePathManager.normalizeToUnix(getAppBasePath());
   }
 
-  return toPlatformPath(path.join(normalizePath(baseFolder), 'resources'));
+  return filePathManager.joinUnixPaths(baseFolder, 'resources');
 }
 
 export function setupFileOperationHandlers() {
@@ -49,14 +46,12 @@ export function setupFileOperationHandlers() {
     'fs:getPromptTemplatePath',
     async (_, templateName: string) => {
       try {
-        const normalizedName = normalizePath(templateName);
+        const normalizedName = filePathManager.normalizeToUnix(templateName);
         const resourcesPath = await getResourcesPath();
 
-        const templatePath = toPlatformPath(
-          path.join(resourcesPath, 'prompts', normalizedName)
+        return filePathManager.toPlatformPath(
+          filePathManager.joinUnixPaths(resourcesPath, 'prompts', normalizedName)
         );
-
-        return templatePath;
       } catch (error) {
         handleError(error, 'getting template path');
       }
@@ -66,7 +61,9 @@ export function setupFileOperationHandlers() {
   // Handle reading directory contents with ignore rules
   ipcMain.handle('fs:readDirectory', async (_, dirPath: string) => {
     try {
-      const normalizedPath = toPlatformPath(normalizePath(dirPath));
+      const normalizedPath = filePathManager.toPlatformPath(
+        filePathManager.normalizeToUnix(dirPath)
+      );
       const exists = await pathExists(normalizedPath);
       if (!exists) {
         throw new Error(`Directory does not exist: ${normalizedPath}`);
@@ -81,11 +78,11 @@ export function setupFileOperationHandlers() {
       const filteredEntries: string[] = [];
 
       for (const entry of entries) {
-        const fullPath = path.join(normalizedPath, entry);
+        const fullPath = filePathManager.joinUnixPaths(normalizedPath, entry);
         const entryStats = await getStats(fullPath);
         const isDir = entryStats?.isDirectory() ?? false;
 
-        const normalizedForIgnore = normalizePathForIgnore(fullPath, isDir);
+        const normalizedForIgnore = filePathManager.normalizeForIgnore(fullPath, isDir);
         if (normalizedForIgnore && !ignoreRulesManager.ignores(normalizedForIgnore)) {
           filteredEntries.push(entry);
         }
@@ -106,7 +103,9 @@ export function setupFileOperationHandlers() {
       options?: { encoding?: BufferEncoding } | BufferEncoding
     ) => {
       try {
-        const normalizedPath = toPlatformPath(normalizePath(filePath));
+        const normalizedPath = filePathManager.toPlatformPath(
+          filePathManager.normalizeToUnix(filePath)
+        );
 
         const exists = await pathExists(normalizedPath);
         if (!exists) {
@@ -131,11 +130,11 @@ export function setupFileOperationHandlers() {
   // Handle writing file contents
   ipcMain.handle('fs:writeFile', async (_, filePath: string, data: string) => {
     try {
-      const normalizedPath = normalizePath(filePath);
-      const absPath = toPlatformPath(
-        path.resolve(getBaseDir(), normalizedPath)
+      const normalizedPath = filePathManager.normalizeToUnix(filePath);
+      const absPath = filePathManager.toPlatformPath(
+        filePathManager.resolveFromBase(normalizedPath)
       );
-      const dirPath = path.dirname(absPath);
+      const dirPath = filePathManager.getParentDir(absPath);
 
       await ensureDirectoryExists(dirPath);
 
@@ -149,9 +148,9 @@ export function setupFileOperationHandlers() {
   // Handle deleting files
   ipcMain.handle('fs:deleteFile', async (_, filePath: string) => {
     try {
-      const normalizedPath = normalizePath(filePath);
-      const absPath = toPlatformPath(
-        path.resolve(getBaseDir(), normalizedPath)
+      const normalizedPath = filePathManager.normalizeToUnix(filePath);
+      const absPath = filePathManager.toPlatformPath(
+        filePathManager.resolveFromBase(normalizedPath)
       );
       const exists = await pathExists(absPath);
       if (!exists) {

@@ -2,23 +2,21 @@
 // path conversion, directory access, and ignore rule management. Manages folder dialogs,
 // path normalization, and .athignore file operations with proper error handling.
 import { ipcMain, dialog, app } from 'electron';
-import * as path from 'path';
 import * as fs from 'fs/promises';
 import { mainWindow } from '../windowManager';
 import {
   setBaseDir,
   loadIgnoreRules,
-  normalizePath,
-  ensureResourcesDir,
-  toPlatformPath,
+  getStats,
+  pathExists,
   cleanupWatchers,
   handleError,
   getBaseDir,
-  getStats,
-  pathExists,
-  clearFileSystemState
+  clearFileSystemState,
+  ensureResourcesDir
 } from '../fileSystemManager';
 import { ignoreRulesManager } from '../ignoreRulesManager';
+import { filePathManager } from '../filePathManager';
 
 export function setupCoreHandlers() {
   // Add handler for getting app version
@@ -42,7 +40,7 @@ export function setupCoreHandlers() {
   // Add handler for converting to OS path
   ipcMain.handle('fs:toOSPath', async (_, inputPath: string) => {
     try {
-      return path.resolve(inputPath);
+      return filePathManager.toPlatformPath(filePathManager.resolveFromBase(inputPath));
     } catch (error) {
       handleError(error, 'converting to OS path');
     }
@@ -75,11 +73,14 @@ export function setupCoreHandlers() {
       });
 
       if (!result.canceled && result.filePaths.length > 0) {
-        const selectedPath = normalizePath(result.filePaths[0]);
+        const selectedPath = filePathManager.normalizeToUnix(result.filePaths[0]);
         
         // Verify folder access
         try {
-          await fs.access(toPlatformPath(selectedPath), fs.constants.R_OK | fs.constants.W_OK);
+          await fs.access(
+            filePathManager.toPlatformPath(selectedPath),
+            fs.constants.R_OK | fs.constants.W_OK
+          );
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
           throw new Error(`Cannot access folder: ${errorMessage}`);
@@ -89,7 +90,7 @@ export function setupCoreHandlers() {
         clearFileSystemState();
 
         // Update directory and base path
-        process.chdir(toPlatformPath(selectedPath));
+        process.chdir(filePathManager.toPlatformPath(selectedPath));
         setBaseDir(selectedPath);
 
         // Ensure resources directory exists
@@ -118,7 +119,9 @@ export function setupCoreHandlers() {
   // Add handler for checking if path is directory
   ipcMain.handle('fs:isDirectory', async (_, filePath: string) => {
     try {
-      const normalizedPath = toPlatformPath(normalizePath(filePath));
+      const normalizedPath = filePathManager.toPlatformPath(
+        filePathManager.normalizeToUnix(filePath)
+      );
       const stats = await getStats(normalizedPath);
       return stats?.isDirectory() ?? false;
     } catch (error) {
