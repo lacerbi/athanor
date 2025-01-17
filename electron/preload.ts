@@ -3,8 +3,9 @@
 // for file system access and monitoring with proper channel validation.
 import { contextBridge, ipcRenderer } from 'electron';
 
-// Expose protected methods that allow the renderer process to use
-// the ipcRenderer without exposing the entire object
+// Expose protected methods for IPC communication and file system operations
+// including path normalization. Provides bridge between renderer process and main process
+// for file system access and monitoring with proper path handling.
 contextBridge.exposeInMainWorld('electron', {
   send: (channel: string, data: any) => {
     const validChannels = ['toMain'];
@@ -25,8 +26,12 @@ contextBridge.exposeInMainWorld('app', {
   getVersion: () => ipcRenderer.invoke('app:version'),
 });
 
-// Expose file system methods
+// Expose file system and path management methods
 contextBridge.exposeInMainWorld('fileSystem', {
+  // Path utilities
+  normalizeToUnix: (path: string) => ipcRenderer.invoke('fs:normalizeToUnix', path),
+  joinPaths: (path1: string, path2: string) => ipcRenderer.invoke('fs:joinPaths', path1, path2),
+  getBaseName: (path: string) => ipcRenderer.invoke('fs:getBaseName', path),
   openFolder: () => ipcRenderer.invoke('fs:openFolder'),
   readDirectory: (path: string) => ipcRenderer.invoke('fs:readDirectory', path),
   isDirectory: (path: string) => ipcRenderer.invoke('fs:isDirectory', path),

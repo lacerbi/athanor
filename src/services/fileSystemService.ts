@@ -1,7 +1,7 @@
 // AI Summary: Provides file system operations including reading directory structure,
-// building the file tree, and analyzing file contents. Handles path normalization,
-// empty folder detection, and file line counting. Includes utilities for tree traversal
-// and item lookup with proper error handling.
+// building the file tree, and analyzing file contents. Delegates path handling to
+// filePathManager via preload bridge. Includes utilities for tree traversal and item
+// lookup with proper error handling.
 import {
   FileItem,
   sortItems,
@@ -42,8 +42,12 @@ export async function buildFileTree(
   currentPath: string = '',
   isResourcesTree: boolean = false
 ): Promise<FileItem> {
-  const fullPath = currentPath || basePath;
-  let name = currentPath.split('/').pop() || basePath.split('/').pop() || '';
+  // Construct the full path by joining base and current paths
+  const fullPath = await window.fileSystem.joinPaths(basePath, currentPath);
+  // Get the name from the last part of the current path, or base path if at root
+  let name = currentPath 
+    ? currentPath.split('/').pop() || ''
+    : basePath.split('/').pop() || '';
   
   // Set root name for resources tree
   if (isResourcesTree && !currentPath) {
@@ -52,9 +56,10 @@ export async function buildFileTree(
 
   try {
     const isDir = await window.fileSystem.isDirectory(fullPath);
+    // Generate ID relative to base path
     const id = isResourcesTree
-      ? `resources:${fullPath.replace(basePath, '')}`
-      : fullPath.replace(basePath, '') || '/';
+      ? `resources:${currentPath}`
+      : currentPath || '/';
 
     if (!isDir) {
       const lineCount = await countFileLines(fullPath);
@@ -75,12 +80,19 @@ export async function buildFileTree(
       if (!isResourcesTree && entry === FILE_SYSTEM.resourcesDirName) {
         continue;
       }
-      const childPath = `${fullPath}/${entry}`.replace('//', '/');
-      if (childPath === fullPath) {
-        console.warn('Skipping recursive path for', childPath);
+      // Build the relative path for the child
+      const childRelativePath = currentPath
+        ? `${currentPath}/${entry}`
+        : entry;
+        
+      // Skip if somehow we got into a recursive path
+      if (childRelativePath === currentPath) {
+        console.warn('Skipping recursive path for', childRelativePath);
         continue;
       }
-      const child = await buildFileTree(basePath, childPath, isResourcesTree);
+      
+      // Recursive call with the same base path but updated relative path
+      const child = await buildFileTree(basePath, childRelativePath, isResourcesTree);
       children.push(child);
     }
 
@@ -127,6 +139,27 @@ export async function readFileContent(path: string): Promise<string> {
   }
 }
 
+// Read file content by relative path within project
+export async function readFileByPath(relativePath: string): Promise<string> {
+  try {
+    // Get current directory and let filePathManager handle path joining
+    const currentDir = await window.fileSystem.getCurrentDirectory();
+    const combinedPath = await window.fileSystem.joinPaths(currentDir, relativePath);
+
+    // Convert to OS-specific format via filePathManager
+    const fullPath = await window.fileSystem.toOSPath(combinedPath);
+
+    // Read and return the file content
+    const content = await window.fileSystem.readFile(fullPath, {
+      encoding: 'utf8',
+    });
+    return normalizeContent(content as string);
+  } catch (error) {
+    console.error(`Error reading file ${relativePath}:`, error);
+    throw error;
+  }
+}
+
 // Function to get all files in a tree
 export function getAllFiles(tree: FileItem): string[] {
   if (tree.type === 'file') {
@@ -165,27 +198,6 @@ export function findItemByPath(
   }
 
   return null;
-}
-
-// Read file content by relative path within project
-export async function readFileByPath(relativePath: string): Promise<string> {
-  try {
-    // Get current directory and combine with relative path
-    const currentDir = await window.fileSystem.getCurrentDirectory();
-    const combinedPath = `${currentDir}/${relativePath}`.replace('//', '/');
-
-    // Convert to OS-specific format
-    const fullPath = await window.fileSystem.toOSPath(combinedPath);
-
-    // Read and return the file content
-    const content = await window.fileSystem.readFile(fullPath, {
-      encoding: 'utf8',
-    });
-    return normalizeContent(content as string);
-  } catch (error) {
-    console.error(`Error reading file ${relativePath}:`, error);
-    throw error;
-  }
 }
 
 // Function to update a specific item in the tree

@@ -37,6 +37,31 @@ export function setupCoreHandlers() {
     }
   });
 
+  // Add handlers for path utilities
+  ipcMain.handle('fs:normalizeToUnix', async (_, inputPath: string) => {
+    try {
+      return filePathManager.normalizeToUnix(inputPath);
+    } catch (error) {
+      handleError(error, 'normalizing path to unix format');
+    }
+  });
+
+  ipcMain.handle('fs:joinPaths', async (_, path1: string, path2: string) => {
+    try {
+      return filePathManager.joinUnixPaths(path1, path2);
+    } catch (error) {
+      handleError(error, 'joining paths');
+    }
+  });
+
+  ipcMain.handle('fs:getBaseName', async (_, inputPath: string) => {
+    try {
+      return filePathManager.getBaseName(inputPath);
+    } catch (error) {
+      handleError(error, 'getting base name');
+    }
+  });
+
   // Add handler for converting to OS path
   ipcMain.handle('fs:toOSPath', async (_, inputPath: string) => {
     try {

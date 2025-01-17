@@ -86,13 +86,15 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       const selectedDir = await window.fileSystem.openFolder();
       if (selectedDir) {
         clearSelections();
-        setCurrentDirectory(selectedDir);
-        const fileTree = await buildFileTree(selectedDir);
+        // Ensure we have normalized path
+        const normalizedDir = await window.fileSystem.normalizeToUnix(selectedDir);
+        setCurrentDirectory(normalizedDir);
+        const fileTree = await buildFileTree(normalizedDir);
         useFileSystemStore.getState().setFileTree([fileTree]);
         validateSelections(fileTree);
         setFilesData(fileTree);
-        await setupWatcher(selectedDir);
-        addLog(`Loaded directory: ${selectedDir}`);
+        await setupWatcher(normalizedDir);
+        addLog(`Loaded directory: ${normalizedDir}`);
       }
     } catch (error) {
       console.error('Error opening folder:', error);
@@ -108,17 +110,18 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
       try {
         const currentDir = await window.fileSystem.getCurrentDirectory();
-        setCurrentDirectory(currentDir);
-        const fileTree = await buildFileTree(currentDir);
-        const resourcesPath = `${currentDir}/${FILE_SYSTEM.resourcesDirName}`;
+        const normalizedDir = await window.fileSystem.normalizeToUnix(currentDir);
+        setCurrentDirectory(normalizedDir);
+        const fileTree = await buildFileTree(normalizedDir);
+        const resourcesPath = await window.fileSystem.joinPaths(normalizedDir, FILE_SYSTEM.resourcesDirName);
         const resourcesTree = await buildFileTree(resourcesPath, '', true);
 
         useFileSystemStore.getState().setFileTree([fileTree, resourcesTree]);
         validateSelections(fileTree);
         setFilesData(fileTree);
         setResourcesData(resourcesTree);
-        await setupWatcher(currentDir);
-        addLog(`Loaded directory: ${currentDir}`);
+        await setupWatcher(normalizedDir);
+        addLog(`Loaded directory: ${normalizedDir}`);
       } catch (error) {
         console.error('Error initializing file system:', error);
         addLog('Failed to initialize file system');

@@ -19,8 +19,7 @@ export async function executeSelectCommand({
   // Split content on whitespace to get file paths
   const filePaths = content
     .trim()
-    .split(/\s+/)
-    .map((path) => '/' + path);
+    .split(/\s+/);
 
   // Select all specified files
   fileSystemStore.selectItems(filePaths);

@@ -31,8 +31,8 @@ function getSelectedFilesWithInfo(
 
   function traverse(item: FileItem) {
     if (item.type === 'file' && selectedItems.has(item.id)) {
-      // Convert absolute path to relative path
-      const relativePath = item.path.replace(rootPath + '/', '');
+      // Use item.id which is already relative path, just remove leading slash
+      const relativePath = item.id.replace(/^\//, '');
       const lineCount = item.lineCount || '?';
       selectedFiles.push(`${relativePath} (${lineCount} lines)`);
     }
@@ -53,8 +53,8 @@ function getSelectedFilesList(
 
   function traverse(item: FileItem) {
     if (item.type === 'file' && selectedItems.has(item.id)) {
-      // Convert absolute path to relative path
-      const relativePath = item.path.replace(rootPath + '/', '');
+      // Use item.id which is already relative path, just remove leading slash
+      const relativePath = item.id.replace(/^\//, '');
       selectedFiles.push(relativePath);
     }
     item.children?.forEach(traverse);
