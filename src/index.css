@@ -60,7 +60,7 @@
   /* Position the label above the button, aligned with left edge */
   bottom: calc(100% + 0.5rem);
   left: 0;
-  transform: translateY(0.5rem);
+  transform: translateY(-100%);
 }
 
 /* Show label on hover */
