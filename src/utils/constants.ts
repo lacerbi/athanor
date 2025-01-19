@@ -1,5 +1,5 @@
 // AI Summary: Stores configuration constants used throughout the application.
-// Defines thresholds for file length, smart preview limits, and code refactoring.
+// Defines thresholds for file length, smart preview limits, code refactoring and UI animations.
 export const FILE_SYSTEM = {
   // Supplementary materials directory name
   materialsDirName: '.ath_materials',
@@ -17,5 +17,23 @@ export const FILE_SYSTEM = {
     minSplitSize: 50,
     // Maximum recommended file size
     maxFileSize: 500,
+  },
+};
+
+export const UI = {
+  animations: {
+    // Transition timings
+    fast: '150ms',
+    normal: '200ms',
+    slow: '300ms',
+    
+    // Floating label
+    labelOffset: '0.5rem',
+    labelDelay: '50ms',
+    labelDuration: '200ms',
+    
+    // Icon scaling
+    iconScale: '1.1',
+    iconDuration: '200ms',
   },
 };

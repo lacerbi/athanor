@@ -28,6 +28,27 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   isActive,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Function to determine floating label position based on button position
+  const getFloatingLabelPosition = (promptId: string) => {
+    const buttonElement = document.querySelector(`button[data-prompt-id="${promptId}"]`);
+    if (!buttonElement) return '';
+
+    const rect = buttonElement.getBoundingClientRect();
+    const viewport = {
+      width: window.innerWidth,
+      height: window.innerHeight
+    };
+
+    // Check if button is near the edges
+    const positions: string[] = [];
+    
+    if (rect.top < 100) positions.push('top');
+    if (rect.left < 100) positions.push('left');
+    if (viewport.width - rect.right < 100) positions.push('right');
+    
+    return positions.join(' ');
+  };
 
   const {
     taskDescription,
@@ -94,7 +115,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <div className="pb-2 border-b">
                   <h2 className="text-lg font-semibold">Dynamic Prompts</h2>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl">
                   {prompts.map((prompt) => {
                     const variant = getDefaultVariant(prompt.id);
                     if (!variant) return null;
@@ -104,7 +125,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     return (
                       <button
                         key={prompt.id}
-                        className="w-32 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
+                        className="icon-btn bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
+                        title={prompt.tooltip || prompt.label}
                         onClick={async () => {
                           try {
                             setIsLoading(true);
@@ -126,10 +148,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                           }
                         }}
                         disabled={isLoading || isTaskEmpty}
-                        title={prompt.tooltip || prompt.label}
+                        data-edge={getFloatingLabelPosition(prompt.id)}
+                        data-prompt-id={prompt.id}
+                        aria-label={prompt.label}
                       >
-                        {IconComponent && <IconComponent className="w-4 h-4 mr-1" />}
-                        {prompt.label}
+                        {IconComponent && (
+                          <>
+                            <IconComponent className="w-5 h-5 icon-btn-icon" />
+                            <span className="floating-label">
+                              {prompt.label}
+                            </span>
+                          </>
+                        )}
                       </button>
                     );
                   })}
@@ -141,9 +171,14 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <div className="pb-2 border-b">
                   <h2 className="text-lg font-semibold">Load Preset Task</h2>
                 </div>
-                <div className="flex space-x-2">
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl">
                   <button
-                    className="w-32 px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-500"
+                    className="icon-btn bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-500"
+                    title={getActionTooltip(
+                      'aiSummaries',
+                      isLoading || hasNoSelection,
+                      isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null
+                    )}
                     onClick={() =>
                       buildAiSummaryPromptAction({
                         rootItems,
@@ -154,18 +189,24 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       })
                     }
                     disabled={isLoading || hasNoSelection}
-                    title={getActionTooltip(
-                      'aiSummaries',
-                      isLoading || hasNoSelection,
-                      isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null
-                    )}
+                    data-edge="left"
+                    aria-label="Summarize files"
                   >
-                    <FileText className="w-4 h-4 mr-1" />
-                    Summarize
+                    <>
+                      <FileText className="w-5 h-5 icon-btn-icon" />
+                      <span className="floating-label">
+                        AI Summaries
+                      </span>
+                    </>
                   </button>
 
                   <button
-                    className="w-32 px-3 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-500"
+                    className="icon-btn bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-500"
+                    title={getActionTooltip(
+                      'refactorCode',
+                      isLoading || hasNoSelection,
+                      isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null
+                    )}
                     onClick={() =>
                       buildRefactorPromptAction({
                         rootItems,
@@ -176,14 +217,15 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       })
                     }
                     disabled={isLoading || hasNoSelection}
-                    title={getActionTooltip(
-                      'refactorCode',
-                      isLoading || hasNoSelection,
-                      isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null
-                    )}
+                    data-edge="left"
+                    aria-label="Refactor files"
                   >
-                    <Scissors className="w-4 h-4 mr-1" />
-                    Refactor
+                    <>
+                      <Scissors className="w-5 h-5 icon-btn-icon" />
+                      <span className="floating-label">
+                        Refactor Code
+                      </span>
+                    </>
                   </button>
                 </div>
               </div>

@@ -1,5 +1,5 @@
-/* AI Summary: Main CSS file that includes Tailwind base styles and custom tooltip timing. */
-/* Configures tooltip pointer events and transitions for consistent UI behavior. */
+/* AI Summary: Main CSS file that includes Tailwind base styles and custom animations. */
+/* Configures floating labels, tooltips, and transitions for consistent UI behavior. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -28,11 +28,68 @@
   border-radius: 4px;
 }
 
+/* Icon button utilities */
+.icon-btn {
+  @apply relative flex items-center justify-center;
+  @apply w-10 h-10 rounded-lg;
+  @apply transition-all duration-200;
+}
+
+.icon-btn-icon {
+  @apply transform transition-transform duration-200;
+}
+
+.icon-btn:hover .icon-btn-icon {
+  @apply scale-110;
+}
+
+.icon-btn:active .icon-btn-icon {
+  @apply scale-95;
+}
+
+/* Floating label styles */
+.floating-label {
+  @apply absolute px-2 py-1 text-sm rounded-md;
+  @apply pointer-events-none opacity-0;
+  @apply bg-gray-800 text-white shadow-md;
+  @apply transition-all duration-100;
+  white-space: nowrap;
+  transform: translateY(1rem);
+  z-index: 50;
+}
+
+/* Default position - to the right of the button */
+.floating-label {
+  top: -75%;
+  left: -25%;
+  transform: translateY(-100%) translateX(0rem);
+  margin-left: 0.5rem;
+}
+
+/* Show label on hover */
+.icon-btn:hover .floating-label {
+  @apply opacity-100;
+  transform: translateY(0%) translateX(0rem);
+}
+
+/* Ensure label stays within viewport */
+.icon-btn[data-edge='right'] .floating-label {
+  left: auto;
+  right: 100%;
+  margin-left: 0;
+  margin-right: 0.5rem;
+  transform: translateY(-50%) translateX(-0.5rem);
+}
+
+.icon-btn[data-edge='right']:hover .floating-label {
+  transform: translateY(-50%) translateX(-1rem);
+}
+
 /* Configure tooltips with proper pointer event handling */
 *[title] {
   position: relative;
   --show-delay: 150ms;
-  pointer-events: auto; /* Only apply pointer-events to elements with tooltips */
+  pointer-events: auto;
 }
 
 @media (prefers-reduced-motion: no-preference) {
