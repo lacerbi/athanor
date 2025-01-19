@@ -1,5 +1,6 @@
 <ath_prompt 
     id="autoselect"
+    order="0"
     label="Autoselect"
     icon="FileSearch"
     tooltip="Prompt to select task-relevant files from the codebase">

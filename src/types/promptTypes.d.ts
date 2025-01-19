@@ -4,7 +4,7 @@ export interface PromptVariant {
   id: string;
   label: string;
   tooltip?: string;
-  content: string;  // Raw unparsed content
+  content: string; // Raw unparsed content
 }
 
 export interface PromptData {
@@ -12,13 +12,17 @@ export interface PromptData {
   label: string;
   icon?: string;
   tooltip?: string;
+  order: number;
   variants: PromptVariant[];
 }
 
 export interface PromptStore {
   prompts: PromptData[];
   getPromptById: (id: string) => PromptData | undefined;
-  getVariantById: (promptId: string, variantId: string) => PromptVariant | undefined;
+  getVariantById: (
+    promptId: string,
+    variantId: string
+  ) => PromptVariant | undefined;
   getDefaultVariant: (promptId: string) => PromptVariant | undefined;
   setPrompts: (prompts: PromptData[]) => void;
   clearPrompts: () => void;

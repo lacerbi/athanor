@@ -1,5 +1,6 @@
 <ath_prompt 
     id="query"
+    order="1"
     label="Query"
     icon="FileQuestion"
     tooltip="Prompt to query the codebase">

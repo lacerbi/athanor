@@ -1,5 +1,6 @@
 <ath_prompt 
     id="coder"
+    order="3"
     label="Coder"
     icon="Wrench"
     tooltip="Prompt to execute a coding task">

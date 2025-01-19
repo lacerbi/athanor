@@ -1,5 +1,6 @@
 <ath_prompt 
     id="architect"
+    order="2"
     label="Architect"
     icon="DraftingCompass"
     tooltip="Prompt to architect a feature">
