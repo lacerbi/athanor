@@ -1,7 +1,7 @@
 // AI Summary: Loads and parses prompt XML files from resources directory with support for order-based sorting.
 // Extracts prompt metadata and variants with proper type safety and defaults.
 // Core functions: parsePromptFile(), parseAttributes(), loadPrompts().
-import { PromptData, PromptVariant } from '../types/promptTypes';
+import { PromptData, PromptVariant, DEFAULT_PROMPT_ORDER } from '../types/promptTypes';
 import { usePromptStore } from '../stores/promptStore';
 import { readFileContent } from './fileSystemService';
 
@@ -40,7 +40,7 @@ async function parsePromptFile(filePath: string): Promise<PromptData | null> {
     }
 
     // Parse order attribute with default fallback
-    const order = promptAttrs.order ? parseInt(promptAttrs.order, 10) : 1000;
+    const order = promptAttrs.order ? parseInt(promptAttrs.order, 10) : DEFAULT_PROMPT_ORDER;
 
     // Validate order is a valid number
     if (isNaN(order)) {
