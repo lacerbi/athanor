@@ -1,1 +1,3 @@
-Fix relative paths in codebase documentation
+- Fix relative paths in codebase documentation (seems to be a dev issue, not in production)
+- Add "order" parameter to dynamic prompts to decide ordering
+- Make also preset tasks dynamic
