@@ -40,25 +40,25 @@ async function countFileLines(path: string): Promise<number> {
 export async function buildFileTree(
   basePath: string,
   currentPath: string = '',
-  isResourcesTree: boolean = false
+  isMaterialsTree: boolean = false
 ): Promise<FileItem> {
   // Construct the full path by joining base and current paths
   const fullPath = await window.fileSystem.joinPaths(basePath, currentPath);
   // Get the name from the last part of the current path, or base path if at root
-  let name = currentPath 
+  let name = currentPath
     ? currentPath.split('/').pop() || ''
     : basePath.split('/').pop() || '';
-  
-  // Set root name for resources tree
-  if (isResourcesTree && !currentPath) {
-    name = 'External Resources';
+
+  // Set root name for supplementary materials tree
+  if (isMaterialsTree && !currentPath) {
+    name = 'Supplementary Materials';
   }
 
   try {
     const isDir = await window.fileSystem.isDirectory(fullPath);
     // Generate ID relative to base path
-    const id = isResourcesTree
-      ? `resources:${currentPath}`
+    const id = isMaterialsTree
+      ? `materials:${currentPath}`
       : currentPath || '/';
 
     if (!isDir) {
@@ -76,23 +76,25 @@ export async function buildFileTree(
     const children: FileItem[] = [];
 
     for (const entry of entries) {
-      // Skip resources directory in main tree to avoid recursion
-      if (!isResourcesTree && entry === FILE_SYSTEM.resourcesDirName) {
+      // Skip supplementary materials directory in main tree to avoid recursion
+      if (!isMaterialsTree && entry === FILE_SYSTEM.materialsDirName) {
         continue;
       }
       // Build the relative path for the child
-      const childRelativePath = currentPath
-        ? `${currentPath}/${entry}`
-        : entry;
-        
+      const childRelativePath = currentPath ? `${currentPath}/${entry}` : entry;
+
       // Skip if somehow we got into a recursive path
       if (childRelativePath === currentPath) {
         console.warn('Skipping recursive path for', childRelativePath);
         continue;
       }
-      
+
       // Recursive call with the same base path but updated relative path
-      const child = await buildFileTree(basePath, childRelativePath, isResourcesTree);
+      const child = await buildFileTree(
+        basePath,
+        childRelativePath,
+        isMaterialsTree
+      );
       children.push(child);
     }
 
@@ -144,7 +146,10 @@ export async function readFileByPath(relativePath: string): Promise<string> {
   try {
     // Get current directory and let filePathManager handle path joining
     const currentDir = await window.fileSystem.getCurrentDirectory();
-    const combinedPath = await window.fileSystem.joinPaths(currentDir, relativePath);
+    const combinedPath = await window.fileSystem.joinPaths(
+      currentDir,
+      relativePath
+    );
 
     // Convert to OS-specific format via filePathManager
     const fullPath = await window.fileSystem.toOSPath(combinedPath);

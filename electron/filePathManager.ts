@@ -1,5 +1,5 @@
-// AI Summary: Centralizes path handling with Unix-style normalization internally and platform-specific 
-// conversion when needed. Manages base directory vs. app directory paths and provides core path 
+// AI Summary: Centralizes path handling with Unix-style normalization internally and platform-specific
+// conversion when needed. Manages base directory vs. app directory paths and provides core path
 // manipulation utilities. All path-related operations should go through this manager.
 
 import * as path from 'path';
@@ -30,9 +30,9 @@ class FilePathManager {
     return this.appDir;
   }
 
-  // Get the resources directory path relative to base directory
-  getResourcesDir(): string {
-    return this.joinUnixPaths(this.getBaseDir(), FILE_SYSTEM.resourcesDirName);
+  // Get the supplementary materials directory path relative to base directory
+  getMaterialsDir(): string {
+    return this.joinUnixPaths(this.getBaseDir(), FILE_SYSTEM.materialsDirName);
   }
 
   // Normalize any path to Unix-style format for internal use

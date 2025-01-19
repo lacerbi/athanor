@@ -57,10 +57,10 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
     }
   }, [hasSelectedDescendants, allDescendantsSelected]);
 
-  // Get the display name - for root level, handle resources directory specially
+  // Get the display name - for root level, handle supplementary materials directory specially
   const displayName =
-    isRoot && item.path.endsWith(FILE_SYSTEM.resourcesDirName)
-      ? 'External Resources'
+    isRoot && item.path.endsWith(FILE_SYSTEM.materialsDirName)
+      ? 'Supplementary Materials'
       : isRoot
         ? getBaseName(item.path)
         : item.name;

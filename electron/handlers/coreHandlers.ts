@@ -13,7 +13,7 @@ import {
   handleError,
   getBaseDir,
   clearFileSystemState,
-  ensureResourcesDir
+  ensureMaterialsDir,
 } from '../fileSystemManager';
 import { ignoreRulesManager } from '../ignoreRulesManager';
 import { filePathManager } from '../filePathManager';
@@ -100,8 +100,10 @@ export function setupCoreHandlers() {
       });
 
       if (!result.canceled && result.filePaths.length > 0) {
-        const selectedPath = filePathManager.normalizeToUnix(result.filePaths[0]);
-        
+        const selectedPath = filePathManager.normalizeToUnix(
+          result.filePaths[0]
+        );
+
         // Verify folder access
         try {
           await fs.access(
@@ -109,7 +111,8 @@ export function setupCoreHandlers() {
             fs.constants.R_OK | fs.constants.W_OK
           );
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           throw new Error(`Cannot access folder: ${errorMessage}`);
         }
 
@@ -120,8 +123,8 @@ export function setupCoreHandlers() {
         process.chdir(filePathManager.toPlatformPath(selectedPath));
         setBaseDir(selectedPath);
 
-        // Ensure resources directory exists
-        await ensureResourcesDir();
+        // Ensure supplementary materials directory exists
+        await ensureMaterialsDir();
 
         // Load new ignore rules
         await loadIgnoreRules();
@@ -147,7 +150,9 @@ export function setupCoreHandlers() {
   ipcMain.handle('fs:isDirectory', async (_, filePath: string) => {
     try {
       const normalizedPath = filePathManager.toPlatformPath(
-        filePathManager.resolveFromBase(filePathManager.normalizeToUnix(filePath))
+        filePathManager.resolveFromBase(
+          filePathManager.normalizeToUnix(filePath)
+        )
       );
       const stats = await getStats(normalizedPath);
       return stats?.isDirectory() ?? false;

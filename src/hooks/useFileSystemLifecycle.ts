@@ -14,7 +14,7 @@ export interface FileSystemLifecycle {
   isRefreshing: boolean;
   appVersion: string;
   filesData: FileItem | null;
-  resourcesData: FileItem | null;
+  materialsData: FileItem | null;
   handleOpenFolder: () => Promise<void>;
   refreshFileSystem: (silent?: boolean) => Promise<void>;
 }
@@ -24,11 +24,11 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [appVersion, setAppVersion] = useState<string>('');
   const [filesData, setFilesData] = useState<FileItem | null>(null);
-  const [resourcesData, setResourcesData] = useState<FileItem | null>(null);
-  
+  const [materialsData, setResourcesData] = useState<FileItem | null>(null);
+
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
-  
+
   const { validateSelections, clearSelections } = useFileSystemStore();
   const { addLog } = useLogStore();
 
@@ -42,18 +42,18 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         await window.fileSystem.reloadIgnoreRules();
         // Build main project tree
         const fileTree = await buildFileTree(currentDirectory);
-        // Build resources tree
-        const resourcesPath = `${currentDirectory}/${FILE_SYSTEM.resourcesDirName}`;
-        const resourcesTree = await buildFileTree(resourcesPath, '', true);
+        // Build supplementaryt materials tree
+        const materialsPath = `${currentDirectory}/${FILE_SYSTEM.materialsDirName}`;
+        const materialsTree = await buildFileTree(materialsPath, '', true);
 
-        useFileSystemStore.getState().setFileTree([fileTree, resourcesTree]);
+        useFileSystemStore.getState().setFileTree([fileTree, materialsTree]);
         validateSelections(fileTree);
         setFilesData(fileTree);
-        setResourcesData(resourcesTree);
-        
+        setResourcesData(materialsTree);
+
         // Load prompts after file system refresh
         await loadPrompts();
-        
+
         if (!silent) {
           addLog('File system refreshed');
         }
@@ -92,16 +92,17 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       if (selectedDir) {
         clearSelections();
         // Ensure we have normalized path
-        const normalizedDir = await window.fileSystem.normalizeToUnix(selectedDir);
+        const normalizedDir =
+          await window.fileSystem.normalizeToUnix(selectedDir);
         setCurrentDirectory(normalizedDir);
         const fileTree = await buildFileTree(normalizedDir);
         useFileSystemStore.getState().setFileTree([fileTree]);
         validateSelections(fileTree);
         setFilesData(fileTree);
-        
+
         // Load prompts after opening new directory
         await loadPrompts();
-        
+
         await setupWatcher(normalizedDir);
         addLog(`Loaded directory: ${normalizedDir}`);
       }
@@ -119,20 +120,24 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
       try {
         const currentDir = await window.fileSystem.getCurrentDirectory();
-        const normalizedDir = await window.fileSystem.normalizeToUnix(currentDir);
+        const normalizedDir =
+          await window.fileSystem.normalizeToUnix(currentDir);
         setCurrentDirectory(normalizedDir);
         const fileTree = await buildFileTree(normalizedDir);
-        const resourcesPath = await window.fileSystem.joinPaths(normalizedDir, FILE_SYSTEM.resourcesDirName);
-        const resourcesTree = await buildFileTree(resourcesPath, '', true);
+        const materialsPath = await window.fileSystem.joinPaths(
+          normalizedDir,
+          FILE_SYSTEM.materialsDirName
+        );
+        const materialsTree = await buildFileTree(materialsPath, '', true);
 
-        useFileSystemStore.getState().setFileTree([fileTree, resourcesTree]);
+        useFileSystemStore.getState().setFileTree([fileTree, materialsTree]);
         validateSelections(fileTree);
         setFilesData(fileTree);
-        setResourcesData(resourcesTree);
-        
+        setResourcesData(materialsTree);
+
         // Load prompts during initial file system setup
         await loadPrompts();
-        
+
         await setupWatcher(normalizedDir);
         addLog(`Loaded directory: ${normalizedDir}`);
       } catch (error) {
@@ -142,7 +147,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     };
 
     initializeFileSystem();
-    
+
     return () => {
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
@@ -170,7 +175,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     isRefreshing,
     appVersion,
     filesData,
-    resourcesData,
+    materialsData,
     handleOpenFolder,
     refreshFileSystem,
   };

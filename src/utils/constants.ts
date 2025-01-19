@@ -1,9 +1,9 @@
 // AI Summary: Stores configuration constants used throughout the application.
 // Defines thresholds for file length, smart preview limits, and code refactoring.
 export const FILE_SYSTEM = {
-  // Resources directory name
-  resourcesDirName: '.ath_resources',
-  
+  // Supplementary materials directory name
+  materialsDirName: '.ath_materials',
+
   // Maximum number of lines before a file is considered too long
   thresholdLineLength: 200,
   // Maximum/minimum lines for smart preview

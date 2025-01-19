@@ -9,7 +9,7 @@ import { filePathManager } from './filePathManager';
 class IgnoreRulesManager {
   private ig = ignore();
   private lastError: Error | null = null;
-  private resourcesDir = FILE_SYSTEM.resourcesDirName;
+  private materialsDir = FILE_SYSTEM.materialsDirName;
 
   // Update base directory and reload rules
   setBaseDir(newDir: string) {

@@ -25,7 +25,7 @@ const AthanorApp: React.FC = () => {
     isRefreshing,
     appVersion,
     filesData,
-    resourcesData,
+    materialsData,
     handleOpenFolder,
     refreshFileSystem,
   } = useFileSystemLifecycle();
@@ -70,7 +70,7 @@ const AthanorApp: React.FC = () => {
   return (
     <MainLayout
       filesData={filesData}
-      resourcesData={resourcesData}
+      materialsData={materialsData}
       currentDirectory={currentDirectory}
       appVersion={appVersion}
       isRefreshing={isRefreshing}

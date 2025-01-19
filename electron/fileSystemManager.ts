@@ -8,21 +8,21 @@ import { FILE_SYSTEM } from '../src/utils/constants';
 import { ignoreRulesManager } from './ignoreRulesManager';
 import { filePathManager } from './filePathManager';
 
-// Get external resources directory path
-export function getResourcesDir(): string {
-  return filePathManager.getResourcesDir();
+// Get supplementary materials directory path
+export function getMaterialsDir(): string {
+  return filePathManager.getMaterialsDir();
 }
 
-// Ensure external resources directory exists
-export async function ensureResourcesDir(): Promise<void> {
-  const resourcesPath = filePathManager.toPlatformPath(
-    filePathManager.resolveFromBase(FILE_SYSTEM.resourcesDirName)
+// Ensure supplementary materials directory exists
+export async function ensureMaterialsDir(): Promise<void> {
+  const materialsPath = filePathManager.toPlatformPath(
+    filePathManager.resolveFromBase(FILE_SYSTEM.materialsDirName)
   );
   try {
-    await fs.access(resourcesPath, constants.F_OK);
+    await fs.access(materialsPath, constants.F_OK);
   } catch {
-    await fs.mkdir(resourcesPath, { recursive: true });
-    console.log('Created resources directory:', resourcesPath);
+    await fs.mkdir(materialsPath, { recursive: true });
+    console.log('Created supplementary materials directory:', materialsPath);
   }
 }
 
@@ -101,7 +101,11 @@ export function cleanupWatchers() {
 }
 
 // Export core file system utilities that use proper path resolution
-export const normalizePath = filePathManager.normalizeToUnix.bind(filePathManager);
-export const toPlatformPath = filePathManager.toPlatformPath.bind(filePathManager);
-export const resolveFromBase = filePathManager.resolveFromBase.bind(filePathManager);
-export const normalizePathForIgnore = filePathManager.normalizeForIgnore.bind(filePathManager);
+export const normalizePath =
+  filePathManager.normalizeToUnix.bind(filePathManager);
+export const toPlatformPath =
+  filePathManager.toPlatformPath.bind(filePathManager);
+export const resolveFromBase =
+  filePathManager.resolveFromBase.bind(filePathManager);
+export const normalizePathForIgnore =
+  filePathManager.normalizeForIgnore.bind(filePathManager);

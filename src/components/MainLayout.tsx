@@ -13,7 +13,7 @@ import { usePanelResize } from '../hooks/usePanelResize';
 
 interface MainLayoutProps {
   filesData: FileItem;
-  resourcesData: FileItem | null;
+  materialsData: FileItem | null;
   currentDirectory: string;
   appVersion: string;
   isRefreshing: boolean;
@@ -27,7 +27,7 @@ interface MainLayoutProps {
 
 const MainLayout: React.FC<MainLayoutProps> = ({
   filesData,
-  resourcesData,
+  materialsData,
   currentDirectory,
   appVersion,
   isRefreshing,
@@ -87,7 +87,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Scrollable file explorer section */}
         <div className="flex-1 min-h-0 overflow-y-auto px-4">
           <FileExplorer
-            items={[filesData, ...(resourcesData ? [resourcesData] : [])]}
+            items={[filesData, ...(materialsData ? [materialsData] : [])]}
             onViewFile={handleFileView}
             onRefresh={onRefresh}
           />
