@@ -1,0 +1,57 @@
+<ath_prompt 
+    id="autoselect"
+    label="Autoselect"
+    icon="FileSearch"
+    tooltip="Select task-relevant files from the codebase">
+
+<ath_prompt_variant 
+    id="default"
+    label="Default"
+    tooltip="Select task-relevant files from the codebase">
+<codebase>
+# Codebase Documentation `{{project_name}}`
+
+{{project_info}}
+<file_contents>
+{{file_contents}}
+</file_contents>
+
+<file_tree>
+{{file_tree}}</file_tree>
+</codebase>
+
+<system_prompt>
+You are an expert software engineer.
+
+You are tasked with following my instructions.
+
+Use the included project information as a general guide.
+</system_prompt>
+
+<current_task>
+<next_task>
+{{task_description}}
+</next_task>
+
+Consider the next_task described above
+
+SELECT which files you will need to read in full, change or delete from the file_tree provided above
+- Consider broadly which files you *might* need to see for the feature, even if not immediately related
+- These might include preloaders, utility or global constant files, etc.
+- If in doubt whether you need to include a file, include it.
+
+First, write your reasoning in a detailed summary paragraph and mention all files
+you think you should select.
+
+Then, write the selected files in a code block as:
+```
+<ath command="select">
+file1 file2 [...]
+</ath>
+```
+
+Use the relative path of each file.
+</current_task>
+</ath_prompt_variant>
+
+</ath_prompt>
