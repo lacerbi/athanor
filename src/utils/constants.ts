@@ -42,5 +42,13 @@ export const UI = {
     padding: 16, // Minimum padding from viewport edges
     maxWidth: 300, // Maximum width for context menus
     minWidth: 200, // Minimum width for context menus
+    buttonSpacing: 8, // Space between button edge and menu
+  },
+  
+  // Button interaction states
+  button: {
+    pressDelay: '50ms',
+    pressDuration: '100ms',
+    contextDelay: '150ms', // Delay before showing context menu
   },
 };

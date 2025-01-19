@@ -5,6 +5,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Copy, FileText, Scissors, Eraser } from 'lucide-react';
+import PromptContextMenu from './PromptContextMenu';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
@@ -28,6 +29,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   isActive,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{
+    promptId: string;
+    x: number;
+    y: number;
+  } | null>(null);
+  
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = () => setContextMenu(null);
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, []);
   
   // Function to determine floating label position based on button position
   const getFloatingLabelPosition = (promptId: string) => {
@@ -63,7 +76,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   
   const { selectedItems } = useFileSystemStore();
   const { addLog } = useLogStore();
-  const { prompts, getDefaultVariant } = usePromptStore();
+  const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } = usePromptStore();
 
   const handleManualCopy = (content: string) => {
     void copyToClipboard({ content, addLog });
@@ -127,7 +140,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         key={prompt.id}
                         className="icon-btn bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
                         title={prompt.tooltip || prompt.label}
-                        onClick={async () => {
+                        onClick={async (e) => {
                           try {
                             setIsLoading(true);
                             const result = await buildDynamicPrompt(
@@ -147,10 +160,21 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             setIsLoading(false);
                           }
                         }}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setContextMenu({
+                            promptId: prompt.id,
+                            x: e.clientX,
+                            y: e.clientY,
+                          });
+                        }}
                         disabled={isLoading || isTaskEmpty}
                         data-edge={getFloatingLabelPosition(prompt.id)}
                         data-prompt-id={prompt.id}
                         aria-label={prompt.label}
+                        aria-haspopup="true"
+                        aria-expanded={contextMenu?.promptId === prompt.id ? 'true' : 'false'}
                       >
                         {IconComponent && (
                           <>
@@ -227,6 +251,24 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
           </div>
         </div>
+
+        {/* Prompt Context Menu */}
+        {contextMenu && (
+          <PromptContextMenu
+            prompt={prompts.find(p => p.id === contextMenu.promptId)!}
+            x={contextMenu.x}
+            y={contextMenu.y}
+            onClose={() => setContextMenu(null)}
+            onSelectVariant={(variantId: string) => {
+              setContextMenu(null);
+              if (contextMenu.promptId) {
+                prompts.find(p => p.id === contextMenu.promptId)?.variants.find(v => v.id === variantId) && 
+                  setActiveVariant(contextMenu.promptId, variantId);
+              }
+            }}
+            activeVariantId={contextMenu?.promptId ? getActiveVariant(contextMenu.promptId)?.id : undefined}
+          />
+        )}
 
         {/* Right Column - Generated Prompt */}
         <div className="flex-1 flex flex-col min-w-0">
