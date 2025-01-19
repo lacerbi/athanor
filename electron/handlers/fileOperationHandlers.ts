@@ -65,7 +65,7 @@ export function setupFileOperationHandlers() {
   );
 
   // Handle reading directory contents with ignore rules
-  ipcMain.handle('fs:readDirectory', async (_, dirPath: string) => {
+  ipcMain.handle('fs:readDirectory', async (_, dirPath: string, applyIgnores = true) => {
     try {
       const normalizedPath = filePathManager.toPlatformPath(
         filePathManager.normalizeToUnix(dirPath)
@@ -93,10 +93,10 @@ export function setupFileOperationHandlers() {
           isDir
         );
 
-        if (
-          !normalizedForIgnore ||
-          (normalizedForIgnore &&
-            !ignoreRulesManager.ignores(normalizedForIgnore))
+        if (!applyIgnores || 
+            !normalizedForIgnore ||
+            (normalizedForIgnore &&
+             !ignoreRulesManager.ignores(normalizedForIgnore))
         ) {
           filteredEntries.push(entry);
         }

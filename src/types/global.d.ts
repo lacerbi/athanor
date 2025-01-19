@@ -24,7 +24,10 @@ declare global {
     };
     fileSystem: {
       openFolder: () => Promise<string | null>;
-      readDirectory: (path: string) => Promise<string[]>;
+      readDirectory: (
+        path: string,
+        applyIgnores?: boolean
+      ) => Promise<string[]>;
       isDirectory: (path: string) => Promise<boolean>;
       getCurrentDirectory: () => Promise<string>;
       getResourcesPath: () => Promise<string>;

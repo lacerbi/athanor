@@ -33,7 +33,7 @@ contextBridge.exposeInMainWorld('fileSystem', {
   joinPaths: (path1: string, path2: string) => ipcRenderer.invoke('fs:joinPaths', path1, path2),
   getBaseName: (path: string) => ipcRenderer.invoke('fs:getBaseName', path),
   openFolder: () => ipcRenderer.invoke('fs:openFolder'),
-  readDirectory: (path: string) => ipcRenderer.invoke('fs:readDirectory', path),
+  readDirectory: (path: string, applyIgnores?: boolean) => ipcRenderer.invoke('fs:readDirectory', path, applyIgnores),
   isDirectory: (path: string) => ipcRenderer.invoke('fs:isDirectory', path),
   getCurrentDirectory: () => ipcRenderer.invoke('fs:getCurrentDirectory'),
   getResourcesPath: () => ipcRenderer.invoke('fs:getResourcesPath'),

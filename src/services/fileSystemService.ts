@@ -40,7 +40,8 @@ async function countFileLines(path: string): Promise<number> {
 export async function buildFileTree(
   basePath: string,
   currentPath: string = '',
-  isMaterialsTree: boolean = false
+  isMaterialsTree: boolean = false,
+  applyIgnores: boolean = true
 ): Promise<FileItem> {
   // Construct the full path by joining base and current paths
   const fullPath = await window.fileSystem.joinPaths(basePath, currentPath);
@@ -72,7 +73,7 @@ export async function buildFileTree(
       };
     }
 
-    const entries = await window.fileSystem.readDirectory(fullPath);
+    const entries = await window.fileSystem.readDirectory(fullPath, applyIgnores);
     const children: FileItem[] = [];
 
     for (const entry of entries) {
@@ -93,7 +94,8 @@ export async function buildFileTree(
       const child = await buildFileTree(
         basePath,
         childRelativePath,
-        isMaterialsTree
+        isMaterialsTree,
+        applyIgnores
       );
       children.push(child);
     }

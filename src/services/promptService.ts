@@ -79,7 +79,7 @@ export async function loadPrompts(): Promise<void> {
       resourcesPath,
       'prompts'
     );
-    const files = await window.fileSystem.readDirectory(promptsDir);
+    const files = await window.fileSystem.readDirectory(promptsDir, false);
 
     // Parse prompt files (starting with 'prompt_' and ending with '.xml')
     const prompts: PromptData[] = [];
