@@ -1,6 +1,7 @@
 // AI Summary: Main prompt builder that loads templates and assembles prompts with variable substitution.
 // Handles missing config values with fallbacks and dynamic legend generation.
 // Provides specialized builders for autoselect, develop, and software engineer prompts.
+// Also supports dynamic prompts from promptStore.
 import { FileItem } from './fileTree';
 import { readAthanorConfig } from './configUtils';
 import { generateCodebaseDocumentation } from './codebaseDocumentation';
@@ -9,6 +10,7 @@ import {
   substituteVariables,
   extractTaskDescription,
 } from './promptTemplates';
+import { PromptData, PromptVariant } from '../types/promptTypes';
 
 export interface PromptVariables {
   project_name?: string;
@@ -78,6 +80,43 @@ function hasSelectedFiles(
     }
   }
   return false;
+}
+
+// Build a dynamic prompt using prompt data and variant
+export async function buildDynamicPrompt(
+  prompt: PromptData,
+  variant: PromptVariant,
+  items: FileItem[],
+  selectedItems: Set<string>,
+  rootPath: string,
+  taskDescription: string = ''
+): Promise<string> {
+  // Load config with fallback values
+  const config = await readAthanorConfig(rootPath);
+
+  // Generate codebase documentation
+  const codebaseDoc = await generateCodebaseDocumentation(
+    items,
+    selectedItems,
+    rootPath,
+    config
+  );
+
+  // Prepare variables for template
+  const variables: PromptVariables = {
+    project_name: config.project_name,
+    project_info: config.project_info,
+    task_description: taskDescription,
+    selected_files: getSelectedFilesList(items, selectedItems, rootPath),
+    selected_files_with_info: getSelectedFilesWithInfo(items, selectedItems, rootPath),
+    codebase_legend: hasSelectedFiles(items, selectedItems)
+      ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
+      : '',
+    ...codebaseDoc, // Contains file_contents and file_tree
+  };
+
+  // Use the variant content directly
+  return substituteVariables(variant.content, variables);
 }
 
 // Build a prompt using a template and provided variables

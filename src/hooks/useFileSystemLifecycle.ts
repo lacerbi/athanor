@@ -7,6 +7,7 @@ import { buildFileTree } from '../services/fileSystemService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { FILE_SYSTEM } from '../utils/constants';
+import { loadPrompts } from '../services/promptService';
 
 export interface FileSystemLifecycle {
   currentDirectory: string;
@@ -49,6 +50,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         validateSelections(fileTree);
         setFilesData(fileTree);
         setResourcesData(resourcesTree);
+        
+        // Load prompts after file system refresh
+        await loadPrompts();
+        
         if (!silent) {
           addLog('File system refreshed');
         }
@@ -93,6 +98,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         useFileSystemStore.getState().setFileTree([fileTree]);
         validateSelections(fileTree);
         setFilesData(fileTree);
+        
+        // Load prompts after opening new directory
+        await loadPrompts();
+        
         await setupWatcher(normalizedDir);
         addLog(`Loaded directory: ${normalizedDir}`);
       }
@@ -120,6 +129,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         validateSelections(fileTree);
         setFilesData(fileTree);
         setResourcesData(resourcesTree);
+        
+        // Load prompts during initial file system setup
+        await loadPrompts();
+        
         await setupWatcher(normalizedDir);
         addLog(`Loaded directory: ${normalizedDir}`);
       } catch (error) {

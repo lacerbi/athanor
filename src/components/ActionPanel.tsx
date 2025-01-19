@@ -3,6 +3,8 @@
 // and file-based groups with clear visual separation. Manages state for task inputs,
 // generated prompts, and clipboard operations with contextual tooltips.
 import React, { useState, useEffect, useRef } from 'react';
+import * as Icons from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import {
   Copy,
   BookOpen,
@@ -15,6 +17,8 @@ import {
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
+import { usePromptStore } from '../stores/promptStore';
+import { buildDynamicPrompt } from '../utils/buildPrompt';
 import { FileItem } from '../utils/fileTree';
 import { autoSelectFiles } from '../actions/AutoSelectAction';
 import { buildTaskPrompt } from '../actions/BuildTaskAction';
@@ -67,6 +71,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
   const { selectedItems, clearSelections, getSelectedItems } = useFileSystemStore();
   const { addLog } = useLogStore();
+  const { prompts, getDefaultVariant } = usePromptStore();
 
   const handleManualCopy = (content: string) => {
     void copyToClipboard({ content, addLog });
@@ -113,6 +118,53 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
             {/* Prompt Generators Section */}
             <div className="space-y-6">
+              {/* Dynamic Prompt Generators */}
+              <div className="space-y-3">
+                <div className="pb-2 border-b">
+                  <h2 className="text-lg font-semibold">Dynamic Prompts</h2>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {prompts.map((prompt) => {
+                    const variant = getDefaultVariant(prompt.id);
+                    if (!variant) return null;
+                    
+                    const IconComponent = prompt.icon ? (Icons as any)[prompt.icon] : null;
+
+                    return (
+                      <button
+                        key={prompt.id}
+                        className="w-32 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
+                        onClick={async () => {
+                          try {
+                            setIsLoading(true);
+                            const result = await buildDynamicPrompt(
+                              prompt,
+                              variant,
+                              rootItems,
+                              selectedItems,
+                              await window.fileSystem.getCurrentDirectory(),
+                              taskDescription
+                            );
+                            setOutputContent(result);
+                            addLog(`Generated ${prompt.label} prompt`);
+                            await copyToClipboard({ content: result, addLog });
+                          } catch (error) {
+                            addLog(`Error generating prompt: ${error}`);
+                          } finally {
+                            setIsLoading(false);
+                          }
+                        }}
+                        disabled={isLoading || isTaskEmpty}
+                        title={prompt.tooltip || prompt.label}
+                      >
+                        {IconComponent && <IconComponent className="w-4 h-4 mr-1" />}
+                        {prompt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               {/* Task-Based Generators */}
               <div className="space-y-3">
                 <div className="pb-2 border-b">

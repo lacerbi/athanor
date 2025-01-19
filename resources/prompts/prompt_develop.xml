@@ -1,13 +1,13 @@
 <ath_prompt 
     id="coder"
     label="Coder"
-    icon="FileSearch"
-    tooltip="Code a feature">
+    icon="Wrench"
+    tooltip="Prompt to execute a coding task">
 
 <ath_prompt_variant 
     id="default"
     label="Generic LLM coder"
-    tooltip="Code a feature (for most LLM coders)">
+    tooltip="Default prompt to execute a coding task">
 <codebase>
 # Codebase Documentation `{{project_name}}`
 

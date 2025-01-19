@@ -2,12 +2,12 @@
     id="autoselect"
     label="Autoselect"
     icon="FileSearch"
-    tooltip="Select task-relevant files from the codebase">
+    tooltip="Prompt to select task-relevant files from the codebase">
 
 <ath_prompt_variant 
     id="default"
     label="Default"
-    tooltip="Select task-relevant files from the codebase">
+    tooltip="Prompt to select task-relevant files from the codebase">
 <codebase>
 # Codebase Documentation `{{project_name}}`
 

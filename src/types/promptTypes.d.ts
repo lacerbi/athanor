@@ -19,6 +19,7 @@ export interface PromptStore {
   prompts: PromptData[];
   getPromptById: (id: string) => PromptData | undefined;
   getVariantById: (promptId: string, variantId: string) => PromptVariant | undefined;
+  getDefaultVariant: (promptId: string) => PromptVariant | undefined;
   setPrompts: (prompts: PromptData[]) => void;
   clearPrompts: () => void;
 }
