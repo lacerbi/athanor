@@ -16,14 +16,21 @@ export interface PromptData {
   variants: PromptVariant[];
 }
 
+// Record to track active variants for each prompt
+export type ActiveVariants = Record<string, string>;
+
 export interface PromptStore {
   prompts: PromptData[];
+  activeVariants: ActiveVariants;
   getPromptById: (id: string) => PromptData | undefined;
   getVariantById: (
     promptId: string,
     variantId: string
   ) => PromptVariant | undefined;
   getDefaultVariant: (promptId: string) => PromptVariant | undefined;
+  getActiveVariant: (promptId: string) => PromptVariant | undefined;
+  setActiveVariant: (promptId: string, variantId: string) => void;
+  resetActiveVariant: (promptId: string) => void;
   setPrompts: (prompts: PromptData[]) => void;
   clearPrompts: () => void;
 }

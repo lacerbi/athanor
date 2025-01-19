@@ -36,4 +36,11 @@ export const UI = {
     iconScale: '1.1',
     iconDuration: '200ms',
   },
+  
+  // Menu configuration
+  menu: {
+    padding: 16, // Minimum padding from viewport edges
+    maxWidth: 300, // Maximum width for context menus
+    minWidth: 200, // Minimum width for context menus
+  },
 };
