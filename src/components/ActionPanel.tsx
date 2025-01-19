@@ -1,29 +1,17 @@
 // AI Summary: Main action panel component that coordinates prompt generation and file operations.
-// Provides UI controls for task description and organizes prompt generators into task-based
-// and file-based groups with clear visual separation. Manages state for task inputs,
-// generated prompts, and clipboard operations with contextual tooltips.
+// Provides UI controls for task description, dynamic prompt generators, and preset tasks.
+// Manages state for task inputs, generated prompts, and clipboard operations with contextual tooltips.
 import React, { useState, useEffect, useRef } from 'react';
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import {
-  Copy,
-  BookOpen,
-  FileSearch,
-  Wrench,
-  FileText,
-  Scissors,
-  Eraser,
-} from 'lucide-react';
+import { Copy, FileText, Scissors, Eraser } from 'lucide-react';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { usePromptStore } from '../stores/promptStore';
 import { buildDynamicPrompt } from '../utils/buildPrompt';
 import { FileItem } from '../utils/fileTree';
-import { autoSelectFiles } from '../actions/AutoSelectAction';
-import { buildTaskPrompt } from '../actions/BuildTaskAction';
 import { copyToClipboard } from '../actions/ManualCopyAction';
-import { buildSoftwareEngineerPromptAction } from '../actions/BuildSoftwareEngineerPromptAction';
 import { buildAiSummaryPromptAction } from '../actions/BuildAiSummaryAction';
 import { buildRefactorPromptAction } from '../actions/BuildRefactorAction';
 import { getActionTooltip } from '../actions';
@@ -52,24 +40,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   // Handle Developer action trigger only when panel is active and a new trigger occurs
   const lastTriggerRef = useRef(developerActionTrigger);
   
-  useEffect(() => {
-    if (!isActive || developerActionTrigger === 0 || isLoading) return;
-    
-    // Only trigger if there's a new developerActionTrigger value
-    if (developerActionTrigger > lastTriggerRef.current) {
-      lastTriggerRef.current = developerActionTrigger;
-      void buildTaskPrompt({
-        rootItems,
-        selectedItems,
-        taskDescription,
-        setOutputContent,
-        addLog,
-        setIsLoading,
-      });
-    }
-  }, [developerActionTrigger, isActive]);
-
-  const { selectedItems, clearSelections, getSelectedItems } = useFileSystemStore();
+  const { selectedItems } = useFileSystemStore();
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant } = usePromptStore();
 
@@ -162,85 +133,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       </button>
                     );
                   })}
-                </div>
-              </div>
-
-              {/* Task-Based Generators */}
-              <div className="space-y-3">
-                <div className="pb-2 border-b">
-                  <h2 className="text-lg font-semibold">Generate Prompt From Task</h2>
-                </div>
-                <div className="flex space-x-2">
-                  <button
-                    className="w-32 px-3 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
-                    onClick={() =>
-                      autoSelectFiles({
-                        rootItems,
-                        selectedItems,
-                        taskDescription,
-                        setOutputContent,
-                        addLog,
-                        setIsLoading,
-                        clearSelections,
-                        getSelectedItems,
-                      })
-                    }
-                    disabled={isLoading || isTaskEmpty}
-                    title={getActionTooltip(
-                      'fileHighlighter',
-                      isLoading || isTaskEmpty,
-                      isLoading ? 'loading' : isTaskEmpty ? 'noTask' : null
-                    )}
-                  >
-                    <FileSearch className="w-4 h-4 mr-1" />
-                    Autoselect
-                  </button>
-
-                  <button
-                    className="w-32 px-3 py-2 bg-teal-500 text-white rounded hover:bg-teal-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-teal-500"
-                    onClick={() =>
-                      buildSoftwareEngineerPromptAction({
-                        rootItems,
-                        selectedItems,
-                        taskDescription,
-                        setOutputContent,
-                        addLog,
-                        setIsLoading,
-                      })
-                    }
-                    disabled={isLoading || isTaskEmpty}
-                    title={getActionTooltip(
-                      'softwareEngineer',
-                      isLoading || isTaskEmpty,
-                      isLoading ? 'loading' : isTaskEmpty ? 'noTask' : null
-                    )}
-                  >
-                    <BookOpen className="w-4 h-4 mr-1" />
-                    Analyze
-                  </button>
-
-                  <button
-                    className="w-32 px-3 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-amber-500"
-                    onClick={() =>
-                      buildTaskPrompt({
-                        rootItems,
-                        selectedItems,
-                        taskDescription,
-                        setOutputContent,
-                        addLog,
-                        setIsLoading,
-                      })
-                    }
-                    disabled={isLoading || isTaskEmpty}
-                    title={getActionTooltip(
-                      'developer',
-                      isLoading || isTaskEmpty,
-                      isLoading ? 'loading' : isTaskEmpty ? 'noTask' : null
-                    )}
-                  >
-                    <Wrench className="w-4 h-4 mr-2" />
-                    Develop
-                  </button>
                 </div>
               </div>
 
