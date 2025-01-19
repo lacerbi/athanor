@@ -14,6 +14,9 @@ export interface PanelResizeState {
 // Re-export action types from actions folder
 export type { ActionType, ActionState } from '../actions';
 
+// Re-export prompt types
+export type { PromptData, PromptVariant } from './promptTypes';
+
 declare global {
   interface Window {
     app: {
