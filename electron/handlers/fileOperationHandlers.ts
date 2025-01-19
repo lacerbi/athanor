@@ -15,13 +15,22 @@ import { ignoreRulesManager } from '../ignoreRulesManager';
 import { filePathManager } from '../filePathManager';
 import { getAppBasePath } from '../main';
 
-// Get resources path based on environment
+// Get resources path based on environment - this path must remain stable regardless of workspace changes
 async function getResourcesPath(): Promise<string> {
-  const baseFolder = app.isPackaged
-    ? filePathManager.getParentDir(filePathManager.normalizeToUnix(app.getPath('exe')))
-    : filePathManager.normalizeToUnix(getAppBasePath());
-    
-  return filePathManager.resolveUnixPath(baseFolder, 'resources');
+  // Get base path depending on environment
+  let resourcesPath;
+
+  if (app.isPackaged) {
+    // In production, process.resourcesPath already points to the resources directory
+    resourcesPath = filePathManager.normalizeToUnix(process.resourcesPath);
+  } else {
+    // In development, we need to join 'resources' to the app path
+    const basePath = filePathManager.normalizeToUnix(app.getAppPath());
+    resourcesPath = filePathManager.joinUnixPaths(basePath, 'resources');
+  }
+
+  // Convert to platform-specific path for the OS
+  return filePathManager.toPlatformPath(resourcesPath);
 }
 
 export function setupFileOperationHandlers() {
@@ -43,7 +52,11 @@ export function setupFileOperationHandlers() {
         const resourcesPath = await getResourcesPath();
 
         return filePathManager.toPlatformPath(
-          filePathManager.joinUnixPaths(resourcesPath, 'prompts', normalizedName)
+          filePathManager.joinUnixPaths(
+            resourcesPath,
+            'prompts',
+            normalizedName
+          )
         );
       } catch (error) {
         handleError(error, 'getting template path');
@@ -75,8 +88,16 @@ export function setupFileOperationHandlers() {
         const entryStats = await getStats(fullPath);
         const isDir = entryStats?.isDirectory() ?? false;
 
-        const normalizedForIgnore = filePathManager.normalizeForIgnore(fullPath, isDir);
-        if (normalizedForIgnore && !ignoreRulesManager.ignores(normalizedForIgnore)) {
+        const normalizedForIgnore = filePathManager.normalizeForIgnore(
+          fullPath,
+          isDir
+        );
+
+        if (
+          !normalizedForIgnore ||
+          (normalizedForIgnore &&
+            !ignoreRulesManager.ignores(normalizedForIgnore))
+        ) {
           filteredEntries.push(entry);
         }
       }

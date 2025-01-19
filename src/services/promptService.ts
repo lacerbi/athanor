@@ -6,7 +6,8 @@ import { readFileContent } from './fileSystemService';
 
 // Regular expressions for parsing prompt files
 const PROMPT_TAG_REGEX = /<ath_prompt\s+([^>]+)>/;
-const VARIANT_TAG_REGEX = /<ath_prompt_variant\s+([^>]+)>([\s\S]*?)<\/ath_prompt_variant>/g;
+const VARIANT_TAG_REGEX =
+  /<ath_prompt_variant\s+([^>]+)>([\s\S]*?)<\/ath_prompt_variant>/g;
 const ATTRIBUTES_REGEX = /(\w+)="([^"]*?)"/g;
 
 // Parse attributes from an XML tag string
@@ -23,7 +24,7 @@ function parseAttributes(attributesStr: string): Record<string, string> {
 async function parsePromptFile(filePath: string): Promise<PromptData | null> {
   try {
     const content = await readFileContent(filePath);
-    
+
     // Parse prompt attributes
     const promptMatch = PROMPT_TAG_REGEX.exec(content);
     if (!promptMatch || !promptMatch[1]) {
@@ -48,7 +49,7 @@ async function parsePromptFile(filePath: string): Promise<PromptData | null> {
         id: variantAttrs.id,
         label: variantAttrs.label,
         tooltip: variantAttrs.tooltip,
-        content: variantMatch[2].trim()
+        content: variantMatch[2].trim(),
       });
     }
 
@@ -62,7 +63,7 @@ async function parsePromptFile(filePath: string): Promise<PromptData | null> {
       label: promptAttrs.label,
       icon: promptAttrs.icon,
       tooltip: promptAttrs.tooltip,
-      variants
+      variants,
     };
   } catch (error) {
     console.error(`Error parsing prompt file ${filePath}:`, error);
@@ -74,17 +75,26 @@ async function parsePromptFile(filePath: string): Promise<PromptData | null> {
 export async function loadPrompts(): Promise<void> {
   try {
     const resourcesPath = await window.fileSystem.getResourcesPath();
-    const promptsDir = await window.fileSystem.joinPaths(resourcesPath, 'prompts');
+    const promptsDir = await window.fileSystem.joinPaths(
+      resourcesPath,
+      'prompts'
+    );
     const files = await window.fileSystem.readDirectory(promptsDir);
-    
+
     // Parse prompt files (starting with 'prompt_' and ending with '.xml')
     const prompts: PromptData[] = [];
     for (const file of files) {
-      if (!file.startsWith('prompt_') || !file.endsWith('.xml')) continue;
-      
+      if (!file.startsWith('prompt_') || !file.endsWith('.xml')) {
+        continue;
+      }
+
       const filePath = await window.fileSystem.joinPaths(promptsDir, file);
       const promptData = await parsePromptFile(filePath);
-      if (promptData) prompts.push(promptData);
+      if (promptData) {
+        prompts.push(promptData);
+      } else {
+        console.log('Failed to parse prompt:', file);
+      }
     }
 
     // Update store

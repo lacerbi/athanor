@@ -6,12 +6,17 @@ import * as path from 'path';
 import { app } from 'electron';
 import { FILE_SYSTEM } from '../src/utils/constants';
 
-// Singleton class to manage all file path operations consistently across the application
+// Singleton class to manage all file path operations consistently across the application.
+// Note: While this manager tracks the user's workspace (baseDir), it should not be used
+// for resolving paths to the application's bundled resources. Those paths must remain
+// stable regardless of workspace changes and should use app.getAppPath() directly.
 class FilePathManager {
   private baseDir: string = process.cwd();
   private appDir: string = '';
 
   constructor() {
+    // Store the application directory path, but note this should only be used
+    // for workspace-relative operations, not for accessing bundled resources
     this.appDir = app.getAppPath();
   }
 
