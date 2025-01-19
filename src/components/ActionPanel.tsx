@@ -109,13 +109,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             />
 
             {/* Prompt Generators Section */}
-            <div className="space-y-6">
-              {/* Dynamic Prompt Generators */}
+            <div className="space-y-4">
               <div className="space-y-3">
                 <div className="pb-2 border-b">
-                  <h2 className="text-lg font-semibold">Dynamic Prompts</h2>
+                  <h2 className="text-lg font-semibold">Preset Prompts and Tasks</h2>
                 </div>
-                <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl">
+                {/* Dynamic Prompts Row */}
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl mb-4">
                   {prompts.map((prompt) => {
                     const variant = getDefaultVariant(prompt.id);
                     if (!variant) return null;
@@ -164,16 +164,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     );
                   })}
                 </div>
-              </div>
 
-              {/* File-Based Generators */}
-              <div className="space-y-3">
-                <div className="pb-2 border-b">
-                  <h2 className="text-lg font-semibold">Load Preset Task</h2>
-                </div>
+                {/* Preset Tasks Row */}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl">
                   <button
-                    className="icon-btn bg-purple-500 text-white hover:bg-purple-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-500"
+                    className="icon-btn bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
                     title={getActionTooltip(
                       'aiSummaries',
                       isLoading || hasNoSelection,
@@ -201,7 +196,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   </button>
 
                   <button
-                    className="icon-btn bg-indigo-500 text-white hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-500"
+                    className="icon-btn bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-teal-500"
                     title={getActionTooltip(
                       'refactorCode',
                       isLoading || hasNoSelection,

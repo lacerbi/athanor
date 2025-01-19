@@ -33,6 +33,7 @@
   @apply relative flex items-center justify-center;
   @apply w-10 h-10 rounded-lg;
   @apply transition-all duration-200;
+  @apply mb-1;
 }
 
 .icon-btn-icon {
@@ -54,22 +55,18 @@
   @apply bg-gray-800 text-white shadow-md;
   @apply transition-all duration-100;
   white-space: nowrap;
-  transform: translateY(1rem);
   z-index: 50;
-}
-
-/* Default position - to the right of the button */
-.floating-label {
-  top: -75%;
-  left: -25%;
-  transform: translateY(-100%) translateX(0rem);
-  margin-left: 0.5rem;
+  
+  /* Position the label above the button, aligned with left edge */
+  bottom: calc(100% + 0.5rem);
+  left: 0;
+  transform: translateY(0.5rem);
 }
 
 /* Show label on hover */
 .icon-btn:hover .floating-label {
   @apply opacity-100;
-  transform: translateY(0%) translateX(0rem);
+  transform: translateY(0);
 }
 
 /* Ensure label stays within viewport */
