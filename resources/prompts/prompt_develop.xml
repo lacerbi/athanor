@@ -7,8 +7,8 @@
 
 <ath_prompt_variant 
     id="default"
-    label="Generic LLM coder"
-    tooltip="Default prompt to execute a coding task">
+    label="Default - Any LLM coding assistant"
+    tooltip="Default prompt to be used with any LLM coding assistant">
 <codebase>
 # Codebase Documentation `{{project_name}}`
 
@@ -206,8 +206,8 @@ instructing them to select the files from the Athanor file manager.
 
 <ath_prompt_variant 
     id="reasoning"
-    label="Reasoning models (o1)"
-    tooltip="Code a feature (o1 and reasoning models)">
+    label="Reasoning - For reasoning models (o1)"
+    tooltip="Coding prompt to be used with reasoning models such as o1 and o1-pro">
 <system_prompt>
 You are an expert software engineer.
 

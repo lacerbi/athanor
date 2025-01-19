@@ -6,6 +6,7 @@ import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Copy, FileText, Scissors, Eraser } from 'lucide-react';
 import PromptContextMenu from './PromptContextMenu';
+import type { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
@@ -78,6 +79,28 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } = usePromptStore();
 
+  // Handler for generating prompts
+  const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
+    try {
+      setIsLoading(true);
+      const result = await buildDynamicPrompt(
+        prompt,
+        variant,
+        rootItems,
+        selectedItems,
+        await window.fileSystem.getCurrentDirectory(),
+        taskDescription
+      );
+      setOutputContent(result);
+      addLog(`Generated ${prompt.label} prompt`);
+      await copyToClipboard({ content: result, addLog });
+    } catch (error) {
+      addLog(`Error generating prompt: ${error}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleManualCopy = (content: string) => {
     void copyToClipboard({ content, addLog });
   };
@@ -140,25 +163,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         key={prompt.id}
                         className="icon-btn bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
                         title={prompt.tooltip || prompt.label}
-                        onClick={async (e) => {
-                          try {
-                            setIsLoading(true);
-                            const result = await buildDynamicPrompt(
-                              prompt,
-                              variant,
-                              rootItems,
-                              selectedItems,
-                              await window.fileSystem.getCurrentDirectory(),
-                              taskDescription
-                            );
-                            setOutputContent(result);
-                            addLog(`Generated ${prompt.label} prompt`);
-                            await copyToClipboard({ content: result, addLog });
-                          } catch (error) {
-                            addLog(`Error generating prompt: ${error}`);
-                          } finally {
-                            setIsLoading(false);
-                          }
+                        onClick={async () => {
+                          if (isLoading || isTaskEmpty) return;
+                          await generatePrompt(prompt, variant);
                         }}
                         onContextMenu={(e) => {
                           e.preventDefault();
@@ -259,12 +266,21 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             x={contextMenu.x}
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
-            onSelectVariant={(variantId: string) => {
-              setContextMenu(null);
-              if (contextMenu.promptId) {
-                prompts.find(p => p.id === contextMenu.promptId)?.variants.find(v => v.id === variantId) && 
+            onSelectVariant={async (variantId: string) => {
+              if (contextMenu?.promptId) {
+                const prompt = prompts.find(p => p.id === contextMenu.promptId);
+                const variant = prompt?.variants.find(v => v.id === variantId);
+                
+                if (prompt && variant) {
                   setActiveVariant(contextMenu.promptId, variantId);
+                  
+                  // Only trigger prompt generation if the button is not disabled
+                  if (!isLoading && !isTaskEmpty) {
+                    await generatePrompt(prompt, variant);
+                  }
+                }
               }
+              setContextMenu(null);
             }}
             activeVariantId={contextMenu?.promptId ? getActiveVariant(contextMenu.promptId)?.id : undefined}
           />

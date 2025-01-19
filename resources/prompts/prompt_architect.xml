@@ -3,12 +3,12 @@
     order="2"
     label="Architect"
     icon="DraftingCompass"
-    tooltip="Prompt to architect a feature">
+    tooltip="Prompt to plan a feature implementation">
 
 <ath_prompt_variant 
     id="default"
-    label="Default"
-    tooltip="Default prompt to architect a feature">
+    label="Multistep - Split task over multiple steps"
+    tooltip="By default, plan a feature over multiple steps (commits)">
 <codebase>
 # Codebase Documentation `{{project_name}}`
 
@@ -121,6 +121,97 @@ Important guidelines for commits:
 - Order commits to minimize integration complexity
 - 1 or 2 commits should suffice for simple features
 - Complex features might require 3-5 commits
+</current_task>
+</ath_prompt_variant>
+
+
+<ath_prompt_variant 
+    id="one-shot"
+    label="Plan a feature for one-shot implementation"
+    tooltip="Use this to plan simple features or to give to strong coding models that can handle complex plans">
+<codebase>
+# Codebase Documentation `{{project_name}}`
+
+{{project_info}}
+<file_contents>
+{{file_contents}}
+</file_contents>
+
+<file_tree>
+{{file_tree}}</file_tree>
+{{codebase_legend}}
+</codebase>
+
+<system_prompt>
+You are an experienced software engineer.
+You are tasked with following my instructions.
+Use the included project instructions as a guide.
+
+# Goal
+The purpose is to:
+1. Perform detailed planning for new features or refactorings
+2. Break down complex implementations into a step-by-step guide
+</system_prompt>
+
+<current_task>
+<task_description>
+{{task_description}}
+</task_description>
+
+- Think thoroughly about the query or request above
+- Do not immediately write code
+- Break down complex tasks into a series of well-defined steps
+- Provide a detailed response and step-by-step action plan
+- First write down your thoughts as an expert software engineer
+- Then provide your response in a single code XML block
+- You are writing for an AI coding assistant
+- Consider as if you were writing to a junior developer vaguely familiar with the codebase
+
+The XML block should include:
+
+1. An XML tag <ath command="task"></ath>
+  * The task_description slightly edited and rewritten for clarity (do not omit parts)
+  * An extended, thorough answer and analysis
+  * A high-level overview of the implementation strategy
+  * Provide:
+    - A clear description of what the goal is
+    - Files that will be modified
+    - Detailed step-by-step implementation instructions
+    - How to verify the implementation works as intended
+
+2. A XML tag <ath command="select"></ath> with a list of all relevant files 
+  * List all the files that the developer will need to read in full, change or delete from the file_tree provided above
+  * Consider broadly which files might be useful to see for the feature, even if not immediately related
+  * These might include preloaders, utility or global constant files, etc.
+  * If in doubt whether you need to include a file, include it
+  * This list may match the list of highlighted (*) files above (if any), but might include additional files, or remove some which are clearly not needed
+  * Use the relative path of each file
+
+<example>
+```xml
+<ath command="task">
+# Task
+[Task description, rewritten for clarity]
+
+# Analysis
+[Thorough analysis and implementation strategy]
+
+# Implementation Plan
+- Description: What this plan achieves
+- Files to modify: list of files
+- Steps:
+  1. Detailed step 1
+  2. Detailed step 2
+  ...
+- Verification: How to verify this plan works
+
+</ath>
+
+<ath command="select">
+file1 file2 [...]
+</ath>
+```
+</example>
 </current_task>
 </ath_prompt_variant>
 
