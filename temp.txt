@@ -1,2 +1,5 @@
 - Fix relative paths in codebase documentation (seems to be a dev issue, not in production)
-- Make also preset tasks dynamic
+- Make also preset tasks dynamic (make them use buildDynamicPrompts or something)
+- Make XML command parsing more lenient, especially:
+  * it's okay for CDATA not to close with ]]> as long as </file_content></file> is there (are we sure? we probably want something more unique)
+  * it's okay for an <ath> block to close with a variety of </ath> tags...
