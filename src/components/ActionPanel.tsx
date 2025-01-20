@@ -106,7 +106,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         rootItems,
         selectedItems,
         await window.fileSystem.getCurrentDirectory(),
-        tabs[activeTabIndex].content // Use current tab's content instead of legacy taskDescription
+        tabs[activeTabIndex].content, // Current tab's content
+        tabs[activeTabIndex].context  // Current tab's context
       );
       setOutputContent(result);
       addLog(`Generated ${prompt.label} prompt`);

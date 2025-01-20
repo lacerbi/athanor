@@ -31,7 +31,7 @@ Use the included project information as a general guide.
 
 <current_task>
 <next_task>
-{{task_description}}
+{{task_description}}{{task_context}}
 </next_task>
 
 Consider the next_task described above

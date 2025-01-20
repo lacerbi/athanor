@@ -104,14 +104,23 @@ export async function buildDynamicPrompt(
     config
   );
 
+  // Format task context if non-empty
+  const formattedTaskContext = taskContext?.trim()
+    ? `\n\n<task_context>\n${taskContext.trim()}\n</task_context>`
+    : '';
+
   // Prepare variables for template
   const variables: PromptVariables = {
     project_name: config.project_name,
     project_info: config.project_info,
     task_description: taskDescription,
-    task_context: taskContext,
+    task_context: formattedTaskContext,
     selected_files: getSelectedFilesList(items, selectedItems, rootPath),
-    selected_files_with_info: getSelectedFilesWithInfo(items, selectedItems, rootPath),
+    selected_files_with_info: getSelectedFilesWithInfo(
+      items,
+      selectedItems,
+      rootPath
+    ),
     codebase_legend: hasSelectedFiles(items, selectedItems)
       ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
       : '',
@@ -128,7 +137,8 @@ export async function buildPrompt(
   items: FileItem[],
   selectedItems: Set<string>,
   rootPath: string,
-  taskDescription: string = ''
+  taskDescription: string = '',
+  taskContext: string = ''
 ): Promise<string> {
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
@@ -141,13 +151,23 @@ export async function buildPrompt(
     config
   );
 
+  // Format task context if non-empty
+  const formattedTaskContext = taskContext?.trim()
+    ? `\n\n<task_context>\n${taskContext.trim()}\n</task_context>`
+    : '';
+
   // Prepare variables for template
   const variables: PromptVariables = {
     project_name: config.project_name,
     project_info: config.project_info,
     task_description: taskDescription,
+    task_context: formattedTaskContext,
     selected_files: getSelectedFilesList(items, selectedItems, rootPath),
-    selected_files_with_info: getSelectedFilesWithInfo(items, selectedItems, rootPath),
+    selected_files_with_info: getSelectedFilesWithInfo(
+      items,
+      selectedItems,
+      rootPath
+    ),
     codebase_legend: hasSelectedFiles(items, selectedItems)
       ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
       : '',
@@ -157,50 +177,4 @@ export async function buildPrompt(
   // Load and process template
   const templateContent = await loadTemplateContent(templateName);
   return substituteVariables(templateContent, variables);
-}
-
-// Specialized builders for specific prompt types
-export async function buildAutoselectPrompt(
-  items: FileItem[],
-  selectedItems: Set<string>,
-  rootPath: string,
-  taskDescription: string
-): Promise<string> {
-  return buildPrompt(
-    'autoselect.xml',
-    items,
-    selectedItems,
-    rootPath,
-    taskDescription
-  );
-}
-
-export async function buildDevelopPrompt(
-  items: FileItem[],
-  selectedItems: Set<string>,
-  rootPath: string,
-  taskDescription: string
-): Promise<string> {
-  return buildPrompt(
-    'develop.xml',
-    items,
-    selectedItems,
-    rootPath,
-    taskDescription
-  );
-}
-
-export async function buildSoftwareEngineerPrompt(
-  items: FileItem[],
-  selectedItems: Set<string>,
-  rootPath: string,
-  taskDescription: string
-): Promise<string> {
-  return buildPrompt(
-    'software_engineer.xml',
-    items,
-    selectedItems,
-    rootPath,
-    taskDescription
-  );
 }

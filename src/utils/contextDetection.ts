@@ -1,12 +1,12 @@
 // AI Summary: Provides utilities for detecting and extracting context from task descriptions.
-// Handles detection of commits, branches, features and other contextual information.
+// Handles detection of specific commit formats and maintains proper formatting.
 
 /** Represents a context detected within task content */
 interface DetectedContext {
   /** The formatted context string for display */
   value: string;
   /** The type of context detected */
-  type: 'commit' | 'branch' | 'feature' | 'other';
+  type: 'commit';
   /** The original source text that matched the context pattern */
   source: string;
 }
@@ -18,38 +18,18 @@ interface DetectedContext {
  */
 export function detectContexts(content: string): DetectedContext[] {
   const contexts: DetectedContext[] = [];
-  
-  // Detect commit references
-  const commitRegex = /commit (\d+|[a-f0-9]{7,40})/gi;
+
+  // Detect commit references in "# Commit X: description" format
+  const commitRegex = /# Commit (\d+:?.*)/g;
   let match;
   while ((match = commitRegex.exec(content)) !== null) {
     contexts.push({
-      value: `Commit ${match[1]}`,
+      value: match[1].trim(),
       type: 'commit',
-      source: match[0]
+      source: match[0],
     });
   }
-  
-  // Detect branch names
-  const branchRegex = /branch[:\s]+([a-zA-Z0-9\/_-]+)/gi;
-  while ((match = branchRegex.exec(content)) !== null) {
-    contexts.push({
-      value: `Branch: ${match[1]}`,
-      type: 'branch',
-      source: match[0]
-    });
-  }
-  
-  // Detect features
-  const featureRegex = /feature[:\s]+([a-zA-Z0-9\s_-]+)/gi;
-  while ((match = featureRegex.exec(content)) !== null) {
-    contexts.push({
-      value: `Feature: ${match[1].trim()}`,
-      type: 'feature',
-      source: match[0]
-    });
-  }
-  
+
   return contexts;
 }
 
@@ -59,6 +39,9 @@ export function detectContexts(content: string): DetectedContext[] {
  * @returns Formatted string representation
  */
 export function formatContext(context: DetectedContext): string {
+  if (context.type === 'commit') {
+    return `We are now working on Commit ${context.value}`;
+  }
   return context.value;
 }
 
@@ -68,6 +51,9 @@ export function formatContext(context: DetectedContext): string {
  * @param taskContent - The task content to check against
  * @returns True if the context is relevant to the task content
  */
-export function isContextRelevant(context: DetectedContext, taskContent: string): boolean {
+export function isContextRelevant(
+  context: DetectedContext,
+  taskContent: string
+): boolean {
   return taskContent.toLowerCase().includes(context.source.toLowerCase());
 }
