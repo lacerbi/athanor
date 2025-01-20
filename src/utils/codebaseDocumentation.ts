@@ -1,7 +1,6 @@
 // AI Summary: Generates codebase documentation including file tree visualization and code content.
 // Handles language detection for code blocks and provides smart previews for large files.
-// Integrates with project configuration for dynamic documentation generation.
-// Provides reusable functions for code block formatting with proper language detection.
+// Supports strict selection mode through includeNonSelected parameter.
 import { FileItem, sortItems, isEmptyFolder, getBaseName } from './fileTree';
 import { AthanorConfig } from '../types/global';
 import { areAllDescendantsSelected } from './fileSelection';
@@ -129,7 +128,8 @@ export async function generateCodebaseDocumentation(
   items: FileItem[],
   selectedItems: Set<string>,
   rootPath: string,
-  config: AthanorConfig | null
+  config: AthanorConfig | null,
+  includeNonSelected: boolean = true
 ): Promise<{ file_contents: string; file_tree: string }> {
   const fileTreeContent = generateFileTree(items, selectedItems);
   let fileContents = '';
@@ -139,10 +139,15 @@ export async function generateCodebaseDocumentation(
     if (item.type === 'file') {
       const isSelected = selectedItems.has(item.id);
 
+      // Skip non-selected files when includeNonSelected is false
+      if (!includeNonSelected && !isSelected) {
+        return;
+      }
+
       try {
         const isText = await isTextFile(item.path);
         if (!isText) {
-          console.log('Skipping non-text file: \${item.path}');
+          console.log('Skipping non-text file: ${item.path}');
           return;
         }
         const content = await window.fileSystem.readFile(item.path, {
@@ -151,12 +156,15 @@ export async function generateCodebaseDocumentation(
 
         // Ensure content is treated as string since we specified utf8 encoding
         const contentString = content.toString();
-        const processedContent = isSelected
-          ? contentString
-          : getSmartPreview(contentString);
-        fileContents +=
-          (fileContents ? '\n' : '') +
-          formatSingleFile(item.path, processedContent, rootPath, isSelected);
+        // Only include full content for selected files, non-selected files get smart preview if includeNonSelected is true
+        const processedContent = isSelected 
+          ? contentString 
+          : includeNonSelected ? getSmartPreview(contentString) : '';
+        if (processedContent) {
+          fileContents +=
+            (fileContents ? '\n' : '') +
+            formatSingleFile(item.path, processedContent, rootPath, isSelected);
+        }
       } catch (error) {
         console.error(`Error reading file ${item.path}:`, error);
       }

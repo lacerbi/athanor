@@ -1,7 +1,5 @@
-// AI Summary: Main layout component managing file explorer, tabs, and content panels.
-// Handles panel resizing and content switching with proper state management.
 import React, { useRef } from 'react';
-import { File, FileText, FolderOpen, RefreshCw } from 'lucide-react';
+import { File, FileText, FolderOpen, RefreshCw, ClipboardCopy } from 'lucide-react';
 import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
 import FileViewerPanel from './FileViewerPanel';
@@ -10,6 +8,7 @@ import AthanorTabs, { TabType } from './AthanorTabs';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { FileItem } from '../utils/fileTree';
 import { usePanelResize } from '../hooks/usePanelResize';
+import { copySelectedFilesContent } from '../actions/ManualCopyAction';
 
 interface MainLayoutProps {
   filesData: FileItem;
@@ -46,6 +45,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     onTabChange('viewer');
   };
 
+  const handleCopySelectedFiles = async () => {
+    await copySelectedFilesContent({
+      addLog: (message) => console.log(message),
+      rootPath: currentDirectory,
+    });
+  };
+
   return (
     <div className="flex h-screen bg-white">
       {/* Left Panel - File Explorer */}
@@ -75,6 +81,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   className={`${
                     isRefreshing
                       ? 'animate-spin text-gray-400'
+                      : 'text-gray-600'
+                  }`}
+                />
+              </button>
+              <button
+                onClick={handleCopySelectedFiles}
+                disabled={selectedFileCount === 0}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                title="Copy selected files"
+              >
+                <ClipboardCopy
+                  size={20}
+                  className={`${
+                    selectedFileCount === 0
+                      ? 'text-gray-400'
                       : 'text-gray-600'
                   }`}
                 />

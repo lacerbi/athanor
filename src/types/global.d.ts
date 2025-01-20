@@ -117,6 +117,9 @@ export interface AthanorConfig {
   project_name?: string;
   project_info?: string;
   system_prompt?: string;
+  documentation?: {
+    includeNonSelected?: boolean;
+  };
 }
 
 // File system store interface
