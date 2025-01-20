@@ -21,6 +21,7 @@ export interface PromptVariables {
   codebase_legend?: string;
   selected_files?: string;
   selected_files_with_info?: string;
+  task_context?: string;
 }
 
 // Get list of selected files with relative paths and line counts
@@ -89,7 +90,8 @@ export async function buildDynamicPrompt(
   items: FileItem[],
   selectedItems: Set<string>,
   rootPath: string,
-  taskDescription: string = ''
+  taskDescription: string = '',
+  taskContext: string = ''
 ): Promise<string> {
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
@@ -107,6 +109,7 @@ export async function buildDynamicPrompt(
     project_name: config.project_name,
     project_info: config.project_info,
     task_description: taskDescription,
+    task_context: taskContext,
     selected_files: getSelectedFilesList(items, selectedItems, rootPath),
     selected_files_with_info: getSelectedFilesWithInfo(items, selectedItems, rootPath),
     codebase_legend: hasSelectedFiles(items, selectedItems)

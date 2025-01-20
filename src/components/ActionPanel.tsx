@@ -1,7 +1,8 @@
 // AI Summary: Main action panel component that coordinates prompt generation and file operations.
 // Provides UI controls for task description, dynamic prompt generators, and preset tasks.
 // Manages state for task inputs, generated prompts, and clipboard operations with contextual tooltips.
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { detectContexts, formatContext, isContextRelevant } from '../utils/contextDetection';
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Copy, FileText, Scissors, Eraser } from 'lucide-react';
@@ -30,6 +31,30 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   isActive,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const {
+    tabs,
+    activeTabIndex,
+    createTab,
+    removeTab,
+    setActiveTab,
+    setTabContent,
+    setTabOutput,
+    setTabContext,
+    taskDescription, // Legacy support
+    outputContent,   // Legacy support
+    setTaskDescription,
+    setOutputContent,
+    developerActionTrigger,
+  } = useWorkbenchStore();
+
+  // Detect contexts from current task
+  const suggestedContexts = useMemo(() => {
+    if (!tabs[activeTabIndex]?.content) return [];
+    const detected = detectContexts(tabs[activeTabIndex].content);
+    return detected
+      .filter(ctx => isContextRelevant(ctx, tabs[activeTabIndex].content))
+      .map(formatContext);
+  }, [tabs, activeTabIndex]);
   const [contextMenu, setContextMenu] = useState<{
     promptId: string;
     x: number;
@@ -63,22 +88,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     
     return positions.join(' ');
   };
-
-  const {
-    tabs,
-    activeTabIndex,
-    createTab,
-    removeTab,
-    setActiveTab,
-    setTabContent,
-    setTabOutput,
-    setTabContext,
-    taskDescription, // Legacy support
-    outputContent,   // Legacy support
-    setTaskDescription,
-    setOutputContent,
-    developerActionTrigger,
-  } = useWorkbenchStore();
 
   // Handle Developer action trigger only when panel is active and a new trigger occurs
   const lastTriggerRef = useRef(developerActionTrigger);
@@ -203,18 +212,20 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 )}
               </div>
               
-              {/* Context Dropdown - To be implemented in next commit */}
-              {false && (
+              {/* Context Dropdown */}
+              {suggestedContexts.length > 0 && (
                 <div className="context-dropdown">
-                  <div className="context-dropdown-item">
-                    Commit 1: Add Context Support
-                  </div>
-                  <div className="context-dropdown-item active">
-                    Commit 2: Implement Context UI
-                  </div>
-                  <div className="context-dropdown-item">
-                    Commit 3: Smart Context Detection
-                  </div>
+                  {suggestedContexts.map((context, index) => (
+                    <div
+                      key={index}
+                      className={`context-dropdown-item ${
+                        context === tabs[activeTabIndex].context ? 'active' : ''
+                      }`}
+                      onClick={() => setTabContext(activeTabIndex, context)}
+                    >
+                      {context}
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

@@ -33,6 +33,10 @@ export function substituteVariables(
 ): string {
   return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
     const value = variables[key as keyof PromptVariables];
+    // Handle task context specially - only include if it exists
+    if (key === 'task_context' && (!value || value.trim() === '')) {
+      return '';
+    }
     return value !== undefined ? value : '';
   });
 }
