@@ -133,7 +133,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       onClick={() => setActiveTab(index)}
                       className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-t border-t border-x transition-colors whitespace-nowrap
                         ${index === activeTabIndex 
-                          ? 'bg-white border-gray-300 text-gray-900' 
+                          ? 'bg-white border-gray-300 text-gray-900 font-semibold' 
                           : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
                     >
                       <span className="truncate max-w-[120px]">{tab.name}</span>
