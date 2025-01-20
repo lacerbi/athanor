@@ -159,13 +159,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     </button>
                   </div>
                 </div>
-                <button
-                  onClick={() => createTab()}
-                  className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
-                  title="New tab"
-                >
-                  +
-                </button>
               </div>
               <div className="flex-none">
                 <button
