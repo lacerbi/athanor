@@ -17,108 +17,121 @@ function createTaskTab(tabNumber: number): TaskTab {
     name: `Task ${tabNumber.toString()}`,
     content: '',
     output: DEFAULT_WELCOME_MESSAGE,
+    context: ''
   };
 }
 
-export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
-  // Tab management state
-  tabs: [createTaskTab(1)], // Initialize with one tab
-  activeTabIndex: 0,
+export const useWorkbenchStore = create<WorkbenchState>((set, get) => {
+  const store = {
+    // Tab management state
+    tabs: [createTaskTab(1)], // Initialize with one tab
+    activeTabIndex: 0,
 
-  // Core tab management
-  createTab: () => set((state) => ({
-    tabs: [...state.tabs, createTaskTab(state.tabs.length + 1)],
-    activeTabIndex: state.tabs.length,
-  })),
+    // Core tab management
+    createTab: () => set((state) => ({
+      tabs: [...state.tabs, createTaskTab(state.tabs.length + 1)],
+      activeTabIndex: state.tabs.length,
+    })),
 
-  removeTab: (index: number) => set((state) => {
-    if (state.tabs.length <= 1) {
-      // When it's the last tab, reset to a fresh default tab but keep the ID
-      const defaultTab = createTaskTab(1);
+    removeTab: (index: number) => set((state) => {
+      if (state.tabs.length <= 1) {
+        return {
+          tabs: [createTaskTab(1)],
+          activeTabIndex: 0,
+        };
+      }
       return {
-        tabs: [{ 
-          ...defaultTab,
-          id: state.tabs[0].id // Preserve the original ID
-        }],
-        activeTabIndex: 0,
+        tabs: state.tabs.filter((_, i) => i !== index),
+        activeTabIndex: Math.min(index, state.tabs.length - 2),
       };
-    }
-    return {
-      tabs: state.tabs.filter((_, i) => i !== index),
-      activeTabIndex: Math.min(index, state.tabs.length - 2),
-    };
-  }),
+    }),
 
-  setActiveTab: (index: number) => set({ activeTabIndex: index }),
+    setActiveTab: (index: number) => set({ activeTabIndex: index }),
 
-  setTabContent: (index: number, text: string) => set((state) => ({
-    tabs: state.tabs.map((tab, i) => 
-      i === index ? { ...tab, content: text } : tab
-    ),
-  })),
+    setTabContent: (index: number, text: string) => set((state) => ({
+      tabs: state.tabs.map((tab, i) => 
+        i === index ? { ...tab, content: text } : tab
+      ),
+    })),
 
-  setTabOutput: (index: number, text: string) => set((state) => ({
-    tabs: state.tabs.map((tab, i) => 
-      i === index ? { ...tab, output: text } : tab
-    ),
-  })),
+    setTabOutput: (index: number, text: string) => set((state) => ({
+      tabs: state.tabs.map((tab, i) => 
+        i === index ? { ...tab, output: text } : tab
+      ),
+    })),
 
-  // Legacy support - maps to active tab
-  get taskDescription() {
-    const state = get();
-    const activeTab = state.tabs[state.activeTabIndex];
-    return activeTab?.content ?? '';
-  },
+    setTabContext: (index: number, context: string) => set((state) => ({
+      tabs: state.tabs.map((tab, i) => 
+        i === index ? { ...tab, context } : tab
+      ),
+    })),
 
-  get outputContent() {
-    const state = get();
-    const activeTab = state.tabs[state.activeTabIndex];
-    return activeTab?.output ?? '';
-  },
+    // Legacy support - getters
+    get taskDescription() {
+      return get().tabs[get().activeTabIndex]?.content ?? '';
+    },
 
-  setTaskDescription: (text: string) => {
-    const state = get();
-    state.setTabContent(state.activeTabIndex, text);
-  },
+    get outputContent() {
+      return get().tabs[get().activeTabIndex]?.output ?? '';
+    },
 
-  setOutputContent: (text: string) => {
-    const state = get();
-    state.setTabOutput(state.activeTabIndex, text);
-  },
+    get taskContext() {
+      return get().tabs[get().activeTabIndex]?.context ?? '';
+    },
 
-  resetTaskDescription: (text: string) => {
-    const state = get();
-    state.setTabContent(state.activeTabIndex, text);
-    state.setTabOutput(state.activeTabIndex, '');
-    set({ developerActionTrigger: 0 });
-  },
+    // Legacy support - setters
+    setTaskDescription: (text: string) => {
+      const state = get();
+      state.setTabContent(state.activeTabIndex, text);
+    },
 
-  // Additional state (unchanged)
-  developerActionTrigger: 0,
-  isGeneratingPrompt: false,
+    setOutputContent: (text: string) => {
+      const state = get();
+      state.setTabOutput(state.activeTabIndex, text);
+    },
 
-  setIsGeneratingPrompt: (isGenerating: boolean) =>
-    set({ isGeneratingPrompt: isGenerating }),
+    setTaskContext: (context: string) => {
+      const state = get();
+      state.setTabContext(state.activeTabIndex, context);
+    },
 
-  resetGeneratingPrompt: () => {
-    set({ isGeneratingPrompt: false });
-  },
+    resetTaskDescription: (text: string) => {
+      const state = get();
+      state.setTabContent(state.activeTabIndex, text);
+      state.setTabOutput(state.activeTabIndex, '');
+      state.setTabContext(state.activeTabIndex, '');
+      set({ developerActionTrigger: 0 });
+    },
 
-  triggerDeveloperAction: () => {
-    const state = get();
-    if (!state.isGeneratingPrompt) {
-      set({
-        developerActionTrigger: state.developerActionTrigger + 1,
-        isGeneratingPrompt: true,
-      });
+    // Additional state
+    developerActionTrigger: 0,
+    isGeneratingPrompt: false,
 
-      setTimeout(() => {
-        const currentState = get();
-        if (currentState.isGeneratingPrompt) {
-          console.warn('Prompt generation timeout - resetting state');
-          set({ isGeneratingPrompt: false });
-        }
-      }, PROMPT_GENERATION_TIMEOUT);
-    }
-  },
-}));
+    setIsGeneratingPrompt: (isGenerating: boolean) =>
+      set({ isGeneratingPrompt: isGenerating }),
+
+    resetGeneratingPrompt: () => {
+      set({ isGeneratingPrompt: false });
+    },
+
+    triggerDeveloperAction: () => {
+      const state = get();
+      if (!state.isGeneratingPrompt) {
+        set({
+          developerActionTrigger: state.developerActionTrigger + 1,
+          isGeneratingPrompt: true,
+        });
+
+        setTimeout(() => {
+          const currentState = get();
+          if (currentState.isGeneratingPrompt) {
+            console.warn('Prompt generation timeout - resetting state');
+            set({ isGeneratingPrompt: false });
+          }
+        }, PROMPT_GENERATION_TIMEOUT);
+      }
+    },
+  };
+
+  return store;
+});

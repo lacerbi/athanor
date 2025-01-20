@@ -51,4 +51,14 @@ export const UI = {
     pressDuration: '100ms',
     contextDelay: '150ms', // Delay before showing context menu
   },
+  
+  // Context field configuration
+  context: {
+    height: '2.5rem',
+    maxWidth: '100%',
+    fontSize: '0.875rem', // 14px
+    lineHeight: '1.25rem', // 20px
+    transitionDuration: '150ms',
+    dropdownMaxHeight: '12rem',
+  },
 };

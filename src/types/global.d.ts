@@ -23,6 +23,7 @@ export interface TaskTab {
   name: string;
   content: string;
   output: string;
+  context: string; // Added context field for task context tracking
 }
 
 export interface WorkbenchState {
@@ -34,12 +35,15 @@ export interface WorkbenchState {
   setActiveTab: (index: number) => void;
   setTabContent: (index: number, text: string) => void;
   setTabOutput: (index: number, text: string) => void;
+  setTabContext: (index: number, context: string) => void; // Added context setter
   
   // Legacy support and additional state
   taskDescription: string; // Maps to active tab content
   outputContent: string;   // Maps to active tab output
+  taskContext: string;     // Added for legacy compatibility
   setTaskDescription: (text: string) => void;
   setOutputContent: (text: string) => void;
+  setTaskContext: (context: string) => void; // Added context setter for legacy support
   resetTaskDescription: (text: string) => void;
   developerActionTrigger: number;
   triggerDeveloperAction: () => void;

@@ -102,6 +102,48 @@
   display: none;  /* Chrome, Safari and Opera */
 }
 
+/* Context field styles */
+.context-field {
+  @apply flex items-center gap-2 px-3 py-1.5 mb-2;
+  @apply bg-gray-50 border border-gray-300 rounded-md;
+  @apply text-sm text-gray-600;
+  @apply transition-all duration-150;
+}
+
+.context-field:hover {
+  @apply border-gray-400 bg-gray-100;
+}
+
+.context-field:focus-within {
+  @apply border-blue-500 ring-1 ring-blue-200 bg-white;
+}
+
+.context-field input {
+  @apply flex-1 bg-transparent border-none outline-none;
+  @apply placeholder-gray-400;
+}
+
+.context-field button {
+  @apply p-1 rounded hover:bg-gray-200 transition-colors;
+}
+
+.context-dropdown {
+  @apply absolute z-50 w-full mt-1;
+  @apply bg-white border border-gray-200 rounded-md shadow-lg;
+  @apply divide-y divide-gray-100;
+  @apply max-h-48 overflow-y-auto;
+}
+
+.context-dropdown-item {
+  @apply px-4 py-2 text-sm text-gray-700;
+  @apply hover:bg-gray-50 cursor-pointer;
+  @apply transition-colors duration-150;
+}
+
+.context-dropdown-item.active {
+  @apply bg-blue-50 text-blue-700;
+}
+
 /* Configure tooltips with proper pointer event handling */
 *[title] {
   position: relative;

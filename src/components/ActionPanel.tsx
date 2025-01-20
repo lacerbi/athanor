@@ -72,6 +72,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     setActiveTab,
     setTabContent,
     setTabOutput,
+    setTabContext,
     taskDescription, // Legacy support
     outputContent,   // Legacy support
     setTaskDescription,
@@ -173,11 +174,50 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             {/* Text Area */}
             <textarea
-              className="flex-1 p-2 border rounded resize-none overflow-auto mb-4"
+              className="flex-1 p-2 border rounded resize-none overflow-auto mb-2"
               placeholder="Describe your task here - whether it's implementing a feature, asking about the codebase, or discussing code improvements..."
               value={tabs[activeTabIndex].content}
               onChange={(e) => setTabContent(activeTabIndex, e.target.value)}
             />
+
+            {/* Context Field */}
+            <div className="relative">
+              <div className="context-field">
+                <span className="text-gray-500">Context:</span>
+                <input
+                  type="text"
+                  placeholder="Add task context (e.g., commit number, branch, feature)"
+                  value={tabs[activeTabIndex].context}
+                  onChange={(e) => setTabContext(activeTabIndex, e.target.value)}
+                  className="flex-1"
+                  aria-label="Task context"
+                />
+                {tabs[activeTabIndex].context && (
+                  <button
+                    onClick={() => setTabContext(activeTabIndex, '')}
+                    className="text-gray-400 hover:text-gray-600"
+                    aria-label="Clear context"
+                  >
+                    <Eraser className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+              
+              {/* Context Dropdown - To be implemented in next commit */}
+              {false && (
+                <div className="context-dropdown">
+                  <div className="context-dropdown-item">
+                    Commit 1: Add Context Support
+                  </div>
+                  <div className="context-dropdown-item active">
+                    Commit 2: Implement Context UI
+                  </div>
+                  <div className="context-dropdown-item">
+                    Commit 3: Smart Context Detection
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Prompt Generators Section */}
             <div className="space-y-4">
