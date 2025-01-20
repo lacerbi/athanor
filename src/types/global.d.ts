@@ -17,6 +17,37 @@ export type { ActionType, ActionState } from '../actions';
 // Re-export prompt types
 export type { PromptData, PromptVariant } from './promptTypes';
 
+// Task tab types for workbench multi-tab support
+export interface TaskTab {
+  id: string;
+  name: string;
+  content: string;
+  output: string;
+}
+
+export interface WorkbenchState {
+  // Tab management
+  tabs: TaskTab[];
+  activeTabIndex: number;
+  createTab: () => void;
+  removeTab: (index: number) => void;
+  setActiveTab: (index: number) => void;
+  setTabContent: (index: number, text: string) => void;
+  setTabOutput: (index: number, text: string) => void;
+  
+  // Legacy support and additional state
+  taskDescription: string; // Maps to active tab content
+  outputContent: string;   // Maps to active tab output
+  setTaskDescription: (text: string) => void;
+  setOutputContent: (text: string) => void;
+  resetTaskDescription: (text: string) => void;
+  developerActionTrigger: number;
+  triggerDeveloperAction: () => void;
+  isGeneratingPrompt: boolean;
+  setIsGeneratingPrompt: (isGenerating: boolean) => void;
+  resetGeneratingPrompt: () => void;
+}
+
 declare global {
   interface Window {
     app: {

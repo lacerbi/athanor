@@ -82,6 +82,16 @@
   transform: translateY(-50%) translateX(-1rem);
 }
 
+/* Hide scrollbar for tab container while allowing scroll */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
 /* Configure tooltips with proper pointer event handling */
 *[title] {
   position: relative;

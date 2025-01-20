@@ -134,7 +134,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           {activeTab === 'workbench' && (
             <ActionPanel
               rootItems={[filesData]}
-              setActiveTab={onTabChange}
+              setActivePanelTab={onTabChange}
               isActive={activeTab === 'workbench'}
             />
           )}

@@ -20,13 +20,13 @@ import { getActionTooltip } from '../actions';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
-  setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+  setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
   isActive: boolean;
 }
 
 const ActionPanel: React.FC<ActionPanelProps> = ({
   rootItems,
-  setActiveTab,
+  setActivePanelTab,
   isActive,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
@@ -65,8 +65,15 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   };
 
   const {
-    taskDescription,
-    outputContent,
+    tabs,
+    activeTabIndex,
+    createTab,
+    removeTab,
+    setActiveTab,
+    setTabContent,
+    setTabOutput,
+    taskDescription, // Legacy support
+    outputContent,   // Legacy support
     setTaskDescription,
     setOutputContent,
     developerActionTrigger,
@@ -89,7 +96,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         rootItems,
         selectedItems,
         await window.fileSystem.getCurrentDirectory(),
-        taskDescription
+        tabs[activeTabIndex].content // Use current tab's content instead of legacy taskDescription
       );
       setOutputContent(result);
       addLog(`Generated ${prompt.label} prompt`);
@@ -105,7 +112,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     void copyToClipboard({ content, addLog });
   };
 
-  const isTaskEmpty = taskDescription.trim().length === 0;
+  const isTaskEmpty = !tabs?.[activeTabIndex] || tabs[activeTabIndex].content.trim().length === 0;
   const hasNoSelection = selectedItems.size === 0;
 
   return (
@@ -114,12 +121,47 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       <div className="flex flex-1 gap-6 min-h-0">
         {/* Left Column */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Task Description Section */}
+          {/* Task Description Section with Tabs */}
           <div className="flex flex-col flex-1 min-h-0">
+            {/* Tab Bar */}
             <div className="flex items-center gap-2 mb-2">
-              <h2 className="text-lg font-semibold">Task Description or Query</h2>
+              <div className="flex-1 flex items-center overflow-x-auto no-scrollbar">
+                <div className="flex gap-1 min-w-0">
+                  {tabs.map((tab, index) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setActiveTab(index)}
+                      className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-t border-t border-x transition-colors whitespace-nowrap
+                        ${index === activeTabIndex 
+                          ? 'bg-white border-gray-300 text-gray-900' 
+                          : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
+                    >
+                      <span className="truncate max-w-[120px]">{tab.name}</span>
+                      {tabs.length > 1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeTab(index);
+                          }}
+                          className="ml-1 p-0.5 hover:bg-gray-200 rounded"
+                          title="Close tab"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => createTab()}
+                  className="flex items-center justify-center w-7 h-7 ml-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                  title="New tab"
+                >
+                  +
+                </button>
+              </div>
               <button
-                onClick={() => handleManualCopy(taskDescription)}
+                onClick={() => handleManualCopy(tabs[activeTabIndex].content)}
                 className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
                 title="Copy to clipboard"
               >
@@ -127,8 +169,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 Copy
               </button>
               <button
-                onClick={() => setTaskDescription('')}
-                disabled={taskDescription.trim().length === 0}
+                onClick={() => setTabContent(activeTabIndex, '')}
+                disabled={tabs[activeTabIndex].content.trim().length === 0}
                 className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Clear task description"
                 aria-label="Clear task description"
@@ -137,11 +179,12 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 Clear
               </button>
             </div>
+            {/* Text Area */}
             <textarea
               className="flex-1 p-2 border rounded resize-none overflow-auto mb-4"
               placeholder="Describe your task here - whether it's implementing a feature, asking about the codebase, or discussing code improvements..."
-              value={taskDescription}
-              onChange={(e) => setTaskDescription(e.target.value)}
+              value={tabs[activeTabIndex].content}
+              onChange={(e) => setTabContent(activeTabIndex, e.target.value)}
             />
 
             {/* Prompt Generators Section */}
@@ -291,7 +334,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           <div className="flex items-center gap-2 mb-2">
             <h2 className="text-lg font-semibold">Generated Prompt</h2>
             <button
-              onClick={() => handleManualCopy(outputContent)}
+              onClick={() => handleManualCopy(tabs[activeTabIndex].output)}
               className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
               title="Copy to clipboard"
             >
@@ -300,8 +343,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </button>
           </div>
           <textarea
-            value={outputContent}
-            onChange={(e) => setOutputContent(e.target.value)}
+            value={tabs[activeTabIndex].output}
+            onChange={(e) => setTabOutput(activeTabIndex, e.target.value)}
             className="flex-1 p-2 border rounded font-mono text-sm resize-none overflow-auto whitespace-pre"
             placeholder="Generated prompt to be pasted into an AI assistant will appear here..."
           />

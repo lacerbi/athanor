@@ -1,53 +1,112 @@
-// AI Summary: Manages workbench state including task description and output content.
-// Provides initial welcome message and methods for updating text fields. Handles
-// persistent state for the main workbench interface with proper cleanup.
+// AI Summary: Manages workbench state including multi-tab task descriptions and outputs.
+// Provides methods for tab management while maintaining backward compatibility with
+// single-tab legacy code. Core features: tab creation/removal, content management,
+// and active tab state tracking.
 import { create } from 'zustand';
-
-interface WorkbenchState {
-  taskDescription: string;
-  outputContent: string;
-  setTaskDescription: (text: string) => void;
-  setOutputContent: (text: string) => void;
-  resetTaskDescription: (text: string) => void;
-  developerActionTrigger: number;
-  triggerDeveloperAction: () => void;
-  isGeneratingPrompt: boolean;
-  setIsGeneratingPrompt: (isGenerating: boolean) => void;
-  resetGeneratingPrompt: () => void;
-}
+import { TaskTab, WorkbenchState } from '../types/global';
 
 const PROMPT_GENERATION_TIMEOUT = 30000; // 30 seconds timeout
 
+// Default welcome message for new tabs
+const DEFAULT_WELCOME_MESSAGE = "Welcome to Athanor! 🚀\n\nI'm here to increase your productivity with AI coding assistants.\nTo get started:\n\n1. Write your task or question in the text area to the left\n2. Select relevant files from the file explorer\n3. Click one of the prompt generation buttons\n4. Paste the prompt into a AI assistant\n5. Copy the AI response to the clipboard\n6. Apply the AI Output above!\n\nLet's build something great together!";
+
+// Create a new task tab
+function createTaskTab(tabNumber: number): TaskTab {
+  return {
+    id: `tab-${Date.now().toString()}`,
+    name: `Task ${tabNumber.toString()}`,
+    content: '',
+    output: DEFAULT_WELCOME_MESSAGE,
+  };
+}
+
 export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
-  taskDescription: '',
-  outputContent:
-    "Welcome to Athanor! 🚀\n\nI'm here to increase your productivity with AI coding assistants.\nTo get started:\n\n1. Write your task or question in the text area to the left\n2. Select relevant files from the file explorer\n3. Click one of the prompt generation buttons\n4. Paste the prompt into a AI assistant\n5. Copy the AI response to the clipboard\n6. Apply the AI Output above!\n\nLet's build something great together!",
-  setTaskDescription: (text: string) => set({ taskDescription: text }),
-  setOutputContent: (text: string) => set({ outputContent: text }),
+  // Tab management state
+  tabs: [createTaskTab(1)], // Initialize with one tab
+  activeTabIndex: 0,
+
+  // Core tab management
+  createTab: () => set((state) => ({
+    tabs: [...state.tabs, createTaskTab(state.tabs.length + 1)],
+    activeTabIndex: state.tabs.length,
+  })),
+
+  removeTab: (index: number) => set((state) => {
+    if (state.tabs.length <= 1) {
+      return {
+        tabs: [{ ...state.tabs[0], content: '', output: DEFAULT_WELCOME_MESSAGE }],
+        activeTabIndex: 0,
+      };
+    }
+    return {
+      tabs: state.tabs.filter((_, i) => i !== index),
+      activeTabIndex: Math.min(index, state.tabs.length - 2),
+    };
+  }),
+
+  setActiveTab: (index: number) => set({ activeTabIndex: index }),
+
+  setTabContent: (index: number, text: string) => set((state) => ({
+    tabs: state.tabs.map((tab, i) => 
+      i === index ? { ...tab, content: text } : tab
+    ),
+  })),
+
+  setTabOutput: (index: number, text: string) => set((state) => ({
+    tabs: state.tabs.map((tab, i) => 
+      i === index ? { ...tab, output: text } : tab
+    ),
+  })),
+
+  // Legacy support - maps to active tab
+  get taskDescription() {
+    const state = get();
+    const activeTab = state.tabs[state.activeTabIndex];
+    return activeTab?.content ?? '';
+  },
+
+  get outputContent() {
+    const state = get();
+    const activeTab = state.tabs[state.activeTabIndex];
+    return activeTab?.output ?? '';
+  },
+
+  setTaskDescription: (text: string) => {
+    const state = get();
+    state.setTabContent(state.activeTabIndex, text);
+  },
+
+  setOutputContent: (text: string) => {
+    const state = get();
+    state.setTabOutput(state.activeTabIndex, text);
+  },
+
+  resetTaskDescription: (text: string) => {
+    const state = get();
+    state.setTabContent(state.activeTabIndex, text);
+    state.setTabOutput(state.activeTabIndex, '');
+    set({ developerActionTrigger: 0 });
+  },
+
+  // Additional state (unchanged)
   developerActionTrigger: 0,
   isGeneratingPrompt: false,
+
   setIsGeneratingPrompt: (isGenerating: boolean) =>
     set({ isGeneratingPrompt: isGenerating }),
+
   resetGeneratingPrompt: () => {
     set({ isGeneratingPrompt: false });
   },
-  resetTaskDescription: (text: string) => {
-    set({ 
-      taskDescription: text,
-      outputContent: '', // Clear output when task is reset
-      developerActionTrigger: 0 // Reset trigger to avoid auto-generation
-    });
-  },
+
   triggerDeveloperAction: () => {
     const state = get();
     if (!state.isGeneratingPrompt) {
-      // Set the generating flag and increment trigger
       set({
         developerActionTrigger: state.developerActionTrigger + 1,
         isGeneratingPrompt: true,
       });
 
-      // Set up timeout safeguard
       setTimeout(() => {
         const currentState = get();
         if (currentState.isGeneratingPrompt) {
