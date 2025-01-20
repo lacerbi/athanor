@@ -125,8 +125,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           <div className="flex flex-col flex-1 min-h-0">
             {/* Tab Bar */}
             <div className="flex items-center gap-2 mb-2">
-              <div className="flex-1 flex items-center overflow-x-auto no-scrollbar">
-                <div className="flex gap-1 min-w-0">
+              <div className="flex-1 flex items-center min-w-0">
+                <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                  <div className="flex gap-1 min-w-0 items-center">
                   {tabs.map((tab, index) => (
                     <button
                       key={tab.id}
@@ -149,23 +150,33 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       </button>
                     </button>
                   ))}
+                    <button
+                      onClick={() => createTab()}
+                      className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                      title="New tab"
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
                 <button
                   onClick={() => createTab()}
-                  className="flex items-center justify-center w-7 h-7 ml-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                  className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
                   title="New tab"
                 >
                   +
                 </button>
               </div>
-              <button
-                onClick={() => handleManualCopy(tabs[activeTabIndex].content)}
-                className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
-                title="Copy to clipboard"
-              >
-                <Copy className="w-4 h-4 mr-1" />
-                Copy
-              </button>
+              <div className="flex-none">
+                <button
+                  onClick={() => handleManualCopy(tabs[activeTabIndex].content)}
+                  className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                  title="Copy to clipboard"
+                >
+                  <Copy className="w-4 h-4 mr-1" />
+                  Copy
+                </button>
+              </div>
             </div>
             {/* Text Area */}
             <textarea
