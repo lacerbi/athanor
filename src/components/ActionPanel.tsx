@@ -2,10 +2,21 @@
 // Provides UI controls for task description, dynamic prompt generators, and preset tasks.
 // Manages state for task inputs, generated prompts, and clipboard operations with contextual tooltips.
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { detectContexts, formatContext, isContextRelevant } from '../utils/contextDetection';
+import {
+  detectContexts,
+  formatContext,
+  isContextRelevant,
+} from '../utils/contextDetection';
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Copy, FileText, Scissors, Eraser, ChevronDown, ChevronUp } from 'lucide-react';
+import {
+  Copy,
+  FileText,
+  Scissors,
+  Eraser,
+  ChevronDown,
+  ChevronUp,
+} from 'lucide-react';
 import PromptContextMenu from './PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
@@ -41,7 +52,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     setTabOutput,
     setTabContext,
     taskDescription, // Legacy support
-    outputContent,   // Legacy support
+    outputContent, // Legacy support
     setTaskDescription,
     setOutputContent,
     developerActionTrigger,
@@ -52,7 +63,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     if (!tabs[activeTabIndex]?.content) return [];
     const detected = detectContexts(tabs[activeTabIndex].content);
     return detected
-      .filter(ctx => isContextRelevant(ctx, tabs[activeTabIndex].content))
+      .filter((ctx) => isContextRelevant(ctx, tabs[activeTabIndex].content))
       .map(formatContext);
   }, [tabs, activeTabIndex]);
   const [showContextDropdown, setShowContextDropdown] = useState(false);
@@ -62,46 +73,52 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     x: number;
     y: number;
   } | null>(null);
-  
+
   // Close context menu and dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       setContextMenu(null);
-      if (contextFieldRef.current && !contextFieldRef.current.contains(event.target as Node)) {
+      if (
+        contextFieldRef.current &&
+        !contextFieldRef.current.contains(event.target as Node)
+      ) {
         setShowContextDropdown(false);
       }
     };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
-  
+
   // Function to determine floating label position based on button position
   const getFloatingLabelPosition = (promptId: string) => {
-    const buttonElement = document.querySelector(`button[data-prompt-id="${promptId}"]`);
+    const buttonElement = document.querySelector(
+      `button[data-prompt-id="${promptId}"]`
+    );
     if (!buttonElement) return '';
 
     const rect = buttonElement.getBoundingClientRect();
     const viewport = {
       width: window.innerWidth,
-      height: window.innerHeight
+      height: window.innerHeight,
     };
 
     // Check if button is near the edges
     const positions: string[] = [];
-    
+
     if (rect.top < 100) positions.push('top');
     if (rect.left < 100) positions.push('left');
     if (viewport.width - rect.right < 100) positions.push('right');
-    
+
     return positions.join(' ');
   };
 
   // Handle Developer action trigger only when panel is active and a new trigger occurs
   const lastTriggerRef = useRef(developerActionTrigger);
-  
+
   const { selectedItems } = useFileSystemStore();
   const { addLog } = useLogStore();
-  const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } = usePromptStore();
+  const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
+    usePromptStore();
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
@@ -114,7 +131,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         selectedItems,
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
-        tabs[activeTabIndex].context  // Current tab's context
+        tabs[activeTabIndex].context // Current tab's context
       );
       setOutputContent(result);
       addLog(`Generated ${prompt.label} prompt`);
@@ -130,7 +147,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     void copyToClipboard({ content, addLog });
   };
 
-  const isTaskEmpty = !tabs?.[activeTabIndex] || tabs[activeTabIndex].content.trim().length === 0;
+  const isTaskEmpty =
+    !tabs?.[activeTabIndex] || tabs[activeTabIndex].content.trim().length === 0;
   const hasNoSelection = selectedItems.size === 0;
 
   return (
@@ -146,28 +164,32 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <div className="flex-1 flex items-center min-w-0">
                 <div className="flex-1 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
                   <div className="flex gap-1 min-w-0 items-center">
-                  {tabs.map((tab, index) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveTab(index)}
-                      className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-t border-t border-x transition-colors whitespace-nowrap
-                        ${index === activeTabIndex 
-                          ? 'bg-white border-gray-300 text-gray-900 font-semibold' 
-                          : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
-                    >
-                      <span className="truncate max-w-[120px]">{tab.name}</span>
+                    {tabs.map((tab, index) => (
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          removeTab(index);
-                        }}
-                        className="ml-1 p-0.5 hover:bg-gray-200 rounded"
-                        title={tabs.length > 1 ? "Close tab" : "Clear tab"}
+                        key={tab.id}
+                        onClick={() => setActiveTab(index)}
+                        className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-t border-t border-x transition-colors whitespace-nowrap
+                        ${
+                          index === activeTabIndex
+                            ? 'bg-white border-gray-300 text-gray-900 font-semibold'
+                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                        }`}
                       >
-                        ×
+                        <span className="truncate max-w-[120px]">
+                          {tab.name}
+                        </span>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removeTab(index);
+                          }}
+                          className="ml-1 p-0.5 hover:bg-gray-200 rounded"
+                          title={tabs.length > 1 ? 'Close tab' : 'Clear tab'}
+                        >
+                          ×
+                        </button>
                       </button>
-                    </button>
-                  ))}
+                    ))}
                     <button
                       onClick={() => createTab()}
                       className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
@@ -192,7 +214,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             {/* Text Area */}
             <textarea
               className="flex-1 p-2 border rounded resize-none overflow-auto mb-2"
-              placeholder="Describe your task here - whether it's implementing a feature, asking about the codebase, or discussing code improvements..."
+              placeholder="Describe your task or query here - whether it's implementing a feature, asking about the codebase, or discussing code improvements..."
               value={tabs[activeTabIndex].content}
               onChange={(e) => setTabContent(activeTabIndex, e.target.value)}
             />
@@ -203,9 +225,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 <span className="text-gray-500">Context:</span>
                 <input
                   type="text"
-                  placeholder="Add task context (e.g., commit number, branch, feature)"
+                  placeholder="Add task context - leave empty in most cases"
                   value={tabs[activeTabIndex].context}
-                  onChange={(e) => setTabContext(activeTabIndex, e.target.value)}
+                  onChange={(e) =>
+                    setTabContext(activeTabIndex, e.target.value)
+                  }
                   className="flex-1"
                   aria-label="Task context"
                 />
@@ -225,7 +249,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       setShowContextDropdown(!showContextDropdown);
                     }}
                     className="text-gray-400 hover:text-gray-600"
-                    aria-label={showContextDropdown ? "Hide suggestions" : "Show suggestions"}
+                    aria-label={
+                      showContextDropdown
+                        ? 'Hide suggestions'
+                        : 'Show suggestions'
+                    }
                   >
                     {showContextDropdown ? (
                       <ChevronUp className="w-4 h-4" />
@@ -235,7 +263,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   </button>
                 )}
               </div>
-              
+
               {/* Context Dropdown */}
               {showContextDropdown && suggestedContexts.length > 0 && (
                 <div className="context-dropdown">
@@ -261,15 +289,19 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="space-y-4">
               <div className="space-y-3">
                 <div className="pb-2 border-b">
-                  <h2 className="text-lg font-semibold">Preset Prompts and Tasks</h2>
+                  <h2 className="text-lg font-semibold">
+                    Preset Prompts and Tasks
+                  </h2>
                 </div>
                 {/* Dynamic Prompts Row */}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl mb-4">
                   {prompts.map((prompt) => {
                     const variant = getDefaultVariant(prompt.id);
                     if (!variant) return null;
-                    
-                    const IconComponent = prompt.icon ? (Icons as any)[prompt.icon] : null;
+
+                    const IconComponent = prompt.icon
+                      ? (Icons as any)[prompt.icon]
+                      : null;
 
                     return (
                       <button
@@ -294,7 +326,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         data-prompt-id={prompt.id}
                         aria-label={prompt.label}
                         aria-haspopup="true"
-                        aria-expanded={contextMenu?.promptId === prompt.id ? 'true' : 'false'}
+                        aria-expanded={
+                          contextMenu?.promptId === prompt.id ? 'true' : 'false'
+                        }
                       >
                         {IconComponent && (
                           <>
@@ -316,7 +350,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     title={getActionTooltip(
                       'aiSummaries',
                       isLoading || hasNoSelection,
-                      isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null
+                      isLoading
+                        ? 'loading'
+                        : hasNoSelection
+                          ? 'noSelection'
+                          : null
                     )}
                     onClick={() =>
                       buildAiSummaryPromptAction({
@@ -333,9 +371,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   >
                     <>
                       <FileText className="w-5 h-5 icon-btn-icon" />
-                      <span className="floating-label">
-                        AI Summaries
-                      </span>
+                      <span className="floating-label">AI Summaries</span>
                     </>
                   </button>
 
@@ -344,7 +380,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     title={getActionTooltip(
                       'refactorCode',
                       isLoading || hasNoSelection,
-                      isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null
+                      isLoading
+                        ? 'loading'
+                        : hasNoSelection
+                          ? 'noSelection'
+                          : null
                     )}
                     onClick={() =>
                       buildRefactorPromptAction({
@@ -361,9 +401,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   >
                     <>
                       <Scissors className="w-5 h-5 icon-btn-icon" />
-                      <span className="floating-label">
-                        Refactor Code
-                      </span>
+                      <span className="floating-label">Refactor Code</span>
                     </>
                   </button>
                 </div>
@@ -375,18 +413,22 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         {/* Prompt Context Menu */}
         {contextMenu && (
           <PromptContextMenu
-            prompt={prompts.find(p => p.id === contextMenu.promptId)!}
+            prompt={prompts.find((p) => p.id === contextMenu.promptId)!}
             x={contextMenu.x}
             y={contextMenu.y}
             onClose={() => setContextMenu(null)}
             onSelectVariant={async (variantId: string) => {
               if (contextMenu?.promptId) {
-                const prompt = prompts.find(p => p.id === contextMenu.promptId);
-                const variant = prompt?.variants.find(v => v.id === variantId);
-                
+                const prompt = prompts.find(
+                  (p) => p.id === contextMenu.promptId
+                );
+                const variant = prompt?.variants.find(
+                  (v) => v.id === variantId
+                );
+
                 if (prompt && variant) {
                   setActiveVariant(contextMenu.promptId, variantId);
-                  
+
                   // Only trigger prompt generation if the button is not disabled
                   if (!isLoading && !isTaskEmpty) {
                     await generatePrompt(prompt, variant);
@@ -395,7 +437,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               }
               setContextMenu(null);
             }}
-            activeVariantId={contextMenu?.promptId ? getActiveVariant(contextMenu.promptId)?.id : undefined}
+            activeVariantId={
+              contextMenu?.promptId
+                ? getActiveVariant(contextMenu.promptId)?.id
+                : undefined
+            }
           />
         )}
 
