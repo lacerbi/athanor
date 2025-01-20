@@ -33,8 +33,13 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => ({
 
   removeTab: (index: number) => set((state) => {
     if (state.tabs.length <= 1) {
+      // When it's the last tab, reset to a fresh default tab but keep the ID
+      const defaultTab = createTaskTab(1);
       return {
-        tabs: [{ ...state.tabs[0], content: '', output: DEFAULT_WELCOME_MESSAGE }],
+        tabs: [{ 
+          ...defaultTab,
+          id: state.tabs[0].id // Preserve the original ID
+        }],
         activeTabIndex: 0,
       };
     }
