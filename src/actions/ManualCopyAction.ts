@@ -47,7 +47,6 @@ export async function copySelectedFilesContent(params: CopySelectedParams): Prom
     const tokenCount = formatTokenCount(countTokens(file_contents));
     addLog(`Copied ${selectedItems.size} files to clipboard (${tokenCount})`);
   } catch (err) {
-    console.error('Failed to copy selected files:', err);
     addLog('Failed to copy selected files');
   }
 }

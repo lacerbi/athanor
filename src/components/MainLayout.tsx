@@ -1,5 +1,6 @@
 import React, { useRef } from 'react';
 import { File, FileText, FolderOpen, RefreshCw, ClipboardCopy } from 'lucide-react';
+import { useLogStore } from '../stores/logStore';
 import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
 import FileViewerPanel from './FileViewerPanel';
@@ -45,9 +46,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     onTabChange('viewer');
   };
 
+  const { addLog } = useLogStore();
   const handleCopySelectedFiles = async () => {
     await copySelectedFilesContent({
-      addLog: (message) => console.log(message),
+      addLog,
       rootPath: currentDirectory,
     });
   };
