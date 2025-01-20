@@ -66,7 +66,7 @@
   @apply transition-all duration-100;
   white-space: nowrap;
   z-index: 50;
-  
+
   /* Position the label above the button, aligned with left edge */
   bottom: calc(100% + 0.5rem);
   left: 0;
@@ -94,12 +94,12 @@
 
 /* Hide scrollbar for tab container while allowing scroll */
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 
 .no-scrollbar::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari and Opera */
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* Context field styles */
@@ -125,10 +125,11 @@
 
 .context-field button {
   @apply p-1 rounded hover:bg-gray-200 transition-colors;
+  @apply ml-1; /* Add spacing between buttons */
 }
 
 .context-dropdown {
-  @apply absolute z-50 w-full mt-1;
+  @apply absolute z-50 w-full mt-0.5;
   @apply bg-white border border-gray-200 rounded-md shadow-lg;
   @apply divide-y divide-gray-100;
   @apply max-h-48 overflow-y-auto;
@@ -137,7 +138,7 @@
 .context-dropdown-item {
   @apply px-4 py-2 text-sm text-gray-700;
   @apply hover:bg-gray-50 cursor-pointer;
-  @apply transition-colors duration-150;
+  @apply transition-all duration-150;
 }
 
 .context-dropdown-item.active {

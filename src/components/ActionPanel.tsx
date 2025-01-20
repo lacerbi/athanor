@@ -5,7 +5,7 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { detectContexts, formatContext, isContextRelevant } from '../utils/contextDetection';
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Copy, FileText, Scissors, Eraser } from 'lucide-react';
+import { Copy, FileText, Scissors, Eraser, ChevronDown, ChevronUp } from 'lucide-react';
 import PromptContextMenu from './PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
@@ -55,15 +55,22 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       .filter(ctx => isContextRelevant(ctx, tabs[activeTabIndex].content))
       .map(formatContext);
   }, [tabs, activeTabIndex]);
+  const [showContextDropdown, setShowContextDropdown] = useState(false);
+  const contextFieldRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<{
     promptId: string;
     x: number;
     y: number;
   } | null>(null);
   
-  // Close context menu when clicking outside
+  // Close context menu and dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = () => setContextMenu(null);
+    const handleClickOutside = (event: MouseEvent) => {
+      setContextMenu(null);
+      if (contextFieldRef.current && !contextFieldRef.current.contains(event.target as Node)) {
+        setShowContextDropdown(false);
+      }
+    };
     document.addEventListener('click', handleClickOutside);
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
@@ -191,8 +198,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             />
 
             {/* Context Field */}
-            <div className="relative">
-              <div className="context-field">
+            <div className="relative" ref={contextFieldRef}>
+              <div className="context-field relative">
                 <span className="text-gray-500">Context:</span>
                 <input
                   type="text"
@@ -211,10 +218,26 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     <Eraser className="w-4 h-4" />
                   </button>
                 )}
+                {suggestedContexts.length > 0 && (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowContextDropdown(!showContextDropdown);
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                    aria-label={showContextDropdown ? "Hide suggestions" : "Show suggestions"}
+                  >
+                    {showContextDropdown ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
+                )}
               </div>
               
               {/* Context Dropdown */}
-              {suggestedContexts.length > 0 && (
+              {showContextDropdown && suggestedContexts.length > 0 && (
                 <div className="context-dropdown">
                   {suggestedContexts.map((context, index) => (
                     <div
@@ -222,7 +245,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       className={`context-dropdown-item ${
                         context === tabs[activeTabIndex].context ? 'active' : ''
                       }`}
-                      onClick={() => setTabContext(activeTabIndex, context)}
+                      onClick={() => {
+                        setTabContext(activeTabIndex, context);
+                        setShowContextDropdown(false);
+                      }}
                     >
                       {context}
                     </div>
