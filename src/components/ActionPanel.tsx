@@ -137,18 +137,16 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                           : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'}`}
                     >
                       <span className="truncate max-w-[120px]">{tab.name}</span>
-                      {tabs.length > 1 && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            removeTab(index);
-                          }}
-                          className="ml-1 p-0.5 hover:bg-gray-200 rounded"
-                          title="Close tab"
-                        >
-                          ×
-                        </button>
-                      )}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeTab(index);
+                        }}
+                        className="ml-1 p-0.5 hover:bg-gray-200 rounded"
+                        title={tabs.length > 1 ? "Close tab" : "Clear tab"}
+                      >
+                        ×
+                      </button>
                     </button>
                   ))}
                 </div>
@@ -167,16 +165,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               >
                 <Copy className="w-4 h-4 mr-1" />
                 Copy
-              </button>
-              <button
-                onClick={() => setTabContent(activeTabIndex, '')}
-                disabled={tabs[activeTabIndex].content.trim().length === 0}
-                className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Clear task description"
-                aria-label="Clear task description"
-              >
-                <Eraser className="w-4 h-4 mr-1" />
-                Clear
               </button>
             </div>
             {/* Text Area */}
