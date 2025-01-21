@@ -180,16 +180,24 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         <span className="truncate max-w-[120px]">
                           {tab.name}
                         </span>
-                        <button
+                        <div
+                          role="button"
+                          tabIndex={0}
                           onClick={(e) => {
                             e.stopPropagation();
                             removeTab(index);
                           }}
-                          className="ml-1 p-0.5 hover:bg-gray-200 rounded"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.stopPropagation();
+                              removeTab(index);
+                            }
+                          }}
+                          className="ml-1 p-0.5 hover:bg-gray-200 rounded cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-400"
                           title={tabs.length > 1 ? 'Close tab' : 'Clear tab'}
                         >
                           ×
-                        </button>
+                        </div>
                       </button>
                     ))}
                     <button
