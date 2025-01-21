@@ -111,16 +111,11 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   return (
     <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
-        className={`flex items-center py-1 hover:bg-gray-100 ${
-          !isEmpty ? DRAG_DROP.classes.draggable : ''
-        } ${isDragging ? DRAG_DROP.classes.dragging : ''}`}
+        className="flex items-center py-1 hover:bg-gray-100"
         onClick={handleFileClick}
         onContextMenu={(e) => onContextMenu(e, item)}
-        draggable={!isEmpty}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
       >
-        {/* Checkbox or placeholder */}
+        {/* Checkbox or placeholder - Not draggable */}
         <div className="w-5 flex-shrink-0" onClick={handleCheckboxClick}>
           {!isEmpty && (
             <input
@@ -133,8 +128,17 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           )}
         </div>
 
-        {/* Folder expand/collapse button or file icon */}
-        <div className="flex-shrink-0">
+        {/* Draggable content area */}
+        <div 
+          className={`flex flex-1 items-center ${
+            !isEmpty ? DRAG_DROP.classes.draggable : ''
+          } ${isDragging ? DRAG_DROP.classes.dragging : ''}`}
+          draggable={!isEmpty}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          {/* Folder expand/collapse button or file icon */}
+          <div className="flex-shrink-0">
           {item.type === 'folder' ? (
             <button
               onClick={(e) => {
@@ -160,26 +164,27 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           )}
         </div>
 
-        {/* Filename */}
-        <span
-          className={`truncate file-name cursor-pointer
-            ${isRoot ? 'font-bold' : ''}
-            ${isCurrentlyViewed ? 'font-bold text-blue-600' : ''}
-          `}
-        >
-          {displayName}
-          {item.type === 'folder' ? '/' : ''}
-        </span>
-
-        {/* Scissors icon for long files */}
-        {isLongFile && (
-          <div
-            className="ml-2 text-gray-500"
-            title={`File has ${item.lineCount} lines (threshold: ${FILE_SYSTEM.thresholdLineLength})`}
+          {/* Filename */}
+          <span
+            className={`truncate file-name cursor-pointer
+              ${isRoot ? 'font-bold' : ''}
+              ${isCurrentlyViewed ? 'font-bold text-blue-600' : ''}
+            `}
           >
-            <Scissors size={14} />
-          </div>
-        )}
+            {displayName}
+            {item.type === 'folder' ? '/' : ''}
+          </span>
+
+          {/* Scissors icon for long files */}
+          {isLongFile && (
+            <div
+              className="ml-2 text-gray-500"
+              title={`File has ${item.lineCount} lines (threshold: ${FILE_SYSTEM.thresholdLineLength})`}
+            >
+              <Scissors size={14} />
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Render children recursively if expanded */}
