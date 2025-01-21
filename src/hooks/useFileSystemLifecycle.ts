@@ -21,7 +21,8 @@ export interface FileSystemLifecycle {
 // Shared helper for loading both main and materials trees
 const loadAndSetTrees = async (basePath: string) => {
   const mainTree = await buildFileTree(basePath);
-  const materialsPath = `${basePath}/${FILE_SYSTEM.materialsDirName}`;
+  // Use the proper path utility instead of string interpolation
+  const materialsPath = await window.fileSystem.getMaterialsDir();
   const materialsTree = await buildFileTree(materialsPath, '', true);
   useFileSystemStore.getState().setFileTree([mainTree, materialsTree]);
   return { mainTree, materialsTree };
@@ -47,9 +48,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       setIsRefreshing(true);
       try {
         await window.fileSystem.reloadIgnoreRules();
-        const { mainTree } = await loadAndSetTrees(currentDirectory);
+        const { mainTree, materialsTree } = await loadAndSetTrees(currentDirectory);
         validateSelections(mainTree);
         setFilesData(mainTree);
+        setResourcesData(materialsTree);
 
         await loadPrompts();
 
@@ -74,9 +76,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         const normalizedDir = await window.fileSystem.normalizeToUnix(selectedDir);
         setCurrentDirectory(normalizedDir);
         
-        const { mainTree } = await loadAndSetTrees(normalizedDir);
+        const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
         validateSelections(mainTree);
         setFilesData(mainTree);
+        setResourcesData(materialsTree);
 
         await loadPrompts();
         await setupWatcher(normalizedDir);

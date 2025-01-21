@@ -91,6 +91,7 @@ declare global {
       writeFile: (path: string, data: string) => Promise<void>;
       deleteFile: (path: string) => Promise<void>;
       addToIgnore: (itemPath: string) => Promise<boolean>;
+      getMaterialsDir: () => Promise<string>;
       // Path utilities
       normalizeToUnix: (path: string) => Promise<string>;
       joinPaths: (path1: string, path2: string) => Promise<string>;

@@ -14,6 +14,7 @@ import {
   getBaseDir,
   clearFileSystemState,
   ensureMaterialsDir,
+  getMaterialsDir,
 } from '../fileSystemManager';
 import { ignoreRulesManager } from '../ignoreRulesManager';
 import { filePathManager } from '../filePathManager';
@@ -158,6 +159,15 @@ export function setupCoreHandlers() {
       return stats?.isDirectory() ?? false;
     } catch (error) {
       handleError(error, `checking directory status ${filePath}`);
+    }
+  });
+
+  // Add handler for getting materials directory path
+  ipcMain.handle('fs:getMaterialsDir', () => {
+    try {
+      return getMaterialsDir();
+    } catch (error) {
+      handleError(error, 'getting materials directory path');
     }
   });
 }

@@ -66,4 +66,5 @@ contextBridge.exposeInMainWorld('fileSystem', {
   deleteFile: (path: string) => ipcRenderer.invoke('fs:deleteFile', path),
   addToIgnore: (itemPath: string) =>
     ipcRenderer.invoke('fs:addToIgnore', itemPath),
+  getMaterialsDir: () => ipcRenderer.invoke('fs:getMaterialsDir'),
 });
