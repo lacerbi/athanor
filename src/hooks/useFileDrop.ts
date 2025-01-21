@@ -54,6 +54,12 @@ function getTextareaPositionFromCoords(
     
     // Find the line where the drop occurred
     const lines = content.split('\n');
+    
+    // Handle drops below last line or empty content
+    if (lineIndex >= lines.length || content.trim() === '') {
+      return content.length;
+    }
+    
     let currentLine = 0;
     let currentPos = 0;
     
@@ -134,18 +140,8 @@ export function useFileDrop({ onInsert, currentValue }: UseFileDropParams) {
       // Calculate insert position based on element type
       if (element instanceof HTMLTextAreaElement) {
         // For textareas, handle positioning
-        const totalHeight = element.scrollHeight;
-        const lastLine = element.value.split('\n').length;
-        const lineHeight = totalHeight / Math.max(lastLine, 1);
-        
-        // If drop is below last line or in empty area, append to end
-        if (y > lastLine * lineHeight || element.value.trim() === '') {
-          insertPosition = textLength;
-        } else {
-          // Try to get precise position
-          const position = getTextareaPositionFromCoords(element, x, y);
-          insertPosition = (position !== null && position <= textLength) ? position : textLength;
-        }
+        const position = getTextareaPositionFromCoords(element, x, y);
+        insertPosition = (position !== null && position <= textLength) ? position : textLength;
       } else {
         // For inputs, use current cursor position or end if out of bounds
         const cursorPos = element.selectionStart ?? 0;
