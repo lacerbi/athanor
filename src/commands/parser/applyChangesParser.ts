@@ -1,17 +1,19 @@
-// AI Summary: Handles parsing of XML commands from clipboard content.
-// Validates XML structure, extracts command types and content with proper error handling.
-// Provides functions for processing file operations and handling diff updates.
+// AI Summary: Parses XML-based change commands and processes file operations for the Athanor system.
+// Core function parseXmlContent() validates command structure, normalizes content, and generates FileOperation objects.
+// Handles CREATE, UPDATE_FULL, UPDATE_DIFF, and DELETE operations with proper error handling.
+// Performs line ending normalization and integrates with file system operations through window.fileSystem.
+// Requires valid XML structure with ath/file elements and handles file content transformations for different operation types.
 import { parseStringPromise } from 'xml2js';
 import {
   FileOperation,
   FileOperationType,
   FileBlock,
   AthCommand,
-} from '../types/global';
+} from '../../types/global';
 import {
   processFileUpdate,
   normalizeLineEndings,
-} from '../utils/fileOperations';
+} from '../../utils/fileOperations';
 
 export async function parseXmlContent(
   clipboardContent: string,

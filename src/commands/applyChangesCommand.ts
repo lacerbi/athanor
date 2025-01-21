@@ -1,7 +1,7 @@
 // AI Summary: Processes apply changes commands by parsing XML content and preparing file operations.
 // Handles both full file updates and diff-based changes with proper error handling.
 import { FileOperation } from '../types/global';
-import { parseXmlContent } from '../services/xmlParsingService';
+import { parseXmlContent } from './parser/applyChangesParser';
 import { countTokens, formatTokenCount } from '../utils/tokenCount';
 
 export interface ApplyChangesParams {
