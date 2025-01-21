@@ -2,6 +2,16 @@
 // Tiktoken types, and store functionality. Defines core interfaces for file operations,
 // command parsing, and application configuration. Extends Window interface with custom
 // file system methods.
+// Augment DragEvent to include custom file path data
+interface AthanorDataTransfer extends DataTransfer {
+  setData(format: 'application/x-athanor-filepath', data: string): void;
+  getData(format: 'application/x-athanor-filepath'): string;
+}
+
+interface AthanorDragEvent extends DragEvent {
+  dataTransfer: AthanorDataTransfer;
+}
+
 export {};
 
 // Panel resizing types

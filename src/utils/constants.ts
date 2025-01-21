@@ -62,3 +62,14 @@ export const UI = {
     dropdownMaxHeight: '12rem',
   },
 };
+
+// Drag and drop configuration
+export const DRAG_DROP = {
+  // Custom MIME type for internal file path transfers
+  MIME_TYPE: 'application/x-athanor-filepath',
+  // CSS classes for drag states
+  classes: {
+    draggable: 'cursor-grab hover:cursor-grab active:cursor-grabbing',
+    dragging: 'opacity-50 cursor-grabbing',
+  },
+};

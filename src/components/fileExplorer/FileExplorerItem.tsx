@@ -1,9 +1,9 @@
 // AI Summary: Handles rendering of individual file/folder items in the explorer tree.
 // Manages item selection, expansion toggling, and context menu integration.
-import React from 'react';
+import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, File, Scissors, Book } from 'lucide-react';
 import { FileItem, getBaseName, isEmptyFolder } from '../../utils/fileTree';
-import { FILE_SYSTEM } from '../../utils/constants';
+import { FILE_SYSTEM, DRAG_DROP } from '../../utils/constants';
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
@@ -29,6 +29,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   onViewFile,
   onContextMenu,
 }) => {
+  const [isDragging, setIsDragging] = useState(false);
   const {
     selectedItems,
     toggleItemSelection,
@@ -56,6 +57,30 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
         hasSelectedDescendants && !allDescendantsSelected;
     }
   }, [hasSelectedDescendants, allDescendantsSelected]);
+
+  // Handle drag start
+  const handleDragStart = (e: React.DragEvent) => {
+    if (isEmpty) return; // Prevent dragging empty folders
+
+    try {
+      // Use the item's ID which is already relative to root
+      const relativePath = item.id === '/' ? '' : item.id;
+      
+      // Set both the custom MIME type and fallback text
+      e.dataTransfer.setData('text/plain', relativePath);
+      e.dataTransfer.effectAllowed = 'copy';
+      setIsDragging(true);
+      
+      console.log('Started drag with path:', relativePath);
+    } catch (error) {
+      console.error('Error preparing drag data:', error);
+    }
+  };
+
+  // Handle drag end
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
 
   // Get the display name - for root level, handle supplementary materials directory specially
   const displayName =
@@ -86,9 +111,14 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   return (
     <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
-        className={`flex items-center py-1 hover:bg-gray-100`}
+        className={`flex items-center py-1 hover:bg-gray-100 ${
+          !isEmpty ? DRAG_DROP.classes.draggable : ''
+        } ${isDragging ? DRAG_DROP.classes.dragging : ''}`}
         onClick={handleFileClick}
         onContextMenu={(e) => onContextMenu(e, item)}
+        draggable={!isEmpty}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
       >
         {/* Checkbox or placeholder */}
         <div className="w-5 flex-shrink-0" onClick={handleCheckboxClick}>

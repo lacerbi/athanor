@@ -29,6 +29,8 @@ import { copyToClipboard } from '../actions/ManualCopyAction';
 import { buildAiSummaryPromptAction } from '../actions/BuildAiSummaryAction';
 import { buildRefactorPromptAction } from '../actions/BuildRefactorAction';
 import { getActionTooltip } from '../actions';
+import { useFileDrop } from '../hooks/useFileDrop';
+import { DRAG_DROP } from '../utils/constants';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -217,6 +219,14 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               placeholder="Describe your task or query here - whether it's implementing a feature, asking about the codebase, or discussing code improvements..."
               value={tabs[activeTabIndex].content}
               onChange={(e) => setTabContent(activeTabIndex, e.target.value)}
+              {...useFileDrop({
+                onInsert: (value, start, end) => {
+                  const text = tabs[activeTabIndex].content;
+                  const newText = text.slice(0, start) + value + text.slice(end);
+                  setTabContent(activeTabIndex, newText);
+                },
+                currentValue: tabs[activeTabIndex].content,
+              })}
             />
 
             {/* Context Field */}
@@ -232,6 +242,14 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   }
                   className="flex-1"
                   aria-label="Task context"
+                  {...useFileDrop({
+                    onInsert: (value, start, end) => {
+                      const text = tabs[activeTabIndex].context;
+                      const newText = text.slice(0, start) + value + text.slice(end);
+                      setTabContext(activeTabIndex, newText);
+                    },
+                    currentValue: tabs[activeTabIndex].context,
+                  })}
                 />
                 {tabs[activeTabIndex].context && (
                   <button
@@ -463,6 +481,14 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             onChange={(e) => setTabOutput(activeTabIndex, e.target.value)}
             className="flex-1 p-2 border rounded font-mono text-sm resize-none overflow-auto whitespace-pre"
             placeholder="Generated prompt to be pasted into an AI assistant will appear here..."
+            {...useFileDrop({
+              onInsert: (value, start, end) => {
+                const text = tabs[activeTabIndex].output;
+                const newText = text.slice(0, start) + value + text.slice(end);
+                setTabOutput(activeTabIndex, newText);
+              },
+              currentValue: tabs[activeTabIndex].output,
+            })}
           />
         </div>
       </div>
