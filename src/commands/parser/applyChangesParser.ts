@@ -1,135 +1,192 @@
-// AI Summary: Parses XML-based change commands and processes file operations for the Athanor system.
-// Core function parseXmlContent() uses regex patterns to parse XML structure, validate content,
-// and generate FileOperation objects. Handles CREATE, UPDATE_FULL, UPDATE_DIFF, and DELETE operations
-// with comprehensive field validation and duplication checks.
-import {
-  FileOperation,
-  FileOperationType,
-} from '../../types/global';
+// AI Summary: Provides robust sequential parsing of XML apply changes commands.
+// Handles CDATA blocks and file operations with precise field validation and error handling.
+// Core functions: parseXmlContent() sequentially processes file blocks and validates operations.
+import { FileOperation, FileOperationType } from '../../types/global';
 import {
   processFileUpdate,
   normalizeLineEndings,
 } from '../../utils/fileOperations';
 
-// Regular expressions for parsing XML structure
-const FILE_BLOCK_REGEX = /<file>([\s\S]*?)<\/file>/g;
-const FIELD_REGEX = /<(file_message|file_operation|file_path|file_code)>([\s\S]*?)<\/\1>/gi;
-const CDATA_REGEX = /<!\[CDATA\[([\s\S]*?)\]\]>/;
-const ATH_COMMAND_REGEX = /<ath\s+command="apply changes">([\s\S]*?)<\/ath(?:\s+command(?:="[^"]*")?)?>/i;
+// Regex pattern for the outer ath command block
+const ATH_COMMAND_REGEX =
+  /<ath\s+command="apply\s*changes">([\s\S]*?)<\/ath(?:\s+command(?:="[^"]*")?)?>/i;
 
-interface ParsedFileBlock {
-  file_message?: string;
-  file_operation?: FileOperationType;
-  file_path?: string;
-  file_code?: string;
-}
+// Sequential parser to extract file blocks and their content
+class XmlParser {
+  private content: string;
+  private position: number;
 
-/**
- * Validates parsed block based on operation type and checks for duplicate fields
- */
-function validateFileBlock(
-  block: ParsedFileBlock,
-  blockContent: string,
-  addLog: (message: string) => void
-): boolean {
-  // Check for empty or undefined path
-  if (!block.file_path?.trim()) {
-    addLog('Invalid file block: empty or missing file path');
-    return false;
+  constructor(content: string) {
+    this.content = content;
+    this.position = 0;
   }
 
-  // Check for duplicate fields
-  const seenFields = new Set<string>();
-  let match;
-  FIELD_REGEX.lastIndex = 0;
-  
-  while ((match = FIELD_REGEX.exec(blockContent)) !== null) {
-    const fieldName = match[1].toLowerCase();
-    if (seenFields.has(fieldName)) {
-      addLog(`Duplicate field found: ${fieldName} in file: ${block.file_path}`);
-      return false;
+  // Move position to next non-whitespace character
+  private skipWhitespace(): void {
+    while (
+      this.position < this.content.length &&
+      /\s/.test(this.content[this.position])
+    ) {
+      this.position++;
     }
-    seenFields.add(fieldName);
   }
 
-  // Operation-specific validation
-  switch (block.file_operation) {
-    case 'CREATE':
-    case 'UPDATE_FULL':
-    case 'UPDATE_DIFF':
-      if (!block.file_code) {
-        addLog(`Missing file_code for ${block.file_operation} operation in: ${block.file_path}`);
-        return false;
-      }
-      break;
-    case 'DELETE':
-      if (block.file_code && block.file_code.trim() !== '') {
-        addLog(`DELETE operation should have empty file_code in: ${block.file_path}`);
-        return false;
-      }
-      break;
-    default:
-      addLog(`Invalid or missing operation type in: ${block.file_path}`);
-      return false;
-  }
-
-  return true;
-}
-
-/**
- * Parse an individual file block and extract its fields
- */
-function parseFileBlock(blockContent: string, addLog: (message: string) => void): ParsedFileBlock | null {
-  // Check for empty block
-  if (!blockContent.trim()) {
-    addLog('Empty file block found');
-    return null;
-  }
-
-  const result: ParsedFileBlock = {};
-  let match;
-
-  // Reset regex state
-  FIELD_REGEX.lastIndex = 0;
-  
-  while ((match = FIELD_REGEX.exec(blockContent)) !== null) {
-    const [, fieldName, fieldContent] = match;
-    const normalizedFieldName = fieldName.toLowerCase() as keyof ParsedFileBlock;
-
-    if (!fieldContent.trim()) {
-      addLog(`Empty content found for field: ${fieldName}`);
-      return null;
+  // Find the next occurrence of a string from current position
+  private findNext(search: string, errorContext: string): number {
+    const pos = this.content.indexOf(search, this.position);
+    if (pos === -1) {
+      throw new Error(`Could not find ${errorContext}`);
     }
+    return pos;
+  }
 
-    // Handle CDATA sections in file_code
-    if (normalizedFieldName === 'file_code') {
-      const cdataMatch = CDATA_REGEX.exec(fieldContent);
-      if (cdataMatch) {
-        result[normalizedFieldName] = cdataMatch[1];
-      } else {
-        addLog('Warning: file_code missing CDATA section');
-        result[normalizedFieldName] = fieldContent;
+  // Extract content between xml tags
+  private extractTagContent(tagName: string): string {
+    const startTag = `<${tagName}>`;
+    const endTag = `</${tagName}>`;
+
+    this.skipWhitespace();
+    const startPos = this.findNext(startTag, `opening tag ${tagName}`);
+    const contentStart = startPos + startTag.length;
+    const endPos = this.findNext(endTag, `closing tag ${tagName}`);
+
+    const content = this.content.slice(contentStart, endPos).trim();
+    this.position = endPos + endTag.length;
+    return content;
+  }
+
+  // Parse CDATA content within file_code block
+  private parseCdataBlock(): string {
+    const cdataStart = '<![CDATA[';
+
+    this.skipWhitespace();
+    const startPos = this.findNext(cdataStart, 'CDATA start marker');
+    const contentStart = startPos + cdataStart.length;
+
+    // Search for CDATA end marker
+    let searchPos = contentStart;
+    while (true) {
+      // Find next CDATA end marker
+      const cdataEndPos = this.content.indexOf(']]>', searchPos);
+      if (cdataEndPos === -1) {
+        throw new Error('Could not find CDATA end marker');
       }
-    } else if (normalizedFieldName === 'file_operation') {
-      const operation = fieldContent.trim();
-      if (operation === 'CREATE' || operation === 'UPDATE_FULL' || 
-          operation === 'UPDATE_DIFF' || operation === 'DELETE') {
-        result[normalizedFieldName] = operation;
-      } else {
-        addLog(`Invalid operation type: ${operation}`);
+
+      // Look ahead for file_code and file closing tags with optional whitespace
+      let pos = cdataEndPos + ']]>'.length;
+      const remaining = this.content.slice(pos);
+
+      // Use regex to match closing tags with optional whitespace
+      const closeTagsRegex = /^\s*<\/file_code>\s*<\/file>/;
+      const match = remaining.match(closeTagsRegex);
+
+      if (match) {
+        // We found the proper closing sequence
+        const content = this.content.slice(contentStart, cdataEndPos);
+        this.position = pos + match[0].length;
+        return content;
+      }
+
+      // If no match, continue searching from after this ]]>
+      searchPos = cdataEndPos + 3;
+    }
+  }
+  // Parse a single file block
+  private parseFileBlock(): {
+    message: string;
+    operation: FileOperationType;
+    path: string;
+    code: string;
+  } | null {
+    try {
+      this.skipWhitespace();
+
+      // Check if we're at a file block
+      if (this.content.indexOf('<file>', this.position) !== this.position) {
         return null;
       }
-    } else {
-      result[normalizedFieldName] = fieldContent.trim();
+      this.position += '<file>'.length;
+
+      // Extract required fields
+      const message = this.extractTagContent('file_message');
+      const operation = this.extractTagContent(
+        'file_operation'
+      ) as FileOperationType;
+      const path = this.extractTagContent('file_path');
+
+      // Find file_code opening tag
+      this.skipWhitespace();
+      const codeTagStart = this.findNext(
+        '<file_code>',
+        'file_code opening tag'
+      );
+      this.position = codeTagStart + '<file_code>'.length;
+
+      // Parse CDATA block
+      const code = this.parseCdataBlock();
+
+      // Validate operation type
+      const validOperations = [
+        'CREATE',
+        'UPDATE_FULL',
+        'UPDATE_DIFF',
+        'DELETE',
+      ] as const;
+      if (!validOperations.includes(operation)) {
+        throw new Error(`Invalid operation type: ${operation}`);
+      }
+
+      // Validate required fields
+      if (!path.trim()) {
+        throw new Error('Empty or missing file path');
+      }
+
+      // Validate code content based on operation
+      const isDELETE = (op: FileOperationType): op is 'DELETE' =>
+        op === 'DELETE';
+
+      if (isDELETE(operation)) {
+        if (code.trim() !== '') {
+          throw new Error('DELETE operation should have empty file_code');
+        }
+      } else if (!code) {
+        throw new Error(`Missing file_code for ${operation} operation`);
+      }
+
+      return { message, operation, path, code };
+    } catch (error) {
+      throw new Error(
+        `Error parsing file block: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
 
-  // Validate the complete block
-  if (!validateFileBlock(result, blockContent, addLog)) {
-    return null;
-  }
+  // Parse all file blocks
+  public parseFileBlocks(): Array<{
+    message: string;
+    operation: FileOperationType;
+    path: string;
+    code: string;
+  }> {
+    const blocks = [];
 
-  return result;
+    while (this.position < this.content.length) {
+      this.skipWhitespace();
+
+      // Check if we've reached the end of the ath block
+      if (this.content.indexOf('</ath', this.position) === this.position) {
+        break;
+      }
+
+      const block = this.parseFileBlock();
+      if (!block) {
+        break;
+      }
+      blocks.push(block);
+    }
+
+    return blocks;
+  }
 }
 
 /**
@@ -156,25 +213,18 @@ export async function parseXmlContent(
     }
 
     const athContent = athMatch[1];
-    let fileMatch;
+    const parser = new XmlParser(athContent);
 
-    // Reset regex state
-    FILE_BLOCK_REGEX.lastIndex = 0;
+    // Parse all file blocks
+    const fileBlocks = parser.parseFileBlocks();
 
     // Process each file block
-    while ((fileMatch = FILE_BLOCK_REGEX.exec(athContent)) !== null) {
-      const blockContent = fileMatch[1];
-      const parsedBlock = parseFileBlock(blockContent, addLog);
-
-      if (!parsedBlock) {
-        continue;
-      }
-
+    for (const block of fileBlocks) {
       try {
         let oldCode = '';
         let processedNewCode = '';
-        const operation = parsedBlock.file_operation as FileOperationType;
-        const path = parsedBlock.file_path as string;
+        const operation = block.operation;
+        const path = block.path;
 
         // Get existing file content if needed
         if (operation !== 'CREATE') {
@@ -199,13 +249,13 @@ export async function parseXmlContent(
         if (operation === 'DELETE') {
           processedNewCode = '';
         } else if (operation === 'CREATE') {
-          processedNewCode = normalizeLineEndings(parsedBlock.file_code || '');
+          processedNewCode = normalizeLineEndings(block.code);
         } else if (operation === 'UPDATE_FULL' || operation === 'UPDATE_DIFF') {
           try {
             processedNewCode = await processFileUpdate(
               operation,
               path,
-              parsedBlock.file_code || '',
+              block.code,
               oldCode
             );
           } catch (error) {
@@ -215,7 +265,7 @@ export async function parseXmlContent(
         }
 
         operations.push({
-          file_message: parsedBlock.file_message || '',
+          file_message: block.message,
           file_operation: operation,
           file_path: path,
           new_code: processedNewCode,
@@ -225,8 +275,8 @@ export async function parseXmlContent(
           diff_blocks: operation === 'UPDATE_DIFF' ? [] : undefined,
         });
       } catch (error) {
-        console.error(`Error processing file ${parsedBlock.file_path}:`, error);
-        addLog(`Failed to process file: ${parsedBlock.file_path} - ${error}`);
+        console.error(`Error processing file ${block.path}:`, error);
+        addLog(`Failed to process file: ${block.path} - ${error}`);
       }
     }
 
