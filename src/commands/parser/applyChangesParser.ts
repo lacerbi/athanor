@@ -55,7 +55,7 @@ class XmlParser {
     return content;
   }
 
-  // Parse CDATA content within file_code block
+  // Parse CDATA content within file_code block, with lenient handling of missing ]]>
   private parseCdataBlock(): string {
     const cdataStart = '<![CDATA[';
 
@@ -63,34 +63,65 @@ class XmlParser {
     const startPos = this.findNext(cdataStart, 'CDATA start marker');
     const contentStart = startPos + cdataStart.length;
 
-    // Search for CDATA end marker
+    // At each position, check both for ]]> and </file_code>
     let searchPos = contentStart;
-    while (true) {
-      // Find next CDATA end marker
+    while (searchPos < this.content.length) {
+      // First check if we have a </file_code> at or before the next ]]>
+      const fileCodeEnd = this.content.indexOf('</file_code>', searchPos);
+      if (fileCodeEnd !== -1) {
+        const nextCdataEnd = this.content.indexOf(']]>', searchPos);
+
+        // If there's no ]]> or </file_code> comes first, try lenient parsing
+        if (nextCdataEnd === -1 || fileCodeEnd < nextCdataEnd) {
+          // Extract content up to the file_code closing tag
+          const content = this.content.slice(contentStart, fileCodeEnd);
+
+          // Look ahead for file closing tags, optionally followed by next block or command end
+          const remaining = this.content.slice(fileCodeEnd);
+          const closeTagsRegex = /^<\/file_code>\s*<\/file>(?:\s*(?:<file>\s*<file_message>|<\/ath(?:\s+command(?:="[^"]*")?)?>\s*)?)?/;
+          const match = remaining.match(closeTagsRegex);
+
+          if (match) {
+            // We found a valid closing sequence
+            this.position = fileCodeEnd + match[0].length;
+            return content;
+          }
+        }
+      }
+
+      // Check for standard ]]> end marker
       const cdataEndPos = this.content.indexOf(']]>', searchPos);
-      if (cdataEndPos === -1) {
-        throw new Error('Could not find CDATA end marker');
+      if (cdataEndPos !== -1) {
+        let pos = cdataEndPos + ']]>'.length;
+        const remaining = this.content.slice(pos);
+
+        // Use regex to match closing tags with optional whitespace
+        const closeTagsRegex = /^\s*<\/file_code>\s*<\/file>/;
+        const match = remaining.match(closeTagsRegex);
+
+        if (match) {
+          // We found the proper closing sequence with ]]>
+          const content = this.content.slice(contentStart, cdataEndPos);
+          this.position = pos + match[0].length;
+          return content;
+        }
+
+        // If no match, try next position
+        searchPos = cdataEndPos + 3;
+        continue;
       }
 
-      // Look ahead for file_code and file closing tags with optional whitespace
-      let pos = cdataEndPos + ']]>'.length;
-      const remaining = this.content.slice(pos);
-
-      // Use regex to match closing tags with optional whitespace
-      const closeTagsRegex = /^\s*<\/file_code>\s*<\/file>/;
-      const match = remaining.match(closeTagsRegex);
-
-      if (match) {
-        // We found the proper closing sequence
-        const content = this.content.slice(contentStart, cdataEndPos);
-        this.position = pos + match[0].length;
-        return content;
-      }
-
-      // If no match, continue searching from after this ]]>
-      searchPos = cdataEndPos + 3;
+      // If we reach here, we found neither a valid ]]> nor a valid </file_code>
+      throw new Error(
+        'Could not find valid CDATA end marker (]]>) or file_code closing tag'
+      );
     }
+
+    throw new Error(
+      'Reached end of content without finding valid CDATA ending'
+    );
   }
+
   // Parse a single file block
   private parseFileBlock(): {
     message: string;
