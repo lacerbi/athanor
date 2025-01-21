@@ -40,14 +40,21 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
   fileTree: [],
   setFileTree: (tree: FileItem[]) => set({ fileTree: tree }),
   
-  resetState: () => set({
-    selectedItems: new Set(),
-    selectedFileCount: 0,
-    selectedLinesTotal: 0,
-    previewedFilePath: null,
-    isRefreshing: false,
-    fileTree: []
-  }),
+  resetState: () => {
+    return set({
+      // Clear selection state
+      selectedItems: new Set(),
+      selectedFileCount: 0,
+      selectedLinesTotal: 0,
+      
+      // Clear UI state
+      previewedFilePath: null,
+      isRefreshing: false,
+      
+      // Clear file system state
+      fileTree: [],
+    });
+  },
   
   selectedItems: new Set<string>(),
   selectedFileCount: 0,
