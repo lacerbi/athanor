@@ -1,4 +1,2 @@
-- Fix weird html warning in console
 - Fix relative paths in codebase documentation (seems to be a dev issue, not in production)
 - Make also preset tasks dynamic (make them use buildDynamicPrompts or something)
-- Fix file name drop behavior
