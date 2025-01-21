@@ -20,7 +20,7 @@ export function extractAllCommandBlocks(content: string): Command[] {
   const normalizedContent = normalizeLineEndings(content);
 
   // Find all <ath command="xxx"> tags and their content
-  const regex = /<ath\s+command="([^"]+)">([\s\S]*?)<\/ath>/g;
+  const regex = /<ath\s+command="([^"]+)">([\s\S]*?)<\/ath(\s+command(="[^"]*")?)?>/g;
   let match;
 
   while ((match = regex.exec(normalizedContent)) !== null) {
