@@ -129,15 +129,27 @@ export function useFileDrop({ onInsert, currentValue }: UseFileDropParams) {
       const y = e.clientY - rect.top;
       
       let insertPosition: number;
+      const textLength = element.value.length;
       
       // Calculate insert position based on element type
       if (element instanceof HTMLTextAreaElement) {
-        // For textareas, calculate position from coordinates
-        const position = getTextareaPositionFromCoords(element, x, y);
-        insertPosition = position !== null ? position : (element.selectionStart ?? 0);
+        // For textareas, handle positioning
+        const totalHeight = element.scrollHeight;
+        const lastLine = element.value.split('\n').length;
+        const lineHeight = totalHeight / Math.max(lastLine, 1);
+        
+        // If drop is below last line or in empty area, append to end
+        if (y > lastLine * lineHeight || element.value.trim() === '') {
+          insertPosition = textLength;
+        } else {
+          // Try to get precise position
+          const position = getTextareaPositionFromCoords(element, x, y);
+          insertPosition = (position !== null && position <= textLength) ? position : textLength;
+        }
       } else {
-        // For inputs, use current cursor position
-        insertPosition = element.selectionStart ?? 0;
+        // For inputs, use current cursor position or end if out of bounds
+        const cursorPos = element.selectionStart ?? 0;
+        insertPosition = cursorPos > textLength ? textLength : cursorPos;
       }
       
       // Insert the path at calculated position
