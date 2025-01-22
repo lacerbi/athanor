@@ -225,7 +225,7 @@ class XmlParser {
  */
 export async function parseXmlContent(
   clipboardContent: string,
-  addLog: (message: string) => void
+  addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void
 ): Promise<FileOperation[]> {
   const operations: FileOperation[] = [];
 
@@ -249,6 +249,9 @@ export async function parseXmlContent(
     // Parse all file blocks
     const fileBlocks = parser.parseFileBlocks();
 
+    // Track failed UPDATE_DIFF operations
+    const failedDiffPaths: string[] = [];
+
     // Process each file block
     for (const block of fileBlocks) {
       try {
@@ -256,6 +259,11 @@ export async function parseXmlContent(
         let processedNewCode = '';
         const operation = block.operation;
         const path = block.path;
+
+        // Track failed UPDATE_DIFF operations
+        if (operation === 'UPDATE_DIFF') {
+          failedDiffPaths.push(path);
+        }
 
         // Get existing file content if needed
         if (operation !== 'CREATE') {
@@ -289,7 +297,15 @@ export async function parseXmlContent(
               block.code,
               oldCode
             );
+            // If we get here successfully for UPDATE_DIFF, remove it from failed paths
+            if (operation === 'UPDATE_DIFF') {
+              const index = failedDiffPaths.indexOf(path);
+              if (index > -1) {
+                failedDiffPaths.splice(index, 1);
+              }
+            }
           } catch (error) {
+            // Keep track of the error but continue processing other files
             addLog(`Error processing update for ${path}: ${error}`);
             continue;
           }
@@ -309,6 +325,23 @@ export async function parseXmlContent(
         console.error(`Error processing file ${block.path}:`, error);
         addLog(`Failed to process file: ${block.path} - ${error}`);
       }
+    }
+
+    // If there were any failed UPDATE_DIFF operations, create a clickable log entry
+    if (failedDiffPaths.length > 0) {
+      const currentDir = await window.fileSystem.getCurrentDirectory();
+      // Create a clickable log entry by passing an object
+      addLog({
+        message: `${failedDiffPaths.length} UPDATE_DIFF operation(s) failed - Click to copy files`,
+        onClick: async () => {
+          const { copyFailedDiffContent } = await import('../../actions/ManualCopyAction');
+          await copyFailedDiffContent({
+            filePaths: failedDiffPaths,
+            addLog,
+            rootPath: currentDir,
+          });
+        }
+      });
     }
 
     return operations;

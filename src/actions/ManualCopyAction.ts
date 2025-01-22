@@ -19,6 +19,12 @@ export interface CopySelectedParams {
   rootPath: string;
 }
 
+export interface CopyFailedDiffParams {
+  filePaths: string[];
+  addLog: (message: string) => void;
+  rootPath: string;
+}
+
 // Normalize line endings while preserving other whitespace
 function normalizeContent(content: string): string {
   if (!content) return '';
@@ -48,6 +54,43 @@ export async function copySelectedFilesContent(params: CopySelectedParams): Prom
     addLog(`Copied ${selectedItems.size} files to clipboard (${tokenCount})`);
   } catch (err) {
     addLog('Failed to copy selected files');
+  }
+}
+
+export async function copyFailedDiffContent(params: CopyFailedDiffParams): Promise<void> {
+  const { filePaths, addLog, rootPath } = params;
+
+  try {
+    // Gather content for each file
+    const fileContents: string[] = [];
+
+    for (const filePath of filePaths) {
+      try {
+        const content = await window.fileSystem.readFile(filePath, {
+          encoding: 'utf8',
+        }) as string;
+        fileContents.push(formatSingleFile(filePath, content, rootPath));
+      } catch (err) {
+        console.error(`Error reading file ${filePath}:`, err);
+        addLog(`Failed to read file: ${filePath}`);
+        return;
+      }
+    }
+
+    // Create final content block with message
+    const contentBlock = [
+      '# Failed UPDATE_DIFF Files',
+      'The following files failed to apply UPDATE_DIFF operations. Please re-run the update diff with these current file contents:\n',
+      ...fileContents,
+      '\nPlease analyze these files and generate new UPDATE_DIFF blocks that will match the current content.'
+    ].join('\n');
+
+    await navigator.clipboard.writeText(contentBlock);
+    const tokenCount = formatTokenCount(countTokens(contentBlock));
+    addLog(`Copied ${filePaths.length} files to clipboard (${tokenCount})`);
+  } catch (err) {
+    console.error('Failed to copy failed diff content:', err);
+    addLog('Failed to copy failed diff content');
   }
 }
 

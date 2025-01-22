@@ -1,2 +1,5 @@
+# TODO
+
 - Fix relative paths in codebase documentation (seems to be a dev issue, not in production)
 - Make also preset tasks dynamic (make them use buildDynamicPrompts or something)
+- Add branch/commits awareness (see https://chatgpt.com/share/67908472-3674-8006-88f4-824147f7ae48)
