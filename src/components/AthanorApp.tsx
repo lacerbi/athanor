@@ -16,7 +16,10 @@ const AthanorApp: React.FC = () => {
   const logsRef = useRef<HTMLDivElement | null>(null);
 
   // Store Hooks
-  const { logs, addLog } = useLogStore() as { logs: LogEntry[]; addLog: (message: string | Omit<LogEntry, 'id' | 'timestamp'>) => void };
+  const { logs, addLog } = useLogStore() as {
+    logs: LogEntry[];
+    addLog: (message: string | Omit<LogEntry, 'id' | 'timestamp'>) => void;
+  };
   const { setChangeAppliedCallback } = useApplyChangesStore();
 
   // File System Lifecycle
@@ -42,16 +45,6 @@ const AthanorApp: React.FC = () => {
     setChangeAppliedCallback(() => refreshFileSystem(true));
     return () => setChangeAppliedCallback(null);
   }, [refreshFileSystem, setChangeAppliedCallback]);
-
-  // Add test clickable log
-  useEffect(() => {
-    addLog({
-      message: "Click me to test log interaction!",
-      onClick: () => {
-        addLog("Test log entry was clicked!");
-      }
-    });
-  }, []); // Run once on mount
 
   // Handle tab changes
   const handleTabChange = (newTab: TabType) => {
