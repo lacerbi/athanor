@@ -175,7 +175,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               {log.onClick ? (
                 <button
                   onClick={log.onClick}
-                  className="text-left hover:underline focus:outline-none focus:ring-2 focus:ring-blue-500 rounded px-1"
+                  className="text-left text-purple-600 hover:underline active:bg-purple-100 transition-colors"
                 >
                   [{log.timestamp}] {log.message}
                 </button>
