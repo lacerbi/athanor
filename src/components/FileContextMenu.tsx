@@ -1,6 +1,7 @@
 // AI Summary: Context menu component for file and folder ignore operations.
 // Handles path normalization for .athignore entries and provides ignore options.
 // Manages menu positioning and integrates with the application's logging system.
+
 import React, { useEffect, useState } from 'react';
 import { useLogStore } from '../stores/logStore';
 
@@ -48,32 +49,18 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
     });
   }, [x, y]);
 
-  // Convert the absolute path to a normalized project-relative path with leading slash
+  // Retrieve the project-relative path from main process
   const getProjectRelativePath = async (): Promise<string> => {
     try {
-      // Get the project root directory
-      const projectRoot = await window.fileSystem.getCurrentDirectory();
-
-      // Convert both paths to forward slashes for consistency
-      const normalizedRoot = projectRoot.replace(/\\/g, '/');
-      const normalizedPath = itemPath.replace(/\\/g, '/');
-
-      // Remove the project root from the path and ensure leading slash
-      let relativePath = normalizedPath.replace(normalizedRoot, '');
-      if (!relativePath.startsWith('/')) {
-        relativePath = '/' + relativePath;
-      }
-
-      // For folders, ensure trailing slash
+      let relativePath = await window.fileSystem.relativeToProject(itemPath);
       if (type === 'folder' && !relativePath.endsWith('/')) {
         relativePath += '/';
       }
-
       return relativePath;
     } catch (error) {
       console.error('Error getting project relative path:', error);
-      // For fallback, still ensure folder has trailing slash
-      return '/' + name + (type === 'folder' ? '/' : '');
+      // Fallback if there's an error
+      return name + (type === 'folder' ? '/' : '');
     }
   };
 
@@ -91,7 +78,11 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
   }, [onClose]);
 
   const handleIgnoreThis = async () => {
-    const relativePath = await getProjectRelativePath();
+    let relativePath = await getProjectRelativePath();
+    // Ensure path starts with '/' for single file/folder ignores
+    //if (!relativePath.startsWith('/')) {
+    //  relativePath = '/' + relativePath;
+    //}
     const logPath = relativePath.endsWith('/')
       ? relativePath.slice(0, -1)
       : relativePath;

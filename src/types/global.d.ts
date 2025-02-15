@@ -96,6 +96,7 @@ declare global {
       normalizeToUnix: (path: string) => Promise<string>;
       joinPaths: (path1: string, path2: string) => Promise<string>;
       getBaseName: (path: string) => Promise<string>;
+      relativeToProject: (filePath: string) => Promise<string>;
     };
   }
 }

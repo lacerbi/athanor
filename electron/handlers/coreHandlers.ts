@@ -1,6 +1,7 @@
 // AI Summary: Handles core IPC operations for file system functionality including folder selection,
 // path conversion, directory access, and ignore rule management. Manages folder dialogs,
 // path normalization, and .athignore file operations with proper error handling.
+
 import { ipcMain, dialog, app } from 'electron';
 import * as fs from 'fs/promises';
 import { mainWindow } from '../windowManager';
@@ -9,10 +10,9 @@ import {
   loadIgnoreRules,
   getStats,
   pathExists,
-  cleanupWatchers,
+  clearFileSystemState,
   handleError,
   getBaseDir,
-  clearFileSystemState,
   ensureMaterialsDir,
   getMaterialsDir,
 } from '../fileSystemManager';
@@ -117,7 +117,7 @@ export function setupCoreHandlers() {
           throw new Error(`Cannot access folder: ${errorMessage}`);
         }
 
-        // Clear existing state and watchers
+        // Clear existing state
         clearFileSystemState();
 
         // Update directory and base path
@@ -168,6 +168,17 @@ export function setupCoreHandlers() {
       return getMaterialsDir();
     } catch (error) {
       handleError(error, 'getting materials directory path');
+    }
+  });
+
+  // Add handler for getting project-relative path
+  ipcMain.handle('fs:relativeToProject', async (_, targetPath: string) => {
+    try {
+      const normalized = filePathManager.normalizeToUnix(targetPath);
+      const resolved = filePathManager.resolveFromBase(normalized);
+      return filePathManager.relativeToCwd(resolved);
+    } catch (error) {
+      handleError(error, `resolving project-relative path for: ${targetPath}`);
     }
   });
 }
