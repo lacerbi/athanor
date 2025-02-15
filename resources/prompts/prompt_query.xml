@@ -10,7 +10,7 @@
     label="Default"
     tooltip="Default prompt to query the codebase">
 <codebase>
-# Codebase Documentation `{{project_name}}`
+# Documentation `{{project_name}}`
 
 {{project_info}}
 <file_contents>

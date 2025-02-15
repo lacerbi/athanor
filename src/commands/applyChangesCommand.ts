@@ -7,7 +7,7 @@ import { countTokens, formatTokenCount } from '../utils/tokenCount';
 export interface ApplyChangesParams {
   content: string;
   fullContent?: string;
-  addLog: (message: string) => void;
+  addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
   setOperations: (ops: FileOperation[]) => void;
   clearOperations: () => void;
   setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
@@ -28,7 +28,10 @@ export async function executeApplyChangesCommand({
   );
 
   try {
-    const operations = await parseXmlContent(fullContent || content, addLog);
+    const operations = await parseXmlContent(fullContent || content, 
+      // Pass addLog directly since it now supports both string and object with onClick
+      addLog
+    );
     if (operations.length) {
       clearOperations();
       setOperations(operations);

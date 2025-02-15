@@ -10,7 +10,7 @@
     label="Multistep - Split task over multiple steps"
     tooltip="By default, plan a feature over multiple steps (commits)">
 <codebase>
-# Codebase Documentation `{{project_name}}`
+# Documentation `{{project_name}}`
 
 {{project_info}}
 <file_contents>
@@ -130,7 +130,7 @@ Important guidelines for commits:
     label="Plan a feature for one-shot implementation"
     tooltip="Use this to plan simple features or to give to strong coding models that can handle complex plans">
 <codebase>
-# Codebase Documentation `{{project_name}}`
+# Documentation `{{project_name}}`
 
 {{project_info}}
 <file_contents>

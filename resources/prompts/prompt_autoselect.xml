@@ -10,7 +10,7 @@
     label="Default"
     tooltip="Prompt to select task-relevant files from the codebase">
 <codebase>
-# Codebase Documentation `{{project_name}}`
+# Documentation `{{project_name}}`
 
 {{project_info}}
 <file_contents>

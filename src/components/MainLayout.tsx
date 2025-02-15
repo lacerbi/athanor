@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { File, FileText, FolderOpen, RefreshCw, ClipboardCopy } from 'lucide-react';
-import { useLogStore } from '../stores/logStore';
+import { useLogStore, LogEntry } from '../stores/logStore';
 import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
 import FileViewerPanel from './FileViewerPanel';
@@ -22,7 +22,7 @@ interface MainLayoutProps {
   onOpenFolder: () => Promise<void>;
   onRefresh: () => Promise<void>;
   logsRef: React.RefObject<HTMLDivElement | null>;
-  logs: string[];
+  logs: LogEntry[];
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -170,9 +170,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           ref={logsRef}
           className="h-24 border-t p-2 bg-gray-50 overflow-y-auto font-mono text-sm"
         >
-          {logs.map((log, index) => (
-            <div key={index} className="text-gray-700">
-              {log}
+          {logs.map((log) => (
+            <div key={log.id} className="text-gray-700">
+              {log.onClick ? (
+                <button
+                  onClick={log.onClick}
+                  className="text-left text-purple-600 hover:underline active:bg-purple-100 transition-colors"
+                >
+                  [{log.timestamp}] {log.message}
+                </button>
+              ) : (
+                <span>[{log.timestamp}] {log.message}</span>
+              )}
             </div>
           ))}
         </div>

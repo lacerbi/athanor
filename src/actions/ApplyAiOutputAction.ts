@@ -4,7 +4,7 @@ import type { FileOperation } from '../types/global';
 import * as commands from '../commands';
 
 export async function applyAiOutput(params: {
-  addLog: (message: string) => void;
+  addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
   setOperations: (ops: FileOperation[]) => void;
   clearOperations: () => void;
   setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;

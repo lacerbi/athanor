@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import MainLayout from './MainLayout';
 import { useFileSystemLifecycle } from '../hooks/useFileSystemLifecycle';
-import { useLogStore } from '../stores/logStore';
+import { useLogStore, LogEntry } from '../stores/logStore';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { TabType } from './AthanorTabs';
 
@@ -16,7 +16,10 @@ const AthanorApp: React.FC = () => {
   const logsRef = useRef<HTMLDivElement | null>(null);
 
   // Store Hooks
-  const { logs, addLog } = useLogStore();
+  const { logs, addLog } = useLogStore() as {
+    logs: LogEntry[];
+    addLog: (message: string | Omit<LogEntry, 'id' | 'timestamp'>) => void;
+  };
   const { setChangeAppliedCallback } = useApplyChangesStore();
 
   // File System Lifecycle
