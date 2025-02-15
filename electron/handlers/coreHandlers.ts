@@ -1,6 +1,5 @@
 // AI Summary: Handles core IPC operations for file system functionality including folder selection,
-// path conversion, directory access, and ignore rule management. Manages folder dialogs,
-// path normalization, and .athignore file operations with proper error handling.
+// path conversion, directory access, and ignore rule management. Now supports ignoreAll param to addToIgnore.
 
 import { ipcMain, dialog, app } from 'electron';
 import * as fs from 'fs/promises';
@@ -84,10 +83,11 @@ export function setupCoreHandlers() {
     }
   });
 
-  // Handle adding items to ignore file
-  ipcMain.handle('fs:addToIgnore', async (_, itemPath: string) => {
+  // Handle adding items to ignore file (now with ignoreAll param)
+  ipcMain.handle('fs:addToIgnore', async (_, itemPath: string, ignoreAll?: boolean) => {
     try {
-      return await ignoreRulesManager.addIgnorePattern(itemPath);
+      const resolvedIgnoreAll = ignoreAll ?? false;
+      return await ignoreRulesManager.addIgnorePattern(itemPath, resolvedIgnoreAll);
     } catch (error) {
       handleError(error, `adding to ignore file: ${itemPath}`);
     }

@@ -1,6 +1,5 @@
 // AI Summary: Exposes protected methods for IPC communication and file system operations
-// including OS path conversion. Provides bridge between renderer process and main process
-// for file system access and monitoring with proper channel validation.
+// including OS path conversion. Provides optional ignoreAll param for addToIgnore bridging.
 
 import { contextBridge, ipcRenderer } from 'electron';
 
@@ -65,8 +64,8 @@ contextBridge.exposeInMainWorld('fileSystem', {
   writeFile: (path: string, data: string) =>
     ipcRenderer.invoke('fs:writeFile', path, data),
   deleteFile: (path: string) => ipcRenderer.invoke('fs:deleteFile', path),
-  addToIgnore: (itemPath: string) =>
-    ipcRenderer.invoke('fs:addToIgnore', itemPath),
+  addToIgnore: (itemPath: string, ignoreAll: boolean = false) =>
+    ipcRenderer.invoke('fs:addToIgnore', itemPath, ignoreAll),
   getMaterialsDir: () => ipcRenderer.invoke('fs:getMaterialsDir'),
   relativeToProject: (filePath: string) => ipcRenderer.invoke('fs:relativeToProject', filePath),
 });

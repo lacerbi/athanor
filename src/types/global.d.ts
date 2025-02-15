@@ -90,7 +90,7 @@ declare global {
       ) => Promise<string | ArrayBuffer>;
       writeFile: (path: string, data: string) => Promise<void>;
       deleteFile: (path: string) => Promise<void>;
-      addToIgnore: (itemPath: string) => Promise<boolean>;
+      addToIgnore: (itemPath: string, ignoreAll?: boolean) => Promise<boolean>;
       getMaterialsDir: () => Promise<string>;
       // Path utilities
       normalizeToUnix: (path: string) => Promise<string>;

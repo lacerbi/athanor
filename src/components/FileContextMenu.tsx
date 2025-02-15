@@ -1,14 +1,14 @@
 // AI Summary: Context menu component for file and folder ignore operations.
-// Handles path normalization for .athignore entries and provides ignore options.
-// Manages menu positioning and integrates with the application's logging system.
+// Manages path normalization for .athignore entries. Calls onIgnoreItem with ignoreAll
+// to differentiate single items vs. wildcard patterns.
 
 import React, { useEffect, useState } from 'react';
 import { useLogStore } from '../stores/logStore';
 
 interface FileContextMenuProps {
   type: 'file' | 'folder';
-  name: string;
-  path: string; // This is the absolute path
+  name: string; // Display name
+  path: string; // Absolute path
   x: number;
   y: number;
   onClose: () => void;
@@ -78,25 +78,23 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
   }, [onClose]);
 
   const handleIgnoreThis = async () => {
-    let relativePath = await getProjectRelativePath();
-    // Ensure path starts with '/' for single file/folder ignores
-    //if (!relativePath.startsWith('/')) {
-    //  relativePath = '/' + relativePath;
-    //}
+    const relativePath = await getProjectRelativePath();
     const logPath = relativePath.endsWith('/')
       ? relativePath.slice(0, -1)
       : relativePath;
     addLog(`Adding ${type} '${logPath}' to .athignore`);
+    // Single-file/folder ignore => ignoreAll = false
     onIgnoreItem(relativePath, false);
   };
 
   const handleIgnoreAll = () => {
-    // For ignoring all folders with this name, add trailing slash
+    // For ignoring all folders with this name, we pass the folder name alone
     const ignorePath = type === 'folder' ? name + '/' : name;
     const logPath = ignorePath.endsWith('/')
       ? ignorePath.slice(0, -1)
       : ignorePath;
     addLog(`Adding all ${type}s named '${logPath}' to .athignore`);
+    // Wildcard pattern => ignoreAll = true
     onIgnoreItem(ignorePath, true);
   };
 

@@ -1,5 +1,7 @@
 // AI Summary: Manages ignore rules including loading from .athignore/.gitignore files,
-// rule application, and path normalization. Integrates with filePathManager for path operations.
+// rule application, and path normalization. Now ensures single-item ignores are prefixed
+// with a leading slash in .athignore when ignoreAll is false.
+
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import ignore from 'ignore';
@@ -79,8 +81,8 @@ class IgnoreRulesManager {
     }
   }
 
-  // Add new ignore pattern
-  async addIgnorePattern(itemPath: string): Promise<boolean> {
+  // Add new ignore pattern, optionally ignoring all with same name (ignoreAll)
+  async addIgnorePattern(itemPath: string, ignoreAll = false): Promise<boolean> {
     try {
       // Check if path ends with slash before normalization
       const hadTrailingSlash =
@@ -94,9 +96,14 @@ class IgnoreRulesManager {
       );
 
       // Restore the trailing slash if it was present
-      const finalPath = hadTrailingSlash
+      let finalPath = hadTrailingSlash
         ? normalizedPath + '/'
         : normalizedPath;
+
+      // If ignoring a single file/folder, prepend slash to make it root-relative
+      if (!ignoreAll && !finalPath.startsWith('/')) {
+        finalPath = '/' + finalPath;
+      }
 
       const ignorePath = filePathManager.toPlatformPath(
         path.join(this.getBaseDir(), '.athignore')
