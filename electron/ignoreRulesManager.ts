@@ -1,7 +1,8 @@
 // AI Summary: Manages ignore rules including loading from .athignore/.gitignore files,
-// rule application, and path normalization. Now ensures single-item ignores are prefixed
-// with a leading slash in .athignore when ignoreAll is false.
-
+// rule application, and path normalization. Now ensures that when ignoreAll is true,
+// the provided path is directly normalized and stripped of any leading slash, so that
+// ignore-all entries in .athignore appear without a leading slash. Single-item ignores
+// still get a leading slash.
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import ignore from 'ignore';
@@ -88,21 +89,25 @@ class IgnoreRulesManager {
       const hadTrailingSlash =
         itemPath.endsWith('/') || itemPath.endsWith('\\');
 
-      // Normalize and ensure path is relative to base directory
-      const normalizedPath = filePathManager.relativeToCwd(
-        filePathManager.resolveFromBase(
-          filePathManager.normalizeToUnix(itemPath)
-        )
-      );
-
-      // Restore the trailing slash if it was present
-      let finalPath = hadTrailingSlash
-        ? normalizedPath + '/'
-        : normalizedPath;
-
-      // If ignoring a single file/folder, prepend slash to make it root-relative
-      if (!ignoreAll && !finalPath.startsWith('/')) {
-        finalPath = '/' + finalPath;
+      let finalPath: string;
+      if (ignoreAll) {
+        // For "ignore all", bypass relativeToCwd and resolveFromBase,
+        // simply normalize and remove any leading slash.
+        finalPath = filePathManager.normalizeToUnix(itemPath).replace(/^\/+/, '');
+        if (hadTrailingSlash && !finalPath.endsWith('/')) {
+          finalPath += '/';
+        }
+      } else {
+        // For single-item ignore, compute the path relative to CWD and ensure it is root-relative.
+        const normalizedPath = filePathManager.relativeToCwd(
+          filePathManager.resolveFromBase(
+            filePathManager.normalizeToUnix(itemPath)
+          )
+        );
+        finalPath = hadTrailingSlash ? normalizedPath + '/' : normalizedPath;
+        if (!finalPath.startsWith('/')) {
+          finalPath = '/' + finalPath;
+        }
       }
 
       const ignorePath = filePathManager.toPlatformPath(

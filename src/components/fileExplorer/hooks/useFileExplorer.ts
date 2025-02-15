@@ -37,7 +37,7 @@ export function useFileExplorer(items: FileItem[], onRefresh: () => void) {
 
   const handleIgnoreItem = async (itemPath: string, ignoreAll: boolean) => {
     try {
-      const success = await window.fileSystem.addToIgnore(itemPath);
+      const success = await window.fileSystem.addToIgnore(itemPath, ignoreAll);
       if (success) {
         onRefresh();
       }

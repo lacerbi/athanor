@@ -1,6 +1,7 @@
 // AI Summary: Context menu component for file and folder ignore operations.
-// Manages path normalization for .athignore entries. Calls onIgnoreItem with ignoreAll
-// to differentiate single items vs. wildcard patterns.
+// Now ensures no leading slash is added for "ignore all" patterns by stripping leading slashes
+// from the item name. Manages path normalization for .athignore entries and differentiates
+// single-item vs. wildcard ignores. Calls onIgnoreItem with ignoreAll to distinguish patterns.
 
 import React, { useEffect, useState } from 'react';
 import { useLogStore } from '../stores/logStore';
@@ -88,8 +89,10 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
   };
 
   const handleIgnoreAll = () => {
-    // For ignoring all folders with this name, we pass the folder name alone
-    const ignorePath = type === 'folder' ? name + '/' : name;
+    // Remove any leading slash from the name
+    const baseName = name.replace(/^\/+/, '');
+    // For ignoring all folders with this name, we pass the bare name plus slash if folder
+    const ignorePath = type === 'folder' ? baseName + '/' : baseName;
     const logPath = ignorePath.endsWith('/')
       ? ignorePath.slice(0, -1)
       : ignorePath;
