@@ -1,7 +1,6 @@
 // AI Summary: Provides file system operations including reading directory structure,
 // building the file tree, analyzing file contents, and an updated addToIgnore method
 // that supports an ignoreAll parameter for .athignore entries.
-
 import {
   FileItem,
   sortItems,
@@ -73,7 +72,10 @@ export async function buildFileTree(
       };
     }
 
-    const entries = await window.fileSystem.readDirectory(fullPath, applyIgnores);
+    const entries = await window.fileSystem.readDirectory(
+      fullPath,
+      applyIgnores
+    );
     const children: FileItem[] = [];
 
     for (const entry of entries) {
@@ -227,94 +229,4 @@ export function updateItemInTree(
   }
 
   return tree;
-}
-
-// Updated addToIgnore method accepting ignoreAll
-interface AthignoreOptions {
-  useStandardIgnore: boolean;
-  importGitignore: boolean;
-}
-
-export async function createAthignoreFile(
-  projectPath: string,
-  options: AthignoreOptions
-): Promise<void> {
-  try {
-    // Read the default athignore content
-    const defaultAthignorePath = await window.fileSystem.getResourcesPath();
-    const defaultContent = await window.fileSystem.readFile(
-      await window.fileSystem.joinPaths(defaultAthignorePath, 'files/default_athignore'),
-      { encoding: 'utf8' }
-    ) as string;
-
-    let finalContent = '';
-
-    // If using standard ignore rules, use the entire default content
-    if (options.useStandardIgnore) {
-      finalContent = defaultContent;
-    } else {
-      // Extract only the initial comment header (everything up to first blank line)
-      finalContent = defaultContent.split(/\n\s*\n/)[0] + '\n\n';
-    }
-
-    // If importing from .gitignore and it exists, add those patterns in a new section
-    if (options.importGitignore) {
-      const gitignorePath = await window.fileSystem.joinPaths(projectPath, '.gitignore');
-      const exists = await window.fileSystem.fileExists(gitignorePath);
-      
-      if (exists) {
-        const gitignoreContent = await window.fileSystem.readFile(gitignorePath, {
-          encoding: 'utf8',
-        }) as string;
-        
-        // Get lines from .gitignore
-        const gitignoreLines = gitignoreContent.split('\n')
-          .map(line => line.trim())
-          .filter(line => line); // Remove empty lines
-
-        // Get existing lines from default content if we're using it
-        const existingLines = options.useStandardIgnore 
-          ? defaultContent.split('\n').map(line => line.trim())
-          : [];
-
-        // Filter out duplicates
-        const uniqueGitignoreLines = gitignoreLines.filter(
-          line => !existingLines.includes(line)
-        );
-
-        if (uniqueGitignoreLines.length > 0) {
-          // Add .gitignore section header
-          finalContent += '\n###############################################################################\n';
-          finalContent += '# IMPORTED FROM .gitignore\n';
-          finalContent += '# These files were imported from .gitignore at creation.\n';
-          finalContent += '# These are NOT updated automatically if .gitignore is later changed.\n';
-          finalContent += '###############################################################################\n\n';
-          
-          // Add unique lines
-          finalContent += uniqueGitignoreLines.join('\n') + '\n';
-        }
-      }
-    }
-
-    // Always add the project files section at the end
-    finalContent += '\n###############################################################################\n';
-    finalContent += '# PROJECT FILES\n';
-    finalContent += '# Add below specific files and folders you want to ignore.\n';
-    finalContent += '###############################################################################\n';
-
-    // Write the .athignore file
-    await window.fileSystem.writeFile('.athignore', finalContent);
-  } catch (error) {
-    console.error('Error creating .athignore:', error);
-    throw error;
-  }
-}
-
-export async function addToIgnore(itemPath: string, ignoreAll: boolean = false): Promise<boolean> {
-  try {
-    return await window.fileSystem.addToIgnore(itemPath, ignoreAll);
-  } catch (error) {
-    console.error(`Error adding path to ignore: ${itemPath}`, error);
-    throw error;
-  }
 }
