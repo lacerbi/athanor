@@ -102,6 +102,26 @@ declare global {
   }
 }
 
+// Project creation options
+export interface ProjectCreationOptions {
+  useStandardIgnore: boolean;
+  importGitignore: boolean;
+}
+
+// File system lifecycle interface
+export interface FileSystemLifecycle {
+  currentDirectory: string;
+  isRefreshing: boolean;
+  appVersion: string;
+  filesData: FileItem | null;
+  materialsData: FileItem | null;
+  handleOpenFolder: () => Promise<void>;
+  refreshFileSystem: (silent?: boolean) => Promise<void>;
+  showProjectDialog: boolean;
+  gitignoreExists: boolean;
+  handleCreateProject: (useStandardIgnore: boolean, importGitignore: boolean) => Promise<void>;
+}
+
 declare module 'js-tiktoken' {
   export class Tiktoken {
     encode(text: string): number[];

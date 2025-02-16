@@ -2,7 +2,7 @@
 // Provides hooks for directory operations, file system refresh, and watcher setup using shared tree loading logic.
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { FileItem } from '../utils/fileTree';
-import { buildFileTree } from '../services/fileSystemService';
+import { buildFileTree, createAthignoreFile } from '../services/fileSystemService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { FILE_SYSTEM } from '../utils/constants';
@@ -76,8 +76,16 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     if (!pendingDirectory) return;
     
     try {
-      // Logic for creating .athignore will be added in next commit
+      // Create .athignore file with selected rules
+      await createAthignoreFile(pendingDirectory, {
+        useStandardIgnore,
+        importGitignore,
+      });
+      
+      // Initialize project with new .athignore
       await initializeProject(pendingDirectory);
+      
+      addLog('Created new Athanor project');
     } catch (error) {
       console.error('Error creating project:', error);
       addLog('Failed to create project');

@@ -230,6 +230,68 @@ export function updateItemInTree(
 }
 
 // Updated addToIgnore method accepting ignoreAll
+interface AthignoreOptions {
+  useStandardIgnore: boolean;
+  importGitignore: boolean;
+}
+
+export async function createAthignoreFile(
+  projectPath: string,
+  options: AthignoreOptions
+): Promise<void> {
+  try {
+    // Read the default athignore content
+    const defaultAthignorePath = await window.fileSystem.getResourcesPath();
+    const defaultContent = await window.fileSystem.readFile(
+      await window.fileSystem.joinPaths(defaultAthignorePath, 'files/default_athignore'),
+      { encoding: 'utf8' }
+    ) as string;
+
+    // Extract comment header (everything up to first blank line)
+    const commentHeader = defaultContent.split(/\n\s*\n/)[0] + '\n\n';
+
+    // Initialize patterns array with comment header
+    let patterns: string[] = [];
+
+    // If using standard ignore rules, add all patterns from default_athignore
+    if (options.useStandardIgnore) {
+      patterns = defaultContent
+        .split('\n')
+        .filter(line => line.trim() && !line.startsWith('#'));
+    }
+
+    // If importing from .gitignore and it exists, add those patterns
+    if (options.importGitignore) {
+      const gitignorePath = await window.fileSystem.joinPaths(projectPath, '.gitignore');
+      const exists = await window.fileSystem.fileExists(gitignorePath);
+      
+      if (exists) {
+        const gitignoreContent = await window.fileSystem.readFile(gitignorePath, {
+          encoding: 'utf8',
+        }) as string;
+        
+        const gitignorePatterns = gitignoreContent
+          .split('\n')
+          .filter(line => line.trim() && !line.startsWith('#'));
+        
+        patterns.push(...gitignorePatterns);
+      }
+    }
+
+    // Deduplicate patterns
+    const uniquePatterns = [...new Set(patterns)];
+
+    // Build final content with comment header
+    const finalContent = commentHeader + uniquePatterns.join('\n') + '\n';
+
+    // Write the .athignore file
+    await window.fileSystem.writeFile('.athignore', finalContent);
+  } catch (error) {
+    console.error('Error creating .athignore:', error);
+    throw error;
+  }
+}
+
 export async function addToIgnore(itemPath: string, ignoreAll: boolean = false): Promise<boolean> {
   try {
     return await window.fileSystem.addToIgnore(itemPath, ignoreAll);
