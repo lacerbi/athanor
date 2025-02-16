@@ -16,6 +16,7 @@
 .gitignore
 .gitattributes
 .gitmodules
+.github
 git-log.txt
 git-reflog.txt
 git-status.txt
@@ -133,6 +134,7 @@ local.properties
 bin/
 build/
 dist/
+forge/
 out/
 target/
 release/
@@ -357,3 +359,10 @@ docs/_site/
 *.xlsx
 *.ppt
 *.pptx
+
+###############################################################################
+# ATHANOR PROJECT FILES
+###############################################################################
+
+.athignore
+/athanor.yml

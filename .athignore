@@ -1,5 +1,30 @@
-# Operating System Files
-## macOS
+###############################################################################
+# ATHIGNORE - Files and folder in this file are IGNORED and will not appear in
+# the Athanor file explorer nor in the project documentation.
+#
+# Uses the same syntax of .gitignore (see https://git-scm.com/docs/gitignore).
+#
+# If a file or folder from your project does not appear in the Athanor file 
+# explorer and you would like it to be included, ensure that it is not ignored 
+# by a .athignore rule below by commenting or removing that line.
+###############################################################################
+
+###############################################################################
+# GIT SYSTEM FILES
+###############################################################################
+.git/
+.gitignore
+.gitattributes
+.gitmodules
+.github
+git-log.txt
+git-reflog.txt
+git-status.txt
+
+###############################################################################
+# OPERATING SYSTEM / FILE EXPLORER FILES
+###############################################################################
+# macOS
 .DS_Store
 .AppleDouble
 .LSOverride
@@ -12,48 +37,81 @@ Icon
 .Trashes
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
-## Windows
+
+# Windows
 Thumbs.db
 Thumbs.db:encryptable
 ehthumbs.db
 ehthumbs_vista.db
-*.stackdump
+Desktop.ini
 [Dd]esktop.ini
 $RECYCLE.BIN/
+*.stackdump
 *.cab
 *.msi
 *.msix
 *.msm
 *.msp
 *.lnk
-## Linux
+
+# Linux
 *~
 .fuse_hidden*
 .directory
 .Trash-*
 .nfs*
-# Version Control
-.git/
-.gitattributes
-.gitmodules
-# Development Environment Files
-## IDEs and Editors
-### Visual Studio Code
+
+###############################################################################
+# EDITOR / IDE / TOOL FILES
+###############################################################################
+# Vim
+*.swp
+*.swo
+*.swn
+*.swm
+*.un~
+*.o
+.session
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+.#*
+
+# Visual Studio Code
+.vscode/
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
-*.code-workspace
 .history/
-### JetBrains IDEs
+*.code-workspace
+
+# JetBrains (IntelliJ, PyCharm, etc.)
 .idea/
-*.iml
-*.iws
-*.ipr
 .idea_modules/
-out/
-### Eclipse
+*.iml
+*.ipr
+*.iws
+# 'out/' is also ignored below in Build Artifacts
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+*.tmlanguage.cache
+*.tmPreferences.cache
+*.stTheme.cache
+
+# Eclipse
 .metadata
 bin/
 tmp/
@@ -68,46 +126,62 @@ local.properties
 .classpath
 .project
 *.launch
-### Sublime Text
-*.tmlanguage.cache
-*.tmPreferences.cache
-*.stTheme.cache
-*.sublime-workspace
-*.sublime-project
-### Vim
-[._]*.s[a-v][a-z]
-[._]*.sw[a-p]
-[._]s[a-rt-v][a-z]
-[._]ss[a-gi-z]
-[._]sw[a-p]
-Session.vim
-Sessionx.vim
-.netrwhist
-# Programming Languages
-## Node.js
+
+###############################################################################
+# BUILD ARTIFACTS
+###############################################################################
+# Common build / distribution directories
+bin/
+build/
+dist/
+forge/
+out/
+target/
+release/
+deploy/
+Debug/
+Release/
+x64/
+x86/
+.mtj.tmp/
+.gradle/
+!gradle/wrapper/gradle-wrapper.jar
+Carthage/Build/
+.webpack/
+
+# Common packaging / compression formats
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+*.gz
+*.iso
+
+###############################################################################
+# DEPENDENCIES
+###############################################################################
+# Node.js
 node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
 .npm/
 .yarn/
 .yarn-integrity
 .pnp.*
+/bower_components/
+/jspm_packages/
+/.pnp
+.pnp.js
 package-lock.json
 yarn.lock
-.env
-.env.*
-!.env.example
-## Python
+
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-build/
 develop-eggs/
-dist/
 downloads/
 eggs/
 .eggs/
@@ -121,46 +195,21 @@ wheels/
 .installed.cfg
 *.egg
 .python-version
-venv/
-ENV/
 env/
-.env/
+ENV/
+venv/
 .venv/
 pip-log.txt
 pip-delete-this-directory.txt
 .tox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-## Java
-*.class
-*.log
-*.ctxt
-.mtj.tmp/
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-hs_err_pid*
-replay_pid*
-target/
-.gradle/
-build/
-!gradle/wrapper/gradle-wrapper.jar
-## Ruby
+# Some coverage-related files also appear below in "Coverage Reports"
+
+# Ruby
+.bundle/
+vendor/bundle/
 *.gem
 *.rbc
 /.config
-/coverage/
 /InstalledFiles
 /pkg/
 /spec/reports/
@@ -174,85 +223,128 @@ build/
 *.bridgesupport
 build-iPhoneOS/
 build-iPhoneSimulator/
-/.bundle/
-/vendor/bundle
-/lib/bundler/man/
+.lib/bundler/man/
 .rvmrc
-## Go
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+*.nar
+hs_err_pid*
+replay_pid*
+
+# PHP (Composer)
+vendor/
+composer.phar
+
+# Go
 *.exe
 *.exe~
 *.dll
-*.so
 *.dylib
 *.test
 *.out
 go.work
-## Rust
+
+# Rust
 /target/
 **/*.rs.bk
 Cargo.lock
-# Build and Compilation
-## Webpack
-.webpack/
-/.webpack/
-## Compiled files
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
-*.dylib
-*.lib
-*.a
-*.obj
-*.ko
-*.elf
-## Build directories
-/dist/
-/build/
-/out/
-/release/
-Debug/
-Release/
-x64/
-x86/
-# Package Managers
-## Composer
-composer.phar
-/vendor/
-## CocoaPods
-Pods/
-*.xcworkspace
-## Carthage
-Carthage/Build/
-# Databases
+
+###############################################################################
+# LOG / TEMPORARY / RUNTIME FILES
+###############################################################################
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+*.log
+*.log.*
+debug.log
+error.log
+logs/
+
+# Temporary files (caches, partial downloads, etc.)
+*.tmp
+*.temp
+.tmp/
+.temp/
+tmp/
+temp/
+.cache/
+.cache-loader/
+.sass-cache/
+*.cache
+.eslintcache
+.stylelintcache
+*.pid
+
+###############################################################################
+# ENVIRONMENT / CONFIG FILES
+###############################################################################
+# Sensitive or environment-specific config files (often contain credentials/keys)
+.env
+.env.*
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+*.local
+*.secret
+.secret
+!.env.example
+.credentials
+secrets.yml
+secrets.json
+
+# Security-related files
+*.pem
+*.key
+*.crt
+*.cert
+*.p12
+*.pfx
+
+###############################################################################
+# OTHER COMMON IGNORABLE FILES
+###############################################################################
+# Databases / data files
 *.sqlite
 *.sqlite3
 *.db
 *.db-shm
 *.db-wal
-# Logs and Debugging
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-debug.log
-error.log
-# Cache and Temporary Files
-.cache/
-.temp/
-.tmp/
-tmp/
-temp/
-.sass-cache/
-*.cache
-.eslintcache
-.stylelintcache
-# Media and Generated Content
-## Images
+*.sql
+*.bak
+
+# Coverage reports
+coverage/
+*.lcov
+*.clover
+.nyc_output
+coverage.xml
+nosetests.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+.cypress
+cypress/videos/
+cypress/screenshots/
+
+# Python notebook checkpoints
+.ipynb_checkpoints/
+
+# Documentation
+docs/_site/
+#docs/api/ # This might be useful
+
+# Media and generated documents (use with caution — you might not always want these ignored)
 *.jpg
 *.jpeg
 *.png
@@ -260,7 +352,6 @@ temp/
 *.ico
 *.svg
 *.webp
-## Documents
 *.pdf
 *.doc
 *.docx
@@ -268,64 +359,20 @@ temp/
 *.xlsx
 *.ppt
 *.pptx
-## Archives
-*.7z
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-# Security and Secrets
-.env
-.env.local
-.env.*.local
-.env.development
-.env.test
-.env.production
-*.pem
-*.key
-*.cert
-*.p12
-*.pfx
-.credentials
-.secret
-secrets.yml
-secrets.json
-# Project-specific
-## Dependencies
-/node_modules
-/bower_components
-/jspm_packages
-/.pnp
-.pnp.js
-## Testing
-/coverage
-.nyc_output
-.cypress
-cypress/videos/
-cypress/screenshots/
-## Documentation
-/docs/_site/
-/docs/api/
-## Misc
-.DS_Store
-Thumbs.db
-*.bak
-*.swp
-*.swo
-*~
-.project
-.settings
-# Athanor
-.github
-_aiconfig.yml
-codebase.md
-public
-.gitignore
+
+###############################################################################
+# ATHANOR PROJECT FILES
+###############################################################################
+
 .athignore
 /athanor.yml
+
+###############################################################################
+# PROJECT FILES
+# Add below specific files and folders you want to ignore.
+###############################################################################
+
+public/
 LICENSE
 /README.md
 temp.txt
-/.vscode/

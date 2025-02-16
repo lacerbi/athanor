@@ -8,3 +8,17 @@
 # RESOURCES
 
 - https://www.reddit.com/r/LocalLLaMA/comments/1ftjbz3/shockingly_good_superintelligent_summarization/
+
+
+# Athanor
+.github
+_aiconfig.yml
+codebase.md
+public
+.gitignore
+.athignore
+/athanor.yml
+LICENSE
+/README.md
+temp.txt
+/.vscode/
