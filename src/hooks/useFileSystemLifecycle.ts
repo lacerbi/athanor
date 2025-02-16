@@ -8,19 +8,7 @@ import { useLogStore } from '../stores/logStore';
 import { FILE_SYSTEM } from '../utils/constants';
 import { loadPrompts } from '../services/promptService';
 
-export interface FileSystemLifecycle {
-  currentDirectory: string;
-  isRefreshing: boolean;
-  appVersion: string;
-  filesData: FileItem | null;
-  materialsData: FileItem | null;
-  handleOpenFolder: () => Promise<void>;
-  refreshFileSystem: (silent?: boolean) => Promise<void>;
-  showProjectDialog: boolean;
-  gitignoreExists: boolean;
-  handleCreateProject: (useStandardIgnore: boolean, importGitignore: boolean) => Promise<void>;
-  handleProjectDialogClose: () => void;
-}
+import { FileSystemLifecycle } from '../types/global';
 
 // Shared helper for loading both main and materials trees
 const loadAndSetTrees = async (basePath: string) => {
@@ -226,7 +214,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     refreshFileSystem,
     showProjectDialog,
     gitignoreExists,
+    pendingDirectory,
     handleCreateProject,
     handleProjectDialogClose,
-  };
+  } as FileSystemLifecycle;
 }

@@ -119,7 +119,9 @@ export interface FileSystemLifecycle {
   refreshFileSystem: (silent?: boolean) => Promise<void>;
   showProjectDialog: boolean;
   gitignoreExists: boolean;
+  pendingDirectory: string | null;
   handleCreateProject: (useStandardIgnore: boolean, importGitignore: boolean) => Promise<void>;
+  handleProjectDialogClose: () => void;
 }
 
 declare module 'js-tiktoken' {

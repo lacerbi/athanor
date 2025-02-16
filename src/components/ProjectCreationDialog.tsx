@@ -9,9 +9,11 @@ interface ProjectCreationDialogProps {
   onClose: () => void;
   onCreateProject: (useStandardIgnore: boolean, importGitignore: boolean) => Promise<void>;
   gitignoreExists: boolean;
+  folderName: string;
 }
 
 const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({
+  folderName,
   isOpen,
   onClose,
   onCreateProject,
@@ -41,7 +43,9 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
-        <h2 className="text-xl font-semibold mb-4">Create Athanor Project</h2>
+        <h2 className="text-xl font-semibold mb-4">
+          Create Athanor Project in &quot;{folderName}&quot;
+        </h2>
         
         <div className="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
           <div className="font-medium">Project Configuration</div>
@@ -64,12 +68,13 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({
                 htmlFor="useStandardIgnore"
                 className="text-sm font-medium leading-none"
               >
-                Use standard .athignore
+                Include default .athignore
               </label>
-              <HelpCircle 
-                className="h-4 w-4 ml-1 text-gray-400 cursor-help"
-                aria-label="Include standard ignore rules for common files and directories"
-              />
+              <span title="Include a default set of ignore rules for common files and directories like node_modules, .git, etc.">
+                <HelpCircle 
+                  className="h-4 w-4 ml-1 text-gray-400 cursor-help"
+                />
+              </span>
             </div>
           </div>
 
@@ -87,12 +92,13 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({
                 htmlFor="importGitignore"
                 className={`text-sm font-medium leading-none ${!gitignoreExists ? 'text-gray-400' : ''}`}
               >
-                Import from .gitignore
+                Import .gitignore options
               </label>
-              <HelpCircle 
-                className="h-4 w-4 ml-1 text-gray-400 cursor-help"
-                aria-label={gitignoreExists ? "Include rules from existing .gitignore file" : "No .gitignore file found"}
-              />
+              <span title={gitignoreExists ? "Import ignore rules from the existing .gitignore file" : "No .gitignore file found in this folder"}>
+                <HelpCircle 
+                  className="h-4 w-4 ml-1 text-gray-400 cursor-help"
+                />
+              </span>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 // AI Summary: Root application component that coordinates file system lifecycle and layout.
 // Manages application state and delegates rendering to MainLayout component.
 import React, { useRef, useEffect } from 'react';
+import { getBaseName } from '../utils/fileTree';
 import MainLayout from './MainLayout';
 import ProjectCreationDialog from './ProjectCreationDialog';
 import { useFileSystemLifecycle } from '../hooks/useFileSystemLifecycle';
@@ -34,6 +35,7 @@ const AthanorApp: React.FC = () => {
     refreshFileSystem,
     showProjectDialog,
     gitignoreExists,
+    pendingDirectory,
     handleCreateProject,
     handleProjectDialogClose,
   } = useFileSystemLifecycle();
@@ -82,6 +84,7 @@ const AthanorApp: React.FC = () => {
         onClose={handleProjectDialogClose}
         onCreateProject={handleCreateProject}
         gitignoreExists={gitignoreExists}
+        folderName={pendingDirectory ? getBaseName(pendingDirectory) : ''}
       />
       {filesData && (
         <MainLayout
