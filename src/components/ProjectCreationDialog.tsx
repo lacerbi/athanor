@@ -5,6 +5,7 @@ import { HelpCircle } from 'lucide-react';
 
 interface ProjectCreationDialogProps {
   isOpen: boolean;
+  // Called when user cancels the dialog - should reset dialog state without re-triggering folder selection
   onClose: () => void;
   onCreateProject: (useStandardIgnore: boolean, importGitignore: boolean) => Promise<void>;
   gitignoreExists: boolean;

@@ -19,6 +19,7 @@ export interface FileSystemLifecycle {
   showProjectDialog: boolean;
   gitignoreExists: boolean;
   handleCreateProject: (useStandardIgnore: boolean, importGitignore: boolean) => Promise<void>;
+  handleProjectDialogClose: () => void;
 }
 
 // Shared helper for loading both main and materials trees
@@ -115,25 +116,29 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const handleOpenFolder = async () => {
     try {
       const selectedDir = await window.fileSystem.openFolder();
-      if (selectedDir) {
-        const normalizedDir = await window.fileSystem.normalizeToUnix(selectedDir);
-        
-        // Check if .athignore exists
-        const athignoreExists = await window.fileSystem.fileExists('.athignore');
-        if (!athignoreExists) {
-          // Check for .gitignore
-          const hasGitignore = await window.fileSystem.fileExists('.gitignore');
-          setGitignoreExists(hasGitignore);
-          
-          // Show project creation dialog
-          setPendingDirectory(normalizedDir);
-          setShowProjectDialog(true);
-          return;
-        }
-        
-        // If .athignore exists, proceed with normal initialization
-        await initializeProject(normalizedDir);
+      
+      // If user cancelled folder selection, do nothing
+      if (!selectedDir) {
+        return;
       }
+      
+      const normalizedDir = await window.fileSystem.normalizeToUnix(selectedDir);
+      
+      // Check if .athignore exists
+      const athignoreExists = await window.fileSystem.fileExists('.athignore');
+      if (!athignoreExists) {
+        // Check for .gitignore
+        const hasGitignore = await window.fileSystem.fileExists('.gitignore');
+        setGitignoreExists(hasGitignore);
+        
+        // Show project creation dialog
+        setPendingDirectory(normalizedDir);
+        setShowProjectDialog(true);
+        return;
+      }
+      
+      // If .athignore exists, proceed with normal initialization
+      await initializeProject(normalizedDir);
     } catch (error) {
       console.error('Error opening folder:', error);
       addLog('Failed to open folder');
@@ -206,6 +211,11 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     fetchVersion();
   }, [addLog]);
 
+  const handleProjectDialogClose = () => {
+    setShowProjectDialog(false);
+    setPendingDirectory(null);
+  };
+
   return {
     currentDirectory,
     isRefreshing,
@@ -217,5 +227,6 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     showProjectDialog,
     gitignoreExists,
     handleCreateProject,
+    handleProjectDialogClose,
   };
 }

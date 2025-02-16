@@ -35,6 +35,7 @@ const AthanorApp: React.FC = () => {
     showProjectDialog,
     gitignoreExists,
     handleCreateProject,
+    handleProjectDialogClose,
   } = useFileSystemLifecycle();
 
   // Auto-scroll logs panel
@@ -78,7 +79,7 @@ const AthanorApp: React.FC = () => {
     <>
       <ProjectCreationDialog
         isOpen={showProjectDialog}
-        onClose={() => handleOpenFolder()}
+        onClose={handleProjectDialogClose}
         onCreateProject={handleCreateProject}
         gitignoreExists={gitignoreExists}
       />
