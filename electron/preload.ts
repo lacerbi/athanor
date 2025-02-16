@@ -61,6 +61,7 @@ contextBridge.exposeInMainWorld('fileSystem', {
     path: string,
     options?: { encoding?: BufferEncoding } | BufferEncoding
   ) => ipcRenderer.invoke('fs:readFile', path, options),
+  fileExists: (path: string) => ipcRenderer.invoke('fs:fileExists', path),
   writeFile: (path: string, data: string) =>
     ipcRenderer.invoke('fs:writeFile', path, data),
   deleteFile: (path: string) => ipcRenderer.invoke('fs:deleteFile', path),

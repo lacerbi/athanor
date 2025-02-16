@@ -19,6 +19,21 @@ import { ignoreRulesManager } from '../ignoreRulesManager';
 import { filePathManager } from '../filePathManager';
 
 export function setupCoreHandlers() {
+  // Add handler for checking if file exists
+  ipcMain.handle('fs:fileExists', async (_, filePath: string) => {
+    try {
+      const normalizedPath = filePathManager.toPlatformPath(
+        filePathManager.resolveFromBase(
+          filePathManager.normalizeToUnix(filePath)
+        )
+      );
+      await fs.access(normalizedPath);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
   // Add handler for getting app version
   ipcMain.handle('app:version', () => {
     try {

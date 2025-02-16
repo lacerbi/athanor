@@ -16,12 +16,14 @@ export interface FileSystemLifecycle {
   materialsData: FileItem | null;
   handleOpenFolder: () => Promise<void>;
   refreshFileSystem: (silent?: boolean) => Promise<void>;
+  showProjectDialog: boolean;
+  gitignoreExists: boolean;
+  handleCreateProject: (useStandardIgnore: boolean, importGitignore: boolean) => Promise<void>;
 }
 
 // Shared helper for loading both main and materials trees
 const loadAndSetTrees = async (basePath: string) => {
   const mainTree = await buildFileTree(basePath);
-  // Use the proper path utility instead of string interpolation
   const materialsPath = await window.fileSystem.getMaterialsDir();
   const materialsTree = await buildFileTree(materialsPath, '', true);
   useFileSystemStore.getState().setFileTree([mainTree, materialsTree]);
@@ -34,6 +36,9 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const [appVersion, setAppVersion] = useState<string>('');
   const [filesData, setFilesData] = useState<FileItem | null>(null);
   const [materialsData, setResourcesData] = useState<FileItem | null>(null);
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
+  const [pendingDirectory, setPendingDirectory] = useState<string | null>(null);
+  const [gitignoreExists, setGitignoreExists] = useState(false);
 
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
@@ -67,23 +72,59 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     [currentDirectory, isRefreshing, validateSelections, addLog]
   );
 
+  const handleCreateProject = async (useStandardIgnore: boolean, importGitignore: boolean) => {
+    if (!pendingDirectory) return;
+    
+    try {
+      // Logic for creating .athignore will be added in next commit
+      await initializeProject(pendingDirectory);
+    } catch (error) {
+      console.error('Error creating project:', error);
+      addLog('Failed to create project');
+      throw error;
+    }
+  };
+
+  const initializeProject = async (directory: string) => {
+    useFileSystemStore.getState().resetState();
+    const normalizedDir = await window.fileSystem.normalizeToUnix(directory);
+    setCurrentDirectory(normalizedDir);
+    
+    const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
+    validateSelections(mainTree);
+    setFilesData(mainTree);
+    setResourcesData(materialsTree);
+
+    await loadPrompts();
+    await setupWatcher(normalizedDir);
+    addLog(`Loaded directory: ${normalizedDir}`);
+    
+    // Reset dialog state
+    setShowProjectDialog(false);
+    setPendingDirectory(null);
+  };
+
   const handleOpenFolder = async () => {
     try {
       const selectedDir = await window.fileSystem.openFolder();
       if (selectedDir) {
-        // Reset all file system state before loading new folder
-        useFileSystemStore.getState().resetState();
         const normalizedDir = await window.fileSystem.normalizeToUnix(selectedDir);
-        setCurrentDirectory(normalizedDir);
         
-        const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
-        validateSelections(mainTree);
-        setFilesData(mainTree);
-        setResourcesData(materialsTree);
-
-        await loadPrompts();
-        await setupWatcher(normalizedDir);
-        addLog(`Loaded directory: ${normalizedDir}`);
+        // Check if .athignore exists
+        const athignoreExists = await window.fileSystem.fileExists('.athignore');
+        if (!athignoreExists) {
+          // Check for .gitignore
+          const hasGitignore = await window.fileSystem.fileExists('.gitignore');
+          setGitignoreExists(hasGitignore);
+          
+          // Show project creation dialog
+          setPendingDirectory(normalizedDir);
+          setShowProjectDialog(true);
+          return;
+        }
+        
+        // If .athignore exists, proceed with normal initialization
+        await initializeProject(normalizedDir);
       }
     } catch (error) {
       console.error('Error opening folder:', error);
@@ -165,5 +206,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     materialsData,
     handleOpenFolder,
     refreshFileSystem,
+    showProjectDialog,
+    gitignoreExists,
+    handleCreateProject,
   };
 }
