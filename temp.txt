@@ -1,24 +1,76 @@
 # TODO
 
-- Fix relative paths in codebase documentation (seems to be a dev issue, not in production)
 - Make also preset tasks dynamic (make them use buildDynamicPrompts or something)
 - Add branch/commits awareness (see https://chatgpt.com/share/67908472-3674-8006-88f4-824147f7ae48)
-
 
 # RESOURCES
 
 - https://www.reddit.com/r/LocalLLaMA/comments/1ftjbz3/shockingly_good_superintelligent_summarization/
 
 
-# Athanor
-.github
-_aiconfig.yml
-codebase.md
-public
-.gitignore
-.athignore
-/athanor.yml
-LICENSE
-/README.md
-temp.txt
-/.vscode/
+
+## Revised Application Description
+
+
+
+### Key Features
+
+
+
+
+## Expanded Action Points (to Avoid Common Mistakes)
+
+1. **Electron Main Process Setup**  
+   - **`main.ts`** initializes the application, creates the browser window, and cleans up watchers on exit.  
+   - Remember to register all IPC handlers in `ipcHandlers.ts` before calling `createWindow()`.  
+   - Always sanitize and normalize file paths (via `filePathManager.ts` or the helper exports in `fileSystemManager.ts`) to prevent unauthorized access or injection.
+
+2. **File System Operations**  
+   - Put low-level file reading/writing in the main process (`fileSystemManager.ts` plus the dedicated handler files).  
+   - Access these operations in the renderer via the exposed IPC calls in `preload.ts` (e.g., `window.fileSystem.readFile()`), **never** bypassing the secure IPC boundary.  
+   - Gracefully handle errors and raise them to the renderer with user-friendly messaging (via `handleError()` in `fileSystemManager.ts`).
+
+3. **Ignore Rules & Watchers**  
+   - When the user switches folders (`openFolder`), always call `clearFileSystemState()` to reset watchers and ignore rules.  
+   - Confirm the new directory’s validity with read/write checks.  
+   - If `.athignore` is missing, consider automatically creating it (and optionally importing `.gitignore` rules).  
+   - The watchers should be closed and re-opened for the new directory to avoid stale references.
+
+4. **Prompt Generation and Templates**  
+   - All prompt templates reside in `resources/prompts/`.  
+   - The `promptStore.ts` loads them at application startup; see `promptService.ts` for parsing logic.  
+   - For changes or additions to prompts, confirm that:  
+     - The XML structure is consistent (`<ath_prompt>` at the top, multiple `<ath_prompt_variant>` blocks).  
+     - The main process can read these files from `process.resourcesPath` in production mode.  
+
+5. **Applying AI Output**  
+   - The `applyChangesStore.ts` plus `ApplyChangesPanel.tsx` handle user acceptance or rejection of each file modification.  
+   - For multi-file updates, ensure each “diff block” is validated carefully to avoid partial corruption.  
+   - If your AI output references a path that does not exist, handle gracefully (warn the user or skip).  
+   - Always re-check watchers so that newly created or deleted files appear correctly in the file explorer.
+
+6. **State Management & React Components**  
+   - Use `fileSystemStore.ts` to track selected items, ensuring line counts and multi-file selection logic is correct.  
+   - When changing store shapes or adding fields, also update relevant components to prevent uncaught runtime errors.  
+   - If new actions or prompts require a brand-new store, keep it minimal and domain-specific.
+
+7. **Refactoring & Extensibility**  
+   - For major expansions, keep large or complicated logic in dedicated modules (e.g., watchers in `fileWatchHandlers.ts`).  
+   - Avoid “god objects” in the main or renderer process to keep code testable.  
+   - Consider writing small tests or manual checks for newly introduced features to confirm watchers and ignoring logic remain stable.
+
+8. **TypeScript & Global Types**  
+   - Regularly open and double-check **`src/types/global.d.ts`** to avoid TypeScript mistakes.  
+   - This file extends the `window` interface to expose `window.fileSystem`, houses core global interfaces (like `FileOperation`), and organizes key application-level types.  
+   - If an IPC method signature changes in the main process or `preload.ts`, update both the main code **and** `global.d.ts` accordingly.
+
+9. **Security Considerations**  
+   - Always treat file paths from the renderer as untrusted. Normalize and resolve them inside the main process.  
+   - Do not allow direct `require` or `fs` usage in the renderer; rely on the safe IPC calls exposed in `preload.ts`.  
+   - For any external code or unverified AI output, never execute it directly without user inspection.
+
+By following these guidelines—and frequently verifying the types in **`src/types/global.d.ts`**—you can minimize errors while maintaining a clear, secure separation of concerns.
+
+---
+
+**If you need the full content of any truncated file**—for example, `electron/filePathManager.ts`, `electron/windowManager.ts`, or any of the partially shown React components or store files—please select those files from the Athanor file explorer so we can fully review them.
