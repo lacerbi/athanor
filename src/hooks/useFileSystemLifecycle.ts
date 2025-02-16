@@ -1,23 +1,18 @@
 // AI Summary: Manages file system initialization, watching, and refresh lifecycle with consolidated tree loading.
-// Provides hooks for directory operations, file system refresh, and watcher setup using shared tree loading logic.
+// Now imports buildFileTree from fileTreeBuilder.ts and createAthignoreFile from athignoreFileService.ts.
+// Maintains overall logic to handle user project setup, ignoring rules, and watchers.
+
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { FileItem } from '../utils/fileTree';
-import { buildFileTree, createAthignoreFile } from '../services/fileSystemService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { FILE_SYSTEM } from '../utils/constants';
 import { loadPrompts } from '../services/promptService';
-
 import { FileSystemLifecycle } from '../types/global';
 
-// Shared helper for loading both main and materials trees
-const loadAndSetTrees = async (basePath: string) => {
-  const mainTree = await buildFileTree(basePath);
-  const materialsPath = await window.fileSystem.getMaterialsDir();
-  const materialsTree = await buildFileTree(materialsPath, '', true);
-  useFileSystemStore.getState().setFileTree([mainTree, materialsTree]);
-  return { mainTree, materialsTree };
-};
+// Newly imported modules after refactoring
+import { buildFileTree } from '../services/fileTreeBuilder';
+import { createAthignoreFile } from '../services/athignoreFileService';
 
 export function useFileSystemLifecycle(): FileSystemLifecycle {
   const [currentDirectory, setCurrentDirectory] = useState<string>('');
@@ -32,7 +27,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
 
-  const { validateSelections, clearSelections } = useFileSystemStore();
+  const { validateSelections } = useFileSystemStore();
   const { addLog } = useLogStore();
 
   const refreshFileSystem = useCallback(
@@ -42,7 +37,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       setIsRefreshing(true);
       try {
         await window.fileSystem.reloadIgnoreRules();
-        const { mainTree, materialsTree } = await loadAndSetTrees(currentDirectory);
+        const mainTree = await buildFileTree(currentDirectory);
+        const materialsPath = await window.fileSystem.getMaterialsDir();
+        const materialsTree = await buildFileTree(materialsPath, '', true);
+
         validateSelections(mainTree);
         setFilesData(mainTree);
         setResourcesData(materialsTree);
@@ -63,17 +61,16 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   const handleCreateProject = async (useStandardIgnore: boolean, importGitignore: boolean) => {
     if (!pendingDirectory) return;
-    
+
     try {
       // Create .athignore file with selected rules
       await createAthignoreFile(pendingDirectory, {
         useStandardIgnore,
         importGitignore,
       });
-      
+
       // Initialize project with new .athignore
       await initializeProject(pendingDirectory);
-      
       addLog('Created new Athanor project');
     } catch (error) {
       console.error('Error creating project:', error);
@@ -86,8 +83,11 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     useFileSystemStore.getState().resetState();
     const normalizedDir = await window.fileSystem.normalizeToUnix(directory);
     setCurrentDirectory(normalizedDir);
-    
-    const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
+
+    const mainTree = await buildFileTree(normalizedDir);
+    const materialsPath = await window.fileSystem.getMaterialsDir();
+    const materialsTree = await buildFileTree(materialsPath, '', true);
+
     validateSelections(mainTree);
     setFilesData(mainTree);
     setResourcesData(materialsTree);
@@ -95,7 +95,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     await loadPrompts();
     await setupWatcher(normalizedDir);
     addLog(`Loaded directory: ${normalizedDir}`);
-    
+
     // Reset dialog state
     setShowProjectDialog(false);
     setPendingDirectory(null);
@@ -104,27 +104,27 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const handleOpenFolder = async () => {
     try {
       const selectedDir = await window.fileSystem.openFolder();
-      
+
       // If user cancelled folder selection, do nothing
       if (!selectedDir) {
         return;
       }
-      
+
       const normalizedDir = await window.fileSystem.normalizeToUnix(selectedDir);
-      
+
       // Check if .athignore exists
       const athignoreExists = await window.fileSystem.fileExists('.athignore');
       if (!athignoreExists) {
         // Check for .gitignore
         const hasGitignore = await window.fileSystem.fileExists('.gitignore');
         setGitignoreExists(hasGitignore);
-        
+
         // Show project creation dialog
         setPendingDirectory(normalizedDir);
         setShowProjectDialog(true);
         return;
       }
-      
+
       // If .athignore exists, proceed with normal initialization
       await initializeProject(normalizedDir);
     } catch (error) {
@@ -161,8 +161,11 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         const currentDir = await window.fileSystem.getCurrentDirectory();
         const normalizedDir = await window.fileSystem.normalizeToUnix(currentDir);
         setCurrentDirectory(normalizedDir);
-        
-        const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
+
+        const mainTree = await buildFileTree(normalizedDir);
+        const materialsPath = await window.fileSystem.getMaterialsDir();
+        const materialsTree = await buildFileTree(materialsPath, '', true);
+
         validateSelections(mainTree);
         setFilesData(mainTree);
         setResourcesData(materialsTree);
@@ -217,5 +220,5 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     pendingDirectory,
     handleCreateProject,
     handleProjectDialogClose,
-  } as FileSystemLifecycle;
+  };
 }
