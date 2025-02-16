@@ -247,20 +247,17 @@ export async function createAthignoreFile(
       { encoding: 'utf8' }
     ) as string;
 
-    // Extract comment header (everything up to first blank line)
-    const commentHeader = defaultContent.split(/\n\s*\n/)[0] + '\n\n';
+    let finalContent = '';
 
-    // Initialize patterns array with comment header
-    let patterns: string[] = [];
-
-    // If using standard ignore rules, add all patterns from default_athignore
+    // If using standard ignore rules, use the entire default content
     if (options.useStandardIgnore) {
-      patterns = defaultContent
-        .split('\n')
-        .filter(line => line.trim() && !line.startsWith('#'));
+      finalContent = defaultContent;
+    } else {
+      // Extract only the initial comment header (everything up to first blank line)
+      finalContent = defaultContent.split(/\n\s*\n/)[0] + '\n\n';
     }
 
-    // If importing from .gitignore and it exists, add those patterns
+    // If importing from .gitignore and it exists, add those patterns in a new section
     if (options.importGitignore) {
       const gitignorePath = await window.fileSystem.joinPaths(projectPath, '.gitignore');
       const exists = await window.fileSystem.fileExists(gitignorePath);
@@ -270,19 +267,40 @@ export async function createAthignoreFile(
           encoding: 'utf8',
         }) as string;
         
-        const gitignorePatterns = gitignoreContent
-          .split('\n')
-          .filter(line => line.trim() && !line.startsWith('#'));
-        
-        patterns.push(...gitignorePatterns);
+        // Get lines from .gitignore
+        const gitignoreLines = gitignoreContent.split('\n')
+          .map(line => line.trim())
+          .filter(line => line); // Remove empty lines
+
+        // Get existing lines from default content if we're using it
+        const existingLines = options.useStandardIgnore 
+          ? defaultContent.split('\n').map(line => line.trim())
+          : [];
+
+        // Filter out duplicates
+        const uniqueGitignoreLines = gitignoreLines.filter(
+          line => !existingLines.includes(line)
+        );
+
+        if (uniqueGitignoreLines.length > 0) {
+          // Add .gitignore section header
+          finalContent += '\n###############################################################################\n';
+          finalContent += '# IMPORTED FROM .gitignore\n';
+          finalContent += '# These files were imported from .gitignore at creation.\n';
+          finalContent += '# These are NOT updated automatically if .gitignore is later changed.\n';
+          finalContent += '###############################################################################\n\n';
+          
+          // Add unique lines
+          finalContent += uniqueGitignoreLines.join('\n') + '\n';
+        }
       }
     }
 
-    // Deduplicate patterns
-    const uniquePatterns = [...new Set(patterns)];
-
-    // Build final content with comment header
-    const finalContent = commentHeader + uniquePatterns.join('\n') + '\n';
+    // Always add the project files section at the end
+    finalContent += '\n###############################################################################\n';
+    finalContent += '# PROJECT FILES\n';
+    finalContent += '# Add below specific files and folders you want to ignore.\n';
+    finalContent += '###############################################################################\n';
 
     // Write the .athignore file
     await window.fileSystem.writeFile('.athignore', finalContent);
