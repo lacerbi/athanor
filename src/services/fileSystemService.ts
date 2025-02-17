@@ -1,6 +1,7 @@
-// AI Summary: Provides file system operations including reading directory structure,
-// building the file tree, analyzing file contents, and an updated addToIgnore method
-// that supports an ignoreAll parameter for .athignore entries.
+// AI Summary: Core file system service that builds and maintains the application's file tree structure.
+// Handles directory traversal, line counting, and content normalization with proper error handling.
+// Key functions: buildFileTree() for recursive tree creation, readFileContent() for normalized reads.
+// Integrates with window.fileSystem for all file operations and maintains consistent line endings.
 import {
   FileItem,
   sortItems,

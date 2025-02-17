@@ -1,7 +1,7 @@
-// AI Summary: Provides dedicated .athignore functionality such as creation and adding ignore patterns.
-// Integrates with the Electron IPC layer via window.fileSystem. Accepts advanced options to import .gitignore
-// and merges them with default .athignore content, ensuring minimal duplication. Also provides pass-through
-// calls to add items to .athignore using the main process.
+// AI Summary: Manages .athignore file creation and rule updates with intelligent .gitignore integration.
+// Creates new .athignore files with optional standard rules and .gitignore imports, avoiding duplicates.
+// Provides addToIgnore() for adding paths with wildcard support and 'ignoreAll' pattern generation.
+// Integrates with main process via window.fileSystem for file operations and rule management.
 interface AthignoreOptions {
   useStandardIgnore: boolean;
   importGitignore: boolean;
