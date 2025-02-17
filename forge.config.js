@@ -3,10 +3,10 @@ module.exports = {
     name: 'Athanor',
     asar: true,
     prune: true,
-    // Ensure prompts directory is not packed into asar
-    asarUnpack: ['resources/prompts/**/*'],
-    // Copy resources to the final package
-    extraResource: ['resources/prompts'],
+    // Ensure resources directory is not packed into asar
+    asarUnpack: ['resources/**/*'],
+    // Copy specific resources subfolders
+    extraResource: ['resources/files', 'resources/prompts'],
   },
   makers: [
     {

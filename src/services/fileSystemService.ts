@@ -1,7 +1,6 @@
 // AI Summary: Provides file system operations including reading directory structure,
 // building the file tree, analyzing file contents, and an updated addToIgnore method
 // that supports an ignoreAll parameter for .athignore entries.
-
 import {
   FileItem,
   sortItems,
@@ -73,7 +72,10 @@ export async function buildFileTree(
       };
     }
 
-    const entries = await window.fileSystem.readDirectory(fullPath, applyIgnores);
+    const entries = await window.fileSystem.readDirectory(
+      fullPath,
+      applyIgnores
+    );
     const children: FileItem[] = [];
 
     for (const entry of entries) {
@@ -227,14 +229,4 @@ export function updateItemInTree(
   }
 
   return tree;
-}
-
-// Updated addToIgnore method accepting ignoreAll
-export async function addToIgnore(itemPath: string, ignoreAll: boolean = false): Promise<boolean> {
-  try {
-    return await window.fileSystem.addToIgnore(itemPath, ignoreAll);
-  } catch (error) {
-    console.error(`Error adding path to ignore: ${itemPath}`, error);
-    throw error;
-  }
 }

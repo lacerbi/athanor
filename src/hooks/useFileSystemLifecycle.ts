@@ -3,25 +3,16 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { FileItem } from '../utils/fileTree';
 import { buildFileTree } from '../services/fileSystemService';
+import { createAthignoreFile } from '../services/fileIgnoreService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
-import { FILE_SYSTEM } from '../utils/constants';
 import { loadPrompts } from '../services/promptService';
 
-export interface FileSystemLifecycle {
-  currentDirectory: string;
-  isRefreshing: boolean;
-  appVersion: string;
-  filesData: FileItem | null;
-  materialsData: FileItem | null;
-  handleOpenFolder: () => Promise<void>;
-  refreshFileSystem: (silent?: boolean) => Promise<void>;
-}
+import { FileSystemLifecycle } from '../types/global';
 
 // Shared helper for loading both main and materials trees
 const loadAndSetTrees = async (basePath: string) => {
   const mainTree = await buildFileTree(basePath);
-  // Use the proper path utility instead of string interpolation
   const materialsPath = await window.fileSystem.getMaterialsDir();
   const materialsTree = await buildFileTree(materialsPath, '', true);
   useFileSystemStore.getState().setFileTree([mainTree, materialsTree]);
@@ -34,6 +25,9 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const [appVersion, setAppVersion] = useState<string>('');
   const [filesData, setFilesData] = useState<FileItem | null>(null);
   const [materialsData, setResourcesData] = useState<FileItem | null>(null);
+  const [showProjectDialog, setShowProjectDialog] = useState(false);
+  const [pendingDirectory, setPendingDirectory] = useState<string | null>(null);
+  const [gitignoreExists, setGitignoreExists] = useState(false);
 
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
@@ -48,7 +42,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       setIsRefreshing(true);
       try {
         await window.fileSystem.reloadIgnoreRules();
-        const { mainTree, materialsTree } = await loadAndSetTrees(currentDirectory);
+        const { mainTree, materialsTree } =
+          await loadAndSetTrees(currentDirectory);
         validateSelections(mainTree);
         setFilesData(mainTree);
         setResourcesData(materialsTree);
@@ -67,24 +62,76 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     [currentDirectory, isRefreshing, validateSelections, addLog]
   );
 
+  const handleCreateProject = async (
+    useStandardIgnore: boolean,
+    importGitignore: boolean
+  ) => {
+    if (!pendingDirectory) return;
+
+    try {
+      // Create .athignore file with selected rules
+      await createAthignoreFile(pendingDirectory, {
+        useStandardIgnore,
+        importGitignore,
+      });
+
+      // Initialize project with new .athignore
+      await initializeProject(pendingDirectory);
+
+      addLog('Created new Athanor project');
+    } catch (error) {
+      console.error('Error creating project:', error);
+      addLog('Failed to create project');
+      throw error;
+    }
+  };
+
+  const initializeProject = async (directory: string) => {
+    useFileSystemStore.getState().resetState();
+    const normalizedDir = await window.fileSystem.normalizeToUnix(directory);
+    setCurrentDirectory(normalizedDir);
+
+    const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
+    validateSelections(mainTree);
+    setFilesData(mainTree);
+    setResourcesData(materialsTree);
+
+    await loadPrompts();
+    await setupWatcher(normalizedDir);
+    addLog(`Loaded directory: ${normalizedDir}`);
+
+    // Reset dialog state
+    setShowProjectDialog(false);
+    setPendingDirectory(null);
+  };
+
   const handleOpenFolder = async () => {
     try {
       const selectedDir = await window.fileSystem.openFolder();
-      if (selectedDir) {
-        // Reset all file system state before loading new folder
-        useFileSystemStore.getState().resetState();
-        const normalizedDir = await window.fileSystem.normalizeToUnix(selectedDir);
-        setCurrentDirectory(normalizedDir);
-        
-        const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
-        validateSelections(mainTree);
-        setFilesData(mainTree);
-        setResourcesData(materialsTree);
 
-        await loadPrompts();
-        await setupWatcher(normalizedDir);
-        addLog(`Loaded directory: ${normalizedDir}`);
+      // If user cancelled folder selection, do nothing
+      if (!selectedDir) {
+        return;
       }
+
+      const normalizedDir =
+        await window.fileSystem.normalizeToUnix(selectedDir);
+
+      // Check if .athignore exists
+      const athignoreExists = await window.fileSystem.fileExists('.athignore');
+      if (!athignoreExists) {
+        // Check for .gitignore
+        const hasGitignore = await window.fileSystem.fileExists('.gitignore');
+        setGitignoreExists(hasGitignore);
+
+        // Show project creation dialog
+        setPendingDirectory(normalizedDir);
+        setShowProjectDialog(true);
+        return;
+      }
+
+      // If .athignore exists, proceed with normal initialization
+      await initializeProject(normalizedDir);
     } catch (error) {
       console.error('Error opening folder:', error);
       addLog('Failed to open folder');
@@ -117,10 +164,12 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
       try {
         const currentDir = await window.fileSystem.getCurrentDirectory();
-        const normalizedDir = await window.fileSystem.normalizeToUnix(currentDir);
+        const normalizedDir =
+          await window.fileSystem.normalizeToUnix(currentDir);
         setCurrentDirectory(normalizedDir);
-        
-        const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
+
+        const { mainTree, materialsTree } =
+          await loadAndSetTrees(normalizedDir);
         validateSelections(mainTree);
         setFilesData(mainTree);
         setResourcesData(materialsTree);
@@ -157,6 +206,11 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     fetchVersion();
   }, [addLog]);
 
+  const handleProjectDialogClose = () => {
+    setShowProjectDialog(false);
+    setPendingDirectory(null);
+  };
+
   return {
     currentDirectory,
     isRefreshing,
@@ -165,5 +219,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     materialsData,
     handleOpenFolder,
     refreshFileSystem,
-  };
+    showProjectDialog,
+    gitignoreExists,
+    pendingDirectory,
+    handleCreateProject,
+    handleProjectDialogClose,
+  } as FileSystemLifecycle;
 }

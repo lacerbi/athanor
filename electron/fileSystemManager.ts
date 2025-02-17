@@ -80,6 +80,24 @@ export async function getStats(pathStr: string): Promise<Stats | null> {
   }
 }
 
+// Create .athignore file from template
+export async function createAthignoreFile(
+  content: string,
+  targetPath: string
+): Promise<void> {
+  try {
+    const normalizedPath = filePathManager.toPlatformPath(
+      filePathManager.resolveFromBase(
+        filePathManager.normalizeToUnix(targetPath)
+      )
+    );
+    await fs.writeFile(normalizedPath, content, 'utf8');
+  } catch (error) {
+    console.error('Error creating .athignore:', error);
+    throw error;
+  }
+}
+
 // Helper function to ensure a directory exists
 export async function ensureDirectoryExists(dirPath: string): Promise<void> {
   try {

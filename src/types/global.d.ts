@@ -97,8 +97,31 @@ declare global {
       joinPaths: (path1: string, path2: string) => Promise<string>;
       getBaseName: (path: string) => Promise<string>;
       relativeToProject: (filePath: string) => Promise<string>;
+      fileExists: (path: string) => Promise<boolean>;
     };
   }
+}
+
+// Project creation options
+export interface ProjectCreationOptions {
+  useStandardIgnore: boolean;
+  importGitignore: boolean;
+}
+
+// File system lifecycle interface
+export interface FileSystemLifecycle {
+  currentDirectory: string;
+  isRefreshing: boolean;
+  appVersion: string;
+  filesData: FileItem | null;
+  materialsData: FileItem | null;
+  handleOpenFolder: () => Promise<void>;
+  refreshFileSystem: (silent?: boolean) => Promise<void>;
+  showProjectDialog: boolean;
+  gitignoreExists: boolean;
+  pendingDirectory: string | null;
+  handleCreateProject: (useStandardIgnore: boolean, importGitignore: boolean) => Promise<void>;
+  handleProjectDialogClose: () => void;
 }
 
 declare module 'js-tiktoken' {

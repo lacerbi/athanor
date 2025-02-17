@@ -46,8 +46,14 @@ Specifically, for each file mark if it is available in full, truncated, or absen
 A truncated file ends with `... (content truncated)`.
 
 If a file is truncated or absent, tell the user. 
-List ALL the files that you require, instructing the user to select 
-the truncated or absent files from the Athanor file manager.
+List ALL the truncated or absent files that you require. 
+Write the required files in a code block as:
+```
+<ath command="select">
+file1 file2 [...]
+</ath>
+```
+Use the relative path of each file.
 </system_prompt>
 
 <current_task>

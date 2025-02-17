@@ -1,125 +1,123 @@
 project_name: 'Athanor - AI Code Nexus'
 project_info: |
   <app_description>
-  Athanor is a middleware Electron application that assists developers in 
-  building prompts for AI coding assistants and applying code changes based on 
-  AI outputs.
+  Athanor is an **Electron-based desktop application** that integrates AI coding assistants into a developer’s local workflow. Its primary goal is to streamline two main flows:
 
-  ## Features
+  1. **Prompt Creation & Refinement**  
+    - The user selects relevant files/folders within a dynamic file explorer.
+    - Athanor then generates prompt text (optionally using multiple specialized “prompt templates”).
+    - The user copies this prompt into an AI assistant (e.g., ChatGPT, Bard, etc.).
 
-  - **Dynamic File Explorer:** Navigate and select/deselect files or folders with real-time file system updates.
-  - **Action Panel:** Perform various actions, manage prompts, and handle AI responses.
-  - **Clipboard Operations:** Seamlessly copy and paste code snippets.
-  - **Project Management:** Exclude/include files and folders from the project scope.
-  - **File System Monitoring:** Automatically detect and reflect file system changes.
+  2. **Applying AI-Generated Changes**  
+    - The user copies the AI’s response from the assistant back into the clipboard.
+    - Athanor parses custom XML-like commands (e.g., `<ath command="apply changes">...`) to figure out how to create, modify, or delete specific files.
+    - The user can preview diffs, accept or reject each change, and finalize changes to disk.
 
-  ## Interface
+  #### Key Features
 
-  The application is divided into two main panels:
+  1. **Dynamic File Explorer**
+    - Displays a tree of the chosen project directory.
+    - Tracks file line counts (for text files) and uses `.athignore` rules to hide excluded paths.
+    - Allows multi-select of files and folders; selecting a folder auto-selects its descendants unless hidden.
+    - Automatically updates when files are added or removed on disk (Chokidar watchers).
 
-  Left Panel (File Explorer):
-  * Shows a dynamic view of the current project directory
-  * Files and folders can be selected/deselected using checkboxes
-  * Right-click context menu for file/folder operations
-  * Excluded items are shown greyed out without checkboxes
-  * Real-time updates when files change on disk
+  2. **Ignore Rules Management**
+    - `.athignore` is the primary ignore file used within Athanor.
+    - Rules can be seeded from `.gitignore` during initial setup, ensuring minimal duplication.
+    - The main process (via `ignoreRulesManager.ts`) uses the `ignore` library to handle advanced wildcard matching.
 
-  Right Panel (Actions):
-  * Various actions and functionalities (to be implemented)
-  * Text inputs and outputs for AI interactions
-  * Project-wide operations
+  3. **Task & Prompt Management**
+    - Multiple “task tabs,” each containing:
+      - A **task description**: plain-text or markdown-based instructions to the AI.
+      - An **AI output** area where user can paste responses from their AI model.
+      - A “context” field for ephemeral data (like partial commit messages).
+    - Prompt templates live in `resources/prompts/` and are loaded on application startup.
+    - The user can dynamically switch between prompt variants (e.g. “Query,” “Coder,” “Architect”) in the UI.
 
-  The application monitors the file system and automatically updates its view when:
-  - Files are added or removed
-  - Files are modified
-  - Directories are created or deleted
+  4. **Clipboard & Code Changes**
+    - Code blocks or raw text can be copied with consistent line endings and optional code fences.
+    - The “apply changes” flow scans for XML blocks from the AI’s output, extracts file operations, and shows them in a diff panel.
+
+  5. **Project Setup & Supplementary Materials**
+    - On folder selection, Athanor can create a `.athignore` file if it does not exist.
+    - A hidden `.ath_materials` folder is automatically created to store extra references (like doc fragments).
+    - If `.gitignore` exists, its rules can be merged in as an optional step.
+
+  6. **User Interface Layout**
+    - **Left Panel**: The file explorer with watchers, expansions, checkboxes, and a context menu (right-click to ignore items).
+    - **Right Panel**: Tabs for different tasks, a file viewer, and the “Apply Changes” panel that lists AI-proposed modifications.
+    - A bottom “log” panel shows messages and clickable events for debugging or re-inspection.
   </app_description>
 
   <tech_stack>
-  ## Technical Stack Specification
+  #### Core Architecture
 
-  ### Core Technologies
+  Athanor follows Electron's recommended **“secure by default”** pattern, separating logic between **main** and **renderer** processes:
 
-  1. Base Framework
-    - Electron (latest stable)
-    - React 18 (latest stable)
-    - TypeScript (latest stable)
-    - Node.js (latest LTS)
+  1. **Main Process (Electron)**
+    - **`main.ts`**: Application startup, window creation, and core event handling.
+    - **IPC Handlers**:
+      - `ipcHandlers.ts` collects all handlers from `handlers/` (e.g., `coreHandlers.ts`, `fileOperationHandlers.ts`, `fileWatchHandlers.ts`) into a single registration function.
+      - Each handler uses Node's `fs/promises` and Chokidar watchers while ensuring paths are sanitized (`filePathManager.ts`).
 
-  2. Build System
-    - electron-forge (latest stable)
-    - Webpack (included with electron-forge)
+    - **File System Manager** (`fileSystemManager.ts`):
+      - Maintains a global “base directory” to represent the open project folder.
+      - Performs file reads/writes, folder creation, ignoring logic, and error handling.
+      - Cleans up watchers on application exit or directory change.
 
-  3. UI & Styling
-    - Material-UI (MUI) v5
-    - TailwindCSS v3
-    - Lucide Icons
+    - **Ignore Rules Manager** (`ignoreRulesManager.ts`)**:
+      - Loads `.athignore` for file exclusion.
+      - Provides advanced matching logic using the `ignore` npm library.
 
-  4. State Management
-    - Zustand (lightweight state management)
+  2. **Renderer Process (React)**
+    - **`src/services/fileSystemService.ts`**:
+      - High-level logic for building a file tree from data returned via IPC.
+      - Normalizes line endings and counts file lines for text files.
+      - Applies ignoring rules or merges them into the UI structure.
 
-  5. File System
-    - Chokidar (file watching)
-    - Node.js fs/promises API
+    - **React Components** (`src/components/*`):  
+      - **`AthanorApp.tsx`** and **`MainLayout.tsx`** define the overall UI layout:
+        - File explorer on the left (expanded by `FileExplorer.tsx`).
+        - Action tabs (workbench, viewer, apply-changes) on the right.
+      - `ApplyChangesPanel.tsx` is the UI for viewing & applying AI-proposed code modifications.
+      - `FileContextMenu.tsx` handles ignoring items and possibly other file actions from the explorer.
+      - `ActionPanel.tsx` controls prompt generation, hooking into `promptStore.ts` and `workbenchStore.ts`.
 
-  6. Development Tools
-    - ESLint (code quality)
-    - Prettier (code formatting)
-    - TypeScript compiler
-    - Webpack Dev Server
+    - **Global Stores** (Zustand) in `src/stores/*`:
+      - `fileSystemStore.ts`: Tracks selected files/folders, previews, and tree data.
+      - `promptStore.ts`: Manages loaded prompt definitions & active prompt variants.
+      - `workbenchStore.ts`: Maintains multiple “task tabs” used to hold user tasks & AI outputs.
+      - `applyChangesStore.ts`: Handles the ephemeral list of file changes returned by AI, letting the user apply or reject them.
 
-  ## File System Considerations
+    - **Utilities** (`src/utils/*`):  
+      - `fileTree.ts`: Functions for sorting & iterating nested file structures.
+      - `constants.ts`: Shared config (e.g., thresholds for large files).
+      - `extractTagContent.ts`: Helpers for parsing XML segments.
+      - Others (e.g., `buildPrompt.ts`, `tokenCount.ts`) serve specialized tasks like AI prompt assembly or token counting.
 
-  The Athanor application implements a secure two-layer file system architecture 
-  that respects Electron's security model:
+  #### Technology Stack
 
-  ### fileSystemManager.ts (Main Process Layer)
-  - Located in the electron/ directory
-  - Runs in the main process with full Node.js access
-  - Provides core file system operations using Node's fs/promises
-  - Manages global state like base directory and ignore rules
-  - Handles low-level operations like path normalization and validation
-  - Maintains watcher instances and cleanup
+  - **Electron v33+**: Powers the main/renderer separation. The main process is responsible for file system access, watchers, and launching the application. The renderer hosts the React UI.  
+  - **React 18+**: Renders the front-end UI, including file explorer trees, task/prompt panels, and the changes diff viewer.  
+  - **TypeScript 5+**: Provides strict typing across main and renderer processes.  
+  - **Node.js** (latest LTS): Provides the backend runtime for the main process.  
+  - **Zustand**: Maintains local state in separate stores—e.g., file selection state (`fileSystemStore.ts`), prompt management (`promptStore.ts`), multi-tab workbench (`workbenchStore.ts`), etc.  
+  - **Chokidar**: Watches the local file system for changes in the open folder.  
+  - **ignore**: Reads `.athignore` and `.gitignore` to filter out hidden or excluded files in the Explorer.  
+  - **Webpack & electron-forge**: Build, package, and run the Electron application.  
+  - **TailwindCSS 3 + Lucide Icons**: Provides a flexible styling system and icon library for a clean UI.  
+  - **Material-UI (MUI) 5**: Partially integrated for certain UI elements (used in some components).  
+  - **ESLint / Prettier**: Linting & formatting for consistent code style.
 
-  Key responsibilities:
-  1. Direct file system access via Node.js fs/promises
-  2. Path normalization and validation
-  3. Ignore rule management (.athignore/.gitignore)
-  4. File watcher lifecycle management
-  5. Error handling and state recovery
-  6. Base directory management
+  #### Future Considerations
 
-  ### fileSystemService.ts (Renderer Process Layer)
-  - Located in the src/services/ directory
-  - Runs in the renderer process without direct fs access
-  - Communicates with main process via IPC bridge
-  - Provides high-level operations for the React application
-  - Handles file tree construction and management
-  - Focuses on data transformation and organization
+  - **Testing**: Integrate unit tests for the main process (handlers) and React components.  
+  - **Database or Extended Persistence**: If user data or historical tasks become more complex, a storage layer might be beneficial.  
+  - **Refined Prompt Templates**: Additional dynamic placeholders or user-defined placeholders.  
+  - **Advanced Visual Diffs**: Implement more advanced color-coded diffs for large or complex changes.  
+  - **Security**: Further refine path sanitization and sandboxing, especially if running untrusted AI output.  
 
-  Key responsibilities:
-  1. Building and managing file tree structure
-  2. Content normalization for display
-  3. File line counting and analysis
-  4. Tree traversal utilities
-  5. Item lookup and path resolution
-  6. Integration with React components
-
-  ### Interface Patterns
-
-  1. Main Process (fileSystemManager.ts):
-    - Exports utility functions used by IPC handlers
-    - Maintains global state (base directory, ignore rules)
-    - Provides error handling and recovery mechanisms
-    - Manages system resources (watchers, file handles)
-
-  2. Renderer Process (fileSystemService.ts):
-    - Uses window.fileSystem interface defined in preload.ts
-    - Provides React-friendly data structures
-    - Handles content formatting and normalization
-    - Manages file tree state and operations
-
-  ### Action points
+  #### Action Points
 
   1. When working with direct file system operations:
     - Use fileSystemManager.ts functions in main process code
@@ -137,24 +135,20 @@ project_info: |
     - Add interface methods to preload.ts
     - Implement high-level operations in fileSystemService.ts
 
-  4. When debugging:
+  4. TypeScript & Global Types:
+    - Regularly open and double-check **`src/types/global.d.ts`** to avoid TypeScript mistakes
+    - This file extends the `window` interface to expose `window.fileSystem`, houses core global interfaces (like `FileOperation`), and organizes key application-level types
+    - If an IPC method signature changes in the main process or `preload.ts`, update both the main code **and** `global.d.ts` accordingly
+
+  5. When debugging:
     - Check main process logs for fileSystemManager.ts issues
     - Verify IPC communication through preload bridge
     - Inspect renderer process state for fileSystemService.ts
 
-  5. Security considerations:
+  6. Security considerations:
     - Never bypass the IPC bridge for file operations
     - Validate all paths and operations in main process
     - Handle sensitive data appropriately at each layer
-
-  ### Future Considerations
-
-  These can be added later if needed:
-  1. Testing Tools (Jest, React Testing Library)
-  2. Database Integration
-  3. Custom Themes Support
-  4. Keyboard Shortcuts
-  5. Search/Filter Capabilities
   </tech_stack>
 system_prompt: |
   None
