@@ -2,6 +2,7 @@
 // Provides UI controls for task description, dynamic prompt generators, and preset tasks.
 // Manages state for task inputs, generated prompts, and clipboard operations with contextual tooltips.
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import TaskContextMenu from './TaskContextMenu';
 import {
   detectContexts,
   formatContext,
@@ -75,11 +76,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     x: number;
     y: number;
   } | null>(null);
+  
+  const [taskContextMenu, setTaskContextMenu] = useState<{
+    taskId: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
-  // Close context menu and dropdown when clicking outside
+  // Close context menus and dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       setContextMenu(null);
+      setTaskContextMenu(null);
       if (
         contextFieldRef.current &&
         !contextFieldRef.current.contains(event.target as Node)
@@ -392,8 +400,19 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                           })
                         }
                         disabled={isDisabled}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setTaskContextMenu({
+                            taskId: task.id,
+                            x: e.clientX,
+                            y: e.clientY,
+                          });
+                        }}
                         data-edge="left"
                         aria-label={task.label}
+                        aria-haspopup="true"
+                        aria-expanded={taskContextMenu?.taskId === task.id ? 'true' : 'false'}
                       >
                         {IconComponent && (
                           <>
@@ -440,6 +459,27 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             activeVariantId={
               contextMenu?.promptId
                 ? getActiveVariant(contextMenu.promptId)?.id
+                : undefined
+            }
+          />
+        )}
+
+        {/* Task Context Menu */}
+        {taskContextMenu && (
+          <TaskContextMenu
+            task={useTaskStore.getState().tasks.find(t => t.id === taskContextMenu.taskId)!}
+            x={taskContextMenu.x}
+            y={taskContextMenu.y}
+            onClose={() => setTaskContextMenu(null)}
+            onSelectVariant={(variantId: string) => {
+              if (taskContextMenu?.taskId) {
+                useTaskStore.getState().setActiveVariant(taskContextMenu.taskId, variantId);
+              }
+              setTaskContextMenu(null);
+            }}
+            activeVariantId={
+              taskContextMenu?.taskId
+                ? useTaskStore.getState().getActiveVariant(taskContextMenu.taskId)?.id
                 : undefined
             }
           />

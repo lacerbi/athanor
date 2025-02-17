@@ -39,7 +39,9 @@ const VariantsContextMenu: React.FC<VariantsContextMenuProps> = ({
     const windowHeight = window.innerHeight;
 
     // Get menu dimensions once it's rendered
-    const menu = document.querySelector('.variants-context-menu') as HTMLElement;
+    const menu = document.querySelector(
+      '.variants-context-menu'
+    ) as HTMLElement;
     if (!menu) return;
 
     const menuWidth = menu.offsetWidth;
@@ -79,14 +81,16 @@ const VariantsContextMenu: React.FC<VariantsContextMenuProps> = ({
         const currentIndex = Array.from(menuItems).findIndex(
           (item) => item === document.activeElement
         );
-        
+
         let nextIndex: number;
         if (event.key === 'ArrowDown') {
-          nextIndex = currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0;
+          nextIndex =
+            currentIndex < menuItems.length - 1 ? currentIndex + 1 : 0;
         } else {
-          nextIndex = currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1;
+          nextIndex =
+            currentIndex > 0 ? currentIndex - 1 : menuItems.length - 1;
         }
-        
+
         (menuItems[nextIndex] as HTMLElement).focus();
       }
     };
@@ -96,7 +100,7 @@ const VariantsContextMenu: React.FC<VariantsContextMenuProps> = ({
   }, [onClose]);
 
   const handleSelectVariant = (variant: Variant) => {
-    addLog(`Selected variant '${variant.label}'`);
+    //addLog(`Selected variant '${variant.label}'`);
     onSelectVariant(variant.id);
     onClose();
   };
