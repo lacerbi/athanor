@@ -1,3 +1,15 @@
+<ath_task 
+    id="refactor"
+    order="2"
+    label="Refactor Code"
+    icon="Scissors"
+    tooltip="Set the task to split/refactor selected files"
+    requires="selected">
+
+<ath_task_variant 
+    id="default"
+    label="Default"
+    tooltip="Default">
 # Target files
 
 {{selected_files_with_info}}

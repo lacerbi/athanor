@@ -1,3 +1,15 @@
+<ath_task 
+    id="ai-summary"
+    order="1"
+    label="AI Summary"
+    icon="FileText"
+    tooltip="Set the task to (re)write AI summaries of selected files"
+    requires="selected">
+
+<ath_task_variant 
+    id="default"
+    label="Default"
+    tooltip="Default">
 # Target files
 
 {{selected_files}}
@@ -77,3 +89,5 @@ Complex manager with important interfaces:
 // Requires initialization before use and proper cleanup of watchers.
 ```
 </example>
+</ath_task_variant>
+</ath_task>
