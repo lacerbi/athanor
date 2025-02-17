@@ -1,0 +1,82 @@
+// AI Summary: Generic task builder that handles any task type using dynamic prompts.
+// Uses task data from taskStore to generate prompts with proper template loading.
+// Integrates with workbench store for task description and context management.
+import { FileItem } from '../utils/fileTree';
+import { buildDynamicPrompt } from '../utils/buildPrompt';
+import { TaskData } from '../types/taskTypes';
+import { useWorkbenchStore } from '../stores/workbenchStore';
+
+export interface BuildTaskActionParams {
+  task: TaskData;
+  rootItems: FileItem[];
+  selectedItems: Set<string>;
+  setOutputContent: (content: string) => void;
+  addLog: (message: string) => void;
+  setIsLoading: (loading: boolean) => void;
+}
+
+export async function buildTaskAction(params: BuildTaskActionParams): Promise<void> {
+  const {
+    task,
+    rootItems,
+    selectedItems,
+    setOutputContent,
+    addLog,
+    setIsLoading,
+  } = params;
+
+  if (!rootItems.length) {
+    console.warn('No file tree data available');
+    return;
+  }
+
+  // Check if task requires file selection
+  if (task.requires === 'selected' && !selectedItems.size) {
+    console.warn('No files selected');
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    // Get current directory for path resolution
+    const currentDir = await window.fileSystem.getCurrentDirectory();
+
+    // Get the default variant from task
+    const defaultVariant = task.variants[0];
+    if (!defaultVariant) {
+      throw new Error(`No variant found for task ${task.id}`);
+    }
+
+    // Get current workbench state
+    const { setTaskDescription, triggerDeveloperAction } = useWorkbenchStore.getState();
+
+    // Build prompt with task content
+    const processedTaskDescription = await buildDynamicPrompt(
+      task,
+      defaultVariant,
+      rootItems,
+      selectedItems,
+      currentDir,
+      useWorkbenchStore.getState().taskDescription,
+      useWorkbenchStore.getState().taskContext
+    );
+
+    // Update task description in workbench
+    setTaskDescription(processedTaskDescription);
+    addLog(`${task.label} task prompt loaded and processed`);
+
+    // Trigger Developer action
+    triggerDeveloperAction();
+  } catch (error) {
+    console.error(`Error processing ${task.label} task:`, error);
+    setOutputContent(
+      `Error processing ${task.label} task. Check console for details.`
+    );
+    addLog(`Failed to process ${task.label} task`);
+    // Ensure state is reset on error
+    const { resetGeneratingPrompt } = useWorkbenchStore.getState();
+    resetGeneratingPrompt();
+  } finally {
+    setIsLoading(false);
+  }
+}

@@ -99,3 +99,5 @@ Analyze and refactor the target file(s) to improve code organization and maintai
 The goal is to improve maintainability while preserving functionality.
 Consider language-specific patterns and project conventions.
 Always maintain proper scoping, visibility, and dependency management.
+</ath_task_variant>
+</ath_task>
