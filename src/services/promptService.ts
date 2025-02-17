@@ -1,14 +1,16 @@
-// AI Summary: Loads and parses prompt XML files from resources directory with support for order-based sorting.
-// Extracts prompt metadata and variants with proper type safety and defaults.
-// Core functions: parsePromptFile(), parseAttributes(), loadPrompts().
+// AI Summary: Loads and parses prompt and task XML files from resources directory.
+// Handles both prompt_*.xml and task_*.xml with shared parsing logic and proper typing.
+// Core functions: parseXmlFile(), parseAttributes(), loadPrompts(), loadTasks().
 import { PromptData, PromptVariant, DEFAULT_PROMPT_ORDER } from '../types/promptTypes';
+import { TaskData, TaskVariant, DEFAULT_TASK_ORDER } from '../types/taskTypes';
 import { usePromptStore } from '../stores/promptStore';
+import { useTaskStore } from '../stores/taskStore';
 import { readFileContent } from './fileSystemService';
 
-// Regular expressions for parsing prompt files
-const PROMPT_TAG_REGEX = /<ath_prompt\s+([^>]+)>/;
+// Regular expressions for parsing XML files
+const XML_TAG_REGEX = /<ath_(\w+)\s+([^>]+)>/;
 const VARIANT_TAG_REGEX =
-  /<ath_prompt_variant\s+([^>]+)>([\s\S]*?)<\/ath_prompt_variant>/g;
+  /<ath_\w+_variant\s+([^>]+)>([\s\S]*?)<\/ath_\w+_variant>/g;
 const ATTRIBUTES_REGEX = /(\w+)="([^"]*?)"/g;
 
 // Parse attributes from an XML tag string
@@ -21,26 +23,33 @@ function parseAttributes(attributesStr: string): Record<string, string> {
   return attributes;
 }
 
-// Parse a single prompt file
-async function parsePromptFile(filePath: string): Promise<PromptData | null> {
+// Generic function to parse both prompt and task files
+async function parseXmlFile<T extends PromptData | TaskData>(
+  filePath: string,
+  type: 'prompt' | 'task'
+): Promise<T | null> {
   try {
     const content = await readFileContent(filePath);
 
-    // Parse prompt attributes
-    const promptMatch = PROMPT_TAG_REGEX.exec(content);
-    if (!promptMatch || !promptMatch[1]) {
-      console.warn(`No valid ath_prompt tag found in ${filePath}`);
+    // Parse main tag attributes
+    const tagMatch = XML_TAG_REGEX.exec(content);
+    if (!tagMatch || !tagMatch[2] || tagMatch[1] !== type) {
+      console.warn(`No valid ath_${type} tag found in ${filePath}`);
       return null;
     }
 
-    const promptAttrs = parseAttributes(promptMatch[1]);
-    if (!promptAttrs.id || !promptAttrs.label) {
+    const attrs = parseAttributes(tagMatch[2]);
+    if (!attrs.id || !attrs.label) {
       console.warn(`Missing required attributes (id/label) in ${filePath}`);
       return null;
     }
 
     // Parse order attribute with default fallback
-    const order = promptAttrs.order ? parseInt(promptAttrs.order, 10) : DEFAULT_PROMPT_ORDER;
+    const order = attrs.order
+      ? parseInt(attrs.order, 10)
+      : type === 'prompt'
+      ? DEFAULT_PROMPT_ORDER
+      : DEFAULT_TASK_ORDER;
 
     // Validate order is a valid number
     if (isNaN(order)) {
@@ -48,7 +57,7 @@ async function parsePromptFile(filePath: string): Promise<PromptData | null> {
     }
 
     // Parse variants
-    const variants: PromptVariant[] = [];
+    const variants: (PromptVariant | TaskVariant)[] = [];
     let variantMatch;
     while ((variantMatch = VARIANT_TAG_REGEX.exec(content)) !== null) {
       const variantAttrs = parseAttributes(variantMatch[1]);
@@ -67,16 +76,24 @@ async function parsePromptFile(filePath: string): Promise<PromptData | null> {
       return null;
     }
 
-    return {
-      id: promptAttrs.id,
-      label: promptAttrs.label,
-      icon: promptAttrs.icon,
-      tooltip: promptAttrs.tooltip,
+    // Construct the data object
+    const data: T = {
+      id: attrs.id,
+      label: attrs.label,
+      icon: attrs.icon,
+      tooltip: attrs.tooltip,
       order: order,
-      variants,
-    };
+      variants: variants,
+    } as T;
+
+    // Add task-specific fields
+    if (type === 'task' && attrs.requires) {
+      (data as TaskData).requires = attrs.requires as 'selected';
+    }
+
+    return data;
   } catch (error) {
-    console.error(`Error parsing prompt file ${filePath}:`, error);
+    console.error(`Error parsing ${type} file ${filePath}:`, error);
     return null;
   }
 }
@@ -85,10 +102,7 @@ async function parsePromptFile(filePath: string): Promise<PromptData | null> {
 export async function loadPrompts(): Promise<void> {
   try {
     const resourcesPath = await window.fileSystem.getResourcesPath();
-    const promptsDir = await window.fileSystem.joinPaths(
-      resourcesPath,
-      'prompts'
-    );
+    const promptsDir = await window.fileSystem.joinPaths(resourcesPath, 'prompts');
     const files = await window.fileSystem.readDirectory(promptsDir, false);
 
     // Parse prompt files (starting with 'prompt_' and ending with '.xml')
@@ -99,7 +113,7 @@ export async function loadPrompts(): Promise<void> {
       }
 
       const filePath = await window.fileSystem.joinPaths(promptsDir, file);
-      const promptData = await parsePromptFile(filePath);
+      const promptData = await parseXmlFile<PromptData>(filePath, 'prompt');
       if (promptData) {
         prompts.push(promptData);
       } else {
@@ -111,6 +125,37 @@ export async function loadPrompts(): Promise<void> {
     usePromptStore.getState().setPrompts(prompts);
   } catch (error) {
     console.error('Error loading prompts:', error);
+    throw error;
+  }
+}
+
+// Load all tasks and update the store
+export async function loadTasks(): Promise<void> {
+  try {
+    const resourcesPath = await window.fileSystem.getResourcesPath();
+    const promptsDir = await window.fileSystem.joinPaths(resourcesPath, 'prompts');
+    const files = await window.fileSystem.readDirectory(promptsDir, false);
+
+    // Parse task files (starting with 'task_' and ending with '.xml')
+    const tasks: TaskData[] = [];
+    for (const file of files) {
+      if (!file.startsWith('task_') || !file.endsWith('.xml')) {
+        continue;
+      }
+
+      const filePath = await window.fileSystem.joinPaths(promptsDir, file);
+      const taskData = await parseXmlFile<TaskData>(filePath, 'task');
+      if (taskData) {
+        tasks.push(taskData);
+      } else {
+        console.log('Failed to parse task:', file);
+      }
+    }
+
+    // Update store
+    useTaskStore.getState().setTasks(tasks);
+  } catch (error) {
+    console.error('Error loading tasks:', error);
     throw error;
   }
 }
