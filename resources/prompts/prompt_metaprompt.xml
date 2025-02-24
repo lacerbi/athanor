@@ -17,8 +17,7 @@
 {{file_contents}}
 </file_contents>
 
-<file_tree>
-{{file_tree}}</file_tree>
+{{file_tree}}
 </codebase>
 
 <task>
@@ -96,8 +95,7 @@ Do NOT use canvas or artifacts.
 {{file_contents}}
 </file_contents>
 
-<file_tree>
-{{file_tree}}</file_tree>
+{{file_tree}}
 </codebase>
 
 <task>

@@ -17,8 +17,7 @@
 {{file_contents}}
 </file_contents>
 
-<file_tree>
-{{file_tree}}</file_tree>
+{{file_tree}}
 </codebase>
 
 <system_prompt>

@@ -131,7 +131,8 @@ export async function generateCodebaseDocumentation(
   config: AthanorConfig | null,
   includeNonSelected: boolean = true
 ): Promise<{ file_contents: string; file_tree: string }> {
-  const fileTreeContent = generateFileTree(items, selectedItems);
+  const rawFileTreeContent = generateFileTree(items, selectedItems);
+  const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>`;
   let fileContents = '';
 
   // Process each file
