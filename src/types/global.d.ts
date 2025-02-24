@@ -24,8 +24,9 @@ export interface PanelResizeState {
 // Re-export action types from actions folder
 export type { ActionType, ActionState } from '../actions';
 
-// Re-export prompt types
+// Re-export prompt and task types
 export type { PromptData, PromptVariant } from './promptTypes';
+export type { TaskData, TaskVariant } from './taskTypes';
 
 // Task tab types for workbench multi-tab support
 export interface TaskTab {

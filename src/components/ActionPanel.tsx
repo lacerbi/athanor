@@ -2,6 +2,7 @@
 // Provides UI controls for task description, dynamic prompt generators, and preset tasks.
 // Manages state for task inputs, generated prompts, and clipboard operations with contextual tooltips.
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import TaskContextMenu from './TaskContextMenu';
 import {
   detectContexts,
   formatContext,
@@ -26,9 +27,9 @@ import { usePromptStore } from '../stores/promptStore';
 import { buildDynamicPrompt } from '../utils/buildPrompt';
 import { FileItem } from '../utils/fileTree';
 import { copyToClipboard } from '../actions/ManualCopyAction';
-import { buildAiSummaryPromptAction } from '../actions/BuildAiSummaryAction';
-import { buildRefactorPromptAction } from '../actions/BuildRefactorAction';
-import { getActionTooltip } from '../actions';
+import { buildTaskAction } from '../actions';
+import { getActionTooltip, getTaskTooltip } from '../actions';
+import { useTaskStore } from '../stores/taskStore';
 import { useFileDrop } from '../hooks/useFileDrop';
 import { DRAG_DROP } from '../utils/constants';
 
@@ -75,11 +76,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     x: number;
     y: number;
   } | null>(null);
+  
+  const [taskContextMenu, setTaskContextMenu] = useState<{
+    taskId: string;
+    x: number;
+    y: number;
+  } | null>(null);
 
-  // Close context menu and dropdown when clicking outside
+  // Close context menus and dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       setContextMenu(null);
+      setTaskContextMenu(null);
       if (
         contextFieldRef.current &&
         !contextFieldRef.current.contains(event.target as Node)
@@ -369,67 +377,52 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   })}
                 </div>
 
-                {/* Preset Tasks Row */}
+                {/* Dynamic Tasks Row */}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl">
-                  <button
-                    className="icon-btn bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
-                    title={getActionTooltip(
-                      'aiSummaries',
-                      isLoading || hasNoSelection,
-                      isLoading
-                        ? 'loading'
-                        : hasNoSelection
-                          ? 'noSelection'
-                          : null
-                    )}
-                    onClick={() =>
-                      buildAiSummaryPromptAction({
-                        rootItems,
-                        selectedItems,
-                        setOutputContent,
-                        addLog,
-                        setIsLoading,
-                      })
-                    }
-                    disabled={isLoading || hasNoSelection}
-                    data-edge="left"
-                    aria-label="Summarize files"
-                  >
-                    <>
-                      <FileText className="w-5 h-5 icon-btn-icon" />
-                      <span className="floating-label">AI Summaries</span>
-                    </>
-                  </button>
+                  {useTaskStore((state) => state.tasks).map((task) => {
+                    const IconComponent = task.icon ? (Icons as any)[task.icon] : null;
+                    const isDisabled = isLoading || (task.requires === 'selected' && hasNoSelection);
+                    const reason = isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null;
 
-                  <button
-                    className="icon-btn bg-teal-500 text-white hover:bg-teal-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-teal-500"
-                    title={getActionTooltip(
-                      'refactorCode',
-                      isLoading || hasNoSelection,
-                      isLoading
-                        ? 'loading'
-                        : hasNoSelection
-                          ? 'noSelection'
-                          : null
-                    )}
-                    onClick={() =>
-                      buildRefactorPromptAction({
-                        rootItems,
-                        selectedItems,
-                        setOutputContent,
-                        addLog,
-                        setIsLoading,
-                      })
-                    }
-                    disabled={isLoading || hasNoSelection}
-                    data-edge="left"
-                    aria-label="Refactor files"
-                  >
-                    <>
-                      <Scissors className="w-5 h-5 icon-btn-icon" />
-                      <span className="floating-label">Refactor Code</span>
-                    </>
-                  </button>
+                    return (
+                      <button
+                        key={task.id}
+                        className="icon-btn bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
+                        title={getTaskTooltip(task, isDisabled, reason)}
+                        onClick={() =>
+                          buildTaskAction({
+                            task,
+                            rootItems,
+                            selectedItems,
+                            setOutputContent,
+                            addLog,
+                            setIsLoading,
+                          })
+                        }
+                        disabled={isDisabled}
+                        onContextMenu={(e) => {
+                          e.preventDefault();
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setTaskContextMenu({
+                            taskId: task.id,
+                            x: e.clientX,
+                            y: e.clientY,
+                          });
+                        }}
+                        data-edge="left"
+                        aria-label={task.label}
+                        aria-haspopup="true"
+                        aria-expanded={taskContextMenu?.taskId === task.id ? 'true' : 'false'}
+                      >
+                        {IconComponent && (
+                          <>
+                            <IconComponent className="w-5 h-5 icon-btn-icon" />
+                            <span className="floating-label">{task.label}</span>
+                          </>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -466,6 +459,27 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             activeVariantId={
               contextMenu?.promptId
                 ? getActiveVariant(contextMenu.promptId)?.id
+                : undefined
+            }
+          />
+        )}
+
+        {/* Task Context Menu */}
+        {taskContextMenu && (
+          <TaskContextMenu
+            task={useTaskStore.getState().tasks.find(t => t.id === taskContextMenu.taskId)!}
+            x={taskContextMenu.x}
+            y={taskContextMenu.y}
+            onClose={() => setTaskContextMenu(null)}
+            onSelectVariant={(variantId: string) => {
+              if (taskContextMenu?.taskId) {
+                useTaskStore.getState().setActiveVariant(taskContextMenu.taskId, variantId);
+              }
+              setTaskContextMenu(null);
+            }}
+            activeVariantId={
+              taskContextMenu?.taskId
+                ? useTaskStore.getState().getActiveVariant(taskContextMenu.taskId)?.id
                 : undefined
             }
           />

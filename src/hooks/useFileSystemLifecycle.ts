@@ -6,7 +6,7 @@ import { buildFileTree } from '../services/fileSystemService';
 import { createAthignoreFile } from '../services/fileIgnoreService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
-import { loadPrompts } from '../services/promptService';
+import { loadPrompts, loadTasks } from '../services/promptService';
 
 import { FileSystemLifecycle } from '../types/global';
 
@@ -48,7 +48,11 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         setFilesData(mainTree);
         setResourcesData(materialsTree);
 
-        await loadPrompts();
+        // Load prompts and tasks
+        await Promise.all([
+          loadPrompts(),
+          loadTasks()
+        ]);
 
         if (!silent) {
           addLog('File system refreshed');
@@ -96,7 +100,11 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     setFilesData(mainTree);
     setResourcesData(materialsTree);
 
-    await loadPrompts();
+    // Load prompts and tasks
+    await Promise.all([
+      loadPrompts(),
+      loadTasks()
+    ]);
     await setupWatcher(normalizedDir);
     addLog(`Loaded directory: ${normalizedDir}`);
 
@@ -174,7 +182,11 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         setFilesData(mainTree);
         setResourcesData(materialsTree);
 
-        await loadPrompts();
+        // Load prompts and tasks
+      await Promise.all([
+        loadPrompts(),
+        loadTasks()
+      ]);
         await setupWatcher(normalizedDir);
         addLog(`Loaded directory: ${normalizedDir}`);
       } catch (error) {

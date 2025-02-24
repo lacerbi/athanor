@@ -1,6 +1,30 @@
 // AI Summary: Provides tooltips and human-readable names for UI action buttons.
 // Handles state-based tooltip generation with proper typing for actions and states.
 import { ActionType, ActionState } from './types';
+import { TaskData } from '../types/taskTypes';
+
+// Get tooltip based on task data
+export function getTaskTooltip(
+  task: TaskData,
+  isDisabled: boolean,
+  reason: ActionState | null
+): string {
+  if (!isDisabled) {
+    return task.tooltip || task.label;
+  }
+
+  // Return reason-specific messages for disabled state
+  switch (reason) {
+    case 'loading':
+      return 'Please wait while the current operation completes';
+    case 'noTask':
+      return `${task.label} - Enter a task description to enable`;
+    case 'noSelection':
+      return `${task.label} - Select one or more files to enable`;
+    default:
+      return 'Action currently unavailable';
+  }
+}
 
 // Get tooltip based on action button state
 export function getActionTooltip(
@@ -16,10 +40,8 @@ export function getActionTooltip(
         return 'Generate a prompt for software engineer Q&A and planning';
       case 'developer':
         return 'Generate a prompt to execute a coding task';
-      case 'aiSummaries':
-        return 'Set the task to (re)write AI summaries of selected files and generate a prompt';
-      case 'refactorCode':
-        return 'Generate a prompt to split/refactor selected file(s)';
+      default:
+        return action;
     }
   }
 
@@ -45,10 +67,6 @@ function getActionName(action: ActionType): string {
       return 'Analyze';
     case 'developer':
       return 'Develop';
-    case 'aiSummaries':
-      return 'Summarize';
-    case 'refactorCode':
-      return 'Refactor';
     default:
       return action;
   }

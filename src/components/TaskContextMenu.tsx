@@ -1,11 +1,11 @@
-// AI Summary: Wrapper component around VariantsContextMenu to handle prompt-specific variant selection.
+// AI Summary: Wrapper component around VariantsContextMenu to handle task-specific variant selection
 import React from 'react';
-import { PromptData } from '../types/promptTypes';
+import { TaskData } from '../types/taskTypes';
 import VariantsContextMenu from './VariantsContextMenu';
 import { useLogStore } from '../stores/logStore';
 
-interface PromptContextMenuProps {
-  prompt: PromptData;
+interface TaskContextMenuProps {
+  task: TaskData;
   x: number;
   y: number;
   onClose: () => void;
@@ -13,8 +13,8 @@ interface PromptContextMenuProps {
   activeVariantId?: string;
 }
 
-const PromptContextMenu: React.FC<PromptContextMenuProps> = ({
-  prompt,
+const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
+  task,
   x,
   y,
   onClose,
@@ -24,9 +24,9 @@ const PromptContextMenu: React.FC<PromptContextMenuProps> = ({
   const { addLog } = useLogStore();
   
   const handleVariantSelect = (variantId: string) => {
-    const variant = prompt.variants.find(v => v.id === variantId);
+    const variant = task.variants.find(v => v.id === variantId);
     if (variant) {
-      addLog(`Selected variant '${variant.label}' for prompt '${prompt.label}'`);
+      addLog(`Selected variant '${variant.label}' for task '${task.label}'`);
     }
     onSelectVariant(variantId);
   };
@@ -35,8 +35,8 @@ const PromptContextMenu: React.FC<PromptContextMenuProps> = ({
     <VariantsContextMenu
       x={x}
       y={y}
-      menuTitle={`${prompt.label} Variants`}
-      variants={prompt.variants}
+      menuTitle={`${task.label} Variants`}
+      variants={task.variants}
       activeVariantId={activeVariantId}
       onClose={onClose}
       onSelectVariant={handleVariantSelect}
@@ -44,4 +44,4 @@ const PromptContextMenu: React.FC<PromptContextMenuProps> = ({
   );
 };
 
-export default PromptContextMenu;
+export default TaskContextMenu;

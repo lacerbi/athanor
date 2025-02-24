@@ -5,9 +5,7 @@
 export type ActionType =
   | 'fileHighlighter'
   | 'softwareEngineer'
-  | 'developer'
-  | 'aiSummaries'
-  | 'refactorCode';
+  | 'developer';
 
 // Action state types
 export type ActionState = 'loading' | 'noTask' | 'noSelection';

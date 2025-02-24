@@ -1,3 +1,15 @@
+<ath_task 
+    id="refactor"
+    order="2"
+    label="Refactor Code"
+    icon="Scissors"
+    tooltip="Set the task to split/refactor selected files"
+    requires="selected">
+
+<ath_task_variant 
+    id="default"
+    label="Default"
+    tooltip="Default">
 # Target files
 
 {{selected_files_with_info}}
@@ -87,3 +99,5 @@ Analyze and refactor the target file(s) to improve code organization and maintai
 The goal is to improve maintainability while preserving functionality.
 Consider language-specific patterns and project conventions.
 Always maintain proper scoping, visibility, and dependency management.
+</ath_task_variant>
+</ath_task>
