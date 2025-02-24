@@ -17,8 +17,7 @@
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}
-{{codebase_legend}}
+{{file_tree}}{{codebase_legend}}
 </codebase>
 
 <system_prompt>
@@ -136,8 +135,7 @@ Important guidelines for commits:
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}
-{{codebase_legend}}
+{{file_tree}}{{codebase_legend}}
 </codebase>
 
 <system_prompt>

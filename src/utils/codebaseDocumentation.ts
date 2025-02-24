@@ -132,7 +132,7 @@ export async function generateCodebaseDocumentation(
   includeNonSelected: boolean = true
 ): Promise<{ file_contents: string; file_tree: string }> {
   const rawFileTreeContent = generateFileTree(items, selectedItems);
-  const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>`;
+  const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>\n`;
   let fileContents = '';
 
   // Process each file
@@ -158,9 +158,11 @@ export async function generateCodebaseDocumentation(
         // Ensure content is treated as string since we specified utf8 encoding
         const contentString = content.toString();
         // Only include full content for selected files, non-selected files get smart preview if includeNonSelected is true
-        const processedContent = isSelected 
-          ? contentString 
-          : includeNonSelected ? getSmartPreview(contentString) : '';
+        const processedContent = isSelected
+          ? contentString
+          : includeNonSelected
+            ? getSmartPreview(contentString)
+            : '';
         if (processedContent) {
           fileContents +=
             (fileContents ? '\n' : '') +

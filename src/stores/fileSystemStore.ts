@@ -30,6 +30,10 @@ interface FileSystemState {
   // Smart preview setting
   smartPreviewEnabled: boolean;
   toggleSmartPreview: () => void;
+  
+  // File tree inclusion setting
+  includeFileTree: boolean;
+  toggleFileTree: () => void;
 
   // Refresh state
   isRefreshing: boolean;
@@ -58,8 +62,9 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
       // Clear file system state
       fileTree: [],
       
-      // Keep smart preview enabled by default
+      // Keep smart preview and file tree enabled by default
       smartPreviewEnabled: true,
+      includeFileTree: true,
     });
   },
   
@@ -74,6 +79,12 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
   smartPreviewEnabled: true,
   toggleSmartPreview: () => set((state) => ({ 
     smartPreviewEnabled: !state.smartPreviewEnabled 
+  })),
+  
+  // File tree inclusion setting (true = include file tree in generated prompt)
+  includeFileTree: true,
+  toggleFileTree: () => set((state) => ({
+    includeFileTree: !state.includeFileTree
   })),
 
   selectItems: (ids: string[]) =>

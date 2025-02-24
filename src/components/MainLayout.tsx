@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { File, FileText, FolderOpen, RefreshCw, ClipboardCopy, Eye, EyeOff } from 'lucide-react';
+import { File, FileText, FolderOpen, RefreshCw, ClipboardCopy, Eye, EyeOff, Folder, FolderX } from 'lucide-react';
 import { useLogStore, LogEntry } from '../stores/logStore';
 import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
@@ -40,7 +40,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const { leftPanelWidth, isResizing, resizeRef, startResize } =
     usePanelResize();
-  const { selectedFileCount, selectedLinesTotal, smartPreviewEnabled, toggleSmartPreview } = useFileSystemStore();
+  const { 
+    selectedFileCount, 
+    selectedLinesTotal, 
+    smartPreviewEnabled, 
+    toggleSmartPreview,
+    includeFileTree,
+    toggleFileTree
+  } = useFileSystemStore();
 
   const handleFileView = () => {
     onTabChange('viewer');
@@ -111,6 +118,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   <Eye size={20} className="text-blue-600" />
                 ) : (
                   <EyeOff size={20} className="text-gray-600" />
+                )}
+              </button>
+              <button
+                onClick={toggleFileTree}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                title={includeFileTree ? "Include File Tree: ON (click to disable)" : "Include File Tree: OFF (click to enable)"}
+              >
+                {includeFileTree ? (
+                  <Folder size={20} className="text-blue-600" />
+                ) : (
+                  <FolderX size={20} className="text-gray-600" />
                 )}
               </button>
             </div>

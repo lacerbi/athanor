@@ -17,8 +17,7 @@
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}
-{{codebase_legend}}
+{{file_tree}}{{codebase_legend}}
 </codebase>
 
 <system_prompt>
@@ -329,8 +328,7 @@ instructing them to select the files from the Athanor file manager.
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}
-{{codebase_legend}}
+{{file_tree}}{{codebase_legend}}
 </codebase>
 
 <current_task>

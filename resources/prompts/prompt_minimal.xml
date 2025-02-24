@@ -7,8 +7,8 @@
 
   <ath_prompt_variant 
       id="default"
-      label="With File Tree"
-      tooltip="Displays full repository information including the folder structure">
+      label="Default"
+      tooltip="Displays repository information">
 <codebase>
 # Documentation `{{project_name}}`
 
@@ -16,26 +16,7 @@
 <file_contents>
 {{file_contents}}
 </file_contents>
-
 {{file_tree}}
-</codebase>
-
-<task>
-{{task_description}}{{task_context}}
-</task>
-</ath_prompt_variant>
-
-  <ath_prompt_variant 
-      id="notree"
-      label="Without File Tree"
-      tooltip="Displays full repository information without the folder structure">
-<codebase>
-# Documentation `{{project_name}}`
-
-{{project_info}}
-<file_contents>
-{{file_contents}}
-</file_contents>
 </codebase>
 
 <task>
