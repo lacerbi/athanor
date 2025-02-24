@@ -33,7 +33,7 @@ function normalizeContent(content: string): string {
 
 export async function copySelectedFilesContent(params: CopySelectedParams): Promise<void> {
   const { addLog, rootPath } = params;
-  const { selectedItems, fileTree } = useFileSystemStore.getState();
+  const { selectedItems, fileTree, smartPreviewEnabled } = useFileSystemStore.getState();
 
   try {
     const { file_contents } = await generateCodebaseDocumentation(
@@ -41,7 +41,7 @@ export async function copySelectedFilesContent(params: CopySelectedParams): Prom
       selectedItems,
       rootPath,
       null,
-      false // Skip non-selected files
+      smartPreviewEnabled // Use the smartPreviewEnabled setting from the store
     );
 
     if (!file_contents) {

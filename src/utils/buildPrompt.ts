@@ -11,6 +11,7 @@ import {
   extractTaskDescription,
 } from './promptTemplates';
 import { PromptData, PromptVariant } from '../types/promptTypes';
+import { useFileSystemStore } from '../stores/fileSystemStore';
 
 export interface PromptVariables {
   project_name?: string;
@@ -96,12 +97,16 @@ export async function buildDynamicPrompt(
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
 
+  // Get the smart preview setting from the store
+  const { smartPreviewEnabled } = useFileSystemStore.getState();
+
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
     items,
     selectedItems,
     rootPath,
-    config
+    config,
+    smartPreviewEnabled
   );
 
   // Format task context if non-empty
@@ -143,12 +148,16 @@ export async function buildPrompt(
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
 
+  // Get the smart preview setting from the store
+  const { smartPreviewEnabled } = useFileSystemStore.getState();
+
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
     items,
     selectedItems,
     rootPath,
-    config
+    config,
+    smartPreviewEnabled
   );
 
   // Format task context if non-empty

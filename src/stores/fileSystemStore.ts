@@ -27,6 +27,10 @@ interface FileSystemState {
   previewedFilePath: string | null;
   setPreviewedFilePath: (path: string | null) => void;
 
+  // Smart preview setting
+  smartPreviewEnabled: boolean;
+  toggleSmartPreview: () => void;
+
   // Refresh state
   isRefreshing: boolean;
   setIsRefreshing: (refreshing: boolean) => void;
@@ -53,6 +57,9 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
       
       // Clear file system state
       fileTree: [],
+      
+      // Keep smart preview enabled by default
+      smartPreviewEnabled: true,
     });
   },
   
@@ -62,6 +69,12 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
 
   getSelectedFileCount: () => get().selectedFileCount,
   getSelectedLinesTotal: () => get().selectedLinesTotal,
+
+  // Smart preview setting (true = include non-selected files with truncated preview)
+  smartPreviewEnabled: true,
+  toggleSmartPreview: () => set((state) => ({ 
+    smartPreviewEnabled: !state.smartPreviewEnabled 
+  })),
 
   selectItems: (ids: string[]) =>
     set((state) => {
