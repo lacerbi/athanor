@@ -78,7 +78,8 @@ class XmlParser {
 
           // Look ahead for file closing tags, optionally followed by next block or command end
           const remaining = this.content.slice(fileCodeEnd);
-          const closeTagsRegex = /^<\/file_code>\s*<\/file>(?:\s*(?:<file>\s*<file_message>|<\/ath(?:\s+command(?:="[^"]*")?)?>\s*)?)?/;
+          const closeTagsRegex =
+            /^<\/file_code>\s*<\/file>(?:\s*(?:<file>\s*<file_message>|<\/ath(?:\s+command(?:="[^"]*")?)?>\s*)?)?/;
           const match = remaining.match(closeTagsRegex);
 
           if (match) {
@@ -225,7 +226,9 @@ class XmlParser {
  */
 export async function parseXmlContent(
   clipboardContent: string,
-  addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void
+  addLog: (
+    message: string | { message: string; onClick: () => Promise<void> }
+  ) => void
 ): Promise<FileOperation[]> {
   const operations: FileOperation[] = [];
 
@@ -334,13 +337,15 @@ export async function parseXmlContent(
       addLog({
         message: `${failedDiffPaths.length} UPDATE_DIFF operation(s) failed - Click to copy files`,
         onClick: async () => {
-          const { copyFailedDiffContent } = await import('../../actions/ManualCopyAction');
+          const { copyFailedDiffContent } = await import(
+            '../../actions/ManualCopyAction'
+          );
           await copyFailedDiffContent({
             filePaths: failedDiffPaths,
             addLog,
             rootPath: currentDir,
           });
-        }
+        },
       });
     }
 

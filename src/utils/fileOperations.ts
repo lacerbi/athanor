@@ -7,28 +7,44 @@ import { DiffBlock } from '../types/global';
 // Preserves lines containing whitespace characters.
 export function removeInitialEmptyLine(content: string): string {
   if (!content) return '';
-  
+
   // Check if content starts with a single newline
-  if (content.startsWith('\n') && !content.startsWith('\n ') && !content.startsWith('\n\t')) {
+  if (
+    content.startsWith('\n') &&
+    !content.startsWith('\n ') &&
+    !content.startsWith('\n\t')
+  ) {
     return content.slice(1);
   }
-  
+
   return content;
 }
 
 // Parse diff blocks from file content
 export function parseDiffBlocks(content: string): DiffBlock[] {
   const blocks: DiffBlock[] = [];
-  const regex = /<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> REPLACE/g;
-  
+  // Modified regex to properly handle empty replacements
+  // The key change is removing the required newline before >>>>>>> REPLACE
+  // This allows empty replacements with just a newline between ======= and >>>>>>> REPLACE
+  const regex = /<<<<<<< SEARCH\n([\s\S]*?)=======\n([\s\S]*?)>>>>>>> REPLACE/g;
+
   let match;
   while ((match = regex.exec(content)) !== null) {
+    // Validate that search content isn't empty
+    if (!match[1].trim()) {
+      throw new Error('Search block cannot be empty');
+    }
+
     blocks.push({
       search: match[1],
       replace: match[2],
     });
   }
-  
+
+  if (blocks.length === 0) {
+    throw new Error('No valid diff blocks found in content');
+  }
+
   return blocks;
 }
 
@@ -37,7 +53,15 @@ export function validateSearchBlocks(
   originalContent: string,
   blocks: DiffBlock[]
 ): boolean {
-  return blocks.every(({ search }) => originalContent.includes(search));
+  for (let i = 0; i < blocks.length; i++) {
+    const { search } = blocks[i];
+    if (!originalContent.includes(search)) {
+      throw new Error(
+        `Search block #${i + 1} not found in file content. The file may have changed since the diff was generated.`
+      );
+    }
+  }
+  return true;
 }
 
 // Apply diff blocks to generate new content
@@ -46,7 +70,7 @@ export function applyDiffBlocks(
   blocks: DiffBlock[]
 ): string {
   let newContent = originalContent;
-  
+
   for (const { search, replace } of blocks) {
     // Ensure the search block exists in the content
     if (!newContent.includes(search)) {
@@ -54,20 +78,18 @@ export function applyDiffBlocks(
         'Search block not found in file content. The file may have changed since the diff was generated.'
       );
     }
-    
+
     // Replace the content
     newContent = newContent.replace(search, replace);
   }
-  
+
   return removeInitialEmptyLine(newContent);
 }
 
 // Normalize line endings while preserving other whitespace
 export function normalizeLineEndings(content: string): string {
   if (!content) return '';
-  const normalized = content
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n');
+  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
   return removeInitialEmptyLine(normalized);
 }
 
@@ -88,7 +110,7 @@ export async function processFileUpdate(
 
   // For diff updates, parse and apply the changes
   const diffBlocks = parseDiffBlocks(normalizedNewCode);
-  
+
   if (!validateSearchBlocks(normalizedCurrentContent, diffBlocks)) {
     throw new Error(
       'One or more search blocks do not match the current file content'
