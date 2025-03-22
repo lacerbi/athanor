@@ -9,7 +9,7 @@
       id="default"
       label="Create prompt"
       tooltip="Create detailed prompt from task or prompt description">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -18,7 +18,7 @@
 </file_contents>
 
 {{file_tree}}
-</codebase>
+</project>
 
 <task>
 Given the input task description or existing prompt provided below, produce a detailed instruction prompt to guide an AI assistant such as a language or reasoning model in completing the task effectively.
@@ -87,7 +87,7 @@ Do NOT use canvas or artifacts.
       id="edit"
       label="Edit prompt"
       tooltip="Edit an existing prompt (original prompt: task area; desired change: context area)">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -96,7 +96,7 @@ Do NOT use canvas or artifacts.
 </file_contents>
 
 {{file_tree}}
-</codebase>
+</project>
 
 <task>
 Given a current prompt and a change description provided below, produce a detailed instruction prompt to guide an AI assistant such as a language or reasoning model in completing the task effectively.

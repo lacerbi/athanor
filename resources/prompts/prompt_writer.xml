@@ -9,7 +9,7 @@
     id="default"
     label="Default - Any LLM assistant"
     tooltip="Default prompt to be used with any LLM assistant">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -18,7 +18,7 @@
 </file_contents>
 
 {{file_tree}}{{codebase_legend}}
-</codebase>
+</project>
 
 <system_prompt>
 You are an expert writer.
@@ -168,7 +168,7 @@ instructing them to select the files from the Athanor file manager.
     id="latex"
     label="LaTeX writing and editing"
     tooltip="Prompt for writing and editing LaTeX documents">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -177,7 +177,7 @@ instructing them to select the files from the Athanor file manager.
 </file_contents>
 
 {{file_tree}}{{codebase_legend}}
-</codebase>
+</project>
 
 <system_prompt>
 You are an expert LaTeX writer.
@@ -454,7 +454,7 @@ Instead, STOP and list ALL the additional files that you require from the user,
 instructing them to select the files from the Athanor file manager.
 </system_prompt>
 
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -463,7 +463,7 @@ instructing them to select the files from the Athanor file manager.
 </file_contents>
 
 {{file_tree}}{{codebase_legend}}
-</codebase>
+</project>
 
 <current_task>
 <task_description>

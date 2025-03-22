@@ -9,7 +9,7 @@
       id="default"
       label="Default"
       tooltip="Displays repository information">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -17,7 +17,7 @@
 {{file_contents}}
 </file_contents>
 {{file_tree}}
-</codebase>
+</project>
 
 <task>
 {{task_description}}{{task_context}}

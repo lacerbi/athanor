@@ -9,7 +9,7 @@
     id="default"
     label="Multistep - Split task over multiple steps"
     tooltip="By default, plan a feature over multiple steps (commits)">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -18,7 +18,7 @@
 </file_contents>
 
 {{file_tree}}{{codebase_legend}}
-</codebase>
+</project>
 
 <system_prompt>
 You are an experienced software engineer.
@@ -127,7 +127,7 @@ Important guidelines for commits:
     id="one-shot"
     label="Plan a feature for one-shot implementation"
     tooltip="Use this to plan simple features or to give to strong coding models that can handle complex plans">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -136,7 +136,7 @@ Important guidelines for commits:
 </file_contents>
 
 {{file_tree}}{{codebase_legend}}
-</codebase>
+</project>
 
 <system_prompt>
 You are an experienced software engineer.
