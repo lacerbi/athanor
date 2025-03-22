@@ -1,5 +1,11 @@
 // AI Summary: Stores configuration constants used throughout the application.
 // Defines thresholds for file length, smart preview limits, code refactoring and UI animations.
+// Documentation formats for code content
+export const DOC_FORMAT = {
+  MARKDOWN: 'markdown',
+  XML: 'xml',
+};
+
 export const FILE_SYSTEM = {
   // Supplementary materials directory name
   materialsDirName: '.ath_materials',

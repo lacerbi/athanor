@@ -5,6 +5,7 @@
 import { FileItem } from './fileTree';
 import { readAthanorConfig } from './configUtils';
 import { generateCodebaseDocumentation } from './codebaseDocumentation';
+import { DOC_FORMAT } from './constants';
 import {
   loadTemplateContent,
   substituteVariables,
@@ -92,7 +93,8 @@ export async function buildDynamicPrompt(
   selectedItems: Set<string>,
   rootPath: string,
   taskDescription: string = '',
-  taskContext: string = ''
+  taskContext: string = '',
+  formatType: string = DOC_FORMAT.MARKDOWN
 ): Promise<string> {
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
@@ -106,7 +108,8 @@ export async function buildDynamicPrompt(
     selectedItems,
     rootPath,
     config,
-    smartPreviewEnabled
+    smartPreviewEnabled,
+    formatType
   );
 
   // Format task context if non-empty
@@ -151,7 +154,8 @@ export async function buildPrompt(
   selectedItems: Set<string>,
   rootPath: string,
   taskDescription: string = '',
-  taskContext: string = ''
+  taskContext: string = '',
+  formatType: string = DOC_FORMAT.MARKDOWN
 ): Promise<string> {
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
@@ -165,7 +169,8 @@ export async function buildPrompt(
     selectedItems,
     rootPath,
     config,
-    smartPreviewEnabled
+    smartPreviewEnabled,
+    formatType
   );
 
   // Format task context if non-empty

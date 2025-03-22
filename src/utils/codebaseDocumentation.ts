@@ -4,7 +4,7 @@
 import { FileItem, sortItems, isEmptyFolder, getBaseName } from './fileTree';
 import { AthanorConfig } from '../types/global';
 import { areAllDescendantsSelected } from './fileSelection';
-import { FILE_SYSTEM } from './constants';
+import { FILE_SYSTEM, DOC_FORMAT } from './constants';
 import { isTextFile } from './fileTextDetection';
 
 // Get the appropriate language for code block formatting
@@ -109,18 +109,43 @@ export function getSmartPreview(content: string): string {
   return lines.slice(0, endLine).join('\n') + '\n... (content truncated)';
 }
 
-// Format a single file's content with appropriate code block
+// Sanitize a filename for use in XML tags
+export function sanitizeForXmlTag(filePath: string): string {
+  // Extract just the filename without path
+  const baseName = getBaseName(filePath);
+  
+  // Replace non-alphanumeric characters (except underscores) with underscores
+  // Keep file extension but replace the dot with underscore
+  let sanitized = baseName.replace(/[^a-zA-Z0-9_]/g, '_');
+  
+  // Ensure the tag starts with a letter (XML requirement)
+  if (!/^[a-zA-Z]/.test(sanitized)) {
+    sanitized = 'file_' + sanitized;
+  }
+  
+  return sanitized;
+}
+
+// Format a single file's content with appropriate code block or XML tags
 export function formatSingleFile(
   filePath: string,
   content: string,
   rootPath: string = '',
-  isSelected: boolean = false
+  isSelected: boolean = false,
+  formatType: string = DOC_FORMAT.MARKDOWN
 ): string {
   const relativePath = rootPath
     ? filePath.replace(rootPath, '').replace(/^[/\\]/, '')
     : filePath;
-  const language = getFileLanguage(filePath);
-  return `# ${relativePath}${isSelected ? ' *' : ''}\n\n\`\`\`${language}\n${content}\n\`\`\`\n`;
+  
+  if (formatType === DOC_FORMAT.XML) {
+    const tagName = sanitizeForXmlTag(relativePath);
+    return `# ${relativePath}${isSelected ? ' *' : ''}\n\n<file_${tagName}>\n${content}\n</file_${tagName}>\n`;
+  } else {
+    // Default to markdown formatting
+    const language = getFileLanguage(filePath);
+    return `# ${relativePath}${isSelected ? ' *' : ''}\n\n\`\`\`${language}\n${content}\n\`\`\`\n`;
+  }
 }
 
 // Generate full codebase documentation
@@ -129,7 +154,8 @@ export async function generateCodebaseDocumentation(
   selectedItems: Set<string>,
   rootPath: string,
   config: AthanorConfig | null,
-  includeNonSelected: boolean = true
+  includeNonSelected: boolean = true,
+  formatType: string = DOC_FORMAT.MARKDOWN
 ): Promise<{ file_contents: string; file_tree: string }> {
   const rawFileTreeContent = generateFileTree(items, selectedItems);
   const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>\n`;
@@ -166,7 +192,7 @@ export async function generateCodebaseDocumentation(
         if (processedContent) {
           fileContents +=
             (fileContents ? '\n' : '') +
-            formatSingleFile(item.path, processedContent, rootPath, isSelected);
+            formatSingleFile(item.path, processedContent, rootPath, isSelected, formatType);
         }
       } catch (error) {
         console.error(`Error reading file ${item.path}:`, error);
