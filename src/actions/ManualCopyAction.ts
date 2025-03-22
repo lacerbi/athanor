@@ -5,6 +5,7 @@ import { countTokens, formatTokenCount } from '../utils/tokenCount';
 import { formatSingleFile } from '../utils/codebaseDocumentation';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { generateCodebaseDocumentation } from '../utils/codebaseDocumentation';
+import { DOC_FORMAT } from '../utils/constants';
 
 export interface CopyParams {
   content: string;
@@ -12,6 +13,7 @@ export interface CopyParams {
   filePath?: string;
   rootPath?: string;
   isFormatted?: boolean;
+  formatType?: string;
 }
 
 export interface CopySelectedParams {
@@ -33,7 +35,7 @@ function normalizeContent(content: string): string {
 
 export async function copySelectedFilesContent(params: CopySelectedParams): Promise<void> {
   const { addLog, rootPath } = params;
-  const { selectedItems, fileTree, smartPreviewEnabled } = useFileSystemStore.getState();
+  const { selectedItems, fileTree, smartPreviewEnabled, formatType } = useFileSystemStore.getState();
 
   try {
     const { file_contents } = await generateCodebaseDocumentation(
@@ -41,7 +43,8 @@ export async function copySelectedFilesContent(params: CopySelectedParams): Prom
       selectedItems,
       rootPath,
       null,
-      smartPreviewEnabled // Use the smartPreviewEnabled setting from the store
+      smartPreviewEnabled, // Use the smartPreviewEnabled setting from the store
+      formatType // Use the format preference from the store
     );
 
     if (!file_contents) {
@@ -59,6 +62,7 @@ export async function copySelectedFilesContent(params: CopySelectedParams): Prom
 
 export async function copyFailedDiffContent(params: CopyFailedDiffParams): Promise<void> {
   const { filePaths, addLog, rootPath } = params;
+  const { formatType } = useFileSystemStore.getState();
 
   try {
     // Gather content for each file
@@ -69,7 +73,7 @@ export async function copyFailedDiffContent(params: CopyFailedDiffParams): Promi
         const content = await window.fileSystem.readFile(filePath, {
           encoding: 'utf8',
         }) as string;
-        fileContents.push(formatSingleFile(filePath, content, rootPath));
+        fileContents.push(formatSingleFile(filePath, content, rootPath, false, formatType));
       } catch (err) {
         console.error(`Error reading file ${filePath}:`, err);
         addLog(`Failed to read file: ${filePath}`);
@@ -95,7 +99,9 @@ export async function copyFailedDiffContent(params: CopyFailedDiffParams): Promi
 }
 
 export async function copyToClipboard(params: CopyParams): Promise<void> {
-  const { content, addLog, filePath, rootPath, isFormatted } = params;
+  const { content, addLog, filePath, rootPath, isFormatted, formatType: providedFormatType } = params;
+  const storeFormatType = useFileSystemStore.getState().formatType;
+  const formatType = providedFormatType || storeFormatType;
 
   try {
     let normalizedContent = normalizeContent(content);
@@ -103,7 +109,7 @@ export async function copyToClipboard(params: CopyParams): Promise<void> {
     // If filePath is provided, format the content as a code block
     if (filePath && content) {
       normalizedContent = normalizeContent(
-        formatSingleFile(filePath, content, rootPath)
+        formatSingleFile(filePath, content, rootPath, false, formatType)
       );
     }
 
