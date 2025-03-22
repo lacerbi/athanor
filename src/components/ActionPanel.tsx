@@ -21,6 +21,8 @@ import {
   EyeOff,
   Folder,
   FolderX,
+  Code,
+  FileText as MarkdownIcon,
 } from 'lucide-react';
 import PromptContextMenu from './PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
@@ -35,7 +37,7 @@ import { buildTaskAction } from '../actions';
 import { getActionTooltip, getTaskTooltip } from '../actions';
 import { useTaskStore } from '../stores/taskStore';
 import { useFileDrop } from '../hooks/useFileDrop';
-import { DRAG_DROP } from '../utils/constants';
+import { DRAG_DROP, DOC_FORMAT } from '../utils/constants';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -134,7 +136,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     smartPreviewEnabled,
     toggleSmartPreview,
     includeFileTree,
-    toggleFileTree
+    toggleFileTree,
+    formatType,
+    toggleFormatType
   } = useFileSystemStore();
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
@@ -151,7 +155,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         selectedItems,
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
-        tabs[activeTabIndex].context // Current tab's context
+        tabs[activeTabIndex].context, // Current tab's context
+        formatType // Pass the current format type
       );
       setOutputContent(result);
       addLog(`Generated ${prompt.label} prompt`);
@@ -357,6 +362,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       <Folder size={20} className="text-blue-600" />
                     ) : (
                       <FolderX size={20} className="text-gray-600" />
+                    )}
+                  </button>
+                  <button
+                    onClick={toggleFormatType}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    title={formatType === DOC_FORMAT.XML ? "Format: XML Tags (click for Markdown)" : "Format: Markdown (click for XML Tags)"}
+                  >
+                    {formatType === DOC_FORMAT.XML ? (
+                      <Code size={20} className="text-blue-600" />
+                    ) : (
+                      <MarkdownIcon size={20} className="text-blue-600" />
                     )}
                   </button>
                 </div>

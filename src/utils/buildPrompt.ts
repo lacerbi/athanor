@@ -94,13 +94,13 @@ export async function buildDynamicPrompt(
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',
-  formatType: string = DOC_FORMAT.MARKDOWN
+  passedFormatType: string = DOC_FORMAT.MARKDOWN
 ): Promise<string> {
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
 
-  // Get the smart preview and file tree inclusion settings from the store
-  const { smartPreviewEnabled, includeFileTree } = useFileSystemStore.getState();
+  // Get the smart preview, file tree and format type settings from the store
+  const { smartPreviewEnabled, includeFileTree, formatType } = useFileSystemStore.getState();
 
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
@@ -109,7 +109,7 @@ export async function buildDynamicPrompt(
     rootPath,
     config,
     smartPreviewEnabled,
-    formatType
+    passedFormatType || formatType // Use passed format or get from store
   );
 
   // Format task context if non-empty
@@ -155,13 +155,13 @@ export async function buildPrompt(
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',
-  formatType: string = DOC_FORMAT.MARKDOWN
+  passedFormatType: string = DOC_FORMAT.MARKDOWN
 ): Promise<string> {
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
 
-  // Get the smart preview and file tree inclusion settings from the store
-  const { smartPreviewEnabled, includeFileTree } = useFileSystemStore.getState();
+  // Get the smart preview, file tree inclusion and format type settings from the store
+  const { smartPreviewEnabled, includeFileTree, formatType } = useFileSystemStore.getState();
 
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
@@ -170,7 +170,7 @@ export async function buildPrompt(
     rootPath,
     config,
     smartPreviewEnabled,
-    formatType
+    passedFormatType || formatType // Use passed format or get from store
   );
 
   // Format task context if non-empty

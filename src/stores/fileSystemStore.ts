@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { FileItem, isEmptyFolder, getAllValidIds, getFileItemById } from '../utils/fileTree';
 import { getSelectableDescendants, calculateSelectionTotals } from '../utils/fileSelection';
+import { DOC_FORMAT } from '../utils/constants';
 
 interface FileSystemState {
   selectedItems: Set<string>;
@@ -34,6 +35,10 @@ interface FileSystemState {
   // File tree inclusion setting
   includeFileTree: boolean;
   toggleFileTree: () => void;
+  
+  // Format type setting
+  formatType: string;
+  toggleFormatType: () => void;
 
   // Refresh state
   isRefreshing: boolean;
@@ -65,6 +70,7 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
       // Keep smart preview and file tree enabled by default
       smartPreviewEnabled: true,
       includeFileTree: true,
+      formatType: DOC_FORMAT.DEFAULT || DOC_FORMAT.XML, // Default to XML format
     });
   },
   
@@ -85,6 +91,12 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
   includeFileTree: true,
   toggleFileTree: () => set((state) => ({
     includeFileTree: !state.includeFileTree
+  })),
+  
+  // Format type setting (XML or Markdown)
+  formatType: DOC_FORMAT.DEFAULT || DOC_FORMAT.XML,
+  toggleFormatType: () => set((state) => ({
+    formatType: state.formatType === DOC_FORMAT.XML ? DOC_FORMAT.MARKDOWN : DOC_FORMAT.XML
   })),
 
   selectItems: (ids: string[]) =>

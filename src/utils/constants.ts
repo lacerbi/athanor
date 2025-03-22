@@ -4,6 +4,7 @@
 export const DOC_FORMAT = {
   MARKDOWN: 'markdown',
   XML: 'xml',
+  DEFAULT: 'xml',  // Set XML as the default format
 };
 
 export const FILE_SYSTEM = {
