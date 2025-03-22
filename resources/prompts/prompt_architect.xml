@@ -21,9 +21,8 @@
 </project>
 
 <system_prompt>
-You are an experienced software engineer.
-You are tasked with following my instructions.
-Use the included project instructions as a guide.
+You are an expert AI assistant and software engineer.
+Use the included project information as a general guide.
 
 # Goal
 The purpose is to:

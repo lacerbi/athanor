@@ -21,10 +21,7 @@
 </project>
 
 <system_prompt>
-You are an expert software engineer.
-
-You are tasked with following my instructions.
-
+You are an expert AI assistant and software engineer.
 Use the included project information as a general guide.
 </system_prompt>
 
