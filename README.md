@@ -1,6 +1,7 @@
 # Athanor - AI Code Nexus
 
-Athanor is an Electron-based desktop application that integrates AI coding assistants into a developer's local workflow. It streamlines the process of creating prompts with relevant code context and applying AI-generated changes back to your codebase.
+Athanor is an Electron-based desktop application that integrates AI coding assistants via chat interfaces into a developer's local workflow.
+It streamlines the process of creating prompts with relevant code context and applying AI-generated changes back to your codebase.
 
 ## Key Features
 
@@ -70,7 +71,7 @@ Athanor is an Electron-based desktop application that integrates AI coding assis
 2. The application will scan your project files and display them in the file explorer
 3. Select relevant files or folders for your task
 4. Use the prompt templates to generate context-aware prompts for your AI assistant
-5. Copy the generated prompt to your AI assistant (e.g., ChatGPT, Claude)
+5. Copy the generated prompt to your AI assistant (we recommend Claude, but others such as ChatGPT, Gemini, etc. might work)
 6. When you receive AI-generated code changes, copy them back to Athanor
 7. Preview the changes in the diff viewer and apply them to your project
 
