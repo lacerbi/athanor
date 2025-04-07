@@ -80,4 +80,4 @@ Contributions are welcome! Please follow standard GitHub fork & pull request wor
 
 ## License
 
-[Specify your license here]
+Athanor is released under the [Apache-2.0 license](LICENSE).
