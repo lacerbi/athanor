@@ -1,4 +1,4 @@
-# Athanor - AI Code Nexus
+# ⚗️ Athanor - AI Code Nexus
 
 [![Status: WIP](https://img.shields.io/badge/Status-Work%20In%20Progress-yellow)](https://github.com/your-username/athanor)
 [![Stage: Pre-Alpha](https://img.shields.io/badge/Stage-Pre--Alpha-orange)](https://github.com/your-username/athanor)
