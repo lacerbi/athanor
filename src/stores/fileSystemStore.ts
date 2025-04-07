@@ -3,6 +3,7 @@
 import { create } from 'zustand';
 import { FileItem, isEmptyFolder, getAllValidIds, getFileItemById } from '../utils/fileTree';
 import { getSelectableDescendants, calculateSelectionTotals } from '../utils/fileSelection';
+import { DOC_FORMAT } from '../utils/constants';
 
 interface FileSystemState {
   selectedItems: Set<string>;
@@ -26,6 +27,18 @@ interface FileSystemState {
   // Preview file path
   previewedFilePath: string | null;
   setPreviewedFilePath: (path: string | null) => void;
+
+  // Smart preview setting
+  smartPreviewEnabled: boolean;
+  toggleSmartPreview: () => void;
+  
+  // File tree inclusion setting
+  includeFileTree: boolean;
+  toggleFileTree: () => void;
+  
+  // Format type setting
+  formatType: string;
+  toggleFormatType: () => void;
 
   // Refresh state
   isRefreshing: boolean;
@@ -53,6 +66,11 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
       
       // Clear file system state
       fileTree: [],
+      
+      // Keep smart preview and file tree enabled by default
+      smartPreviewEnabled: true,
+      includeFileTree: true,
+      formatType: DOC_FORMAT.DEFAULT || DOC_FORMAT.XML, // Default to XML format
     });
   },
   
@@ -62,6 +80,24 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
 
   getSelectedFileCount: () => get().selectedFileCount,
   getSelectedLinesTotal: () => get().selectedLinesTotal,
+
+  // Smart preview setting (true = include non-selected files with truncated preview)
+  smartPreviewEnabled: true,
+  toggleSmartPreview: () => set((state) => ({ 
+    smartPreviewEnabled: !state.smartPreviewEnabled 
+  })),
+  
+  // File tree inclusion setting (true = include file tree in generated prompt)
+  includeFileTree: true,
+  toggleFileTree: () => set((state) => ({
+    includeFileTree: !state.includeFileTree
+  })),
+  
+  // Format type setting (XML or Markdown)
+  formatType: DOC_FORMAT.DEFAULT || DOC_FORMAT.XML,
+  toggleFormatType: () => set((state) => ({
+    formatType: state.formatType === DOC_FORMAT.XML ? DOC_FORMAT.MARKDOWN : DOC_FORMAT.XML
+  })),
 
   selectItems: (ids: string[]) =>
     set((state) => {

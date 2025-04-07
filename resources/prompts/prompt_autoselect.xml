@@ -3,13 +3,13 @@
     order="0"
     label="Autoselect"
     icon="FileSearch"
-    tooltip="Prompt to select task-relevant files from the codebase">
+    tooltip="Prompt to select task-relevant files from the project">
 
 <ath_prompt_variant 
     id="default"
     label="Default"
-    tooltip="Prompt to select task-relevant files from the codebase">
-<codebase>
+    tooltip="Prompt to select task-relevant files from the project">
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -17,15 +17,11 @@
 {{file_contents}}
 </file_contents>
 
-<file_tree>
-{{file_tree}}</file_tree>
-</codebase>
+{{file_tree}}
+</project>
 
 <system_prompt>
-You are an expert software engineer.
-
-You are tasked with following my instructions.
-
+You are an expert AI assistant and software engineer.
 Use the included project information as a general guide.
 </system_prompt>
 

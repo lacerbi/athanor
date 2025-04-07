@@ -3,13 +3,13 @@
     order="1"
     label="Query"
     icon="FileQuestion"
-    tooltip="Prompt to query the codebase">
+    tooltip="Prompt to query the project">
 
 <ath_prompt_variant 
     id="default"
     label="Default"
-    tooltip="Default prompt to query the codebase">
-<codebase>
+    tooltip="Default prompt to query the project">
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -17,19 +17,16 @@
 {{file_contents}}
 </file_contents>
 
-<file_tree>
-{{file_tree}}</file_tree>
-{{codebase_legend}}
-</codebase>
+{{file_tree}}{{codebase_legend}}
+</project>
 
 <system_prompt>
-You are an experienced software engineer.
-You are tasked with following my instructions.
-Use the included project instructions as a guide.
+You are a helpful and intelligent AI assistant.
+Use the included project information as a guide.
 
 # Goal
 The purpose is to answer thoroughly and precisely to the user query about the
-codebase or project.
+project or codebase.
 
 # Procedure
 

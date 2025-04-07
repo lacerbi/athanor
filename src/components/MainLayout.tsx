@@ -40,7 +40,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const { leftPanelWidth, isResizing, resizeRef, startResize } =
     usePanelResize();
-  const { selectedFileCount, selectedLinesTotal } = useFileSystemStore();
+  const { 
+    selectedFileCount, 
+    selectedLinesTotal
+  } = useFileSystemStore();
 
   const handleFileView = () => {
     onTabChange('viewer');

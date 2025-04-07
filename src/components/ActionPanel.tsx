@@ -17,6 +17,12 @@ import {
   Eraser,
   ChevronDown,
   ChevronUp,
+  Eye,
+  EyeOff,
+  Folder,
+  FolderX,
+  Code,
+  FileText as MarkdownIcon,
 } from 'lucide-react';
 import PromptContextMenu from './PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
@@ -31,7 +37,7 @@ import { buildTaskAction } from '../actions';
 import { getActionTooltip, getTaskTooltip } from '../actions';
 import { useTaskStore } from '../stores/taskStore';
 import { useFileDrop } from '../hooks/useFileDrop';
-import { DRAG_DROP } from '../utils/constants';
+import { DRAG_DROP, DOC_FORMAT } from '../utils/constants';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -125,7 +131,15 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   // Handle Developer action trigger only when panel is active and a new trigger occurs
   const lastTriggerRef = useRef(developerActionTrigger);
 
-  const { selectedItems } = useFileSystemStore();
+  const { 
+    selectedItems,
+    smartPreviewEnabled,
+    toggleSmartPreview,
+    includeFileTree,
+    toggleFileTree,
+    formatType,
+    toggleFormatType
+  } = useFileSystemStore();
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
@@ -141,7 +155,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         selectedItems,
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
-        tabs[activeTabIndex].context // Current tab's context
+        tabs[activeTabIndex].context, // Current tab's context
+        formatType // Pass the current format type
       );
       setOutputContent(result);
       addLog(`Generated ${prompt.label} prompt`);
@@ -322,11 +337,46 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             {/* Prompt Generators Section */}
             <div className="space-y-4">
               <div className="space-y-3">
-                <div className="pb-2 border-b">
-                  <h2 className="text-lg font-semibold">
-                    Preset Prompts and Tasks
-                  </h2>
+                <div className="pb-2 border-b flex justify-between items-center">
+                <h2 className="text-lg font-semibold">
+                  Preset Prompts and Tasks
+                </h2>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={toggleSmartPreview}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    title={smartPreviewEnabled ? "Smart Preview: ON (click to disable)" : "Smart Preview: OFF (click to enable)"}
+                  >
+                    {smartPreviewEnabled ? (
+                      <Eye size={20} className="text-blue-600" />
+                    ) : (
+                      <EyeOff size={20} className="text-gray-600" />
+                    )}
+                  </button>
+                  <button
+                    onClick={toggleFileTree}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    title={includeFileTree ? "Include File Tree: ON (click to disable)" : "Include File Tree: OFF (click to enable)"}
+                  >
+                    {includeFileTree ? (
+                      <Folder size={20} className="text-blue-600" />
+                    ) : (
+                      <FolderX size={20} className="text-gray-600" />
+                    )}
+                  </button>
+                  <button
+                    onClick={toggleFormatType}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    title={formatType === DOC_FORMAT.XML ? "Format: XML Tags (click for Markdown)" : "Format: Markdown (click for XML Tags)"}
+                  >
+                    {formatType === DOC_FORMAT.XML ? (
+                      <Code size={20} className="text-blue-600" />
+                    ) : (
+                      <MarkdownIcon size={20} className="text-blue-600" />
+                    )}
+                  </button>
                 </div>
+              </div>
                 {/* Dynamic Prompts Row */}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl mb-4">
                   {prompts.map((prompt) => {

@@ -9,7 +9,7 @@
     id="default"
     label="Multistep - Split task over multiple steps"
     tooltip="By default, plan a feature over multiple steps (commits)">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -17,15 +17,12 @@
 {{file_contents}}
 </file_contents>
 
-<file_tree>
-{{file_tree}}</file_tree>
-{{codebase_legend}}
-</codebase>
+{{file_tree}}{{codebase_legend}}
+</project>
 
 <system_prompt>
-You are an experienced software engineer.
-You are tasked with following my instructions.
-Use the included project instructions as a guide.
+You are an expert AI assistant and software engineer.
+Use the included project information as a general guide.
 
 # Goal
 The purpose is to:
@@ -129,7 +126,7 @@ Important guidelines for commits:
     id="one-shot"
     label="Plan a feature for one-shot implementation"
     tooltip="Use this to plan simple features or to give to strong coding models that can handle complex plans">
-<codebase>
+<project>
 # Documentation `{{project_name}}`
 
 {{project_info}}
@@ -137,10 +134,8 @@ Important guidelines for commits:
 {{file_contents}}
 </file_contents>
 
-<file_tree>
-{{file_tree}}</file_tree>
-{{codebase_legend}}
-</codebase>
+{{file_tree}}{{codebase_legend}}
+</project>
 
 <system_prompt>
 You are an experienced software engineer.
