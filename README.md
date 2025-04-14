@@ -1,7 +1,7 @@
 # ⚗️ Athanor - AI Code Nexus
 
-[![Status: WIP](https://img.shields.io/badge/Status-Work%20In%20Progress-yellow)](https://github.com/your-username/athanor)
-[![Stage: Pre-Alpha](https://img.shields.io/badge/Stage-Pre--Alpha-orange)](https://github.com/your-username/athanor)
+[![Status: WIP](https://img.shields.io/badge/Status-Work%20In%20Progress-yellow)](https://github.com/lacerbi/athanor)
+[![Stage: Pre-Alpha](https://img.shields.io/badge/Stage-Pre--Alpha-orange)](https://github.com/lacerbi/athanor)
 [![Node.js >=18.x](https://img.shields.io/badge/Node.js-%3E%3D18.x-brightgreen)](https://nodejs.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -82,7 +82,7 @@ It streamlines the process of creating prompts with relevant code context and ap
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/athanor.git
+   git clone https://github.com/lacerbi/athanor.git
    ```
 
 2. **Navigate to the project directory**:
