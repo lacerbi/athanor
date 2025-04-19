@@ -39,6 +39,10 @@ interface FileSystemState {
   // Format type setting
   formatType: string;
   toggleFormatType: () => void;
+  
+  // Project info inclusion setting
+  includeProjectInfo: boolean;
+  toggleProjectInfo: () => void;
 
   // Refresh state
   isRefreshing: boolean;
@@ -70,6 +74,7 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
       // Keep smart preview and file tree enabled by default
       smartPreviewEnabled: true,
       includeFileTree: true,
+      includeProjectInfo: true,
       formatType: DOC_FORMAT.DEFAULT || DOC_FORMAT.XML, // Default to XML format
     });
   },
@@ -97,6 +102,12 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
   formatType: DOC_FORMAT.DEFAULT || DOC_FORMAT.XML,
   toggleFormatType: () => set((state) => ({
     formatType: state.formatType === DOC_FORMAT.XML ? DOC_FORMAT.MARKDOWN : DOC_FORMAT.XML
+  })),
+  
+  // Project info inclusion setting (true = include project info in generated prompt)
+  includeProjectInfo: true,
+  toggleProjectInfo: () => set((state) => ({
+    includeProjectInfo: !state.includeProjectInfo
   })),
 
   selectItems: (ids: string[]) =>

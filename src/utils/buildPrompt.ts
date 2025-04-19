@@ -99,8 +99,8 @@ export async function buildDynamicPrompt(
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
 
-  // Get the smart preview, file tree and format type settings from the store
-  const { smartPreviewEnabled, includeFileTree, formatType } = useFileSystemStore.getState();
+  // Get the store settings
+  const { smartPreviewEnabled, includeFileTree, formatType, includeProjectInfo } = useFileSystemStore.getState();
 
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
@@ -128,7 +128,7 @@ export async function buildDynamicPrompt(
   // Prepare variables for template
   const variables: PromptVariables = {
     project_name: config.project_name,
-    project_info: config.project_info,
+    project_info: includeProjectInfo ? config.project_info : '',
     task_description: taskDescription,
     task_context: formattedTaskContext,
     selected_files: getSelectedFilesList(items, selectedItems, rootPath),
@@ -160,8 +160,8 @@ export async function buildPrompt(
   // Load config with fallback values
   const config = await readAthanorConfig(rootPath);
 
-  // Get the smart preview, file tree inclusion and format type settings from the store
-  const { smartPreviewEnabled, includeFileTree, formatType } = useFileSystemStore.getState();
+  // Get settings from the store
+  const { smartPreviewEnabled, includeFileTree, formatType, includeProjectInfo } = useFileSystemStore.getState();
 
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
@@ -189,7 +189,7 @@ export async function buildPrompt(
   // Prepare variables for template
   const variables: PromptVariables = {
     project_name: config.project_name,
-    project_info: config.project_info,
+    project_info: includeProjectInfo ? config.project_info : '',
     task_description: taskDescription,
     task_context: formattedTaskContext,
     selected_files: getSelectedFilesList(items, selectedItems, rootPath),
