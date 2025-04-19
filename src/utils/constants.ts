@@ -27,6 +27,14 @@ export const FILE_SYSTEM = {
   },
 };
 
+// Project information file configuration
+export const PROJECT_INFO = {
+  // Basenames in order of precedence (case-insensitive)
+  BASENAMES: ['project', 'about', 'index', 'readme'],
+  // Extensions in order of precedence (case-insensitive)
+  EXTENSIONS: ['.md', '.txt'],
+};
+
 export const UI = {
   animations: {
     // Transition timings
