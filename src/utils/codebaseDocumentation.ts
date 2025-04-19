@@ -58,7 +58,8 @@ function generateFileTree(
     const connector = level === 0 ? '' : `${isLastItem ? '└── ' : '├── '}`;
     const isSelected =
       !isEmptyFolder(item) && areAllDescendantsSelected(item, selectedItems);
-    const displayName = level === 0 ? getBaseName(item.path) : item.name;
+    // Use "." for root level folder instead of actual folder name
+    const displayName = level === 0 ? '.' : item.name;
 
     result += `${prefix}${connector}${displayName}${item.type === 'folder' ? '/' : ''}${isSelected ? ' *' : ''}\n`;
 

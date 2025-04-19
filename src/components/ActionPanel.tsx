@@ -23,6 +23,8 @@ import {
   FolderX,
   Code,
   FileText as MarkdownIcon,
+  Info,
+  FileQuestion,
 } from 'lucide-react';
 import PromptContextMenu from './PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
@@ -138,7 +140,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     includeFileTree,
     toggleFileTree,
     formatType,
-    toggleFormatType
+    toggleFormatType,
+    includeProjectInfo,
+    toggleProjectInfo
   } = useFileSystemStore();
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
@@ -362,6 +366,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       <Folder size={20} className="text-blue-600" />
                     ) : (
                       <FolderX size={20} className="text-gray-600" />
+                    )}
+                  </button>
+                  <button
+                    onClick={toggleProjectInfo}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                    title={includeProjectInfo ? "Include Project Info: ON (click to disable)" : "Include Project Info: OFF (click to enable)"}
+                  >
+                    {includeProjectInfo ? (
+                      <Info size={20} className="text-blue-600" />
+                    ) : (
+                      <FileQuestion size={20} className="text-gray-600" />
                     )}
                   </button>
                   <button

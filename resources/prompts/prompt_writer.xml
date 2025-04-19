@@ -334,9 +334,9 @@ instructing them to select the files from the Athanor file manager.
 </ath_prompt_variant>
 
 <ath_prompt_variant 
-    id="reasoning"
-    label="Reasoning - For reasoning models (o1)"
-    tooltip="Coding prompt to be used with reasoning models such as o1 and o1-pro">
+    id="full-update"
+    label="Full file updates"
+    tooltip="Writing prompt asking models to provide full files (no diffs)">
 <system_prompt>
 You are an expert software engineer.
 
