@@ -15,19 +15,21 @@ export interface IFileService {
   relativize(absolutePath: string): string; // Converts absolute Unix path to project-relative Unix path
 
   // --- Basic FS Operations (Async) ---
-  read(projectRelativePath: string, opts?: { encoding?: BufferEncoding }): Promise<string | Buffer>;
-  write(projectRelativePath: string, data: string | Buffer): Promise<void>;
-  remove(projectRelativePath: string): Promise<void>;
-  exists(projectRelativePath: string): Promise<boolean>;
-  stats(projectRelativePath: string): Promise<fs.Stats | null>;
-  isDirectory(projectRelativePath: string): Promise<boolean>; // Convenience method
-  ensureDir(projectRelativePath: string): Promise<void>; // Ensures directory exists (recursive)
-  readdir(projectRelativePath: string, opts?: { applyIgnores?: boolean }): Promise<string[]>; // Returns basenames
+  // All methods accept either project-relative paths or absolute paths
+  read(pathStr: string, opts?: { encoding?: BufferEncoding }): Promise<string | Buffer>;
+  write(pathStr: string, data: string | Buffer): Promise<void>;
+  remove(pathStr: string): Promise<void>;
+  exists(pathStr: string): Promise<boolean>;
+  stats(pathStr: string): Promise<fs.Stats | null>;
+  isDirectory(pathStr: string): Promise<boolean>; // Convenience method
+  ensureDir(pathStr: string): Promise<void>; // Ensures directory exists (recursive)
+  readdir(pathStr: string, opts?: { applyIgnores?: boolean }): Promise<string[]>; // Returns basenames
 
   // --- Watcher Management ---
   // Returns an unsubscribe function
+  // Accepts either project-relative paths or absolute paths
   watch(
-    projectRelativePath: string,
+    pathStr: string,
     callback: (
       event: 'add' | 'change' | 'unlink' | 'addDir' | 'unlinkDir',
       projectRelativeFile: string // Always provides project-relative path

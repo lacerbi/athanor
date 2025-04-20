@@ -4,6 +4,7 @@
 
 import { ipcMain } from 'electron';
 import { FileService } from '../services/FileService';
+import { PathUtils } from '../services/PathUtils';
 
 // Store fileService instance
 let _fileService: FileService;
@@ -36,12 +37,16 @@ export function setupFileOperationHandlers(fileService: FileService) {
   // Handle reading directory contents with ignore rules
   ipcMain.handle('fs:readDirectory', async (_, dirPath: string, applyIgnores = true) => {
     try {
-      // Convert input path to relative path if absolute
-      const relativePath = _fileService.toUnix(dirPath).startsWith('/')
-        ? _fileService.relativize(dirPath)
-        : dirPath;
+      // Normalize to Unix format
+      const unix = _fileService.toUnix(dirPath);
+      
+      // Only relativize if absolute AND inside base directory
+      const pathForFs = 
+        PathUtils.isAbsolute(unix) && PathUtils.isPathInside(_fileService.getBaseDir(), unix)
+          ? _fileService.relativize(unix)
+          : unix;  // absolute path outside project or already relative, use as-is
 
-      return await _fileService.readdir(relativePath, { applyIgnores });
+      return await _fileService.readdir(pathForFs, { applyIgnores });
     } catch (error) {
       handleError(error, `reading directory ${dirPath}`);
     }
@@ -60,13 +65,17 @@ export function setupFileOperationHandlers(fileService: FileService) {
         const readOptions =
           typeof options === 'string' ? { encoding: options } : options;
 
-        // Convert input path to relative path if absolute
-        const relativePath = _fileService.toUnix(filePath).startsWith('/')
-          ? _fileService.relativize(filePath)
-          : filePath;
+        // Normalize to Unix format
+        const unix = _fileService.toUnix(filePath);
+        
+        // Only relativize if absolute AND inside base directory
+        const pathForFs = 
+          PathUtils.isAbsolute(unix) && PathUtils.isPathInside(_fileService.getBaseDir(), unix)
+            ? _fileService.relativize(unix)
+            : unix;  // absolute path outside project or already relative, use as-is
 
         // Read the file
-        return await _fileService.read(relativePath, readOptions);
+        return await _fileService.read(pathForFs, readOptions);
       } catch (error) {
         handleError(error, `reading file ${filePath}`);
       }
@@ -76,12 +85,16 @@ export function setupFileOperationHandlers(fileService: FileService) {
   // Handle writing file contents
   ipcMain.handle('fs:writeFile', async (_, filePath: string, data: string) => {
     try {
-      // Convert input path to relative path if absolute
-      const relativePath = _fileService.toUnix(filePath).startsWith('/')
-        ? _fileService.relativize(filePath)
-        : filePath;
+      // Normalize to Unix format
+      const unix = _fileService.toUnix(filePath);
+      
+      // Only relativize if absolute AND inside base directory
+      const pathForFs = 
+        PathUtils.isAbsolute(unix) && PathUtils.isPathInside(_fileService.getBaseDir(), unix)
+          ? _fileService.relativize(unix)
+          : unix;  // absolute path outside project or already relative, use as-is
 
-      await _fileService.write(relativePath, data);
+      await _fileService.write(pathForFs, data);
       return true;
     } catch (error) {
       handleError(error, `writing file ${filePath}`);
@@ -91,12 +104,16 @@ export function setupFileOperationHandlers(fileService: FileService) {
   // Handle deleting files
   ipcMain.handle('fs:deleteFile', async (_, filePath: string) => {
     try {
-      // Convert input path to relative path if absolute
-      const relativePath = _fileService.toUnix(filePath).startsWith('/')
-        ? _fileService.relativize(filePath)
-        : filePath;
+      // Normalize to Unix format
+      const unix = _fileService.toUnix(filePath);
+      
+      // Only relativize if absolute AND inside base directory
+      const pathForFs = 
+        PathUtils.isAbsolute(unix) && PathUtils.isPathInside(_fileService.getBaseDir(), unix)
+          ? _fileService.relativize(unix)
+          : unix;  // absolute path outside project or already relative, use as-is
 
-      await _fileService.remove(relativePath);
+      await _fileService.remove(pathForFs);
       return true;
     } catch (error) {
       handleError(error, `deleting file ${filePath}`);

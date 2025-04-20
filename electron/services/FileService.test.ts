@@ -53,6 +53,12 @@ describe('FileService', () => {
       expect(spy).toHaveBeenCalledWith('path/to/file');
     });
 
+    test('toAbsolute handles absolute paths correctly', () => {
+      // Use the private method directly for testing
+      const result = (fileService as any).toAbsolute('/absolute/path/file.txt');
+      expect(result).toBe('/absolute/path/file.txt');
+    });
+
     test('toOS delegates to PathUtils.toPlatform', () => {
       const spy = jest.spyOn(PathUtils, 'toPlatform');
       fileService.toOS('path/to/file');
@@ -70,8 +76,12 @@ describe('FileService', () => {
     });
 
     test('resolve throws error for path traversal attempts', () => {
-      expect(() => fileService.resolve('../outside/file.txt')).not.toThrow();
+      expect(() => fileService.resolve('../outside/file.txt')).toThrow();
       expect(() => fileService.resolve('/outside/dir/file.txt')).toThrow();
+      // Valid relative path within project should not throw
+      expect(() => fileService.resolve('subdir/file.txt')).not.toThrow();
+      // Valid absolute path within project should not throw
+      expect(() => fileService.resolve('/test/dir/subdir/file.txt')).not.toThrow();
     });
 
     test('relativize converts absolute path to project-relative', () => {
@@ -135,6 +145,15 @@ describe('FileService', () => {
       expect(result).toBe('file content');
     });
 
+    test('read accepts absolute paths outside baseDir', async () => {
+      const result = await fileService.read('/tmp/athanor-test.txt');
+      
+      expect(fsPromises.access).toHaveBeenCalled();
+      expect(fsPromises.stat).toHaveBeenCalled();
+      expect(fsPromises.readFile).toHaveBeenCalled();
+      expect(result).toBe('file content');
+    });
+
     test('read throws error for non-existent files', async () => {
       (fsPromises.access as jest.Mock).mockRejectedValue(new Error('ENOENT'));
       
@@ -144,6 +163,16 @@ describe('FileService', () => {
     test('write writes data to file', async () => {
       await fileService.write('file.txt', 'new content');
       
+      expect(fsPromises.writeFile).toHaveBeenCalledWith(
+        expect.any(String),
+        'new content'
+      );
+    });
+
+    test('write accepts absolute paths outside baseDir', async () => {
+      await fileService.write('/tmp/athanor-test.txt', 'new content');
+      
+      expect(fsPromises.mkdir).toHaveBeenCalled();
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
         expect.any(String),
         'new content'
@@ -182,6 +211,15 @@ describe('FileService', () => {
       
       (fsPromises.access as jest.Mock).mockRejectedValue(new Error('ENOENT'));
       const result2 = await fileService.exists('non-existent.txt');
+      expect(result2).toBe(false);
+    });
+
+    test('exists works with absolute paths outside baseDir', async () => {
+      const result = await fileService.exists('/tmp/athanor-test.txt');
+      expect(result).toBe(true);
+      
+      (fsPromises.access as jest.Mock).mockRejectedValue(new Error('ENOENT'));
+      const result2 = await fileService.exists('/tmp/non-existent.txt');
       expect(result2).toBe(false);
     });
 
@@ -264,6 +302,14 @@ describe('FileService', () => {
       // node_modules should be filtered out by the ignore rule in mock
       expect(result).toEqual(['file1.txt', 'subdir']);
     });
+
+    test('readdir works with absolute paths outside the project', async () => {
+      const result = await fileService.readdir('/resources/prompts');
+      
+      expect(fsPromises.readdir).toHaveBeenCalled();
+      // Should not try to apply ignore rules for external paths
+      expect(result).toEqual(['file1.txt', 'file2.txt', 'subdir']);
+    });
   });
 
   describe('Watcher Management', () => {
@@ -294,6 +340,14 @@ describe('FileService', () => {
       
       expect(mockChokidarWatcher.close).toHaveBeenCalledTimes(2);
       expect(fileService['watchers'].size).toBe(0);
+    });
+
+    test('watch can watch absolute paths outside the project', () => {
+      const callback = jest.fn();
+      
+      fileService.watch('/tmp/watch-dir', callback);
+      
+      expect(chokidar.watch).toHaveBeenCalled();
     });
   });
 

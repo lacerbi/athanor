@@ -3,6 +3,7 @@
 
 import { ipcMain } from 'electron';
 import { FileService } from '../services/FileService';
+import { PathUtils } from '../services/PathUtils';
 
 // Store fileService instance
 let _fileService: FileService;
@@ -16,15 +17,19 @@ export function setupFileWatchHandlers(fileService: FileService) {
   // Handle directory watching with ignore rules
   ipcMain.handle('fs:watch', (event, dirPath: string) => {
     try {
-      // Convert input path to relative path if absolute
-      const relativePath = _fileService.toUnix(dirPath).startsWith('/')
-        ? _fileService.relativize(dirPath)
-        : dirPath;
-
-      // Generate a consistent key for this watcher
-      const watcherKey = relativePath;
+      // Normalize to Unix format
+      const unix = _fileService.toUnix(dirPath);
       
-      console.log(`Setting up watcher for: ${relativePath}`);
+      // Only relativize if absolute AND inside base directory
+      const pathForFs = 
+        PathUtils.isAbsolute(unix) && PathUtils.isPathInside(_fileService.getBaseDir(), unix)
+          ? _fileService.relativize(unix)
+          : unix;  // absolute path outside project or already relative, use as-is
+      
+      // Generate a consistent key for this watcher
+      const watcherKey = pathForFs;
+      
+      console.log(`Setting up watcher for: ${pathForFs}`);
 
       // Clean up existing watcher if any
       if (unsubscribeFunctions.has(watcherKey)) {
@@ -34,7 +39,7 @@ export function setupFileWatchHandlers(fileService: FileService) {
       }
 
       // Set up new watcher with FileService
-      const unsubscribe = _fileService.watch(relativePath, (eventName, filePath) => {
+      const unsubscribe = _fileService.watch(pathForFs, (eventName, filePath) => {
         if (!event.sender.isDestroyed()) {
           // Forward the event to the renderer process
           event.sender.send('fs:change', eventName, filePath);

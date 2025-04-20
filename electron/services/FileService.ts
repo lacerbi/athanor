@@ -90,6 +90,36 @@ export class FileService implements IFileService {
   }
 
   /**
+   * Handles absolute paths directly or converts relative paths using resolve
+   * @param pathStr Path string (absolute or relative)
+   * @param mustExist Whether to verify the path exists
+   * @returns Normalized absolute Unix path
+   * @throws Error if the path is relative and resolves outside the base directory,
+   *         or if mustExist is true and the path doesn't exist
+   */
+  private toAbsolute(pathStr: string, mustExist = false): string {
+    // Normalize to Unix style
+    const normalized = this.toUnix(pathStr);
+    
+    // Handle absolute vs relative paths
+    const absolutePath = PathUtils.isAbsolute(normalized)
+      ? normalized // Already absolute, use as-is
+      : this.resolve(normalized); // Relative, resolve (with traversal checks)
+    
+    // Optionally verify existence
+    if (mustExist) {
+      try {
+        const platformPath = this.toOS(absolutePath);
+        statSync(platformPath);
+      } catch (error) {
+        throw new Error(`Path does not exist: ${pathStr}`);
+      }
+    }
+    
+    return absolutePath;
+  }
+
+  /**
    * Convert absolute Unix path to project-relative Unix path
    * @param absolutePath Absolute Unix path
    * @returns Project-relative Unix path
@@ -170,13 +200,13 @@ export class FileService implements IFileService {
   // --- Core FS Operations ---
   /**
    * Read a file's contents
-   * @param relativePath Project-relative path to the file
+   * @param pathStr Path to the file (absolute or project-relative)
    * @param opts Optional read options
    * @returns File contents as string or Buffer
    */
-  async read(relativePath: string, opts?: { encoding?: BufferEncoding }): Promise<string | Buffer> {
+  async read(pathStr: string, opts?: { encoding?: BufferEncoding }): Promise<string | Buffer> {
     try {
-      const absPath = this.resolve(relativePath);
+      const absPath = this.toAbsolute(pathStr);
       const platformPath = this.toOS(absPath);
       
       // Verify file exists and is readable
@@ -185,28 +215,34 @@ export class FileService implements IFileService {
       // Get file stats to ensure it's a file
       const stats = await fs.stat(platformPath);
       if (!stats.isFile()) {
-        throw new Error(`Path is not a file: ${relativePath}`);
+        throw new Error(`Path is not a file: ${pathStr}`);
       }
       
       return fs.readFile(platformPath, opts);
     } catch (error) {
-      console.error(`Error reading file ${relativePath}:`, error);
+      console.error(`Error reading file ${pathStr}:`, error);
       throw error;
     }
   }
 
   /**
    * Write data to a file, creating parent directories if needed
-   * @param relativePath Project-relative path to the file
+   * @param pathStr Path to the file (absolute or project-relative)
    * @param data Data to write
    */
-  async write(relativePath: string, data: string | Buffer): Promise<void> {
+  async write(pathStr: string, data: string | Buffer): Promise<void> {
     try {
-      const absPath = this.resolve(relativePath);
+      const absPath = this.toAbsolute(pathStr);
       const absDir = PathUtils.dirname(absPath);
       
       // Ensure parent directory exists
-      await this.ensureDir(this.relativize(absDir));
+      if (PathUtils.isPathInside(this.baseDir, absPath)) {
+        // For paths inside the project, use ensureDir with relative path
+        await this.ensureDir(this.relativize(absDir));
+      } else {
+        // For external paths, use mkdir directly
+        await fs.mkdir(this.toOS(absDir), { recursive: true });
+      }
       
       // Normalize line endings for string data
       const normalizedData = typeof data === 'string' ? data.replace(/\r\n/g, '\n') : data;
@@ -214,42 +250,43 @@ export class FileService implements IFileService {
       // Write file
       await fs.writeFile(this.toOS(absPath), normalizedData);
     } catch (error) {
-      console.error(`Error writing file ${relativePath}:`, error);
+      console.error(`Error writing file ${pathStr}:`, error);
       throw error;
     }
   }
 
   /**
    * Delete a file
-   * @param relativePath Project-relative path to the file
+   * @param pathStr Path to the file (absolute or project-relative)
    */
-  async remove(relativePath: string): Promise<void> {
+  async remove(pathStr: string): Promise<void> {
     try {
-      const absPath = this.resolve(relativePath);
+      const absPath = this.toAbsolute(pathStr);
       const platformPath = this.toOS(absPath);
       
       // Verify file exists
-      const exists = await this.exists(relativePath);
-      if (!exists) {
-        throw new Error(`File does not exist: ${relativePath}`);
+      try {
+        await fs.access(platformPath);
+      } catch {
+        throw new Error(`File does not exist: ${pathStr}`);
       }
       
       // Delete file
       await fs.unlink(platformPath);
     } catch (error) {
-      console.error(`Error deleting file ${relativePath}:`, error);
+      console.error(`Error deleting file ${pathStr}:`, error);
       throw error;
     }
   }
 
   /**
    * Check if a file or directory exists
-   * @param relativePath Project-relative path to check
+   * @param pathStr Path to check (absolute or project-relative)
    * @returns True if the path exists
    */
-  async exists(relativePath: string): Promise<boolean> {
+  async exists(pathStr: string): Promise<boolean> {
     try {
-      const absPath = this.resolve(relativePath);
+      const absPath = this.toAbsolute(pathStr);
       await fs.access(this.toOS(absPath));
       return true;
     } catch {
@@ -259,12 +296,12 @@ export class FileService implements IFileService {
 
   /**
    * Get stats for a file or directory
-   * @param relativePath Project-relative path
+   * @param pathStr Path (absolute or project-relative)
    * @returns Stats object or null if path doesn't exist
    */
-  async stats(relativePath: string): Promise<Stats | null> {
+  async stats(pathStr: string): Promise<Stats | null> {
     try {
-      const absPath = this.resolve(relativePath);
+      const absPath = this.toAbsolute(pathStr);
       return await fs.stat(this.toOS(absPath));
     } catch {
       return null;
@@ -273,26 +310,26 @@ export class FileService implements IFileService {
 
   /**
    * Check if a path is a directory
-   * @param relativePath Project-relative path
+   * @param pathStr Path (absolute or project-relative)
    * @returns True if the path exists and is a directory
    */
-  async isDirectory(relativePath: string): Promise<boolean> {
-    const stats = await this.stats(relativePath);
+  async isDirectory(pathStr: string): Promise<boolean> {
+    const stats = await this.stats(pathStr);
     return stats?.isDirectory() ?? false;
   }
 
   /**
    * Ensure a directory exists, creating it recursively if needed
-   * @param relativePath Project-relative path to directory
+   * @param pathStr Path to directory (absolute or project-relative)
    */
-  async ensureDir(relativePath: string): Promise<void> {
+  async ensureDir(pathStr: string): Promise<void> {
     try {
-      const absPath = this.resolve(relativePath);
+      const absPath = this.toAbsolute(pathStr);
       await fs.mkdir(this.toOS(absPath), { recursive: true });
     } catch (error) {
       // Ignore error if directory already exists
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') {
-        console.error(`Error creating directory ${relativePath}:`, error);
+        console.error(`Error creating directory ${pathStr}:`, error);
         throw error;
       }
     }
@@ -300,13 +337,13 @@ export class FileService implements IFileService {
 
   /**
    * Read directory contents with optional ignore rules
-   * @param relativePath Project-relative path to directory
+   * @param pathStr Path to directory (absolute or project-relative)
    * @param opts Options for directory reading
    * @returns Array of filenames (not full paths)
    */
-  async readdir(relativePath: string, opts: { applyIgnores?: boolean } = { applyIgnores: true }): Promise<string[]> {
+  async readdir(pathStr: string, opts: { applyIgnores?: boolean } = { applyIgnores: true }): Promise<string[]> {
     try {
-      const absDir = this.resolve(relativePath);
+      const absDir = this.toAbsolute(pathStr);
       const entries = await fs.readdir(this.toOS(absDir));
       
       if (!opts.applyIgnores) {
@@ -315,17 +352,34 @@ export class FileService implements IFileService {
       
       const filteredEntries: string[] = [];
       
+      // Skip ignore rule processing for paths outside the project base directory
+      const isExternalPath = !PathUtils.isPathInside(this.baseDir, absDir);
+      
       for (const entry of entries) {
         const entryAbsPath = PathUtils.joinUnix(absDir, entry);
+        
+        if (isExternalPath) {
+          // For external paths, don't apply ignore rules
+          filteredEntries.push(entry);
+          continue;
+        }
+        
         const entryRelPath = this.relativize(entryAbsPath);
         
         // Materials directory is handled separately, skip it in the main tree
-        if (entryRelPath === FILE_SYSTEM.materialsDirName && relativePath === '') {
+        if (entryRelPath === FILE_SYSTEM.materialsDirName && 
+            (pathStr === '' || pathStr === '.' || pathStr === this.baseDir)) {
           continue;
         }
         
         // Check if the entry should be ignored
-        const stats = await this.stats(entryRelPath);
+        let stats: Stats | null;
+        try {
+          stats = await fs.stat(this.toOS(entryAbsPath));
+        } catch {
+          stats = null;
+        }
+        
         const isDir = stats?.isDirectory() ?? false;
         
         // Normalize path for ignore rules
@@ -338,7 +392,7 @@ export class FileService implements IFileService {
       
       return filteredEntries;
     } catch (error) {
-      console.error(`Error reading directory ${relativePath}:`, error);
+      console.error(`Error reading directory ${pathStr}:`, error);
       throw error;
     }
   }
@@ -346,19 +400,19 @@ export class FileService implements IFileService {
   // --- Watcher Management ---
   /**
    * Watch a directory for changes
-   * @param relativePath Project-relative path to watch
+   * @param pathStr Path to watch (absolute or project-relative)
    * @param callback Callback function for file changes
    * @returns Unsubscribe function
    */
   watch(
-    relativePath: string,
+    pathStr: string,
     callback: (
       event: 'add' | 'change' | 'unlink' | 'addDir' | 'unlinkDir',
       projectRelativeFile: string
     ) => void
   ): () => void {
     try {
-      const absPath = this.resolve(relativePath);
+      const absPath = this.toAbsolute(pathStr);
       const platformPath = this.toOS(absPath);
       const watcherKey = absPath;
       
@@ -366,10 +420,10 @@ export class FileService implements IFileService {
       if (this.watchers.has(watcherKey)) {
         this.watchers.get(watcherKey)?.close();
         this.watchers.delete(watcherKey);
-        console.log(`Closed existing watcher for: ${relativePath}`);
+        console.log(`Closed existing watcher for: ${pathStr}`);
       }
       
-      console.log(`Setting up watcher for: ${relativePath}`);
+      console.log(`Setting up watcher for: ${pathStr}`);
       
       // Create new watcher
       const watcher = chokidar.watch(platformPath, {
@@ -427,7 +481,7 @@ export class FileService implements IFileService {
       
       // Handle errors
       watcher.on('error', (error) => {
-        console.error(`Watcher error for ${relativePath}:`, error);
+        console.error(`Watcher error for ${pathStr}:`, error);
       });
       
       // Store watcher
@@ -438,11 +492,11 @@ export class FileService implements IFileService {
         if (this.watchers.has(watcherKey)) {
           this.watchers.get(watcherKey)?.close();
           this.watchers.delete(watcherKey);
-          console.log(`Closed watcher for: ${relativePath}`);
+          console.log(`Closed watcher for: ${pathStr}`);
         }
       };
     } catch (error) {
-      console.error(`Error setting up watcher for ${relativePath}:`, error);
+      console.error(`Error setting up watcher for ${pathStr}:`, error);
       throw error;
     }
   }
