@@ -1,49 +1,21 @@
-// AI Summary: Handles IPC communication for file system operations with comprehensive error handling
-// and path normalization. Provides unified interface for reading/writing files, resolving template
-// paths, and directory traversal with ignore rules. Now accepts FileService instance.
-import { app, ipcMain } from 'electron';
-import * as fs from 'fs/promises';
-import {
-  getBaseDir,
-  handleError,
-  pathExists,
-  getStats,
-  ensureDirectoryExists,
-} from '../fileSystemManager';
-import { ignoreRulesManager } from '../ignoreRulesManager';
-import { filePathManager } from '../filePathManager';
-import { getAppBasePath } from '../main';
+// AI Summary: Handles IPC communication for file system operations using FileService.
+// Provides unified interface for reading/writing files, resolving template paths,
+// and directory traversal with proper path handling and error management.
+
+import { ipcMain } from 'electron';
 import { FileService } from '../services/FileService';
 
 // Store fileService instance
 let _fileService: FileService;
 
-// Get resources path based on environment - this path must remain stable regardless of workspace changes
-// Note: Will be replaced by fileService.getResourcesPath() in future commits
-async function getResourcesPath(): Promise<string> {
-  // Get base path depending on environment
-  let resourcesPath;
-
-  if (app.isPackaged) {
-    // In production, process.resourcesPath already points to the resources directory
-    resourcesPath = filePathManager.normalizeToUnix(process.resourcesPath);
-  } else {
-    // In development, we need to join 'resources' to the app path
-    const basePath = filePathManager.normalizeToUnix(app.getAppPath());
-    resourcesPath = filePathManager.joinUnixPaths(basePath, 'resources');
-  }
-
-  // Convert to platform-specific path for the OS
-  return filePathManager.toPlatformPath(resourcesPath);
-}
-
 export function setupFileOperationHandlers(fileService: FileService) {
   // Store the fileService instance for later use
   _fileService = fileService;
+
   // Handle getting resources path
   ipcMain.handle('fs:getResourcesPath', async () => {
     try {
-      return await getResourcesPath();
+      return await _fileService.getResourcesPath();
     } catch (error) {
       handleError(error, 'getting resources path');
     }
@@ -54,16 +26,7 @@ export function setupFileOperationHandlers(fileService: FileService) {
     'fs:getPromptTemplatePath',
     async (_, templateName: string) => {
       try {
-        const normalizedName = filePathManager.normalizeToUnix(templateName);
-        const resourcesPath = await getResourcesPath();
-
-        return filePathManager.toPlatformPath(
-          filePathManager.joinUnixPaths(
-            resourcesPath,
-            'prompts',
-            normalizedName
-          )
-        );
+        return await _fileService.getPromptTemplatePath(templateName);
       } catch (error) {
         handleError(error, 'getting template path');
       }
@@ -73,42 +36,12 @@ export function setupFileOperationHandlers(fileService: FileService) {
   // Handle reading directory contents with ignore rules
   ipcMain.handle('fs:readDirectory', async (_, dirPath: string, applyIgnores = true) => {
     try {
-      const normalizedPath = filePathManager.toPlatformPath(
-        filePathManager.normalizeToUnix(dirPath)
-      );
-      const exists = await pathExists(normalizedPath);
-      if (!exists) {
-        throw new Error(`Directory does not exist: ${normalizedPath}`);
-      }
+      // Convert input path to relative path if absolute
+      const relativePath = _fileService.toUnix(dirPath).startsWith('/')
+        ? _fileService.relativize(dirPath)
+        : dirPath;
 
-      const stats = await getStats(normalizedPath);
-      if (!stats?.isDirectory()) {
-        throw new Error(`Path is not a directory: ${normalizedPath}`);
-      }
-
-      const entries = await fs.readdir(normalizedPath);
-      const filteredEntries: string[] = [];
-
-      for (const entry of entries) {
-        const fullPath = filePathManager.joinUnixPaths(normalizedPath, entry);
-        const entryStats = await getStats(fullPath);
-        const isDir = entryStats?.isDirectory() ?? false;
-
-        const normalizedForIgnore = filePathManager.normalizeForIgnore(
-          fullPath,
-          isDir
-        );
-
-        if (!applyIgnores || 
-            !normalizedForIgnore ||
-            (normalizedForIgnore &&
-             !ignoreRulesManager.ignores(normalizedForIgnore))
-        ) {
-          filteredEntries.push(entry);
-        }
-      }
-
-      return filteredEntries;
+      return await _fileService.readdir(relativePath, { applyIgnores });
     } catch (error) {
       handleError(error, `reading directory ${dirPath}`);
     }
@@ -123,24 +56,17 @@ export function setupFileOperationHandlers(fileService: FileService) {
       options?: { encoding?: BufferEncoding } | BufferEncoding
     ) => {
       try {
-        const normalizedPath = filePathManager.toPlatformPath(
-          filePathManager.normalizeToUnix(filePath)
-        );
-
-        const exists = await pathExists(normalizedPath);
-        if (!exists) {
-          throw new Error(`File does not exist: ${normalizedPath}`);
-        }
-
-        const stats = await getStats(normalizedPath);
-        if (!stats?.isFile()) {
-          throw new Error(`Path is not a file: ${normalizedPath}`);
-        }
-
+        // Convert options format if needed
         const readOptions =
           typeof options === 'string' ? { encoding: options } : options;
-        const content = await fs.readFile(normalizedPath, readOptions);
-        return content;
+
+        // Convert input path to relative path if absolute
+        const relativePath = _fileService.toUnix(filePath).startsWith('/')
+          ? _fileService.relativize(filePath)
+          : filePath;
+
+        // Read the file
+        return await _fileService.read(relativePath, readOptions);
       } catch (error) {
         handleError(error, `reading file ${filePath}`);
       }
@@ -150,16 +76,13 @@ export function setupFileOperationHandlers(fileService: FileService) {
   // Handle writing file contents
   ipcMain.handle('fs:writeFile', async (_, filePath: string, data: string) => {
     try {
-      const normalizedPath = filePathManager.normalizeToUnix(filePath);
-      const absPath = filePathManager.toPlatformPath(
-        filePathManager.resolveFromBase(normalizedPath)
-      );
-      const dirPath = filePathManager.getParentDir(absPath);
+      // Convert input path to relative path if absolute
+      const relativePath = _fileService.toUnix(filePath).startsWith('/')
+        ? _fileService.relativize(filePath)
+        : filePath;
 
-      await ensureDirectoryExists(dirPath);
-
-      const normalizedData = data.replace(/\r\n/g, '\n');
-      await fs.writeFile(absPath, normalizedData, 'utf8');
+      await _fileService.write(relativePath, data);
+      return true;
     } catch (error) {
       handleError(error, `writing file ${filePath}`);
     }
@@ -168,18 +91,21 @@ export function setupFileOperationHandlers(fileService: FileService) {
   // Handle deleting files
   ipcMain.handle('fs:deleteFile', async (_, filePath: string) => {
     try {
-      const normalizedPath = filePathManager.normalizeToUnix(filePath);
-      const absPath = filePathManager.toPlatformPath(
-        filePathManager.resolveFromBase(normalizedPath)
-      );
-      const exists = await pathExists(absPath);
-      if (!exists) {
-        throw new Error(`File does not exist: ${filePath}`);
-      }
+      // Convert input path to relative path if absolute
+      const relativePath = _fileService.toUnix(filePath).startsWith('/')
+        ? _fileService.relativize(filePath)
+        : filePath;
 
-      await fs.unlink(absPath);
+      await _fileService.remove(relativePath);
+      return true;
     } catch (error) {
       handleError(error, `deleting file ${filePath}`);
     }
   });
+}
+
+// Enhanced error handling
+function handleError(error: unknown, operation: string): never {
+  console.error(`Error during ${operation}:`, error);
+  throw error instanceof Error ? error : new Error(String(error));
 }
