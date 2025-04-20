@@ -228,7 +228,8 @@ export async function parseXmlContent(
   clipboardContent: string,
   addLog: (
     message: string | { message: string; onClick: () => Promise<void> }
-  ) => void
+  ) => void,
+  diffMode: 'strict' | 'fuzzy' = 'fuzzy'
 ): Promise<FileOperation[]> {
   const operations: FileOperation[] = [];
 
@@ -298,7 +299,8 @@ export async function parseXmlContent(
               operation,
               path,
               block.code,
-              oldCode
+              oldCode,
+              diffMode
             );
             // If we get here successfully for UPDATE_DIFF, remove it from failed paths
             if (operation === 'UPDATE_DIFF') {

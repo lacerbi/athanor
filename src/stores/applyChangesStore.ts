@@ -12,6 +12,8 @@ interface ApplyChangesState {
   applyChange: (index: number) => Promise<void>;
   rejectChange: (index: number) => void;
   setChangeAppliedCallback: (callback: (() => Promise<void>) | null) => void;
+  diffMode: 'strict' | 'fuzzy';
+  setDiffMode: (mode: 'strict' | 'fuzzy') => void;
 }
 
 export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
@@ -19,6 +21,7 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
 
   return {
     activeOperations: [],
+    diffMode: 'fuzzy', // Default to fuzzy mode (current behavior)
 
     setOperations: (ops: FileOperation[]) => {
       set({ activeOperations: ops });
@@ -30,6 +33,10 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
 
     setChangeAppliedCallback: (callback: (() => Promise<void>) | null) => {
       onChangeApplied = callback;
+    },
+
+    setDiffMode: (mode: 'strict' | 'fuzzy') => {
+      set({ diffMode: mode });
     },
 
     applyChange: async (index: number) => {
