@@ -32,7 +32,10 @@ export class PathUtils {
    */
   static toPlatform(unixPath: string): string {
     if (!unixPath) return '';
-    return unixPath.split(path.posix.sep).join(path.sep);
+    // Only convert slashes on Windows, leave untouched on other platforms
+    return process.platform === 'win32' 
+      ? unixPath.split(path.posix.sep).join(path.sep)
+      : unixPath;
   }
 
   /**
@@ -41,7 +44,9 @@ export class PathUtils {
    * @returns Joined path with forward slashes
    */
   static joinUnix(...paths: string[]): string {
-    return PathUtils.normalizeToUnix(path.join(...paths));
+    const joined = PathUtils.normalizeToUnix(path.join(...paths));
+    // If all segments were empty, return empty string rather than "."
+    return joined === '.' && paths.every(p => !p) ? '' : joined;
   }
 
   /**
@@ -87,7 +92,9 @@ export class PathUtils {
    */
   static dirname(pathStr: string): string {
     if (!pathStr) return '';
-    return PathUtils.normalizeToUnix(path.dirname(pathStr));
+    const result = PathUtils.normalizeToUnix(path.dirname(pathStr));
+    // Return empty string for top-level relative paths instead of "."
+    return result === '.' ? '' : result;
   }
 
   /**
@@ -198,19 +205,24 @@ export class PathUtils {
    * Check if a path is inside another path
    * @param parent Parent path to check against
    * @param child Child path to check
-   * @returns True if child is inside parent
+   * @returns True if child is inside parent or is the same path
    */
   static isPathInside(parent: string, child: string): boolean {
     if (!parent || !child) return false;
     
-    // Normalize both paths
-    const normalizedParent = PathUtils.ensureTrailingSlash(
+    // Normalize both paths and remove trailing slashes
+    const normalizedParent = PathUtils.removeTrailingSlash(
       PathUtils.normalizeToUnix(parent)
     );
-    const normalizedChild = PathUtils.normalizeToUnix(child);
+    const normalizedChild = PathUtils.removeTrailingSlash(
+      PathUtils.normalizeToUnix(child)
+    );
     
-    // Check if child starts with parent
-    return normalizedChild.startsWith(normalizedParent);
+    // Check if paths are the same
+    if (normalizedParent === normalizedChild) return true;
+    
+    // Check if child is inside parent (starts with parent + '/')
+    return normalizedChild.startsWith(normalizedParent + '/');
   }
 
   /**

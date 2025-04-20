@@ -61,6 +61,7 @@ export class FileService implements IFileService {
    * Convert project-relative path to absolute Unix path
    * @param relativePath Project-relative path
    * @returns Absolute Unix-style path
+   * @throws Error if the path resolves to a location outside the base directory
    */
   resolve(relativePath: string): string {
     const normalized = this.toUnix(relativePath);
@@ -76,9 +77,13 @@ export class FileService implements IFileService {
     // Join with baseDir
     const absolutePath = PathUtils.joinUnix(this.baseDir, normalized);
     
-    // Final path traversal check
-    if (!absolutePath.startsWith(this.baseDir) && absolutePath !== this.baseDir) {
-      throw new Error(`Path traversal attempt detected: ${relativePath}`);
+    // Final path traversal check - fixed to correctly handle edge cases
+    // The baseDir check should allow paths like "/base/dir" when baseDir is "/base/dir"
+    if (!absolutePath.startsWith(this.baseDir + '/') && absolutePath !== this.baseDir) {
+      // Use PathUtils.isPathInside which correctly handles path equality
+      if (!PathUtils.isPathInside(this.baseDir, absolutePath)) {
+        throw new Error(`Path traversal attempt detected: ${relativePath}`);
+      }
     }
     
     return absolutePath;

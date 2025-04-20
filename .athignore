@@ -8,7 +8,6 @@
 # explorer and you would like it to be included, ensure that it is not ignored 
 # by a .athignore rule below by commenting or removing that line.
 ###############################################################################
-
 ###############################################################################
 # GIT SYSTEM FILES
 ###############################################################################
@@ -20,7 +19,6 @@
 git-log.txt
 git-reflog.txt
 git-status.txt
-
 ###############################################################################
 # OPERATING SYSTEM / FILE EXPLORER FILES
 ###############################################################################
@@ -37,7 +35,6 @@ Icon
 .Trashes
 .VolumeIcon.icns
 .com.apple.timemachine.donotpresent
-
 # Windows
 Thumbs.db
 Thumbs.db:encryptable
@@ -53,14 +50,12 @@ $RECYCLE.BIN/
 *.msm
 *.msp
 *.lnk
-
 # Linux
 *~
 .fuse_hidden*
 .directory
 .Trash-*
 .nfs*
-
 ###############################################################################
 # EDITOR / IDE / TOOL FILES
 ###############################################################################
@@ -80,12 +75,10 @@ $RECYCLE.BIN/
 Session.vim
 Sessionx.vim
 .netrwhist
-
 # Emacs
 *~
 \#*\#
 .#*
-
 # Visual Studio Code
 .vscode/
 .vscode/*
@@ -95,7 +88,6 @@ Sessionx.vim
 !.vscode/extensions.json
 .history/
 *.code-workspace
-
 # JetBrains (IntelliJ, PyCharm, etc.)
 .idea/
 .idea_modules/
@@ -103,14 +95,12 @@ Sessionx.vim
 *.ipr
 *.iws
 # 'out/' is also ignored below in Build Artifacts
-
 # Sublime Text
 *.sublime-workspace
 *.sublime-project
 *.tmlanguage.cache
 *.tmPreferences.cache
 *.stTheme.cache
-
 # Eclipse
 .metadata
 bin/
@@ -126,7 +116,6 @@ local.properties
 .classpath
 .project
 *.launch
-
 ###############################################################################
 # BUILD ARTIFACTS
 ###############################################################################
@@ -148,7 +137,6 @@ x86/
 !gradle/wrapper/gradle-wrapper.jar
 Carthage/Build/
 .webpack/
-
 # Common packaging / compression formats
 *.zip
 *.tar
@@ -158,7 +146,6 @@ Carthage/Build/
 *.7z
 *.gz
 *.iso
-
 ###############################################################################
 # DEPENDENCIES
 ###############################################################################
@@ -174,7 +161,6 @@ node_modules/
 .pnp.js
 package-lock.json
 yarn.lock
-
 # Python
 __pycache__/
 *.py[cod]
@@ -203,7 +189,6 @@ pip-log.txt
 pip-delete-this-directory.txt
 .tox/
 # Some coverage-related files also appear below in "Coverage Reports"
-
 # Ruby
 .bundle/
 vendor/bundle/
@@ -225,7 +210,6 @@ build-iPhoneOS/
 build-iPhoneSimulator/
 .lib/bundler/man/
 .rvmrc
-
 # Java
 *.class
 *.jar
@@ -234,11 +218,9 @@ build-iPhoneSimulator/
 *.nar
 hs_err_pid*
 replay_pid*
-
 # PHP (Composer)
 vendor/
 composer.phar
-
 # Go
 *.exe
 *.exe~
@@ -247,12 +229,10 @@ composer.phar
 *.test
 *.out
 go.work
-
 # Rust
 /target/
 **/*.rs.bk
 Cargo.lock
-
 ###############################################################################
 # LOG / TEMPORARY / RUNTIME FILES
 ###############################################################################
@@ -267,7 +247,6 @@ pnpm-debug.log*
 debug.log
 error.log
 logs/
-
 # Temporary files (caches, partial downloads, etc.)
 *.tmp
 *.temp
@@ -282,7 +261,6 @@ temp/
 .eslintcache
 .stylelintcache
 *.pid
-
 ###############################################################################
 # ENVIRONMENT / CONFIG FILES
 ###############################################################################
@@ -301,7 +279,6 @@ temp/
 .credentials
 secrets.yml
 secrets.json
-
 # Security-related files
 *.pem
 *.key
@@ -309,7 +286,6 @@ secrets.json
 *.cert
 *.p12
 *.pfx
-
 ###############################################################################
 # OTHER COMMON IGNORABLE FILES
 ###############################################################################
@@ -321,7 +297,6 @@ secrets.json
 *.db-wal
 *.sql
 *.bak
-
 # Coverage reports
 coverage/
 *.lcov
@@ -336,14 +311,11 @@ nosetests.xml
 .cypress
 cypress/videos/
 cypress/screenshots/
-
 # Python notebook checkpoints
 .ipynb_checkpoints/
-
 # Documentation
 docs/_site/
 #docs/api/ # This might be useful
-
 # Media and generated documents (use with caution — you might not always want these ignored)
 *.jpg
 *.jpeg
@@ -359,19 +331,16 @@ docs/_site/
 *.xlsx
 *.ppt
 *.pptx
-
 ###############################################################################
 # ATHANOR PROJECT FILES
 ###############################################################################
-
 .athignore
 /athanor.yml
-
 ###############################################################################
 # PROJECT FILES
 # Add below specific files and folders you want to ignore.
 ###############################################################################
-
 public/
 LICENSE
 temp.txt
+/.prettierrc
