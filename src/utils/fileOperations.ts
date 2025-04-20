@@ -52,7 +52,10 @@ export function parseDiffBlocks(content: string): DiffBlock[] {
 // Normalize line endings while preserving other whitespace
 export function normalizeLineEndings(content: string): string {
   if (!content) return '';
-  const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  // First normalize line endings
+  let normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  // Then replace non-breaking spaces with regular spaces
+  normalized = normalized.replace(/\u00A0/g, ' ');
   return removeInitialEmptyLine(normalized);
 }
 
