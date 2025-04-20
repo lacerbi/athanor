@@ -1,7 +1,6 @@
-// AI Summary: Main prompt builder that loads templates and assembles prompts with variable substitution.
-// Handles missing config values with fallbacks and dynamic legend generation.
-// Provides specialized builders for autoselect, develop, and software engineer prompts.
-// Also supports dynamic prompts from promptStore.
+// AI Summary: Builds AI prompts dynamically by loading templates, substituting variables (project info, file contents, selected files, task details), and applying user configuration settings.
+// Handles codebase documentation generation, selected file list formatting, and applies settings like smart preview and file tree inclusion from the fileSystemStore.
+// Core function: buildDynamicPrompt.
 import { FileItem } from './fileTree';
 import { readAthanorConfig } from './configUtils';
 import { generateCodebaseDocumentation } from './codebaseDocumentation';
@@ -100,7 +99,12 @@ export async function buildDynamicPrompt(
   const config = await readAthanorConfig(rootPath);
 
   // Get the store settings
-  const { smartPreviewEnabled, includeFileTree, formatType, includeProjectInfo } = useFileSystemStore.getState();
+  const {
+    smartPreviewEnabled,
+    includeFileTree,
+    formatType,
+    includeProjectInfo,
+  } = useFileSystemStore.getState();
 
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
@@ -119,7 +123,7 @@ export async function buildDynamicPrompt(
 
   // Create a copy of codebaseDoc to avoid modifying the original
   const codebaseContent = { ...codebaseDoc };
-  
+
   // If file tree is disabled, set it to empty string
   if (!includeFileTree) {
     codebaseContent.file_tree = '';
@@ -145,66 +149,4 @@ export async function buildDynamicPrompt(
 
   // Use the variant content directly
   return substituteVariables(variant.content, variables);
-}
-
-// Build a prompt using a template and provided variables
-export async function buildPrompt(
-  templateName: string,
-  items: FileItem[],
-  selectedItems: Set<string>,
-  rootPath: string,
-  taskDescription: string = '',
-  taskContext: string = '',
-  passedFormatType: string = DOC_FORMAT.MARKDOWN
-): Promise<string> {
-  // Load config with fallback values
-  const config = await readAthanorConfig(rootPath);
-
-  // Get settings from the store
-  const { smartPreviewEnabled, includeFileTree, formatType, includeProjectInfo } = useFileSystemStore.getState();
-
-  // Generate codebase documentation
-  const codebaseDoc = await generateCodebaseDocumentation(
-    items,
-    selectedItems,
-    rootPath,
-    config,
-    smartPreviewEnabled,
-    passedFormatType || formatType // Use passed format or get from store
-  );
-
-  // Format task context if non-empty
-  const formattedTaskContext = taskContext?.trim()
-    ? `\n\n<task_context>\n${taskContext.trim()}\n</task_context>`
-    : '';
-
-  // Create a copy of codebaseDoc to avoid modifying the original
-  const codebaseContent = { ...codebaseDoc };
-  
-  // If file tree is disabled, set it to empty string
-  if (!includeFileTree) {
-    codebaseContent.file_tree = '';
-  }
-
-  // Prepare variables for template
-  const variables: PromptVariables = {
-    project_name: config.project_name,
-    project_info: includeProjectInfo ? config.project_info : '',
-    task_description: taskDescription,
-    task_context: formattedTaskContext,
-    selected_files: getSelectedFilesList(items, selectedItems, rootPath),
-    selected_files_with_info: getSelectedFilesWithInfo(
-      items,
-      selectedItems,
-      rootPath
-    ),
-    codebase_legend: hasSelectedFiles(items, selectedItems)
-      ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
-      : '',
-    ...codebaseContent, // Contains file_contents and modified file_tree
-  };
-
-  // Load and process template
-  const templateContent = await loadTemplateContent(templateName);
-  return substituteVariables(templateContent, variables);
 }
