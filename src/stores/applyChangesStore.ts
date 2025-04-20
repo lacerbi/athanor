@@ -21,7 +21,7 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
 
   return {
     activeOperations: [],
-    diffMode: 'fuzzy', // Default to fuzzy mode (current behavior)
+    diffMode: 'strict', // Default to strict mode for more accurate changes
 
     setOperations: (ops: FileOperation[]) => {
       set({ activeOperations: ops });

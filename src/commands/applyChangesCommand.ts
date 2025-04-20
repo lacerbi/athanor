@@ -21,7 +21,7 @@ export async function executeApplyChangesCommand({
   setOperations,
   clearOperations,
   setActiveTab,
-  diffMode = 'fuzzy',
+  diffMode = 'strict',
 }: ApplyChangesParams): Promise<boolean> {
   addLog(
     `Processing apply changes command (${formatTokenCount(

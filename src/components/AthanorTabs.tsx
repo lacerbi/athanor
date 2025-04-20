@@ -13,9 +13,13 @@ interface AthanorTabsProps {
   onTabChange: (tab: TabType) => void;
 }
 
-const AthanorTabs: React.FC<AthanorTabsProps> = ({ activeTab, onTabChange }) => {
+const AthanorTabs: React.FC<AthanorTabsProps> = ({
+  activeTab,
+  onTabChange,
+}) => {
   const { addLog } = useLogStore();
-  const { setOperations, clearOperations, diffMode, setDiffMode } = useApplyChangesStore();
+  const { setOperations, clearOperations, diffMode, setDiffMode } =
+    useApplyChangesStore();
 
   return (
     <div className="flex-shrink-0 border-b p-2 flex items-center justify-between">
@@ -58,11 +62,13 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({ activeTab, onTabChange }) => 
               ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
               : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
           }`}
-          onClick={() => setDiffMode(diffMode === 'strict' ? 'fuzzy' : 'strict')}
+          onClick={() =>
+            setDiffMode(diffMode === 'strict' ? 'fuzzy' : 'strict')
+          }
           title={`Diff Mode: ${
             diffMode === 'strict'
               ? 'Strict (Exact Match Only)'
-              : 'Fuzzy (Fallback to Fuzzy Matching)'
+              : 'Fuzzy (Fallback to Fuzzy Matching - EXPERIMENTAL)'
           }`}
         >
           {diffMode === 'strict' ? (
