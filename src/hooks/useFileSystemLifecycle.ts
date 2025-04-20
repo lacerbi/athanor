@@ -13,7 +13,7 @@ import { FileSystemLifecycle } from '../types/global';
 // Shared helper for loading both main and materials trees
 const loadAndSetTrees = async (basePath: string) => {
   const mainTree = await buildFileTree(basePath);
-  const materialsPath = await window.fileSystem.getMaterialsDir();
+  const materialsPath = await window.fileService.getMaterialsDir();
   const materialsTree = await buildFileTree(materialsPath, '', true);
   useFileSystemStore.getState().setFileTree([mainTree, materialsTree]);
   return { mainTree, materialsTree };
@@ -52,7 +52,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
       setIsRefreshing(true);
       try {
-        await window.fileSystem.reloadIgnoreRules();
+        await window.fileService.reloadIgnoreRules();
         const { mainTree, materialsTree } =
           await loadAndSetTrees(currentDirectory);
         validateSelections(mainTree);
@@ -110,7 +110,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   const initializeProject = async (directory: string) => {
     useFileSystemStore.getState().resetState();
-    const normalizedDir = await window.fileSystem.normalizeToUnix(directory);
+    const normalizedDir = await window.pathUtils.toUnix(directory);
     setCurrentDirectory(normalizedDir);
 
     const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
@@ -133,21 +133,20 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   const handleOpenFolder = async () => {
     try {
-      const selectedDir = await window.fileSystem.openFolder();
+      const selectedDir = await window.fileService.openFolder();
 
       // If user cancelled folder selection, do nothing
       if (!selectedDir) {
         return;
       }
 
-      const normalizedDir =
-        await window.fileSystem.normalizeToUnix(selectedDir);
+      const normalizedDir = await window.pathUtils.toUnix(selectedDir);
 
       // Check if .athignore exists
-      const athignoreExists = await window.fileSystem.fileExists('.athignore');
+      const athignoreExists = await window.fileService.exists('.athignore');
       if (!athignoreExists) {
         // Check for .gitignore
-        const hasGitignore = await window.fileSystem.fileExists('.gitignore');
+        const hasGitignore = await window.fileService.exists('.gitignore');
         setGitignoreExists(hasGitignore);
 
         // Show project creation dialog
@@ -167,7 +166,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const setupWatcher = useCallback(
     async (dir: string) => {
       try {
-        await window.fileSystem.watchDirectory(dir, async () => {
+        await window.fileService.watch(dir, async () => {
           if (refreshTimeoutRef.current) {
             clearTimeout(refreshTimeoutRef.current);
           }
@@ -189,9 +188,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       isInitializedRef.current = true;
 
       try {
-        const currentDir = await window.fileSystem.getCurrentDirectory();
-        const normalizedDir =
-          await window.fileSystem.normalizeToUnix(currentDir);
+        const currentDir = await window.fileService.getCurrentDirectory();
+        const normalizedDir = await window.pathUtils.toUnix(currentDir);
         setCurrentDirectory(normalizedDir);
 
         const { mainTree, materialsTree } =
@@ -201,10 +199,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         setResourcesData(materialsTree);
 
         // Load prompts and tasks
-      await Promise.all([
-        loadPrompts(),
-        loadTasks()
-      ]);
+        await Promise.all([
+          loadPrompts(),
+          loadTasks()
+        ]);
         await setupWatcher(normalizedDir);
         addLog(`Loaded directory: ${normalizedDir}`);
       } catch (error) {

@@ -1,7 +1,6 @@
 // AI Summary: Core file system service that builds and maintains the application's file tree structure.
+// Now uses fileService and pathUtils for all file operations and path manipulation.
 // Handles directory traversal, line counting, and content normalization with proper error handling.
-// Key functions: buildFileTree() for recursive tree creation, readFileContent() for normalized reads.
-// Integrates with window.fileSystem for all file operations and maintains consistent line endings.
 import {
   FileItem,
   sortItems,
@@ -26,7 +25,7 @@ function normalizeContent(content: string): string {
 // Function to count lines in a file
 async function countFileLines(path: string): Promise<number> {
   try {
-    const content = await window.fileSystem.readFile(path, {
+    const content = await window.fileService.read(path, {
       encoding: 'utf8',
     });
     // Count lines after normalizing line endings
@@ -44,7 +43,7 @@ export async function buildFileTree(
   applyIgnores: boolean = true
 ): Promise<FileItem> {
   // Construct the full path by joining base and current paths
-  const fullPath = await window.fileSystem.joinPaths(basePath, currentPath);
+  const fullPath = await window.pathUtils.join(basePath, currentPath);
   // Get the name from the last part of the current path, or base path if at root
   let name = currentPath
     ? currentPath.split('/').pop() || ''
@@ -56,7 +55,7 @@ export async function buildFileTree(
   }
 
   try {
-    const isDir = await window.fileSystem.isDirectory(fullPath);
+    const isDir = await window.fileService.isDirectory(fullPath);
     // Generate ID relative to base path
     const id = isMaterialsTree
       ? `materials:${currentPath}`
@@ -73,7 +72,7 @@ export async function buildFileTree(
       };
     }
 
-    const entries = await window.fileSystem.readDirectory(
+    const entries = await window.fileService.readDirectory(
       fullPath,
       applyIgnores
     );
@@ -136,7 +135,7 @@ export async function buildFileTree(
 // Read file content with normalization
 export async function readFileContent(path: string): Promise<string> {
   try {
-    const content = await window.fileSystem.readFile(path, {
+    const content = await window.fileService.read(path, {
       encoding: 'utf8',
     });
     return normalizeContent(content as string);
@@ -149,18 +148,11 @@ export async function readFileContent(path: string): Promise<string> {
 // Read file content by relative path within project
 export async function readFileByPath(relativePath: string): Promise<string> {
   try {
-    // Get current directory and let filePathManager handle path joining
-    const currentDir = await window.fileSystem.getCurrentDirectory();
-    const combinedPath = await window.fileSystem.joinPaths(
-      currentDir,
-      relativePath
-    );
-
-    // Convert to OS-specific format via filePathManager
-    const fullPath = await window.fileSystem.toOSPath(combinedPath);
+    // Convert to OS-specific format if needed
+    const fullPath = await window.fileService.resolve(relativePath);
 
     // Read and return the file content
-    const content = await window.fileSystem.readFile(fullPath, {
+    const content = await window.fileService.read(relativePath, {
       encoding: 'utf8',
     });
     return normalizeContent(content as string);

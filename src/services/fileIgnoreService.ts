@@ -1,7 +1,6 @@
 // AI Summary: Manages .athignore file creation and rule updates with intelligent .gitignore integration.
-// Creates new .athignore files with optional standard rules and .gitignore imports, avoiding duplicates.
-// Provides addToIgnore() for adding paths with wildcard support and 'ignoreAll' pattern generation.
-// Integrates with main process via window.fileSystem for file operations and rule management.
+// Now uses fileService and pathUtils APIs for file operations and path manipulation.
+// Creates .athignore files with optional standard rules and handles path normalization for ignore patterns.
 interface AthignoreOptions {
   useStandardIgnore: boolean;
   importGitignore: boolean;
@@ -22,14 +21,16 @@ export async function createAthignoreFile(
 ): Promise<void> {
   try {
     // Read the default athignore content
-    const defaultAthignorePath = await window.fileSystem.getResourcesPath();
-    const defaultContent = (await window.fileSystem.readFile(
-      await window.fileSystem.joinPaths(
-        defaultAthignorePath,
-        'files/default_athignore'
-      ),
+    const defaultAthignorePath = await window.fileService.getResourcesPath();
+    const defaultContentPath = await window.pathUtils.join(
+      defaultAthignorePath,
+      'files/default_athignore'
+    );
+    
+    const defaultContent = await window.fileService.read(
+      await window.pathUtils.relative(defaultContentPath),
       { encoding: 'utf8' }
-    )) as string;
+    ) as string;
 
     let finalContent = '';
 
@@ -43,19 +44,19 @@ export async function createAthignoreFile(
 
     // If importing from .gitignore and it exists, add those patterns
     if (options.importGitignore) {
-      const gitignorePath = await window.fileSystem.joinPaths(
+      const gitignorePath = await window.pathUtils.join(
         projectPath,
         '.gitignore'
       );
-      const exists = await window.fileSystem.fileExists(gitignorePath);
+      const exists = await window.fileService.exists(
+        await window.pathUtils.relative(gitignorePath)
+      );
 
       if (exists) {
-        const gitignoreContent = (await window.fileSystem.readFile(
-          gitignorePath,
-          {
-            encoding: 'utf8',
-          }
-        )) as string;
+        const gitignoreContent = await window.fileService.read(
+          await window.pathUtils.relative(gitignorePath),
+          { encoding: 'utf8' }
+        ) as string;
 
         // Get lines from .gitignore
         const gitignoreLines = gitignoreContent
@@ -101,7 +102,7 @@ export async function createAthignoreFile(
       '###############################################################################\n';
 
     // Write the .athignore file
-    await window.fileSystem.writeFile('.athignore', finalContent);
+    await window.fileService.write('.athignore', finalContent);
   } catch (error) {
     console.error('Error creating .athignore:', error);
     throw error;
@@ -111,11 +112,11 @@ export async function createAthignoreFile(
 /**
  * addToIgnore
  * -----------
- * Pass-through call to the main process for adding a file/folder path to .athignore.
- * Uses advanced logic in the main process (ignoreRulesManager) to handle wildcard patterns,
- * and optionally sets an ignoreAll flag for ignoring all items with the same name.
+ * Pass-through call to add a file/folder path to .athignore.
+ * Uses advanced logic to handle wildcard patterns, and optionally
+ * sets an ignoreAll flag for ignoring all items with the same name.
  *
- * @param itemPath - Absolute or relative path to be ignored
+ * @param itemPath - Path to be ignored
  * @param ignoreAll - Whether to ignore all items by that name
  */
 export async function addToIgnore(
@@ -123,7 +124,7 @@ export async function addToIgnore(
   ignoreAll: boolean = false
 ): Promise<boolean> {
   try {
-    return await window.fileSystem.addToIgnore(itemPath, ignoreAll);
+    return await window.fileService.addToIgnore(itemPath, ignoreAll);
   } catch (error) {
     console.error(`Error adding path to ignore: ${itemPath}`, error);
     throw error;
