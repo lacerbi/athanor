@@ -77,9 +77,13 @@ class XmlParser {
           const content = this.content.slice(contentStart, fileCodeEnd);
 
           // Look ahead for file closing tags, optionally followed by next block or command end
+          // Matches </file_code> ... </file>
+          // then asserts (without consuming) that the next non‑whitespace chars are
+          // - the beginning of the next <file><file_message> block,  or
+          // - the </ath …> closing tag (optionally with command="...")
           const remaining = this.content.slice(fileCodeEnd);
           const closeTagsRegex =
-            /^<\/file_code>\s*<\/file>(?:\s*(?:<file>\s*<file_message>|<\/ath(?:\s+command(?:="[^"]*")?)?>\s*)?)?/;
+            /^<\/file_code>\s*<\/file>(?=\s*(?:<file>\s*<file_message>|<\/ath(?:\s+command(?:="[^"]*")?)?>))/;
           const match = remaining.match(closeTagsRegex);
 
           if (match) {
