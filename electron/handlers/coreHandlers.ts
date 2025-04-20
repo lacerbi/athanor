@@ -1,36 +1,23 @@
 // AI Summary: Handles core IPC operations for file system functionality including folder selection,
-// path conversion, directory access, and ignore rule management. Now supports ignoreAll param to addToIgnore.
+// path conversion, directory access, and ignore rule management. Now uses FileService for all operations.
 
 import { ipcMain, dialog, app } from 'electron';
-import * as fs from 'fs/promises';
 import { mainWindow } from '../windowManager';
-import {
-  setBaseDir,
-  loadIgnoreRules,
-  getStats,
-  pathExists,
-  clearFileSystemState,
-  handleError,
-  getBaseDir,
-  ensureMaterialsDir,
-  getMaterialsDir,
-} from '../fileSystemManager';
-import { ignoreRulesManager } from '../ignoreRulesManager';
-import { filePathManager } from '../filePathManager';
+import { FileService } from '../services/FileService';
 
-export function setupCoreHandlers() {
+// Store fileService instance
+let _fileService: FileService;
+
+export function setupCoreHandlers(fileService: FileService) {
+  // Store the fileService instance for later use
+  _fileService = fileService;
+
   // Add handler for checking if file exists
   ipcMain.handle('fs:fileExists', async (_, filePath: string) => {
     try {
-      const normalizedPath = filePathManager.toPlatformPath(
-        filePathManager.resolveFromBase(
-          filePathManager.normalizeToUnix(filePath)
-        )
-      );
-      await fs.access(normalizedPath);
-      return true;
-    } catch {
-      return false;
+      return await _fileService.exists(filePath);
+    } catch (error) {
+      handleError(error, `checking if file exists: ${filePath}`);
     }
   });
 
@@ -46,7 +33,7 @@ export function setupCoreHandlers() {
   // Add handler for getting current directory
   ipcMain.handle('fs:getCurrentDirectory', () => {
     try {
-      return getBaseDir();
+      return _fileService.getBaseDir();
     } catch (error) {
       handleError(error, 'getting current directory');
     }
@@ -55,7 +42,7 @@ export function setupCoreHandlers() {
   // Add handlers for path utilities
   ipcMain.handle('fs:normalizeToUnix', async (_, inputPath: string) => {
     try {
-      return filePathManager.normalizeToUnix(inputPath);
+      return _fileService.toUnix(inputPath);
     } catch (error) {
       handleError(error, 'normalizing path to unix format');
     }
@@ -63,7 +50,7 @@ export function setupCoreHandlers() {
 
   ipcMain.handle('fs:joinPaths', async (_, path1: string, path2: string) => {
     try {
-      return filePathManager.joinUnixPaths(path1, path2);
+      return _fileService.join(path1, path2);
     } catch (error) {
       handleError(error, 'joining paths');
     }
@@ -71,7 +58,7 @@ export function setupCoreHandlers() {
 
   ipcMain.handle('fs:getBaseName', async (_, inputPath: string) => {
     try {
-      return filePathManager.getBaseName(inputPath);
+      return _fileService.basename(inputPath);
     } catch (error) {
       handleError(error, 'getting base name');
     }
@@ -80,9 +67,16 @@ export function setupCoreHandlers() {
   // Add handler for converting to OS path
   ipcMain.handle('fs:toOSPath', async (_, inputPath: string) => {
     try {
-      const normalizedPath = filePathManager.normalizeToUnix(inputPath);
-      const resolvedPath = filePathManager.resolveFromBase(normalizedPath);
-      return filePathManager.toPlatformPath(resolvedPath);
+      const normalizedPath = _fileService.toUnix(inputPath);
+      
+      // If input is already absolute, resolve it directly
+      if (normalizedPath.startsWith('/')) {
+        return _fileService.toOS(normalizedPath);
+      }
+      
+      // Otherwise, resolve from base directory
+      const resolvedPath = _fileService.resolve(normalizedPath);
+      return _fileService.toOS(resolvedPath);
     } catch (error) {
       handleError(error, 'converting to OS path');
     }
@@ -91,18 +85,18 @@ export function setupCoreHandlers() {
   // Add handler for reloading ignore rules
   ipcMain.handle('fs:reloadIgnoreRules', async () => {
     try {
-      await loadIgnoreRules();
+      await _fileService.reloadIgnoreRules();
       return true;
     } catch (error) {
       handleError(error, 'reloading ignore rules');
     }
   });
 
-  // Handle adding items to ignore file (now with ignoreAll param)
+  // Handle adding items to ignore file
   ipcMain.handle('fs:addToIgnore', async (_, itemPath: string, ignoreAll?: boolean) => {
     try {
       const resolvedIgnoreAll = ignoreAll ?? false;
-      return await ignoreRulesManager.addIgnorePattern(itemPath, resolvedIgnoreAll);
+      return await _fileService.addToIgnore(itemPath, resolvedIgnoreAll);
     } catch (error) {
       handleError(error, `adding to ignore file: ${itemPath}`);
     }
@@ -116,14 +110,14 @@ export function setupCoreHandlers() {
       });
 
       if (!result.canceled && result.filePaths.length > 0) {
-        const selectedPath = filePathManager.normalizeToUnix(
-          result.filePaths[0]
-        );
+        const selectedPath = _fileService.toUnix(result.filePaths[0]);
 
-        // Verify folder access
         try {
-          await fs.access(
-            filePathManager.toPlatformPath(selectedPath),
+          // Verify directory exists and has proper access
+          const platformPath = _fileService.toOS(selectedPath);
+          const fs = require('fs');
+          await fs.promises.access(
+            platformPath,
             fs.constants.R_OK | fs.constants.W_OK
           );
         } catch (error) {
@@ -132,18 +126,9 @@ export function setupCoreHandlers() {
           throw new Error(`Cannot access folder: ${errorMessage}`);
         }
 
-        // Clear existing state
-        clearFileSystemState();
-
-        // Update directory and base path
-        process.chdir(filePathManager.toPlatformPath(selectedPath));
-        setBaseDir(selectedPath);
-
-        // Ensure supplementary materials directory exists
-        await ensureMaterialsDir();
-
-        // Load new ignore rules
-        await loadIgnoreRules();
+        // Set new base directory in FileService
+        // (This will handle cleaning up old watchers, reloading ignore rules, etc.)
+        await _fileService.setBaseDir(selectedPath);
 
         // Notify renderer of successful folder change
         if (mainWindow?.webContents && !mainWindow.webContents.isDestroyed()) {
@@ -165,13 +150,7 @@ export function setupCoreHandlers() {
   // Add handler for checking if path is directory
   ipcMain.handle('fs:isDirectory', async (_, filePath: string) => {
     try {
-      const normalizedPath = filePathManager.toPlatformPath(
-        filePathManager.resolveFromBase(
-          filePathManager.normalizeToUnix(filePath)
-        )
-      );
-      const stats = await getStats(normalizedPath);
-      return stats?.isDirectory() ?? false;
+      return await _fileService.isDirectory(filePath);
     } catch (error) {
       handleError(error, `checking directory status ${filePath}`);
     }
@@ -180,7 +159,7 @@ export function setupCoreHandlers() {
   // Add handler for getting materials directory path
   ipcMain.handle('fs:getMaterialsDir', () => {
     try {
-      return getMaterialsDir();
+      return _fileService.getMaterialsDir();
     } catch (error) {
       handleError(error, 'getting materials directory path');
     }
@@ -189,11 +168,15 @@ export function setupCoreHandlers() {
   // Add handler for getting project-relative path
   ipcMain.handle('fs:relativeToProject', async (_, targetPath: string) => {
     try {
-      const normalized = filePathManager.normalizeToUnix(targetPath);
-      const resolved = filePathManager.resolveFromBase(normalized);
-      return filePathManager.relativeToCwd(resolved);
+      return _fileService.relativize(_fileService.toUnix(targetPath));
     } catch (error) {
       handleError(error, `resolving project-relative path for: ${targetPath}`);
     }
   });
+}
+
+// Enhanced error handling
+function handleError(error: unknown, operation: string): never {
+  console.error(`Error during ${operation}:`, error);
+  throw error instanceof Error ? error : new Error(String(error));
 }

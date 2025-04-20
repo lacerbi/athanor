@@ -15,6 +15,6 @@
     "outDir": "./.webpack",
     "sourceMap": true
   },
-  "include": ["src/**/*", "electron/**/*", "electron/handlers/**/*"],
+  "include": ["src/**/*", "electron/**/*", "electron/handlers/**/*", "common/**/*"],
   "exclude": ["node_modules", "out"]
 }

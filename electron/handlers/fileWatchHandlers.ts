@@ -1,14 +1,20 @@
 // AI Summary: Handles IPC communication for file system watching and monitoring
 // with proper cleanup and error handling. Manages Chokidar watchers with ignore rules,
-// file change events, and watcher lifecycle management.
+// file change events, and watcher lifecycle management. Now accepts FileService instance.
 import { ipcMain } from 'electron';
 import { statSync } from 'fs';
 import * as chokidar from 'chokidar';
 import { activeWatchers } from '../fileSystemManager';
 import { ignoreRulesManager } from '../ignoreRulesManager';
 import { filePathManager } from '../filePathManager';
+import { FileService } from '../services/FileService';
 
-export function setupFileWatchHandlers() {
+// Store fileService instance
+let _fileService: FileService;
+
+export function setupFileWatchHandlers(fileService: FileService) {
+  // Store the fileService instance for later use
+  _fileService = fileService;
   // Handle directory watching with ignore rules
   ipcMain.handle('fs:watch', (event, dirPath: string) => {
     try {

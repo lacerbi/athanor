@@ -1,7 +1,6 @@
 // AI Summary: Handles IPC communication for file system operations with comprehensive error handling
 // and path normalization. Provides unified interface for reading/writing files, resolving template
-// paths, and directory traversal with ignore rules. Key functions manage resource path resolution
-// in both dev/prod environments and ensure proper directory structure.
+// paths, and directory traversal with ignore rules. Now accepts FileService instance.
 import { app, ipcMain } from 'electron';
 import * as fs from 'fs/promises';
 import {
@@ -14,8 +13,13 @@ import {
 import { ignoreRulesManager } from '../ignoreRulesManager';
 import { filePathManager } from '../filePathManager';
 import { getAppBasePath } from '../main';
+import { FileService } from '../services/FileService';
+
+// Store fileService instance
+let _fileService: FileService;
 
 // Get resources path based on environment - this path must remain stable regardless of workspace changes
+// Note: Will be replaced by fileService.getResourcesPath() in future commits
 async function getResourcesPath(): Promise<string> {
   // Get base path depending on environment
   let resourcesPath;
@@ -33,7 +37,9 @@ async function getResourcesPath(): Promise<string> {
   return filePathManager.toPlatformPath(resourcesPath);
 }
 
-export function setupFileOperationHandlers() {
+export function setupFileOperationHandlers(fileService: FileService) {
+  // Store the fileService instance for later use
+  _fileService = fileService;
   // Handle getting resources path
   ipcMain.handle('fs:getResourcesPath', async () => {
     try {
