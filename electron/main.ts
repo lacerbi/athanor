@@ -4,7 +4,6 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { createWindow, mainWindow } from './windowManager';
-import { loadIgnoreRules, cleanupWatchers } from './fileSystemManager';
 import { setupIpcHandlers } from './ipcHandlers';
 import { FileService } from './services/FileService';
 
@@ -18,7 +17,7 @@ export function getAppBasePath(): string {
 
 // App lifecycle handlers
 app.whenReady().then(async () => {
-  await loadIgnoreRules();
+  await fileService.reloadIgnoreRules();
   setupIpcHandlers(fileService);
   createWindow();
 
@@ -30,7 +29,6 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  cleanupWatchers();
   fileService.cleanupWatchers().catch(err => {
     console.error('Error cleaning up FileService watchers:', err);
   });
