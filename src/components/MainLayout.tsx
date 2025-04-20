@@ -9,6 +9,7 @@ import AthanorTabs, { TabType } from './AthanorTabs';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { FileItem } from '../utils/fileTree';
 import { usePanelResize } from '../hooks/usePanelResize';
+import { useLogPanelResize } from '../hooks/useLogPanelResize';
 import { copySelectedFilesContent } from '../actions/ManualCopyAction';
 
 interface MainLayoutProps {
@@ -40,6 +41,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const { leftPanelWidth, isResizing, resizeRef, startResize } =
     usePanelResize();
+  const { 
+    logPanelHeight, 
+    isResizing: isLogResizing, 
+    resizeRef: logResizeRef, 
+    startResize: startLogResize 
+  } = useLogPanelResize();
+  
   const { 
     selectedFileCount, 
     selectedLinesTotal
@@ -156,7 +164,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         <AthanorTabs activeTab={activeTab} onTabChange={onTabChange} />
 
         {/* Tab content */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto p-4">
           {activeTab === 'workbench' && (
             <ActionPanel
               rootItems={[filesData]}
@@ -168,10 +176,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           {activeTab === 'apply-changes' && <ApplyChangesPanel />}
         </div>
 
+        {/* Log panel resize handle */}
+        <div
+          ref={logResizeRef}
+          className="h-1 cursor-ns-resize bg-gray-200 hover:bg-blue-500 active:bg-blue-700"
+          onMouseDown={startLogResize}
+        />
+
         {/* Bottom panel: logs */}
         <div
           ref={logsRef}
-          className="h-24 border-t p-2 bg-gray-50 overflow-y-auto font-mono text-sm"
+          style={{ height: logPanelHeight }}
+          className="border-t p-2 bg-gray-50 overflow-y-auto font-mono text-sm"
         >
           {logs.map((log) => (
             <div key={log.id} className="text-gray-700">
