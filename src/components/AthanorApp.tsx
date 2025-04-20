@@ -49,7 +49,11 @@ const AthanorApp: React.FC = () => {
 
   // Register refresh callback
   useEffect(() => {
-    setChangeAppliedCallback(() => refreshFileSystem(true));
+    setChangeAppliedCallback((newlyCreatedPath?: string) => 
+      newlyCreatedPath 
+        ? refreshFileSystem(newlyCreatedPath) 
+        : refreshFileSystem(true)
+    );
     return () => setChangeAppliedCallback(null);
   }, [refreshFileSystem, setChangeAppliedCallback]);
 

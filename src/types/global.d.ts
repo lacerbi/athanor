@@ -117,7 +117,7 @@ export interface FileSystemLifecycle {
   filesData: FileItem | null;
   materialsData: FileItem | null;
   handleOpenFolder: () => Promise<void>;
-  refreshFileSystem: (silent?: boolean) => Promise<void>;
+  refreshFileSystem: (silentOrNewPath?: boolean | string, newlyCreatedPath?: string) => Promise<void>;
   showProjectDialog: boolean;
   gitignoreExists: boolean;
   pendingDirectory: string | null;
