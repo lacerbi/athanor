@@ -36,7 +36,18 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const { addLog } = useLogStore();
 
   const refreshFileSystem = useCallback(
-    async (silent = false) => {
+    async (silentOrNewPath: boolean | string = false, newlyCreatedPath?: string) => {
+      // Handle both function signatures:
+      // refreshFileSystem(silent = false) and 
+      // refreshFileSystem(newlyCreatedPath?: string)
+      let silent = false;
+      
+      if (typeof silentOrNewPath === 'boolean') {
+        silent = silentOrNewPath;
+      } else if (typeof silentOrNewPath === 'string') {
+        newlyCreatedPath = silentOrNewPath;
+        silent = true;
+      }
       if (isRefreshing || !currentDirectory) return;
 
       setIsRefreshing(true);
@@ -54,6 +65,13 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
           loadTasks()
         ]);
 
+        // Auto-select newly created file if path was provided
+        if (newlyCreatedPath) {
+          const { selectItems } = useFileSystemStore.getState();
+          selectItems([newlyCreatedPath]);
+          addLog(`Auto-selected newly created file: ${newlyCreatedPath}`);
+        }
+        
         if (!silent) {
           addLog('File system refreshed');
         }

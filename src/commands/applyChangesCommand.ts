@@ -11,6 +11,7 @@ export interface ApplyChangesParams {
   setOperations: (ops: FileOperation[]) => void;
   clearOperations: () => void;
   setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+  diffMode?: 'strict' | 'fuzzy';
 }
 
 export async function executeApplyChangesCommand({
@@ -20,6 +21,7 @@ export async function executeApplyChangesCommand({
   setOperations,
   clearOperations,
   setActiveTab,
+  diffMode = 'strict',
 }: ApplyChangesParams): Promise<boolean> {
   addLog(
     `Processing apply changes command (${formatTokenCount(
@@ -28,9 +30,11 @@ export async function executeApplyChangesCommand({
   );
 
   try {
-    const operations = await parseXmlContent(fullContent || content, 
+    const operations = await parseXmlContent(
+      fullContent || content, 
       // Pass addLog directly since it now supports both string and object with onClick
-      addLog
+      addLog,
+      diffMode
     );
     if (operations.length) {
       clearOperations();

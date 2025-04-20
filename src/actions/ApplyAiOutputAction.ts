@@ -2,6 +2,7 @@
 // Processes SELECT, TASK, and APPLY CHANGES commands through modular command system.
 import type { FileOperation } from '../types/global';
 import * as commands from '../commands';
+import { useApplyChangesStore } from '../stores/applyChangesStore';
 
 export async function applyAiOutput(params: {
   addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
@@ -40,6 +41,8 @@ export async function applyAiOutput(params: {
           break;
 
         case commands.COMMAND_TYPES.APPLY_CHANGES:
+          // Get current diff mode from store
+          const { diffMode } = useApplyChangesStore.getState();
           success = await commands.executeApplyChangesCommand({
             content: command.content,
             fullContent: command.fullContent,
@@ -47,6 +50,7 @@ export async function applyAiOutput(params: {
             setOperations,
             clearOperations,
             setActiveTab,
+            diffMode,
           });
           break;
 

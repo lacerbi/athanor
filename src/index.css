@@ -9,6 +9,11 @@
   min-height: 0;
 }
 
+/* Cursor utilities for resize handles */
+.cursor-ns-resize {
+  cursor: ns-resize;
+}
+
 /* Custom scrollbar utility */
 .scrollbar-thin {
   scrollbar-width: thin;

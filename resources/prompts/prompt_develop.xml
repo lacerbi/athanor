@@ -104,9 +104,11 @@ You can provide changes in two formats:
    ```
 
 When using enhanced diff format:
-- Preserve indentation of the original code
 - You may include multiple SEARCH/REPLACE blocks
-- **IMPORTANT:** If needed, include additional context lines in a SEARCH/REPLACE block to uniquely identify the change in the file
+- Make sure the SEARCH block is an exact, character-for-character copy from the original code section you intend to replace
+- Do NOT reformat, re-indent, or change comments within the SEARCH block
+- Failure to provide a verbatim SEARCH block will cause the update to fail!
+- **IMPORTANT:** Include additional context lines in a SEARCH/REPLACE block to uniquely identify the change in the file
 
 Choose the appropriate format based on the changes:
 - Use full file content for:
@@ -117,7 +119,6 @@ Choose the appropriate format based on the changes:
 - Use enhanced diff format for:
   - Small to medium updates, affecting less than 30% of the file (UPDATE_DIFF)
   - When there are several non-contiguous changes
-  - Example: changing the documentation
 
 For DELETE operations, leave the file content empty
   ```

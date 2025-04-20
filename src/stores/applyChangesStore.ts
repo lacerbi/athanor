@@ -11,14 +11,17 @@ interface ApplyChangesState {
   clearOperations: () => void;
   applyChange: (index: number) => Promise<void>;
   rejectChange: (index: number) => void;
-  setChangeAppliedCallback: (callback: (() => Promise<void>) | null) => void;
+  setChangeAppliedCallback: (callback: ((newlyCreatedPath?: string) => Promise<void>) | null) => void;
+  diffMode: 'strict' | 'fuzzy';
+  setDiffMode: (mode: 'strict' | 'fuzzy') => void;
 }
 
 export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
-  let onChangeApplied: (() => Promise<void>) | null = null;
+  let onChangeApplied: ((newlyCreatedPath?: string) => Promise<void>) | null = null;
 
   return {
     activeOperations: [],
+    diffMode: 'strict', // Default to strict mode for more accurate changes
 
     setOperations: (ops: FileOperation[]) => {
       set({ activeOperations: ops });
@@ -28,8 +31,12 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
       set({ activeOperations: [] });
     },
 
-    setChangeAppliedCallback: (callback: (() => Promise<void>) | null) => {
+    setChangeAppliedCallback: (callback: ((newlyCreatedPath?: string) => Promise<void>) | null) => {
       onChangeApplied = callback;
+    },
+
+    setDiffMode: (mode: 'strict' | 'fuzzy') => {
+      set({ diffMode: mode });
     },
 
     applyChange: async (index: number) => {
@@ -121,7 +128,12 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
         // Call the refresh callback after successful operation
         if (onChangeApplied) {
           try {
-            await onChangeApplied();
+            // For CREATE operations, pass the file path to the callback
+            if (op.file_operation === 'CREATE') {
+              await onChangeApplied(relativePath);
+            } else {
+              await onChangeApplied();
+            }
           } catch (error) {
             console.error('Error in change applied callback:', error);
             addLog('Warning: Post-operation refresh failed');
