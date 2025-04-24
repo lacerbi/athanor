@@ -4,7 +4,7 @@
 import { FileItem } from './fileTree';
 import { readAthanorConfig } from './configUtils';
 import { generateCodebaseDocumentation } from './codebaseDocumentation';
-import { DOC_FORMAT } from './constants';
+import { DOC_FORMAT, FILE_SYSTEM } from './constants';
 import {
   loadTemplateContent,
   substituteVariables,
@@ -23,6 +23,7 @@ export interface PromptVariables {
   selected_files?: string;
   selected_files_with_info?: string;
   task_context?: string;
+  threshold_line_length?: number;
 }
 
 // Get list of selected files with relative paths and line counts
@@ -129,6 +130,9 @@ export async function buildDynamicPrompt(
     codebaseContent.file_tree = '';
   }
 
+  // Get threshold line length from constants
+  const thresholdLineLength = FILE_SYSTEM.thresholdLineLength;
+
   // Prepare variables for template
   const variables: PromptVariables = {
     project_name: config.project_name,
@@ -144,6 +148,7 @@ export async function buildDynamicPrompt(
     codebase_legend: hasSelectedFiles(items, selectedItems)
       ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
       : '',
+    threshold_line_length: thresholdLineLength,
     ...codebaseContent, // Contains file_contents and modified file_tree
   };
 

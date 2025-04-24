@@ -126,9 +126,9 @@ For DELETE operations, leave the file content empty
   <file_code><![CDATA[]]></file_code>
   ```
 
-## Claude Artifacts
+## Artifacts and Canvas
 
-If you are Claude AI assistant, do not use artifacts in writing your response.
+**Do NOT use artifacts or canvas in writing your response.**
 
 ## File Contents Availability
 
@@ -300,9 +300,9 @@ For DELETE operations, leave the file content empty
   <file_code><![CDATA[]]></file_code>
   ```
 
-## Claude Artifacts
+## Artifacts and Canvas
 
-If you are Claude AI assistant, do not use artifacts in writing your response.
+**Do NOT use artifacts or canvas in writing your response.**
 
 ## File Contents Availability
 
@@ -428,12 +428,6 @@ Place them at the start of new/updated files and include:
 Add comments as needed to explain parts of the code and make it readable.
 
 Do NOT remove existing comments, unless they are wrong or misleading.
-
-## File Length
-
-Files should be up to 100 lines max, unless there is a reason otherwise.
-
-Whenever possible, refactor long files (>> 100 lines) into smaller files.
 
 ## File Contents Availability
 

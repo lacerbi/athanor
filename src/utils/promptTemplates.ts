@@ -3,7 +3,6 @@
 // Provides functions for template loading, variable substitution, and task description extraction.
 import { PromptVariables } from './buildPrompt';
 import { extractTagContent } from './extractTagContent';
-
 // Load a template from the prompts folder
 export async function loadTemplateContent(
   templateName: string
@@ -20,12 +19,10 @@ export async function loadTemplateContent(
     throw new Error(`Failed to load template ${templateName}`);
   }
 }
-
 // Extract task description from a template
 export function extractTaskDescription(templateContent: string): string {
   return extractTagContent(templateContent, 'task_description');
 }
-
 // Substitute variables in template content
 export function substituteVariables(
   template: string,
@@ -33,13 +30,12 @@ export function substituteVariables(
 ): string {
   return template.replace(/\{\{(\w+)\}\}/g, (match, key) => {
     const value = variables[key as keyof PromptVariables];
-
     // Handle task context specially - only include if it exists
-    if (key === 'task_context' && (!value || value.trim() === '')) {
+    if (key === 'task_context' && (!value || (typeof value === 'string' && value.trim() === ''))) {
       return '';
     }
-
-    const result = value !== undefined ? value : '';
+    // Ensure we convert any value to string
+    const result = value !== undefined ? String(value) : '';
     return result;
   });
 }
