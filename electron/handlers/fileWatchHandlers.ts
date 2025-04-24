@@ -1,83 +1,85 @@
-// AI Summary: Handles IPC communication for file system watching and monitoring
-// with proper cleanup and error handling. Manages Chokidar watchers with ignore rules,
-// file change events, and watcher lifecycle management.
-import { ipcMain } from 'electron';
-import { statSync } from 'fs';
-import * as chokidar from 'chokidar';
-import { activeWatchers } from '../fileSystemManager';
-import { ignoreRulesManager } from '../ignoreRulesManager';
-import { filePathManager } from '../filePathManager';
+// AI Summary: Handles IPC communication for file system watching using FileService.
+// Sets up directory watchers with proper path handling and event forwarding to renderer.
 
-export function setupFileWatchHandlers() {
+import { ipcMain } from 'electron';
+import { FileService } from '../services/FileService';
+import { PathUtils } from '../services/PathUtils';
+
+// Store fileService instance
+let _fileService: FileService;
+// Store active unsubscribe functions by watcher path
+const unsubscribeFunctions = new Map<string, () => void>();
+
+export function setupFileWatchHandlers(fileService: FileService) {
+  // Store the fileService instance for later use
+  _fileService = fileService;
+
   // Handle directory watching with ignore rules
   ipcMain.handle('fs:watch', (event, dirPath: string) => {
     try {
-      const normalizedPath = filePathManager.toPlatformPath(
-        filePathManager.normalizeToUnix(dirPath)
-      );
+      // Normalize to Unix format
+      const unix = _fileService.toUnix(dirPath);
+      
+      // Only relativize if absolute AND inside base directory
+      const pathForFs = 
+        PathUtils.isAbsolute(unix) && PathUtils.isPathInside(_fileService.getBaseDir(), unix)
+          ? _fileService.relativize(unix)
+          : unix;  // absolute path outside project or already relative, use as-is
+      
+      // Generate a consistent key for this watcher
+      const watcherKey = pathForFs;
+      
+      console.log(`Setting up watcher for: ${pathForFs}`);
 
       // Clean up existing watcher if any
-      if (activeWatchers.has(normalizedPath)) {
-        activeWatchers.get(normalizedPath)?.close();
-        activeWatchers.delete(normalizedPath);
+      if (unsubscribeFunctions.has(watcherKey)) {
+        unsubscribeFunctions.get(watcherKey)?.();
+        unsubscribeFunctions.delete(watcherKey);
+        console.log(`Cleaned up existing watcher for: ${watcherKey}`);
       }
 
-      // Set up new watcher with ignore rules
-      const watcher = chokidar.watch(normalizedPath, {
-        ignored: (filePath: string) => {
-          if (!filePath) return true;
-
-          try {
-            const stats = statSync(filePath);
-            const normalizedForIgnore = filePathManager.normalizeForIgnore(
-              filePath,
-              stats.isDirectory()
-            );
-            return normalizedForIgnore ? ignoreRulesManager.ignores(normalizedForIgnore) : true;
-          } catch (error) {
-            return true;
-          }
-        },
-        persistent: true,
-        ignoreInitial: true,
-        awaitWriteFinish: {
-          stabilityThreshold: 500,
-          pollInterval: 100,
-        },
-      });
-
-      // Set up event handlers
-      const events = [
-        'add',
-        'change',
-        'unlink',
-        'addDir',
-        'unlinkDir',
-      ] as const;
-
-      events.forEach((eventName) => {
-        watcher.on(eventName, (filePath) => {
-          if (!event.sender.isDestroyed()) {
-            event.sender.send('fs:change', eventName, filePath);
-          }
-        });
-      });
-
-      // Handle errors
-      watcher.on('error', (error) => {
-        console.error('Watcher error:', error);
+      // Set up new watcher with FileService
+      const unsubscribe = _fileService.watch(pathForFs, (eventName, filePath) => {
         if (!event.sender.isDestroyed()) {
-          event.sender.send(
-            'fs:error',
-            error instanceof Error ? error.message : 'Unknown watcher error'
-          );
+          // Forward the event to the renderer process
+          event.sender.send('fs:change', eventName, filePath);
         }
       });
 
-      activeWatchers.set(normalizedPath, watcher);
+      // Store the unsubscribe function
+      unsubscribeFunctions.set(watcherKey, unsubscribe);
+      
+      console.log(`Watcher established for: ${watcherKey}`);
       return true;
     } catch (error) {
       console.error('Error setting up file watcher:', error);
+      
+      // Notify renderer of the error
+      if (!event.sender.isDestroyed()) {
+        event.sender.send(
+          'fs:error',
+          error instanceof Error ? error.message : 'Unknown watcher error'
+        );
+      }
+      
+      throw error;
+    }
+  });
+
+  // Cleanup all watchers when requested
+  ipcMain.handle('fs:cleanupWatchers', () => {
+    try {
+      // Call all unsubscribe functions
+      for (const [key, unsubscribe] of unsubscribeFunctions.entries()) {
+        unsubscribe();
+        console.log(`Cleaned up watcher for: ${key}`);
+      }
+      
+      // Clear the map
+      unsubscribeFunctions.clear();
+      return true;
+    } catch (error) {
+      console.error('Error cleaning up watchers:', error);
       throw error;
     }
   });

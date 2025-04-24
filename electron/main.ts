@@ -4,8 +4,11 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { createWindow, mainWindow } from './windowManager';
-import { loadIgnoreRules, cleanupWatchers } from './fileSystemManager';
 import { setupIpcHandlers } from './ipcHandlers';
+import { FileService } from './services/FileService';
+
+// Create a singleton instance of FileService
+export const fileService = new FileService();
 
 // Get the base directory of the Athanor application
 export function getAppBasePath(): string {
@@ -14,8 +17,8 @@ export function getAppBasePath(): string {
 
 // App lifecycle handlers
 app.whenReady().then(async () => {
-  await loadIgnoreRules();
-  setupIpcHandlers();
+  await fileService.reloadIgnoreRules();
+  setupIpcHandlers(fileService);
   createWindow();
 
   app.on('activate', () => {
@@ -26,7 +29,9 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  cleanupWatchers();
+  fileService.cleanupWatchers().catch(err => {
+    console.error('Error cleaning up FileService watchers:', err);
+  });
 
   // Quit on all windows closed (except on macOS)
   if (process.platform !== 'darwin') {

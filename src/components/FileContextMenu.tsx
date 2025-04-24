@@ -53,7 +53,7 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
   // Retrieve the project-relative path from main process
   const getProjectRelativePath = async (): Promise<string> => {
     try {
-      let relativePath = await window.fileSystem.relativeToProject(itemPath);
+      let relativePath = await window.pathUtils.relative(itemPath);
       if (type === 'folder' && !relativePath.endsWith('/')) {
         relativePath += '/';
       }

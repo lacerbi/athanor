@@ -29,13 +29,13 @@ const FileViewerPanel: React.FC = () => {
 
       try {
         // Get current directory and OS-specific path
-        const dir = await window.fileSystem.getCurrentDirectory();
+        const dir = await window.fileService.getCurrentDirectory();
         setCurrentDir(dir);
         
-        const resolvedPath = await window.fileSystem.toOSPath(previewedFilePath);
+        const resolvedPath = await window.fileService.resolve(previewedFilePath);
         setOsPath(resolvedPath);
 
-        const isDirectory = await window.fileSystem.isDirectory(previewedFilePath);
+        const isDirectory = await window.fileService.isDirectory(previewedFilePath);
         if (isDirectory) {
           setFileContent('');
           setError('Cannot display folder contents.');
@@ -54,7 +54,7 @@ const FileViewerPanel: React.FC = () => {
           return;
         }
 
-        const content = await window.fileSystem.readFile(previewedFilePath, {
+        const content = await window.fileService.read(previewedFilePath, {
           encoding: 'utf8',
         });
         const contentStr = content as string;

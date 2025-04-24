@@ -68,6 +68,145 @@ declare global {
     app: {
       getVersion: () => Promise<string>;
     };
+    
+    // New path utilities API
+    pathUtils: {
+      /**
+       * Convert path to Unix format (with forward slashes)
+       */
+      toUnix: (path: string) => Promise<string>;
+      
+      /**
+       * Join two path segments
+       */
+      join: (path1: string, path2: string) => Promise<string>;
+      
+      /**
+       * Get the base name (filename) from a path
+       */
+      basename: (path: string) => Promise<string>;
+      
+      /**
+       * Convert path to platform-specific format
+       */
+      toOS: (path: string) => Promise<string>;
+      
+      /**
+       * Get relative path from base directory
+       */
+      relative: (path: string) => Promise<string>;
+    };
+    
+    // New file service API
+    fileService: {
+      // Path operations
+      /**
+       * Resolve a relative path to an absolute path
+       */
+      resolve: (relativePath: string) => Promise<string>;
+      
+      /**
+       * Convert an absolute path to a project-relative path
+       */
+      relativize: (absolutePath: string) => Promise<string>;
+      
+      // Directory operations
+      /**
+       * Get the current base directory path
+       */
+      getCurrentDirectory: () => Promise<string>;
+      
+      /**
+       * Check if a path is a directory
+       */
+      isDirectory: (path: string) => Promise<boolean>;
+      
+      /**
+       * Read directory contents
+       */
+      readDirectory: (
+        path: string,
+        applyIgnores?: boolean
+      ) => Promise<string[]>;
+      
+      /**
+       * Ensure directory exists, creating it if needed
+       */
+      ensureDirectory: (path: string) => Promise<void>;
+      
+      // File operations
+      /**
+       * Check if a file exists
+       */
+      exists: (path: string) => Promise<boolean>;
+      
+      /**
+       * Read file contents
+       */
+      read: (
+        path: string,
+        options?: { encoding?: BufferEncoding } | BufferEncoding
+      ) => Promise<string | ArrayBuffer>;
+      
+      /**
+       * Write data to a file
+       */
+      write: (path: string, data: string) => Promise<void>;
+      
+      /**
+       * Delete a file
+       */
+      remove: (path: string) => Promise<void>;
+      
+      // Watcher operations
+      /**
+       * Watch a directory for changes
+       */
+      watch: (
+        path: string,
+        callback: (event: string, filename: string) => void
+      ) => Promise<void>;
+      
+      /**
+       * Clean up all active watchers
+       */
+      cleanupWatchers: () => Promise<void>;
+      
+      // Ignore operations
+      /**
+       * Reload ignore rules
+       */
+      reloadIgnoreRules: () => Promise<boolean>;
+      
+      /**
+       * Add a path to ignore rules
+       */
+      addToIgnore: (itemPath: string, ignoreAll?: boolean) => Promise<boolean>;
+      
+      // Application paths
+      /**
+       * Get the materials directory path
+       */
+      getMaterialsDir: () => Promise<string>;
+      
+      /**
+       * Get the resources directory path
+       */
+      getResourcesPath: () => Promise<string>;
+      
+      /**
+       * Get path to a prompt template
+       */
+      getPromptTemplatePath: (templateName: string) => Promise<string>;
+      
+      // Project operations
+      /**
+       * Open folder dialog and set as base directory
+       */
+      openFolder: () => Promise<string | null>;
+    };
+    
+    // Legacy file system API (maintained for backward compatibility)
     fileSystem: {
       openFolder: () => Promise<string | null>;
       readDirectory: (

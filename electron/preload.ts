@@ -1,11 +1,9 @@
-// AI Summary: Exposes protected methods for IPC communication and file system operations
-// including OS path conversion. Provides optional ignoreAll param for addToIgnore bridging.
+// AI Summary: Exposes protected methods for IPC communication and file system operations.
+// Now includes FileService and PathUtils interfaces alongside the legacy fileSystem API.
 
 import { contextBridge, ipcRenderer } from 'electron';
 
-// Expose protected methods for IPC communication and file system operations
-// including path normalization. Provides bridge between renderer process and main process
-// for file system access and monitoring with proper path handling.
+// Expose protected methods for IPC communication
 contextBridge.exposeInMainWorld('electron', {
   send: (channel: string, data: any) => {
     const validChannels = ['toMain'];
@@ -21,12 +19,69 @@ contextBridge.exposeInMainWorld('electron', {
   },
 });
 
-// Expose app version
+// Expose app info methods
 contextBridge.exposeInMainWorld('app', {
   getVersion: () => ipcRenderer.invoke('app:version'),
 });
 
-// Expose file system and path management methods
+// Expose the new pathUtils API
+contextBridge.exposeInMainWorld('pathUtils', {
+  // Path utilities (pure functions)
+  toUnix: (path: string) => ipcRenderer.invoke('fs:normalizeToUnix', path),
+  join: (path1: string, path2: string) => ipcRenderer.invoke('fs:joinPaths', path1, path2),
+  basename: (path: string) => ipcRenderer.invoke('fs:getBaseName', path),
+  toOS: (path: string) => ipcRenderer.invoke('fs:toOSPath', path),
+  relative: (path: string) => ipcRenderer.invoke('fs:relativeToProject', path),
+});
+
+// Expose the new fileService API
+contextBridge.exposeInMainWorld('fileService', {
+  // Path operations
+  resolve: (relativePath: string) => ipcRenderer.invoke('fs:toOSPath', relativePath),
+  relativize: (absolutePath: string) => ipcRenderer.invoke('fs:relativeToProject', absolutePath),
+  
+  // Directory operations
+  getCurrentDirectory: () => ipcRenderer.invoke('fs:getCurrentDirectory'),
+  isDirectory: (path: string) => ipcRenderer.invoke('fs:isDirectory', path),
+  readDirectory: (path: string, applyIgnores?: boolean) => 
+    ipcRenderer.invoke('fs:readDirectory', path, applyIgnores),
+  ensureDirectory: (path: string) => ipcRenderer.invoke('fs:ensureDirectory', path),
+  
+  // File operations
+  exists: (path: string) => ipcRenderer.invoke('fs:fileExists', path),
+  read: (path: string, options?: { encoding?: BufferEncoding } | BufferEncoding) => 
+    ipcRenderer.invoke('fs:readFile', path, options),
+  write: (path: string, data: string) => ipcRenderer.invoke('fs:writeFile', path, data),
+  remove: (path: string) => ipcRenderer.invoke('fs:deleteFile', path),
+  
+  // Watcher operations
+  watch: async (path: string, callback: (event: string, filename: string) => void) => {
+    ipcRenderer.removeAllListeners('fs:change');
+    ipcRenderer.removeAllListeners('fs:error');
+
+    ipcRenderer.on('fs:change', (_, event, filename) => callback(event, filename));
+    ipcRenderer.on('fs:error', (_, error) => console.error('File system error:', error));
+
+    return await ipcRenderer.invoke('fs:watch', path);
+  },
+  cleanupWatchers: () => ipcRenderer.invoke('fs:cleanupWatchers'),
+  
+  // Ignore operations
+  reloadIgnoreRules: () => ipcRenderer.invoke('fs:reloadIgnoreRules'),
+  addToIgnore: (itemPath: string, ignoreAll: boolean = false) =>
+    ipcRenderer.invoke('fs:addToIgnore', itemPath, ignoreAll),
+  
+  // Application paths
+  getMaterialsDir: () => ipcRenderer.invoke('fs:getMaterialsDir'),
+  getResourcesPath: () => ipcRenderer.invoke('fs:getResourcesPath'),
+  getPromptTemplatePath: (templateName: string) =>
+    ipcRenderer.invoke('fs:getPromptTemplatePath', templateName),
+  
+  // Project operations
+  openFolder: () => ipcRenderer.invoke('fs:openFolder'),
+});
+
+// Maintain legacy fileSystem API for backwards compatibility
 contextBridge.exposeInMainWorld('fileSystem', {
   // Path utilities
   normalizeToUnix: (path: string) => ipcRenderer.invoke('fs:normalizeToUnix', path),

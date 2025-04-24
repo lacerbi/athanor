@@ -7,16 +7,17 @@ import * as path from 'path';
 import * as fs from 'fs/promises';
 import ignore from 'ignore';
 import { FILE_SYSTEM } from '../src/utils/constants';
-import { filePathManager } from './filePathManager';
+import { PathUtils } from './services/PathUtils';
 
 class IgnoreRulesManager {
   private ig = ignore();
   private lastError: Error | null = null;
   private materialsDir = FILE_SYSTEM.materialsDirName;
+  private baseDir = '';
 
   // Update base directory and reload rules
   setBaseDir(newDir: string) {
-    filePathManager.setBaseDir(newDir);
+    this.baseDir = PathUtils.normalizeToUnix(newDir);
     this.clearRules();
     this.loadIgnoreRules().catch((error) => {
       console.error('Error reloading ignore rules:', error);
@@ -25,7 +26,7 @@ class IgnoreRulesManager {
 
   // Get current base directory
   getBaseDir(): string {
-    return filePathManager.getBaseDir();
+    return this.baseDir;
   }
 
   // Clear existing ignore rules
@@ -45,7 +46,7 @@ class IgnoreRulesManager {
     this.clearRules();
 
     const currentBaseDir = this.getBaseDir();
-    const platformBaseDir = filePathManager.toPlatformPath(currentBaseDir);
+    const platformBaseDir = PathUtils.toPlatform(currentBaseDir);
 
     // Try .athignore first
     const athignorePath = path.join(platformBaseDir, '.athignore');
@@ -93,24 +94,22 @@ class IgnoreRulesManager {
       if (ignoreAll) {
         // For "ignore all", bypass relativeToCwd and resolveFromBase,
         // simply normalize and remove any leading slash.
-        finalPath = filePathManager.normalizeToUnix(itemPath).replace(/^\/+/, '');
+        finalPath = PathUtils.normalizeToUnix(itemPath).replace(/^\/+/, '');
         if (hadTrailingSlash && !finalPath.endsWith('/')) {
           finalPath += '/';
         }
       } else {
-        // For single-item ignore, compute the path relative to CWD and ensure it is root-relative.
-        const normalizedPath = filePathManager.relativeToCwd(
-          filePathManager.resolveFromBase(
-            filePathManager.normalizeToUnix(itemPath)
-          )
-        );
+        // For single-item ignore, make the path relative to base dir
+        const fullPath = PathUtils.joinUnix(this.baseDir, PathUtils.normalizeToUnix(itemPath));
+        const normalizedPath = PathUtils.relative(this.baseDir, fullPath);
+        
         finalPath = hadTrailingSlash ? normalizedPath + '/' : normalizedPath;
         if (!finalPath.startsWith('/')) {
           finalPath = '/' + finalPath;
         }
       }
 
-      const ignorePath = filePathManager.toPlatformPath(
+      const ignorePath = PathUtils.toPlatform(
         path.join(this.getBaseDir(), '.athignore')
       );
 
