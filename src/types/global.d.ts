@@ -291,6 +291,7 @@ export type CommandType = 'apply changes' | 'select' | 'task';
 export interface AthanorConfig {
   project_name?: string;
   project_info?: string;
+  project_info_path?: string; // Path to the file from which project_info was loaded
   system_prompt?: string;
   documentation?: {
     includeNonSelected?: boolean;

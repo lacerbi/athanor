@@ -4,13 +4,14 @@
 import { parse } from 'yaml';
 import { AthanorConfig } from '../types/global';
 import { getBaseName } from './fileTree';
-import { readProjectInfo } from './projectInfoUtils';
+import { readProjectInfo, normalizeContent } from './projectInfoUtils';
 
 // Get fallback config values based on the base directory
 export function getFallbackConfig(basePath: string): AthanorConfig {
   return {
     project_name: getBaseName(basePath),
     project_info: '',
+    project_info_path: undefined,
   };
 }
 
@@ -50,9 +51,23 @@ export async function readAthanorConfig(
     }
     
     // Try to read project info from a text file and override YAML/fallback if found
-    const projectInfo = await readProjectInfo(basePath);
-    if (projectInfo !== null) {
-      config.project_info = projectInfo;
+    const projectInfoResult = await readProjectInfo(basePath);
+    if (projectInfoResult !== null) {
+      // Use project info from file, which already includes the XML tags
+      config.project_info = projectInfoResult.content;
+      config.project_info_path = projectInfoResult.path;
+    } else {
+      // No project info file found, ensure project_info from YAML is properly wrapped
+      config.project_info_path = undefined;
+      
+      // If we have non-empty project_info from YAML, ensure it's wrapped in tags
+      if (config.project_info && config.project_info.trim().length > 0) {
+        const trimmedInfo = config.project_info.trim();
+        // Only wrap if it's not already wrapped
+        if (!trimmedInfo.startsWith('<project_info>') || !trimmedInfo.endsWith('</project_info>')) {
+          config.project_info = normalizeContent(config.project_info);
+        }
+      }
     }
     
     return config;

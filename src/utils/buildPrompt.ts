@@ -107,6 +107,22 @@ export async function buildDynamicPrompt(
     includeProjectInfo,
   } = useFileSystemStore.getState();
 
+  // Prepare project info with source file path if available
+  let projectInfoForPrompt = '';
+  if (includeProjectInfo && config.project_info && config.project_info.trim()) {
+    if (config.project_info_path) {
+      // Convert absolute path to project-relative path
+      const relativePath = config.project_info_path
+        .replace(rootPath, '')
+        .replace(/^[/\\]/, '');
+      // If project_info came from a file, add header with relative file path
+      projectInfoForPrompt = `# Project info from: ${relativePath}\n\n${config.project_info}`;
+    } else {
+      // Use project_info as is (already wrapped in tags)
+      projectInfoForPrompt = config.project_info;
+    }
+  }
+
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
     items,
@@ -114,7 +130,8 @@ export async function buildDynamicPrompt(
     rootPath,
     config,
     smartPreviewEnabled,
-    passedFormatType || formatType // Use passed format or get from store
+    passedFormatType || formatType, // Use passed format or get from store
+    config.project_info_path // Pass project_info_path to avoid duplication
   );
 
   // Format task context if non-empty
@@ -136,7 +153,7 @@ export async function buildDynamicPrompt(
   // Prepare variables for template
   const variables: PromptVariables = {
     project_name: config.project_name,
-    project_info: includeProjectInfo ? config.project_info : '',
+    project_info: projectInfoForPrompt,
     task_description: taskDescription,
     task_context: formattedTaskContext,
     selected_files: getSelectedFilesList(items, selectedItems, rootPath),
