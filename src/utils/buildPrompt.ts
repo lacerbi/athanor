@@ -4,7 +4,7 @@
 import { FileItem } from './fileTree';
 import { readAthanorConfig } from './configUtils';
 import { generateCodebaseDocumentation } from './codebaseDocumentation';
-import { DOC_FORMAT } from './constants';
+import { DOC_FORMAT, FILE_SYSTEM } from './constants';
 import {
   loadTemplateContent,
   substituteVariables,
@@ -23,6 +23,7 @@ export interface PromptVariables {
   selected_files?: string;
   selected_files_with_info?: string;
   task_context?: string;
+  threshold_line_length?: number;
 }
 
 // Get list of selected files with relative paths and line counts
@@ -106,6 +107,22 @@ export async function buildDynamicPrompt(
     includeProjectInfo,
   } = useFileSystemStore.getState();
 
+  // Prepare project info with source file path if available
+  let projectInfoForPrompt = '';
+  if (includeProjectInfo && config.project_info && config.project_info.trim()) {
+    if (config.project_info_path) {
+      // Convert absolute path to project-relative path
+      const relativePath = config.project_info_path
+        .replace(rootPath, '')
+        .replace(/^[/\\]/, '');
+      // If project_info came from a file, add header with relative file path
+      projectInfoForPrompt = `# Project info from: ${relativePath}\n\n${config.project_info}`;
+    } else {
+      // Use project_info as is (already wrapped in tags)
+      projectInfoForPrompt = config.project_info;
+    }
+  }
+
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
     items,
@@ -113,7 +130,8 @@ export async function buildDynamicPrompt(
     rootPath,
     config,
     smartPreviewEnabled,
-    passedFormatType || formatType // Use passed format or get from store
+    passedFormatType || formatType, // Use passed format or get from store
+    config.project_info_path // Pass project_info_path to avoid duplication
   );
 
   // Format task context if non-empty
@@ -129,10 +147,13 @@ export async function buildDynamicPrompt(
     codebaseContent.file_tree = '';
   }
 
+  // Get threshold line length from constants
+  const thresholdLineLength = FILE_SYSTEM.thresholdLineLength;
+
   // Prepare variables for template
   const variables: PromptVariables = {
     project_name: config.project_name,
-    project_info: includeProjectInfo ? config.project_info : '',
+    project_info: projectInfoForPrompt,
     task_description: taskDescription,
     task_context: formattedTaskContext,
     selected_files: getSelectedFilesList(items, selectedItems, rootPath),
@@ -144,6 +165,7 @@ export async function buildDynamicPrompt(
     codebase_legend: hasSelectedFiles(items, selectedItems)
       ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
       : '',
+    threshold_line_length: thresholdLineLength,
     ...codebaseContent, // Contains file_contents and modified file_tree
   };
 

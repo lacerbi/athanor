@@ -48,7 +48,7 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Make sure to enclose the code with ![CDATA[__CODE HERE__]]
 - You can write multiple `file` blocks in the same `ath` command
 - If the `ath` block is getting too long (>> 250 lines):
-  - When you close the `file` tag, also close the `ath` tag and close he XML block
+  - When you close the `file` tag, also close the `ath` tag and close the XML block
   - Start a new XML block with a new `ath` tag
 
 ### File operations
@@ -159,13 +159,11 @@ Do NOT remove existing comments, unless they are wrong or misleading.
 
 ## File Length
 
-Files should be up to 100 lines max, unless there is a reason otherwise.
+Files should be up to {{threshold_line_length}} lines max, unless there is a reason otherwise.
 
-Whenever possible, refactor long files (>> 100 lines) into smaller files.
+## Artifacts and Canvas
 
-## Claude Artifacts
-
-If you are Claude AI assistant, do not use artifacts in writing your response.
+**Do NOT use artifacts or canvas in writing your response.**
 
 ## File Contents Availability
 
@@ -291,9 +289,7 @@ Do NOT remove existing comments, unless they are wrong or misleading.
 
 ## File Length
 
-Files should be up to 100 lines max, unless there is a reason otherwise.
-
-Whenever possible, refactor long files (>> 100 lines) into smaller files.
+Files should be up to {{threshold_line_length}} lines max, unless there is a reason otherwise.
 
 ## File Contents Availability
 

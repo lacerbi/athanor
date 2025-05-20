@@ -156,7 +156,8 @@ export async function generateCodebaseDocumentation(
   rootPath: string,
   config: AthanorConfig | null,
   includeNonSelected: boolean = true,
-  formatType: string = DOC_FORMAT.MARKDOWN
+  formatType: string = DOC_FORMAT.MARKDOWN,
+  projectInfoFilePath?: string
 ): Promise<{ file_contents: string; file_tree: string }> {
   const rawFileTreeContent = generateFileTree(items, selectedItems);
   const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>\n`;
@@ -169,6 +170,19 @@ export async function generateCodebaseDocumentation(
 
       // Skip non-selected files when includeNonSelected is false
       if (!includeNonSelected && !isSelected) {
+        return;
+      }
+
+      // Check if this file is the source of project_info
+      if (projectInfoFilePath && item.path === projectInfoFilePath) {
+        const relativePath = rootPath
+          ? item.path.replace(rootPath, '').replace(/^[/\\]/, '')
+          : item.path;
+        
+        // Add placeholder message instead of duplicating content
+        fileContents += (fileContents ? '\n' : '') + 
+          `# ${relativePath}${isSelected ? ' *' : ''}\n\n` + 
+          `The content of this file is fully reported above inside \`<project_info>\` tags.\n`;
         return;
       }
 

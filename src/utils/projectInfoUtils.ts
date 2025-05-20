@@ -8,7 +8,7 @@ import { PROJECT_INFO } from './constants';
  * Reused from fileSystemService to ensure consistent handling
  * Optionally wrap the content in XML tags
  */
-function normalizeContent(content: string, wrapInXml: boolean = true): string {
+export function normalizeContent(content: string, wrapInXml: boolean = true): string {
   // Normalize line endings and trim content
   const normalizedContent = content
     .replace(/\r\n/g, '\n') // Convert Windows line endings to Unix
@@ -35,9 +35,9 @@ function normalizeContent(content: string, wrapInXml: boolean = true): string {
  * 4. readme.md, readme.txt
  * 
  * @param basePath The root path of the project
- * @returns The normalized content of the first matching file, or null if no file is found
+ * @returns An object with the normalized content and absolute path of the first matching file, or null if no file is found
  */
-export async function readProjectInfo(basePath: string): Promise<string | null> {
+export async function readProjectInfo(basePath: string): Promise<{ content: string; path: string } | null> {
   try {
     // Read the directory entries once
     const entries = await window.fileSystem.readDirectory(basePath, false);
@@ -66,8 +66,11 @@ export async function readProjectInfo(basePath: string): Promise<string | null> 
           encoding: 'utf8',
         });
         
-        // Normalize the content and return it
-        return normalizeContent(content as string);
+        // Normalize the content and return it along with the file path
+        return {
+          content: normalizeContent(content as string),
+          path: filePath
+        };
       }
     }
 
