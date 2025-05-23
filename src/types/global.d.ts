@@ -14,6 +14,24 @@ interface AthanorDragEvent extends DragEvent {
 
 export {};
 
+// Settings types
+export interface ProjectSettings {
+  projectNameOverride?: string;
+  projectInfoFilePath?: string;
+  // Future expansion: other project-specific settings
+}
+
+export interface ApplicationSettings {
+  // Example application settings for demonstration
+  enableExperimentalFeatures?: boolean;
+  defaultSmartPreviewLines?: number;
+  autoSaveEnabled?: boolean;
+  
+  // Future expansion: more global settings
+  // defaultLargeFileWarningThreshold?: number;
+  // uiTheme?: 'light' | 'dark' | 'auto';
+}
+
 // Panel resizing types
 export interface PanelResizeState {
   leftPanelWidth: number;
@@ -204,6 +222,29 @@ declare global {
        * Open folder dialog and set as base directory
        */
       openFolder: () => Promise<string | null>;
+    };
+    
+    // Settings service API
+    settingsService: {
+      /**
+       * Get project settings from project_settings.json
+       */
+      getProjectSettings: (projectPath: string) => Promise<ProjectSettings | null>;
+      
+      /**
+       * Save project settings to project_settings.json
+       */
+      saveProjectSettings: (projectPath: string, settings: ProjectSettings) => Promise<void>;
+      
+      /**
+       * Get application settings from application_settings.json
+       */
+      getApplicationSettings: () => Promise<ApplicationSettings | null>;
+      
+      /**
+       * Save application settings to application_settings.json
+       */
+      saveApplicationSettings: (settings: ApplicationSettings) => Promise<void>;
     };
     
     // Legacy file system API (maintained for backward compatibility)

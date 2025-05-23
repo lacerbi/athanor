@@ -6,6 +6,7 @@ import { buildFileTree } from '../services/fileSystemService';
 import { createAthignoreFile } from '../services/fileIgnoreService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { loadPrompts, loadTasks } from '../services/promptService';
 
 import { FileSystemLifecycle } from '../types/global';
@@ -34,6 +35,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   const { validateSelections, clearSelections } = useFileSystemStore();
   const { addLog } = useLogStore();
+  const { loadProjectSettings, loadApplicationSettings } = useSettingsStore();
 
   const refreshFileSystem = useCallback(
     async (silentOrNewPath: boolean | string = false, newlyCreatedPath?: string) => {
@@ -123,6 +125,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       loadPrompts(),
       loadTasks()
     ]);
+    
+    // Load project settings for the new directory
+    await loadProjectSettings(normalizedDir);
+    
     await setupWatcher(normalizedDir);
     addLog(`Loaded directory: ${normalizedDir}`);
 
@@ -188,6 +194,9 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       isInitializedRef.current = true;
 
       try {
+        // Load application settings first (independent of project)
+        await loadApplicationSettings();
+        
         const currentDir = await window.fileService.getCurrentDirectory();
         const normalizedDir = await window.pathUtils.toUnix(currentDir);
         setCurrentDirectory(normalizedDir);
@@ -203,6 +212,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
           loadPrompts(),
           loadTasks()
         ]);
+        
+        // Load project settings for the current directory
+        await loadProjectSettings(normalizedDir);
+        
         await setupWatcher(normalizedDir);
         addLog(`Loaded directory: ${normalizedDir}`);
       } catch (error) {
@@ -218,7 +231,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [setupWatcher, validateSelections, addLog]);
+  }, [setupWatcher, validateSelections, addLog, loadApplicationSettings, loadProjectSettings]);
 
   useEffect(() => {
     const fetchVersion = async () => {

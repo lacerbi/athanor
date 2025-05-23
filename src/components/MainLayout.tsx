@@ -5,6 +5,7 @@ import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
 import FileViewerPanel from './FileViewerPanel';
 import ApplyChangesPanel from './ApplyChangesPanel';
+import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { FileItem } from '../utils/fileTree';
@@ -174,6 +175,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           )}
           {activeTab === 'viewer' && <FileViewerPanel />}
           {activeTab === 'apply-changes' && <ApplyChangesPanel />}
+          {activeTab === 'settings' && <SettingsPanel />}
         </div>
 
         {/* Log panel resize handle */}

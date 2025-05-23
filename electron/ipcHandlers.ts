@@ -4,10 +4,13 @@
 import { setupCoreHandlers } from './handlers/coreHandlers';
 import { setupFileOperationHandlers } from './handlers/fileOperationHandlers';
 import { setupFileWatchHandlers } from './handlers/fileWatchHandlers';
+import { setupSettingsHandlers } from './handlers/settingsHandlers';
 import { FileService } from './services/FileService';
+import { SettingsService } from './services/SettingsService';
 
-export function setupIpcHandlers(fileService: FileService) {
+export function setupIpcHandlers(fileService: FileService, settingsService: SettingsService) {
   setupCoreHandlers(fileService);
   setupFileOperationHandlers(fileService);
   setupFileWatchHandlers(fileService);
+  setupSettingsHandlers(settingsService);
 }

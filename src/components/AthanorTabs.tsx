@@ -6,7 +6,7 @@ import CommandButton from './CommandButton';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useLogStore } from '../stores/logStore';
 
-export type TabType = 'workbench' | 'viewer' | 'apply-changes';
+export type TabType = 'workbench' | 'viewer' | 'apply-changes' | 'settings';
 
 interface AthanorTabsProps {
   activeTab: TabType;
@@ -53,6 +53,16 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({
           onClick={() => onTabChange('apply-changes')}
         >
           Apply Changes
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${
+            activeTab === 'settings'
+              ? 'bg-gray-200 font-medium'
+              : 'hover:bg-gray-100'
+          }`}
+          onClick={() => onTabChange('settings')}
+        >
+          Settings
         </button>
       </div>
       <div className="flex items-center">

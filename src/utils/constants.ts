@@ -27,6 +27,24 @@ export const FILE_SYSTEM = {
   },
 };
 
+// Settings configuration
+export const SETTINGS = {
+  // Filenames for settings files
+  PROJECT_SETTINGS_FILENAME: 'project_settings.json',
+  APP_SETTINGS_FILENAME: 'application_settings.json',
+  
+  // Default settings
+  defaults: {
+    project: {
+      projectNameOverride: '',
+      projectInfoFilePath: '',
+    },
+    application: {
+      // Future: global settings defaults
+    },
+  },
+};
+
 // Project information file configuration
 export const PROJECT_INFO = {
   // Basenames in order of precedence (case-insensitive)
