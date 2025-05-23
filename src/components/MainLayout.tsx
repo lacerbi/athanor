@@ -51,7 +51,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   
   const { 
     selectedFileCount, 
-    selectedLinesTotal
+    selectedLinesTotal,
+    effectiveConfig
   } = useFileSystemStore();
 
   const handleFileView = () => {
@@ -116,7 +117,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               </button>
             </div>
           </div>
-          <div className="text-sm text-gray-600 mb-0">{currentDirectory}</div>
+          <div className="text-sm text-gray-600 mb-0">
+            <div className="font-medium">
+              {effectiveConfig?.project_name || 'Loading...'}
+            </div>
+            <div className="text-xs text-gray-500 mt-1">
+              {currentDirectory}
+            </div>
+          </div>
         </div>
 
         {/* Scrollable file explorer section */}

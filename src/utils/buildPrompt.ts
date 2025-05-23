@@ -2,7 +2,6 @@
 // Handles codebase documentation generation, selected file list formatting, and applies settings like smart preview and file tree inclusion from the fileSystemStore.
 // Core function: buildDynamicPrompt.
 import { FileItem } from './fileTree';
-import { readAthanorConfig } from './configUtils';
 import { generateCodebaseDocumentation } from './codebaseDocumentation';
 import { DOC_FORMAT, FILE_SYSTEM } from './constants';
 import {
@@ -12,6 +11,7 @@ import {
 } from './promptTemplates';
 import { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { AthanorConfig } from '../types/global';
 
 export interface PromptVariables {
   project_name?: string;
@@ -96,16 +96,25 @@ export async function buildDynamicPrompt(
   taskContext: string = '',
   passedFormatType: string = DOC_FORMAT.MARKDOWN
 ): Promise<string> {
-  // Load config with fallback values
-  const config = await readAthanorConfig(rootPath);
-
-  // Get the store settings
+  // Get the store settings and effective configuration
   const {
     smartPreviewEnabled,
     includeFileTree,
     formatType,
     includeProjectInfo,
+    effectiveConfig,
   } = useFileSystemStore.getState();
+
+  // Use effective config from store, with fallback for safety
+  let config: AthanorConfig;
+  if (effectiveConfig) {
+    config = effectiveConfig;
+  } else {
+    console.warn('No effective configuration available, using fallback');
+    // Import readAthanorConfig dynamically only when needed as fallback
+    const { readAthanorConfig } = await import('./configUtils');
+    config = await readAthanorConfig(rootPath);
+  }
 
   // Prepare project info with source file path if available
   let projectInfoForPrompt = '';
