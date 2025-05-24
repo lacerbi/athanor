@@ -3,7 +3,7 @@
 // Core function: buildDynamicPrompt.
 import { FileItem } from './fileTree';
 import { generateCodebaseDocumentation } from './codebaseDocumentation';
-import { DOC_FORMAT, FILE_SYSTEM } from './constants';
+import { DOC_FORMAT, FILE_SYSTEM, SETTINGS } from './constants';
 import {
   loadTemplateContent,
   substituteVariables,
@@ -94,17 +94,32 @@ export async function buildDynamicPrompt(
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',
-  passedFormatType: string = DOC_FORMAT.MARKDOWN,
-  smartPreviewConfig: { minLines: number; maxLines: number } = { minLines: 10, maxLines: 20 }
+  passedFormatTypeOverride?: string,
+  smartPreviewConfigInput?: { minLines: number; maxLines: number }
 ): Promise<string> {
   // Get the store settings and effective configuration
   const {
     smartPreviewEnabled,
     includeFileTree,
-    formatType,
+    formatType: storeFormatType,
     includeProjectInfo,
     effectiveConfig,
   } = useFileSystemStore.getState();
+
+  // Handle smartPreviewConfig with centralized defaults and warning
+  let smartPreviewConfig = smartPreviewConfigInput;
+  if (!smartPreviewConfig) {
+    console.warn(
+      'AthanorApp: buildDynamicPrompt did not receive smartPreviewConfig. Using default values from constants.ts.'
+    );
+    smartPreviewConfig = {
+      minLines: SETTINGS.defaults.application.minSmartPreviewLines,
+      maxLines: SETTINGS.defaults.application.maxSmartPreviewLines,
+    };
+  }
+
+  // Determine the actual format type to use for documentation
+  const actualFormatType = passedFormatTypeOverride || storeFormatType || DOC_FORMAT.DEFAULT;
 
   // Use effective config from store, with fallback for safety
   let config: AthanorConfig;
@@ -140,7 +155,7 @@ export async function buildDynamicPrompt(
     rootPath,
     config,
     smartPreviewEnabled,
-    passedFormatType || formatType, // Use passed format or get from store
+    actualFormatType, // Use the derived actualFormatType
     config.project_info_path, // Pass project_info_path to avoid duplication
     smartPreviewConfig
   );
