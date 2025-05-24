@@ -4,23 +4,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { HelpCircle } from 'lucide-react';
 
-// Debounce utility function
-const useDebounce = (value: string, delay: number) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-};
 
 const SettingsPanel: React.FC = () => {
   const {
@@ -48,14 +33,9 @@ const SettingsPanel: React.FC = () => {
   // Local state for application settings form inputs
   const [enableExperimentalFeatures, setEnableExperimentalFeatures] = useState(false);
   const [defaultSmartPreviewLines, setDefaultSmartPreviewLines] = useState('15');
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
   const [isSavingApplication, setIsSavingApplication] = useState(false);
   const [applicationSaveError, setApplicationSaveError] = useState<string | null>(null);
 
-  // Debounced values for API calls
-  const debouncedProjectName = useDebounce(projectNameOverride, 500);
-  const debouncedInfoFilePath = useDebounce(projectInfoFilePath, 500);
-  const debouncedSmartPreviewLines = useDebounce(defaultSmartPreviewLines, 500);
   
   // Load application settings on mount
   useEffect(() => {
@@ -86,12 +66,10 @@ const SettingsPanel: React.FC = () => {
     if (applicationSettings) {
       setEnableExperimentalFeatures(applicationSettings.enableExperimentalFeatures || false);
       setDefaultSmartPreviewLines(String(applicationSettings.defaultSmartPreviewLines || 15));
-      setAutoSaveEnabled(applicationSettings.autoSaveEnabled !== false); // Default to true
     } else {
       // Set default values when no application settings
       setEnableExperimentalFeatures(false);
       setDefaultSmartPreviewLines('15');
-      setAutoSaveEnabled(true);
     }
     // Clear any previous save errors when settings load
     setApplicationSaveError(null);
@@ -139,38 +117,7 @@ const SettingsPanel: React.FC = () => {
     }
   }, [applicationSettings, saveApplicationSettings]);
 
-  // Effect for saving debounced project name
-  useEffect(() => {
-    if (!projectSettings || !currentProjectPath) return;
-    
-    const originalValue = projectSettings.projectNameOverride || '';
-    if (debouncedProjectName !== originalValue) {
-      saveProjectSettingsCallback({ projectNameOverride: debouncedProjectName });
-    }
-  }, [debouncedProjectName, projectSettings, currentProjectPath, saveProjectSettingsCallback]);
 
-  // Effect for saving debounced info file path
-  useEffect(() => {
-    if (!projectSettings || !currentProjectPath) return;
-    
-    const originalValue = projectSettings.projectInfoFilePath || '';
-    if (debouncedInfoFilePath !== originalValue) {
-      saveProjectSettingsCallback({ projectInfoFilePath: debouncedInfoFilePath });
-    }
-  }, [debouncedInfoFilePath, projectSettings, currentProjectPath, saveProjectSettingsCallback]);
-
-  // Effect for saving debounced smart preview lines
-  useEffect(() => {
-    if (!applicationSettings) return;
-    
-    const originalValue = String(applicationSettings.defaultSmartPreviewLines || 15);
-    if (debouncedSmartPreviewLines !== originalValue) {
-      const numericValue = parseInt(debouncedSmartPreviewLines, 10);
-      if (!isNaN(numericValue) && numericValue > 0 && numericValue <= 100) {
-        saveApplicationSettingsCallback({ defaultSmartPreviewLines: numericValue });
-      }
-    }
-  }, [debouncedSmartPreviewLines, applicationSettings, saveApplicationSettingsCallback]);
 
   const hasProject = fileTree.length > 0 && currentProjectPath;
 
@@ -193,18 +140,41 @@ const SettingsPanel: React.FC = () => {
     setProjectInfoFilePath(value);
   };
 
+  // Project save button handler
+  const handleSaveProjectSettings = () => {
+    saveProjectSettingsCallback({ 
+      projectNameOverride: projectNameOverride.trim(), 
+      projectInfoFilePath: projectInfoFilePath.trim() 
+    });
+  };
+
+  // Check if project settings have unsaved changes
+  const hasUnsavedProjectChanges = 
+    projectNameOverride !== (projectSettings?.projectNameOverride || '') ||
+    projectInfoFilePath !== (projectSettings?.projectInfoFilePath || '');
+
   // Application settings handlers
   const handleExperimentalFeaturesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.checked;
     setEnableExperimentalFeatures(newValue);
-    saveApplicationSettingsCallback({ enableExperimentalFeatures: newValue });
   };
 
-  const handleAutoSaveChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.checked;
-    setAutoSaveEnabled(newValue);
-    saveApplicationSettingsCallback({ autoSaveEnabled: newValue });
+  // Application save button handler
+  const handleSaveApplicationSettings = () => {
+    const numericValue = parseInt(defaultSmartPreviewLines, 10);
+    const validatedLines = isNaN(numericValue) || numericValue < 1 ? 15 : 
+                          numericValue > 100 ? 100 : numericValue;
+    
+    saveApplicationSettingsCallback({ 
+      enableExperimentalFeatures,
+      defaultSmartPreviewLines: validatedLines
+    });
   };
+
+  // Check if application settings have unsaved changes
+  const hasUnsavedApplicationChanges = 
+    enableExperimentalFeatures !== (applicationSettings?.enableExperimentalFeatures || false) ||
+    defaultSmartPreviewLines !== String(applicationSettings?.defaultSmartPreviewLines || 15);
 
   const handleSmartPreviewLinesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -270,9 +240,17 @@ const SettingsPanel: React.FC = () => {
 
                   {/* Project Name Override */}
                   <div className="space-y-2">
-                    <label htmlFor="projectNameOverride" className="block text-sm font-medium text-gray-700">
-                      Project Name Override
-                    </label>
+                    <div className="flex items-center space-x-2">
+                      <label htmlFor="projectNameOverride" className="block text-sm font-medium text-gray-700">
+                        Project Name Override
+                      </label>
+                      <div 
+                        className="relative group"
+                        title="If provided, this name will be used instead of the folder name in prompts and display."
+                      >
+                        <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                      </div>
+                    </div>
                     <input
                       id="projectNameOverride"
                       type="text"
@@ -283,16 +261,21 @@ const SettingsPanel: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                       disabled={isLoadingProjectSettings || isSavingProject}
                     />
-                    <p className="text-xs text-gray-500">
-                      If provided, this name will be used instead of the folder name in prompts and display.
-                    </p>
                   </div>
 
                   {/* Project Info File Path */}
                   <div className="space-y-2">
-                    <label htmlFor="projectInfoFilePath" className="block text-sm font-medium text-gray-700">
-                      Project Info File Path
-                    </label>
+                    <div className="flex items-center space-x-2">
+                      <label htmlFor="projectInfoFilePath" className="block text-sm font-medium text-gray-700">
+                        Project Info File Path
+                      </label>
+                      <div 
+                        className="relative group"
+                        title="Path relative to project root. If empty or invalid, Athanor will search for PROJECT.md, README.md, etc."
+                      >
+                        <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                      </div>
+                    </div>
                     <input
                       id="projectInfoFilePath"
                       type="text"
@@ -303,18 +286,26 @@ const SettingsPanel: React.FC = () => {
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                       disabled={isLoadingProjectSettings || isSavingProject}
                     />
-                    <p className="text-xs text-gray-500">
-                      Path relative to project root. If empty or invalid, Athanor will search for PROJECT.md, README.md, etc.
-                    </p>
                   </div>
 
-                  {/* Save Status */}
-                  {isSavingProject && (
-                    <div className="flex items-center text-sm text-blue-600">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                      Saving project settings...
-                    </div>
-                  )}
+                  {/* Save Project Settings Button */}
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={handleSaveProjectSettings}
+                      disabled={isLoadingProjectSettings || isSavingProject || !hasUnsavedProjectChanges || !hasProject}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Save Project Settings
+                    </button>
+                    
+                    {/* Save Status */}
+                    {isSavingProject && (
+                      <div className="flex items-center text-sm text-blue-600">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                        Saving project settings...
+                      </div>
+                    )}
+                  </div>
 
                   {/* Current Settings Display */}
                   <div className="mt-6">
@@ -365,13 +356,16 @@ const SettingsPanel: React.FC = () => {
                 <div className="space-y-6">
                   {/* Experimental Features Toggle */}
                   <div className="flex items-center justify-between">
-                    <div className="flex-1">
+                    <div className="flex items-center space-x-2">
                       <label htmlFor="enableExperimentalFeatures" className="block text-sm font-medium text-gray-700">
                         Enable Experimental Features
                       </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Enables access to experimental features that are still in development.
-                      </p>
+                      <div 
+                        className="relative group"
+                        title="Enables access to experimental features that are still in development."
+                      >
+                        <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                      </div>
                     </div>
                     <div className="flex-shrink-0 ml-4">
                       <input
@@ -385,33 +379,19 @@ const SettingsPanel: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Auto-Save Toggle */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <label htmlFor="autoSaveEnabled" className="block text-sm font-medium text-gray-700">
-                        Auto-Save Settings
-                      </label>
-                      <p className="text-xs text-gray-500 mt-1">
-                        Automatically save changes to settings as you type.
-                      </p>
-                    </div>
-                    <div className="flex-shrink-0 ml-4">
-                      <input
-                        id="autoSaveEnabled"
-                        type="checkbox"
-                        checked={autoSaveEnabled}
-                        onChange={handleAutoSaveChange}
-                        disabled={isLoadingApplicationSettings || isSavingApplication}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-                      />
-                    </div>
-                  </div>
-
                   {/* Default Smart Preview Lines */}
                   <div className="space-y-2">
-                    <label htmlFor="defaultSmartPreviewLines" className="block text-sm font-medium text-gray-700">
-                      Default Smart Preview Lines
-                    </label>
+                    <div className="flex items-center space-x-2">
+                      <label htmlFor="defaultSmartPreviewLines" className="block text-sm font-medium text-gray-700">
+                        Default Smart Preview Lines
+                      </label>
+                      <div 
+                        className="relative group"
+                        title="Default number of lines to show in smart preview mode (1-100)."
+                      >
+                        <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                      </div>
+                    </div>
                     <div className="flex items-center space-x-2">
                       <input
                         id="defaultSmartPreviewLines"
@@ -425,19 +405,27 @@ const SettingsPanel: React.FC = () => {
                       />
                       <span className="text-sm text-gray-500">lines</span>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      Default number of lines to show in smart preview mode (1-100).
-                    </p>
                   </div>
                 </div>
 
-                {/* Save Status */}
-                {isSavingApplication && (
-                  <div className="flex items-center text-sm text-blue-600">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                    Saving application settings...
-                  </div>
-                )}
+                {/* Save Application Settings Button */}
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={handleSaveApplicationSettings}
+                    disabled={isLoadingApplicationSettings || isSavingApplication || !hasUnsavedApplicationChanges}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Save Application Settings
+                  </button>
+                  
+                  {/* Save Status */}
+                  {isSavingApplication && (
+                    <div className="flex items-center text-sm text-blue-600">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                      Saving application settings...
+                    </div>
+                  )}
+                </div>
 
                 {/* Current Settings Display */}
                 <div className="mt-6">

@@ -25,7 +25,6 @@ export interface ApplicationSettings {
   // Example application settings for demonstration
   enableExperimentalFeatures?: boolean;
   defaultSmartPreviewLines?: number;
-  autoSaveEnabled?: boolean;
   
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;
