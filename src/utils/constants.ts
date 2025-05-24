@@ -11,8 +11,6 @@ export const FILE_SYSTEM = {
   // Supplementary materials directory name
   materialsDirName: '.ath_materials',
 
-  // Maximum number of lines before a file is considered too long
-  thresholdLineLength: 200,
   // Refactoring thresholds
   refactoring: {
     // Files over this length are candidates for splitting
@@ -40,6 +38,7 @@ export const SETTINGS = {
       enableExperimentalFeatures: false,
       minSmartPreviewLines: 10,
       maxSmartPreviewLines: 20,
+      thresholdLineLength: 200,
     },
   },
 };

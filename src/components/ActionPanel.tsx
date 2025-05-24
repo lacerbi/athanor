@@ -155,12 +155,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     try {
       setIsLoading(true);
       
-      // Get smart preview configuration from application settings
-      const defaults = SETTINGS.defaults.application;
+      // Get smart preview configuration and threshold line length from application settings
+      const appDefaults = SETTINGS.defaults.application;
       const smartPreviewConfig = {
-        minLines: applicationSettings?.minSmartPreviewLines ?? defaults.minSmartPreviewLines,
-        maxLines: applicationSettings?.maxSmartPreviewLines ?? defaults.maxSmartPreviewLines,
+        minLines: applicationSettings?.minSmartPreviewLines ?? appDefaults.minSmartPreviewLines,
+        maxLines: applicationSettings?.maxSmartPreviewLines ?? appDefaults.maxSmartPreviewLines,
       };
+      const currentThresholdLineLength = applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
       
       const result = await buildDynamicPrompt(
         prompt,
@@ -171,7 +172,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         tabs[activeTabIndex].content, // Current tab's content
         tabs[activeTabIndex].context, // Current tab's context
         formatType, // Pass the current format type
-        smartPreviewConfig // Pass the smart preview configuration from settings
+        smartPreviewConfig, // Pass the smart preview configuration from settings
+        currentThresholdLineLength // Pass the current threshold line length
       );
       setOutputContent(result);
       addLog(`Generated ${prompt.label} prompt`);
@@ -473,6 +475,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             setOutputContent,
                             addLog,
                             setIsLoading,
+                            currentThresholdLineLength: applicationSettings?.thresholdLineLength ?? SETTINGS.defaults.application.thresholdLineLength,
                           })
                         }
                         disabled={isDisabled}

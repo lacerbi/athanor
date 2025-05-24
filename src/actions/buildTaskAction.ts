@@ -13,6 +13,7 @@ export interface BuildTaskActionParams {
   setOutputContent: (content: string) => void;
   addLog: (message: string) => void;
   setIsLoading: (loading: boolean) => void;
+  currentThresholdLineLength: number;
 }
 
 export async function buildTaskAction(params: BuildTaskActionParams): Promise<void> {
@@ -23,6 +24,7 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     setOutputContent,
     addLog,
     setIsLoading,
+    currentThresholdLineLength,
   } = params;
 
   if (!rootItems.length) {
@@ -58,7 +60,10 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
       selectedItems,
       currentDir,
       useWorkbenchStore.getState().taskDescription,
-      useWorkbenchStore.getState().taskContext
+      useWorkbenchStore.getState().taskContext,
+      undefined, // passedFormatTypeOverride
+      undefined, // smartPreviewConfigInput
+      currentThresholdLineLength
     );
 
     // Update task description in workbench

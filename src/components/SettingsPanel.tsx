@@ -36,6 +36,7 @@ const SettingsPanel: React.FC = () => {
   const [enableExperimentalFeatures, setEnableExperimentalFeatures] = useState(false);
   const [minSmartPreviewLines, setMinSmartPreviewLines] = useState('10');
   const [maxSmartPreviewLines, setMaxSmartPreviewLines] = useState('20');
+  const [thresholdLineLengthInput, setThresholdLineLengthInput] = useState('200');
   const [isSavingApplication, setIsSavingApplication] = useState(false);
   const [applicationSaveError, setApplicationSaveError] = useState<string | null>(null);
 
@@ -71,11 +72,13 @@ const SettingsPanel: React.FC = () => {
       setEnableExperimentalFeatures(applicationSettings.enableExperimentalFeatures ?? defaults.enableExperimentalFeatures);
       setMinSmartPreviewLines(String(applicationSettings.minSmartPreviewLines ?? defaults.minSmartPreviewLines));
       setMaxSmartPreviewLines(String(applicationSettings.maxSmartPreviewLines ?? defaults.maxSmartPreviewLines));
+      setThresholdLineLengthInput(String(applicationSettings.thresholdLineLength ?? defaults.thresholdLineLength));
     } else {
       // Set default values when no application settings
       setEnableExperimentalFeatures(defaults.enableExperimentalFeatures);
       setMinSmartPreviewLines(String(defaults.minSmartPreviewLines));
       setMaxSmartPreviewLines(String(defaults.maxSmartPreviewLines));
+      setThresholdLineLengthInput(String(defaults.thresholdLineLength));
     }
     // Clear any previous save errors when settings load
     setApplicationSaveError(null);
@@ -191,10 +194,12 @@ const SettingsPanel: React.FC = () => {
   const handleSaveApplicationSettings = () => {
     const minValue = parseInt(minSmartPreviewLines, 10);
     const maxValue = parseInt(maxSmartPreviewLines, 10);
+    const thresholdValue = parseInt(thresholdLineLengthInput, 10);
     
     // Validate and apply defaults/limits
     const validatedMin = isNaN(minValue) || minValue < 1 ? 10 : Math.min(minValue, 200);
     const validatedMax = isNaN(maxValue) || maxValue < 1 ? 20 : Math.min(maxValue, 200);
+    const validatedThreshold = isNaN(thresholdValue) || thresholdValue < 50 ? SETTINGS.defaults.application.thresholdLineLength : Math.min(thresholdValue, 2000);
     
     // Ensure max >= min
     const finalMin = validatedMin;
@@ -203,7 +208,8 @@ const SettingsPanel: React.FC = () => {
     saveApplicationSettingsCallback({ 
       enableExperimentalFeatures,
       minSmartPreviewLines: finalMin,
-      maxSmartPreviewLines: finalMax
+      maxSmartPreviewLines: finalMax,
+      thresholdLineLength: validatedThreshold
     });
   };
 
@@ -212,7 +218,8 @@ const SettingsPanel: React.FC = () => {
   const hasUnsavedApplicationChanges = 
     enableExperimentalFeatures !== (applicationSettings?.enableExperimentalFeatures ?? defaults.enableExperimentalFeatures) ||
     minSmartPreviewLines !== String(applicationSettings?.minSmartPreviewLines ?? defaults.minSmartPreviewLines) ||
-    maxSmartPreviewLines !== String(applicationSettings?.maxSmartPreviewLines ?? defaults.maxSmartPreviewLines);
+    maxSmartPreviewLines !== String(applicationSettings?.maxSmartPreviewLines ?? defaults.maxSmartPreviewLines) ||
+    thresholdLineLengthInput !== String(applicationSettings?.thresholdLineLength ?? defaults.thresholdLineLength);
 
   const handleMinSmartPreviewLinesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -263,6 +270,28 @@ const SettingsPanel: React.FC = () => {
       const currentMin = parseInt(minSmartPreviewLines, 10);
       const finalMax = !isNaN(currentMin) ? Math.max(numericValue, currentMin) : numericValue;
       setMaxSmartPreviewLines(String(finalMax));
+    }
+  };
+
+  const handleThresholdLineLengthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow only numeric input
+    if (/^\d*$/.test(value) && value.length <= 4) {
+      setThresholdLineLengthInput(value);
+    }
+  };
+
+  const handleThresholdLineLengthBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value.trim();
+    const numericValue = parseInt(value, 10);
+    
+    // Validate and clamp the value
+    if (isNaN(numericValue) || numericValue < 50) {
+      setThresholdLineLengthInput(String(SETTINGS.defaults.application.thresholdLineLength)); // Reset to default
+    } else if (numericValue > 2000) {
+      setThresholdLineLengthInput('2000'); // Max value
+    } else {
+      setThresholdLineLengthInput(String(numericValue));
     }
   };
 
@@ -522,6 +551,34 @@ const SettingsPanel: React.FC = () => {
                         onChange={handleMaxSmartPreviewLinesChange}
                         onBlur={handleMaxSmartPreviewLinesBlur}
                         placeholder="20"
+                        className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        disabled={isLoadingApplicationSettings || isSavingApplication}
+                      />
+                      <span className="text-sm text-gray-500">lines</span>
+                    </div>
+                  </div>
+
+                  {/* Threshold Line Length */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <label htmlFor="thresholdLineLength" className="block text-sm font-medium text-gray-700">
+                        Threshold Line Length
+                      </label>
+                      <div 
+                        className="relative group"
+                        title="Lines after which a file is considered large for warnings or special handling (50-2000). Default: 200."
+                      >
+                        <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        id="thresholdLineLength"
+                        type="text"
+                        value={thresholdLineLengthInput}
+                        onChange={handleThresholdLineLengthChange}
+                        onBlur={handleThresholdLineLengthBlur}
+                        placeholder="200"
                         className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                         disabled={isLoadingApplicationSettings || isSavingApplication}
                       />

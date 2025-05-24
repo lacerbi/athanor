@@ -133,7 +133,8 @@ export function formatSingleFile(
   content: string,
   rootPath: string = '',
   isSelected: boolean = false,
-  formatType: string = DOC_FORMAT.MARKDOWN
+  formatType: string = DOC_FORMAT.MARKDOWN,
+  currentThresholdLineLength?: number // Added for future use, not currently used in this function's logic
 ): string {
   const relativePath = rootPath
     ? filePath.replace(rootPath, '').replace(/^[/\\]/, '')
@@ -158,7 +159,8 @@ export async function generateCodebaseDocumentation(
   includeNonSelected: boolean = true,
   formatType: string = DOC_FORMAT.MARKDOWN,
   projectInfoFilePath?: string,
-  smartPreviewConfig: { minLines: number; maxLines: number } = { minLines: 10, maxLines: 20 }
+  smartPreviewConfig: { minLines: number; maxLines: number } = { minLines: 10, maxLines: 20 },
+  currentThresholdLineLength?: number // Added, to be passed down if needed
 ): Promise<{ file_contents: string; file_tree: string }> {
   const rawFileTreeContent = generateFileTree(items, selectedItems);
   const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>\n`;
@@ -208,7 +210,7 @@ export async function generateCodebaseDocumentation(
         if (processedContent) {
           fileContents +=
             (fileContents ? '\n' : '') +
-            formatSingleFile(item.path, processedContent, rootPath, isSelected, formatType);
+            formatSingleFile(item.path, processedContent, rootPath, isSelected, formatType, currentThresholdLineLength);
         }
       } catch (error) {
         console.error(`Error reading file ${item.path}:`, error);

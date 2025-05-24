@@ -3,12 +3,13 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, File, Scissors, Book } from 'lucide-react';
 import { FileItem, getBaseName, isEmptyFolder } from '../../utils/fileTree';
-import { FILE_SYSTEM, DRAG_DROP } from '../../utils/constants';
+import { FILE_SYSTEM, SETTINGS, DRAG_DROP } from '../../utils/constants'; // Re-added FILE_SYSTEM
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
 } from '../../utils/fileSelection';
 import { useFileSystemStore } from '../../stores/fileSystemStore';
+import { useSettingsStore } from '../../stores/settingsStore'; // Added settings store
 
 interface FileExplorerItemProps {
   item: FileItem;
@@ -36,7 +37,12 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
     previewedFilePath,
     setPreviewedFilePath,
   } = useFileSystemStore();
+  const { applicationSettings } = useSettingsStore(); // Get application settings
   const checkboxRef = React.useRef<HTMLInputElement>(null);
+
+  const appDefaults = SETTINGS.defaults.application;
+  const currentThresholdLineLength = applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
+
   const isExpanded = expandedFolders.has(item.id);
   const hasSelectedDescendants = areSomeDescendantsSelected(
     item,
@@ -48,7 +54,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   const isLongFile =
     item.type === 'file' &&
     item.lineCount &&
-    item.lineCount > FILE_SYSTEM.thresholdLineLength;
+    item.lineCount > currentThresholdLineLength; // Use dynamic threshold
 
   // Handle checkbox indeterminate state
   React.useEffect(() => {
@@ -179,7 +185,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           {isLongFile && (
             <div
               className="ml-2 text-gray-500"
-              title={`File has ${item.lineCount} lines (threshold: ${FILE_SYSTEM.thresholdLineLength})`}
+              title={`File has ${item.lineCount} lines (threshold: ${currentThresholdLineLength})`} // Use dynamic threshold
             >
               <Scissors size={14} />
             </div>

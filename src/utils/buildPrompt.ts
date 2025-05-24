@@ -95,7 +95,8 @@ export async function buildDynamicPrompt(
   taskDescription: string = '',
   taskContext: string = '',
   passedFormatTypeOverride?: string,
-  smartPreviewConfigInput?: { minLines: number; maxLines: number }
+  smartPreviewConfigInput?: { minLines: number; maxLines: number },
+  currentThresholdLineLength?: number // Added new parameter
 ): Promise<string> {
   // Get the store settings and effective configuration
   const {
@@ -120,6 +121,9 @@ export async function buildDynamicPrompt(
 
   // Determine the actual format type to use for documentation
   const actualFormatType = passedFormatTypeOverride || storeFormatType || DOC_FORMAT.DEFAULT;
+
+  // Determine the active threshold line length to use
+  const activeThresholdLineLength = currentThresholdLineLength ?? SETTINGS.defaults.application.thresholdLineLength;
 
   // Use effective config from store, with fallback for safety
   let config: AthanorConfig;
@@ -157,7 +161,8 @@ export async function buildDynamicPrompt(
     smartPreviewEnabled,
     actualFormatType, // Use the derived actualFormatType
     config.project_info_path, // Pass project_info_path to avoid duplication
-    smartPreviewConfig
+    smartPreviewConfig,
+    activeThresholdLineLength // Pass the active threshold
   );
 
   // Format task context if non-empty
@@ -172,9 +177,6 @@ export async function buildDynamicPrompt(
   if (!includeFileTree) {
     codebaseContent.file_tree = '';
   }
-
-  // Get threshold line length from constants
-  const thresholdLineLength = FILE_SYSTEM.thresholdLineLength;
 
   // Prepare variables for template
   const variables: PromptVariables = {
@@ -191,7 +193,7 @@ export async function buildDynamicPrompt(
     codebase_legend: hasSelectedFiles(items, selectedItems)
       ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
       : '',
-    threshold_line_length: thresholdLineLength,
+    threshold_line_length: activeThresholdLineLength,
     ...codebaseContent, // Contains file_contents and modified file_tree
   };
 

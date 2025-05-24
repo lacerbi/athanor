@@ -26,6 +26,7 @@ export interface ApplicationSettings {
   enableExperimentalFeatures?: boolean;
   minSmartPreviewLines?: number;
   maxSmartPreviewLines?: number;
+  thresholdLineLength?: number;
   
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;

@@ -118,11 +118,13 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     
     try {
       const settings = await window.settingsService.getApplicationSettings();
+      // If no settings file exists, use defaults
+      const applicationSettings = settings || { ...SETTINGS.defaults.application };
       set({ 
-        applicationSettings: settings,
+        applicationSettings,
         isLoadingApplicationSettings: false,
       });
-      console.log('Loaded application settings:', settings);
+      console.log('Loaded application settings:', applicationSettings);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error loading application settings';
       set({ 
