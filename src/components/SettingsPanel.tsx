@@ -4,7 +4,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
-import { HelpCircle } from 'lucide-react';
+import { HelpCircle, Info } from 'lucide-react';
 
 
 const SettingsPanel: React.FC = () => {
@@ -344,29 +344,32 @@ const SettingsPanel: React.FC = () => {
                       Save Project Settings
                     </button>
                     
-                    {/* Save Status */}
-                    {isSavingProject && (
-                      <div className="flex items-center text-sm text-blue-600">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                        Saving project settings...
-                      </div>
-                    )}
-                  </div>
+                    <div className="flex items-center">
+                      {/* Save Status */}
+                      {isSavingProject && (
+                        <div className="flex items-center text-sm text-blue-600 mr-3">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                          Saving project settings...
+                        </div>
+                      )}
 
-                  {/* Current Settings Display */}
-                  <div className="mt-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Current Settings:</h3>
-                    <div className="bg-gray-50 border rounded-md p-4">
-                      <pre className="text-sm text-gray-800 whitespace-pre-wrap">
-                        {projectSettings 
-                          ? JSON.stringify(projectSettings, null, 2)
-                          : 'No project settings file found\n(Using default values)'
-                        }
-                      </pre>
+                      {/* Info Icon for Project Settings */}
+                      {hasProject && !isLoadingProjectSettings && (
+                        <div
+                          className="relative group"
+                          title={
+                            `Current Settings:\n${
+                              projectSettings
+                                ? JSON.stringify(projectSettings, null, 2)
+                                : 'No project settings file found or loaded.\n(Using default values or awaiting load)'
+                            }\n\n` +
+                            `Settings are stored in .ath_materials/project_settings.json`
+                          }
+                        >
+                          <Info className="w-5 h-5 text-gray-500 cursor-help hover:text-gray-700" />
+                        </div>
+                      )}
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Settings are stored in <code>.ath_materials/project_settings.json</code>
-                    </p>
                   </div>
                 </>
               )}
@@ -464,29 +467,32 @@ const SettingsPanel: React.FC = () => {
                     Save Application Settings
                   </button>
                   
-                  {/* Save Status */}
-                  {isSavingApplication && (
-                    <div className="flex items-center text-sm text-blue-600">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                      Saving application settings...
-                    </div>
-                  )}
-                </div>
+                  <div className="flex items-center">
+                    {/* Save Status */}
+                    {isSavingApplication && (
+                      <div className="flex items-center text-sm text-blue-600 mr-3">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                        Saving application settings...
+                      </div>
+                    )}
 
-                {/* Current Settings Display */}
-                <div className="mt-6">
-                  <h3 className="text-sm font-medium text-gray-700 mb-2">Current Settings:</h3>
-                  <div className="bg-gray-50 border rounded-md p-4">
-                    <pre className="text-sm text-gray-800 whitespace-pre-wrap">
-                      {applicationSettings 
-                        ? JSON.stringify(applicationSettings, null, 2)
-                        : 'No application settings file found\n(Using default values)'
-                      }
-                    </pre>
+                    {/* Info Icon for Application Settings */}
+                    {!isLoadingApplicationSettings && (
+                      <div
+                        className="relative group"
+                        title={
+                          `Current Settings:\n${
+                            applicationSettings
+                              ? JSON.stringify(applicationSettings, null, 2)
+                              : 'No application settings file found or loaded.\n(Using default values or awaiting load)'
+                          }\n\n` +
+                          `Settings are stored in the application user data directory`
+                        }
+                      >
+                        <Info className="w-5 h-5 text-gray-500 cursor-help hover:text-gray-700" />
+                      </div>
+                    )}
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Settings are stored in the application user data directory
-                  </p>
                 </div>
               </>
             )}
