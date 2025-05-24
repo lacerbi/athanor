@@ -7,10 +7,12 @@ import { createWindow, mainWindow } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
+import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 
 // Create singleton instances
 export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
+export let apiKeyService: ApiKeyServiceMain;
 
 // Get the base directory of the Athanor application
 export function getAppBasePath(): string {
@@ -20,7 +22,11 @@ export function getAppBasePath(): string {
 // App lifecycle handlers
 app.whenReady().then(async () => {
   await fileService.reloadIgnoreRules();
-  setupIpcHandlers(fileService, settingsService);
+  
+  // Initialize secure API key service
+  apiKeyService = new ApiKeyServiceMain(app.getPath('userData'));
+  
+  setupIpcHandlers(fileService, settingsService, apiKeyService);
   createWindow();
 
   app.on('activate', () => {

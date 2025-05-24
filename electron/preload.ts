@@ -1,7 +1,8 @@
 // AI Summary: Exposes protected methods for IPC communication and file system operations.
-// Now includes FileService and PathUtils interfaces alongside the legacy fileSystem API.
+// Now includes FileService, PathUtils interfaces, and secure API key management.
 
 import { contextBridge, ipcRenderer } from 'electron';
+import { IPCChannelNames } from './modules/secure-api-storage/common/types';
 
 // Expose protected methods for IPC communication
 contextBridge.exposeInMainWorld('electron', {
@@ -34,6 +35,22 @@ contextBridge.exposeInMainWorld('settingsService', {
     ipcRenderer.invoke('settings:get-application'),
   saveApplicationSettings: (settings: any) => 
     ipcRenderer.invoke('settings:save-application', settings),
+});
+
+// Expose secure API key management
+contextBridge.exposeInMainWorld('electronBridge', {
+  secureApiKeyManager: {
+    storeKey: (providerId: string, apiKey: string) => 
+      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_STORE, { providerId, apiKey }),
+    getKey: (providerId: string) => 
+      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET, providerId),
+    deleteKey: (providerId: string) => 
+      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_DELETE, providerId),
+    isKeyStored: (providerId: string) => 
+      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_IS_STORED, providerId),
+    getStoredProviderIds: () => 
+      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_STORED_PROVIDERS),
+  },
 });
 
 // Expose the new pathUtils API

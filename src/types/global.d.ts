@@ -88,6 +88,36 @@ declare global {
       getVersion: () => Promise<string>;
     };
     
+    // Electron bridge for secure operations
+    electronBridge: {
+      secureApiKeyManager: {
+        /**
+         * Stores an API key securely
+         */
+        storeKey: (providerId: string, apiKey: string) => Promise<{ success: boolean }>;
+        
+        /**
+         * Retrieves an API key
+         */
+        getKey: (providerId: string) => Promise<string | null>;
+        
+        /**
+         * Deletes an API key
+         */
+        deleteKey: (providerId: string) => Promise<{ success: boolean }>;
+        
+        /**
+         * Checks if an API key is stored
+         */
+        isKeyStored: (providerId: string) => Promise<boolean>;
+        
+        /**
+         * Gets all provider IDs with stored keys
+         */
+        getStoredProviderIds: () => Promise<string[]>;
+      };
+    };
+    
     // New path utilities API
     pathUtils: {
       /**
