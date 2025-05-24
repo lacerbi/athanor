@@ -91,6 +91,7 @@ contextBridge.exposeInMainWorld('fileService', {
   
   // Project operations
   openFolder: () => ipcRenderer.invoke('fs:openFolder'),
+  selectProjectInfoFile: () => ipcRenderer.invoke('fs:selectProjectInfoFile'),
 });
 
 // Maintain legacy fileSystem API for backwards compatibility

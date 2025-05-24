@@ -221,6 +221,13 @@ declare global {
        * Open folder dialog and set as base directory
        */
       openFolder: () => Promise<string | null>;
+      
+      /**
+       * Opens a dialog to select a project information file.
+       * Returns a project-relative path or null if canceled.
+       * Throws an error if selected file is outside project directory.
+       */
+      selectProjectInfoFile: () => Promise<string | null>;
     };
     
     // Settings service API

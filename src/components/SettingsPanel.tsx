@@ -29,6 +29,7 @@ const SettingsPanel: React.FC = () => {
   const [projectInfoFilePath, setProjectInfoFilePath] = useState('');
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [projectSaveError, setProjectSaveError] = useState<string | null>(null);
+  const [browseError, setBrowseError] = useState<string | null>(null);
 
   // Local state for application settings form inputs
   const [enableExperimentalFeatures, setEnableExperimentalFeatures] = useState(false);
@@ -138,6 +139,28 @@ const SettingsPanel: React.FC = () => {
   const handleInfoFilePathBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const value = e.target.value.trim();
     setProjectInfoFilePath(value);
+  };
+
+  // Handle browse for project info file
+  const handleBrowseProjectInfoFile = async () => {
+    if (!hasProject) return;
+    setBrowseError(null); // Clear previous error
+    try {
+      const relativePath = await window.fileService.selectProjectInfoFile();
+      if (relativePath !== null) {
+        setProjectInfoFilePath(relativePath);
+      }
+    } catch (error) {
+      console.error('Error selecting project info file:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to select file.';
+      setBrowseError(errorMessage);
+    }
+  };
+
+  // Handle clear project info file path
+  const handleClearProjectInfoFile = () => {
+    setProjectInfoFilePath('');
+    setBrowseError(null); // Clear any browse error if path is cleared
   };
 
   // Project save button handler
@@ -276,16 +299,39 @@ const SettingsPanel: React.FC = () => {
                         <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
                       </div>
                     </div>
-                    <input
-                      id="projectInfoFilePath"
-                      type="text"
-                      value={projectInfoFilePath}
-                      onChange={handleInfoFilePathChange}
-                      onBlur={handleInfoFilePathBlur}
-                      placeholder="Relative path to project info file (e.g., docs/about.md)"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                      disabled={isLoadingProjectSettings || isSavingProject}
-                    />
+                    <div className="flex items-center space-x-2">
+                      <input
+                        id="projectInfoFilePath"
+                        type="text"
+                        value={projectInfoFilePath}
+                        onChange={handleInfoFilePathChange}
+                        onBlur={handleInfoFilePathBlur}
+                        placeholder="Relative path to project info file (e.g., docs/about.md)"
+                        className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        disabled={isLoadingProjectSettings || isSavingProject}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleBrowseProjectInfoFile}
+                        disabled={!hasProject || isLoadingProjectSettings || isSavingProject}
+                        className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Browse for project info file"
+                      >
+                        Browse...
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleClearProjectInfoFile}
+                        disabled={!hasProject || isLoadingProjectSettings || isSavingProject || !projectInfoFilePath}
+                        className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Clear project info file path"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    {browseError && (
+                      <p className="text-sm text-red-600 mt-1">{browseError}</p>
+                    )}
                   </div>
 
                   {/* Save Project Settings Button */}

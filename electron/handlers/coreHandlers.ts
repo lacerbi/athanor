@@ -173,6 +173,42 @@ export function setupCoreHandlers(fileService: FileService) {
       handleError(error, `resolving project-relative path for: ${targetPath}`);
     }
   });
+
+  // Add handler for selecting project info file
+  ipcMain.handle('fs:selectProjectInfoFile', async () => {
+    try {
+      const baseDir = _fileService.getBaseDir();
+      if (!baseDir) {
+        throw new Error('No project is currently open');
+      }
+
+      const result = await dialog.showOpenDialog(mainWindow!, {
+        title: 'Select Project Information File',
+        defaultPath: _fileService.toOS(baseDir),
+        properties: ['openFile'],
+        filters: [
+          { name: 'Text Files', extensions: ['md', 'txt', 'log', 'json', 'xml', 'yaml', 'yml', 'ini', 'rst', 'adoc'] },
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      });
+
+      if (result.canceled || !result.filePaths.length) {
+        return null;
+      }
+
+      const selectedPathAbs = _fileService.toUnix(result.filePaths[0]);
+      const relativePath = _fileService.relativize(selectedPathAbs);
+      
+      // Validate that the selected file is within the project directory
+      if (relativePath.startsWith('../') || relativePath === selectedPathAbs) {
+        throw new Error('Selected file must be within the project directory');
+      }
+
+      return relativePath;
+    } catch (error) {
+      handleError(error, 'selecting project info file');
+    }
+  });
 }
 
 // Enhanced error handling
