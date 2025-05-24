@@ -23,8 +23,9 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
   applicationDefaults,
 }) => {
   // Local state for application settings form inputs
-  const [enableExperimentalFeatures, setEnableExperimentalFeatures] =
-    useState(SETTINGS.defaults.application.enableExperimentalFeatures);
+  const [enableExperimentalFeatures, setEnableExperimentalFeatures] = useState(
+    SETTINGS.defaults.application.enableExperimentalFeatures
+  );
   const [minSmartPreviewLines, setMinSmartPreviewLines] = useState(
     String(SETTINGS.defaults.application.minSmartPreviewLines)
   );
@@ -349,68 +350,61 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                 </div>
               </div>
 
-              {/* Min Smart Preview Lines */}
+              {/* Smart Preview Lines Range */}
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
-                  <label
-                    htmlFor="minSmartPreviewLines"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Min Smart Preview Lines
+                  <label className="block text-sm font-medium text-gray-700">
+                    Smart Preview Lines Range
                   </label>
                   <div
                     className="relative group"
-                    title="Minimum number of lines to show in smart preview mode (1-200)."
+                    title="Range of lines to show in smart preview mode. Min: 1-200, Max: 1-200 (must be >= min)."
                   >
                     <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <input
-                    id="minSmartPreviewLines"
-                    type="text"
-                    value={minSmartPreviewLines}
-                    onChange={handleMinSmartPreviewLinesChange}
-                    onBlur={handleMinSmartPreviewLinesBlur}
-                    placeholder="10"
-                    className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    disabled={
-                      isLoadingApplicationSettings || isSavingApplication
-                    }
-                  />
-                  <span className="text-sm text-gray-500">lines</span>
-                </div>
-              </div>
-
-              {/* Max Smart Preview Lines */}
-              <div className="space-y-2">
-                <div className="flex items-center space-x-2">
-                  <label
-                    htmlFor="maxSmartPreviewLines"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    Max Smart Preview Lines
-                  </label>
-                  <div
-                    className="relative group"
-                    title="Maximum number of lines to show in smart preview mode (1-200). Must be >= min lines."
-                  >
-                    <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                  <div className="flex items-center space-x-2">
+                    <label
+                      htmlFor="minSmartPreviewLines"
+                      className="text-sm text-gray-600"
+                    >
+                      Min:
+                    </label>
+                    <input
+                      id="minSmartPreviewLines"
+                      type="text"
+                      value={minSmartPreviewLines}
+                      onChange={handleMinSmartPreviewLinesChange}
+                      onBlur={handleMinSmartPreviewLinesBlur}
+                      placeholder="10"
+                      className="w-16 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      disabled={
+                        isLoadingApplicationSettings || isSavingApplication
+                      }
+                    />
                   </div>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <input
-                    id="maxSmartPreviewLines"
-                    type="text"
-                    value={maxSmartPreviewLines}
-                    onChange={handleMaxSmartPreviewLinesChange}
-                    onBlur={handleMaxSmartPreviewLinesBlur}
-                    placeholder="20"
-                    className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    disabled={
-                      isLoadingApplicationSettings || isSavingApplication
-                    }
-                  />
+                  <span className="text-gray-400">–</span>
+                  <div className="flex items-center space-x-2">
+                    <label
+                      htmlFor="maxSmartPreviewLines"
+                      className="text-sm text-gray-600"
+                    >
+                      Max:
+                    </label>
+                    <input
+                      id="maxSmartPreviewLines"
+                      type="text"
+                      value={maxSmartPreviewLines}
+                      onChange={handleMaxSmartPreviewLinesChange}
+                      onBlur={handleMaxSmartPreviewLinesBlur}
+                      placeholder="20"
+                      className="w-16 px-2 py-1 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                      disabled={
+                        isLoadingApplicationSettings || isSavingApplication
+                      }
+                    />
+                  </div>
                   <span className="text-sm text-gray-500">lines</span>
                 </div>
               </div>
@@ -422,11 +416,11 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                     htmlFor="thresholdLineLength"
                     className="block text-sm font-medium text-gray-700"
                   >
-                    Threshold Line Length
+                    File Size Threshold
                   </label>
                   <div
                     className="relative group"
-                    title="Lines after which a file is considered large for warnings or special handling (50-2000). Default: 200."
+                    title="File size (number of lines) after which a file is considered large for warnings or special handling (50-2000). Default: 200."
                   >
                     <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
                   </div>
