@@ -65,12 +65,22 @@ export class ApiKeyServiceMain {
     }
 
     try {
-      // Encrypt the API key
-      const encryptedKey = safeStorage.encryptString(apiKey);
+      // Extract last four characters for display purposes
+      const lastFourChars = apiKey.slice(-4);
       
-      // Save encrypted key to file
+      // Encrypt the API key
+      const encryptedBuffer = safeStorage.encryptString(apiKey);
+      const encryptedKeyBase64 = encryptedBuffer.toString('base64');
+      
+      // Create data object to store
+      const dataToStore = {
+        encryptedKey: encryptedKeyBase64,
+        lastFourChars: lastFourChars
+      };
+      
+      // Save data to JSON file
       const filePath = this.getFilePath(providerId);
-      await fs.promises.writeFile(filePath, encryptedKey);
+      await fs.promises.writeFile(filePath, JSON.stringify(dataToStore));
       
       // Store plaintext in memory for quick access
       this.apiKeyStore.set(providerId, apiKey);
@@ -101,7 +111,7 @@ export class ApiKeyServiceMain {
       // Remove from memory
       this.apiKeyStore.delete(providerId);
       
-      // Delete file if it exists
+      // Delete JSON file if it exists
       const filePath = this.getFilePath(providerId);
       try {
         await fs.promises.unlink(filePath);
@@ -155,14 +165,14 @@ export class ApiKeyServiceMain {
    */
   private async loadAllKeysFromDisk(): Promise<void> {
     try {
-      // Read all .key files in storage directory
+      // Read all .json files in storage directory
       const files = await fs.promises.readdir(this.storageDir);
-      const keyFiles = files.filter(file => file.endsWith('.key'));
+      const keyFiles = files.filter(file => file.endsWith('.json'));
 
       console.log(`Found ${keyFiles.length} encrypted API key files`);
 
       for (const keyFile of keyFiles) {
-        const providerId = path.basename(keyFile, '.key') as ApiProvider;
+        const providerId = path.basename(keyFile, '.json') as ApiProvider;
         
         // Skip if not a valid provider
         if (!this.providerService.getProvider(providerId)) {
@@ -172,10 +182,18 @@ export class ApiKeyServiceMain {
 
         try {
           const filePath = path.join(this.storageDir, keyFile);
-          const encryptedData = await fs.promises.readFile(filePath);
+          const fileContent = await fs.promises.readFile(filePath, 'utf-8');
+          const jsonData = JSON.parse(fileContent);
           
-          // Decrypt the key
-          const decryptedKey = safeStorage.decryptString(encryptedData);
+          // Check if encrypted key exists in the JSON data
+          if (!jsonData.encryptedKey) {
+            console.warn(`No encrypted key found in file for provider: ${providerId}, skipping`);
+            continue;
+          }
+          
+          // Decode Base64 to buffer and decrypt
+          const encryptedBuffer = Buffer.from(jsonData.encryptedKey, 'base64');
+          const decryptedKey = safeStorage.decryptString(encryptedBuffer);
           
           // Validate the decrypted key
           if (this.providerService.validateApiKey(providerId, decryptedKey)) {
@@ -211,13 +229,45 @@ export class ApiKeyServiceMain {
   }
 
   /**
+   * Gets display information for an API key without decrypting the full key
+   * 
+   * @param providerId The provider to get display info for
+   * @returns Object containing storage status and last four characters if stored
+   */
+  async getApiKeyDisplayInfo(providerId: ApiProvider): Promise<{ isStored: boolean, lastFourChars?: string }> {
+    try {
+      const filePath = this.getFilePath(providerId);
+      
+      try {
+        const fileContent = await fs.promises.readFile(filePath, 'utf-8');
+        const jsonData = JSON.parse(fileContent);
+        
+        if (jsonData.lastFourChars) {
+          return {
+            isStored: true,
+            lastFourChars: jsonData.lastFourChars
+          };
+        } else {
+          // File exists but no lastFourChars field
+          return { isStored: false };
+        }
+      } catch (error) {
+        // File doesn't exist or can't be parsed
+        return { isStored: false };
+      }
+    } catch (error) {
+      throw new ApiKeyStorageError(`Failed to get display info for API key ${providerId}: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Gets the file path for a provider's encrypted key
    * 
    * @param providerId The provider ID
-   * @returns Full path to the encrypted key file
+   * @returns Full path to the encrypted key JSON file
    * @private
    */
   private getFilePath(providerId: ApiProvider): string {
-    return path.join(this.storageDir, `${providerId}.key`);
+    return path.join(this.storageDir, `${providerId}.json`);
   }
 }

@@ -80,5 +80,17 @@ export function registerSecureApiKeyIpc(apiKeyService: ApiKeyServiceMain): void 
     }
   });
 
+  // Get API key display info
+  ipcMain.handle(IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO, async (_event, providerId: string) => {
+    try {
+      return await apiKeyService.getApiKeyDisplayInfo(providerId as any);
+    } catch (error) {
+      if (error instanceof ApiKeyStorageError) {
+        throw error;
+      }
+      throw new ApiKeyStorageError(`Failed to get API key display info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
   console.log('Secure API key IPC handlers registered');
 }

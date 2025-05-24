@@ -50,6 +50,8 @@ contextBridge.exposeInMainWorld('electronBridge', {
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_IS_STORED, providerId),
     getStoredProviderIds: () => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_STORED_PROVIDERS),
+    getApiKeyDisplayInfo: (providerId: string) => 
+      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO, providerId),
   },
 });
 

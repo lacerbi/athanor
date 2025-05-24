@@ -115,6 +115,11 @@ declare global {
          * Gets all provider IDs with stored keys
          */
         getStoredProviderIds: () => Promise<string[]>;
+        
+        /**
+         * Gets display information for an API key (status and last four chars)
+         */
+        getApiKeyDisplayInfo: (providerId: string) => Promise<{ isStored: boolean, lastFourChars?: string }>;
       };
     };
     

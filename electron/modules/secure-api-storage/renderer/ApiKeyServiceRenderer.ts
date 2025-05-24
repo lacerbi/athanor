@@ -180,6 +180,36 @@ export class ApiKeyServiceRenderer {
   }
 
   /**
+   * Gets display information for an API key (status and last four chars)
+   * 
+   * This method retrieves information about whether a key is stored and its
+   * last four characters without requiring full decryption. Useful for UI
+   * display purposes.
+   * 
+   * @param providerId The provider to get display info for
+   * @returns An object with isStored and optionally lastFourChars
+   * @throws ApiKeyStorageError if the operation fails
+   */
+  async getApiKeyDisplayInfo(providerId: ApiProvider): Promise<{ isStored: boolean, lastFourChars?: string }> {
+    try {
+      const result = await this.bridge.getApiKeyDisplayInfo(providerId);
+      return result;
+    } catch (error) {
+      // If it's already an ApiKeyStorageError, re-throw it
+      if (error instanceof ApiKeyStorageError) {
+        throw error;
+      }
+      
+      // Handle IPC errors
+      if (error && typeof error === 'object' && 'message' in error) {
+        throw new ApiKeyStorageError(error.message as string);
+      }
+      
+      throw new ApiKeyStorageError(`Failed to get API key display info for ${providerId}`);
+    }
+  }
+
+  /**
    * Gets all available provider IDs (for UI listing)
    * 
    * This is a synchronous operation that returns all providers that the system

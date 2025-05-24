@@ -32,7 +32,8 @@ export const IPCChannelNames = {
   SECURE_API_KEY_GET: 'secure-api-key:get',
   SECURE_API_KEY_DELETE: 'secure-api-key:delete',
   SECURE_API_KEY_IS_STORED: 'secure-api-key:is-stored',
-  SECURE_API_KEY_GET_STORED_PROVIDERS: 'secure-api-key:get-stored-providers'
+  SECURE_API_KEY_GET_STORED_PROVIDERS: 'secure-api-key:get-stored-providers',
+  SECURE_API_KEY_GET_DISPLAY_INFO: 'secure-api-key:get-display-info'
 } as const;
 
 /**
