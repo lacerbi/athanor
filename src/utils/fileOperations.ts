@@ -24,10 +24,9 @@ export function removeInitialEmptyLine(content: string): string {
 // Parse diff blocks from file content
 export function parseDiffBlocks(content: string): DiffBlock[] {
   const blocks: DiffBlock[] = [];
-  // Modified regex to properly handle empty replacements
-  // The key change is removing the required newline before >>>>>>> REPLACE
-  // This allows empty replacements with just a newline between ======= and >>>>>>> REPLACE
-  const regex = /<<<<<<< SEARCH\n([\s\S]*?)=======\n([\s\S]*?)>>>>>>> REPLACE/g;
+  // Modified regex to properly handle optional punctuation after SEARCH and REPLACE
+  // Allows one of [?<>!.,:;] immediately following the literal keyword
+  const regex = /<<<<<<< SEARCH[?<>!.,:;]?\n([\s\S]*?)=======\n([\s\S]*?)>>>>>>> REPLACE[?<>!.,:;]?/g;
 
   let match;
   while ((match = regex.exec(content)) !== null) {
@@ -153,3 +152,4 @@ export async function processFileUpdate(
   // Return the final processed content with any final cleanup
   return removeInitialEmptyLine(processedContent);
 }
+    

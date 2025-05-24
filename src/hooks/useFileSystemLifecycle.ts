@@ -6,7 +6,9 @@ import { buildFileTree } from '../services/fileSystemService';
 import { createAthignoreFile } from '../services/fileIgnoreService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { loadPrompts, loadTasks } from '../services/promptService';
+import { readAthanorConfig } from '../utils/configUtils';
 
 import { FileSystemLifecycle } from '../types/global';
 
@@ -17,6 +19,26 @@ const loadAndSetTrees = async (basePath: string) => {
   const materialsTree = await buildFileTree(materialsPath, '', true);
   useFileSystemStore.getState().setFileTree([mainTree, materialsTree]);
   return { mainTree, materialsTree };
+};
+
+// Helper for loading effective configuration with settings integration
+const loadAndSetEffectiveConfig = async (basePath: string) => {
+  try {
+    // Get current project settings from the settings store
+    const { projectSettings } = useSettingsStore.getState();
+    
+    // Load effective configuration with settings integration
+    const effectiveConfig = await readAthanorConfig(basePath, projectSettings);
+    
+    // Update the file system store with the effective config
+    useFileSystemStore.getState().setEffectiveConfig(effectiveConfig);
+    
+    return effectiveConfig;
+  } catch (error) {
+    console.error('Error loading effective configuration:', error);
+    useFileSystemStore.getState().setEffectiveConfig(null);
+    return null;
+  }
 };
 
 export function useFileSystemLifecycle(): FileSystemLifecycle {
@@ -34,6 +56,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   const { validateSelections, clearSelections } = useFileSystemStore();
   const { addLog } = useLogStore();
+  const { loadProjectSettings, loadApplicationSettings, projectSettings } = useSettingsStore();
 
   const refreshFileSystem = useCallback(
     async (silentOrNewPath: boolean | string = false, newlyCreatedPath?: string) => {
@@ -58,6 +81,9 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         validateSelections(mainTree);
         setFilesData(mainTree);
         setResourcesData(materialsTree);
+
+        // Load effective configuration with settings
+        await loadAndSetEffectiveConfig(currentDirectory);
 
         // Load prompts and tasks
         await Promise.all([
@@ -118,11 +144,18 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     setFilesData(mainTree);
     setResourcesData(materialsTree);
 
+    // Load project settings for the new directory
+    await loadProjectSettings(normalizedDir);
+    
+    // Load effective configuration with settings
+    await loadAndSetEffectiveConfig(normalizedDir);
+
     // Load prompts and tasks
     await Promise.all([
       loadPrompts(),
       loadTasks()
     ]);
+    
     await setupWatcher(normalizedDir);
     addLog(`Loaded directory: ${normalizedDir}`);
 
@@ -188,6 +221,9 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       isInitializedRef.current = true;
 
       try {
+        // Load application settings first (independent of project)
+        await loadApplicationSettings();
+        
         const currentDir = await window.fileService.getCurrentDirectory();
         const normalizedDir = await window.pathUtils.toUnix(currentDir);
         setCurrentDirectory(normalizedDir);
@@ -198,11 +234,18 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         setFilesData(mainTree);
         setResourcesData(materialsTree);
 
+        // Load application settings and project settings
+        await loadProjectSettings(normalizedDir);
+        
+        // Load effective configuration with settings
+        await loadAndSetEffectiveConfig(normalizedDir);
+
         // Load prompts and tasks
         await Promise.all([
           loadPrompts(),
           loadTasks()
         ]);
+        
         await setupWatcher(normalizedDir);
         addLog(`Loaded directory: ${normalizedDir}`);
       } catch (error) {
@@ -218,7 +261,18 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [setupWatcher, validateSelections, addLog]);
+  }, [setupWatcher, validateSelections, addLog, loadApplicationSettings, loadProjectSettings]);
+
+  // Effect to update effective config when project settings change
+  useEffect(() => {
+    if (currentDirectory && projectSettings !== undefined) {
+      // Reload effective configuration when project settings change
+      loadAndSetEffectiveConfig(currentDirectory).catch(error => {
+        console.error('Error updating effective configuration after settings change:', error);
+        addLog('Failed to update configuration after settings change');
+      });
+    }
+  }, [projectSettings, currentDirectory, addLog]);
 
   useEffect(() => {
     const fetchVersion = async () => {

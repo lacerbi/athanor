@@ -6,7 +6,7 @@ import CommandButton from './CommandButton';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useLogStore } from '../stores/logStore';
 
-export type TabType = 'workbench' | 'viewer' | 'apply-changes';
+export type TabType = 'workbench' | 'viewer' | 'apply-changes' | 'settings';
 
 interface AthanorTabsProps {
   activeTab: TabType;
@@ -31,6 +31,7 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({
               : 'hover:bg-gray-100'
           }`}
           onClick={() => onTabChange('workbench')}
+          title="Create and refine AI prompts using selected files and task templates"
         >
           Prompt Studio
         </button>
@@ -41,6 +42,7 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({
               : 'hover:bg-gray-100'
           }`}
           onClick={() => onTabChange('viewer')}
+          title="View and preview selected files with syntax highlighting"
         >
           File Viewer
         </button>
@@ -51,8 +53,20 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({
               : 'hover:bg-gray-100'
           }`}
           onClick={() => onTabChange('apply-changes')}
+          title="Review and apply AI-generated code changes with diff preview"
         >
           Apply Changes
+        </button>
+        <button
+          className={`px-4 py-2 rounded ${
+            activeTab === 'settings'
+              ? 'bg-gray-200 font-medium'
+              : 'hover:bg-gray-100'
+          }`}
+          onClick={() => onTabChange('settings')}
+          title="Manage your project-specific and application-wide preferences"
+        >
+          Settings
         </button>
       </div>
       <div className="flex items-center">

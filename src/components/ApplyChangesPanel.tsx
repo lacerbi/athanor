@@ -6,7 +6,9 @@ import { createPatch } from 'diff';
 import { AlertTriangle } from 'lucide-react';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { getSmartPreview } from '../utils/codebaseDocumentation';
+import { SETTINGS } from '../utils/constants';
 
 interface DiffLineProps {
   content: string;
@@ -113,6 +115,7 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
 }) => {
   const [showWarning, setShowWarning] = useState(false);
   const { selectedItems } = useFileSystemStore();
+  const { applicationSettings } = useSettingsStore();
 
   useEffect(() => {
     const checkWarning = async () => {
@@ -145,7 +148,13 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
           return;
         }
 
-        const preview = getSmartPreview(content);
+        // Get smart preview configuration from settings with fallback to defaults
+        const config = {
+          minLines: applicationSettings?.minSmartPreviewLines ?? SETTINGS.defaults.application.minSmartPreviewLines,
+          maxLines: applicationSettings?.maxSmartPreviewLines ?? SETTINGS.defaults.application.maxSmartPreviewLines,
+        };
+
+        const preview = getSmartPreview(content, config);
         setShowWarning(preview.endsWith('... (content truncated)'));
       } catch (error) {
         console.error('Error checking file status:', error);
@@ -154,7 +163,7 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
     };
 
     void checkWarning();
-  }, [op.file_path, op.file_operation, selectedItems]);
+  }, [op.file_path, op.file_operation, selectedItems, applicationSettings]);
 
   return (
     <div className="border rounded p-4 bg-white shadow-sm">

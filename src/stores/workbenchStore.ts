@@ -4,11 +4,13 @@
 // and active tab state tracking.
 import { create } from 'zustand';
 import { TaskTab, WorkbenchState } from '../types/global';
+import { SETTINGS } from '../utils/constants';
 
 const PROMPT_GENERATION_TIMEOUT = 30000; // 30 seconds timeout
 
 // Default welcome message for new tabs
-const DEFAULT_WELCOME_MESSAGE = "Welcome to Athanor! 🚀\n\nI'm here to increase your productivity with AI coding assistants.\nTo get started:\n\n1. Write your task or question in the text area to the left\n2. Select relevant files from the file explorer\n3. Click one of the prompt generation buttons\n4. Paste the prompt into a AI assistant\n5. Copy the AI response to the clipboard\n6. Apply the AI Output above!\n\nLet's build something great together!";
+const DEFAULT_WELCOME_MESSAGE =
+  "Welcome to Athanor! 🚀\n\nI'm here to increase your productivity with AI assistants.\nTo get started:\n\n1. Write your task or question in the text area to the left\n2. Select relevant files from the file explorer\n3. Click one of the prompt generation buttons\n4. Paste the prompt into a AI assistant\n5. Copy the AI response to the clipboard\n6. Apply the AI Output above!\n\nLet's build something great together!";
 
 // Create a new task tab with smart numbering
 function createTaskTab(existingTabs: TaskTab[]): TaskTab {
@@ -16,7 +18,7 @@ function createTaskTab(existingTabs: TaskTab[]): TaskTab {
   const taskRegex = /^Task (\d+)$/;
   let highestNumber = 0;
 
-  existingTabs.forEach(tab => {
+  existingTabs.forEach((tab) => {
     const match = tab.name.match(taskRegex);
     if (match) {
       const number = parseInt(match[1], 10);
@@ -26,13 +28,13 @@ function createTaskTab(existingTabs: TaskTab[]): TaskTab {
 
   // Use highest number + 1 for new tab
   const newNumber = highestNumber + 1;
-  
+
   return {
     id: `tab-${Date.now().toString()}`,
     name: `Task ${newNumber}`,
     content: '',
     output: DEFAULT_WELCOME_MESSAGE,
-    context: ''
+    context: '',
   };
 }
 
@@ -43,44 +45,49 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => {
     activeTabIndex: 0,
 
     // Core tab management
-    createTab: () => set((state) => ({
-      tabs: [...state.tabs, createTaskTab(state.tabs)],
-      activeTabIndex: state.tabs.length,
-    })),
+    createTab: () =>
+      set((state) => ({
+        tabs: [...state.tabs, createTaskTab(state.tabs)],
+        activeTabIndex: state.tabs.length,
+      })),
 
-    removeTab: (index: number) => set((state) => {
-      if (state.tabs.length <= 1) {
-        // If last tab is being closed, create a new "Task 1" tab
+    removeTab: (index: number) =>
+      set((state) => {
+        if (state.tabs.length <= 1) {
+          // If last tab is being closed, create a new "Task 1" tab
+          return {
+            tabs: [createTaskTab([])],
+            activeTabIndex: 0,
+          };
+        }
         return {
-          tabs: [createTaskTab([])],
-          activeTabIndex: 0,
+          tabs: state.tabs.filter((_, i) => i !== index),
+          activeTabIndex: Math.min(index, state.tabs.length - 2),
         };
-      }
-      return {
-        tabs: state.tabs.filter((_, i) => i !== index),
-        activeTabIndex: Math.min(index, state.tabs.length - 2),
-      };
-    }),
+      }),
 
     setActiveTab: (index: number) => set({ activeTabIndex: index }),
 
-    setTabContent: (index: number, text: string) => set((state) => ({
-      tabs: state.tabs.map((tab, i) => 
-        i === index ? { ...tab, content: text } : tab
-      ),
-    })),
+    setTabContent: (index: number, text: string) =>
+      set((state) => ({
+        tabs: state.tabs.map((tab, i) =>
+          i === index ? { ...tab, content: text } : tab
+        ),
+      })),
 
-    setTabOutput: (index: number, text: string) => set((state) => ({
-      tabs: state.tabs.map((tab, i) => 
-        i === index ? { ...tab, output: text } : tab
-      ),
-    })),
+    setTabOutput: (index: number, text: string) =>
+      set((state) => ({
+        tabs: state.tabs.map((tab, i) =>
+          i === index ? { ...tab, output: text } : tab
+        ),
+      })),
 
-    setTabContext: (index: number, context: string) => set((state) => ({
-      tabs: state.tabs.map((tab, i) => 
-        i === index ? { ...tab, context } : tab
-      ),
-    })),
+    setTabContext: (index: number, context: string) =>
+      set((state) => ({
+        tabs: state.tabs.map((tab, i) =>
+          i === index ? { ...tab, context } : tab
+        ),
+      })),
 
     // Legacy support - getters
     get taskDescription() {
@@ -146,6 +153,22 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => {
           }
         }, PROMPT_GENERATION_TIMEOUT);
       }
+    },
+
+    // Get smart preview config for prompt generation
+    getSmartPreviewConfig: () => {
+      // Import settingsStore dynamically to avoid circular dependencies
+      const { useSettingsStore } = require('./settingsStore');
+      const { applicationSettings } = useSettingsStore.getState();
+
+      return {
+        minLines:
+          applicationSettings?.minSmartPreviewLines ??
+          SETTINGS.defaults.application.minSmartPreviewLines,
+        maxLines:
+          applicationSettings?.maxSmartPreviewLines ??
+          SETTINGS.defaults.application.maxSmartPreviewLines,
+      };
     },
   };
 

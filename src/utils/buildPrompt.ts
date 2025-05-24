@@ -2,9 +2,8 @@
 // Handles codebase documentation generation, selected file list formatting, and applies settings like smart preview and file tree inclusion from the fileSystemStore.
 // Core function: buildDynamicPrompt.
 import { FileItem } from './fileTree';
-import { readAthanorConfig } from './configUtils';
 import { generateCodebaseDocumentation } from './codebaseDocumentation';
-import { DOC_FORMAT, FILE_SYSTEM } from './constants';
+import { DOC_FORMAT, FILE_SYSTEM, SETTINGS } from './constants';
 import {
   loadTemplateContent,
   substituteVariables,
@@ -12,6 +11,7 @@ import {
 } from './promptTemplates';
 import { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { AthanorConfig } from '../types/global';
 
 export interface PromptVariables {
   project_name?: string;
@@ -94,18 +94,47 @@ export async function buildDynamicPrompt(
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',
-  passedFormatType: string = DOC_FORMAT.MARKDOWN
+  passedFormatTypeOverride?: string,
+  smartPreviewConfigInput?: { minLines: number; maxLines: number },
+  currentThresholdLineLength?: number // Added new parameter
 ): Promise<string> {
-  // Load config with fallback values
-  const config = await readAthanorConfig(rootPath);
-
-  // Get the store settings
+  // Get the store settings and effective configuration
   const {
     smartPreviewEnabled,
     includeFileTree,
-    formatType,
+    formatType: storeFormatType,
     includeProjectInfo,
+    effectiveConfig,
   } = useFileSystemStore.getState();
+
+  // Handle smartPreviewConfig with centralized defaults and warning
+  let smartPreviewConfig = smartPreviewConfigInput;
+  if (!smartPreviewConfig) {
+    console.warn(
+      'AthanorApp: buildDynamicPrompt did not receive smartPreviewConfig. Using default values from constants.ts.'
+    );
+    smartPreviewConfig = {
+      minLines: SETTINGS.defaults.application.minSmartPreviewLines,
+      maxLines: SETTINGS.defaults.application.maxSmartPreviewLines,
+    };
+  }
+
+  // Determine the actual format type to use for documentation
+  const actualFormatType = passedFormatTypeOverride || storeFormatType || DOC_FORMAT.DEFAULT;
+
+  // Determine the active threshold line length to use
+  const activeThresholdLineLength = currentThresholdLineLength ?? SETTINGS.defaults.application.thresholdLineLength;
+
+  // Use effective config from store, with fallback for safety
+  let config: AthanorConfig;
+  if (effectiveConfig) {
+    config = effectiveConfig;
+  } else {
+    console.warn('No effective configuration available, using fallback');
+    // Import readAthanorConfig dynamically only when needed as fallback
+    const { readAthanorConfig } = await import('./configUtils');
+    config = await readAthanorConfig(rootPath);
+  }
 
   // Prepare project info with source file path if available
   let projectInfoForPrompt = '';
@@ -130,8 +159,10 @@ export async function buildDynamicPrompt(
     rootPath,
     config,
     smartPreviewEnabled,
-    passedFormatType || formatType, // Use passed format or get from store
-    config.project_info_path // Pass project_info_path to avoid duplication
+    actualFormatType, // Use the derived actualFormatType
+    config.project_info_path, // Pass project_info_path to avoid duplication
+    smartPreviewConfig,
+    activeThresholdLineLength // Pass the active threshold
   );
 
   // Format task context if non-empty
@@ -146,9 +177,6 @@ export async function buildDynamicPrompt(
   if (!includeFileTree) {
     codebaseContent.file_tree = '';
   }
-
-  // Get threshold line length from constants
-  const thresholdLineLength = FILE_SYSTEM.thresholdLineLength;
 
   // Prepare variables for template
   const variables: PromptVariables = {
@@ -165,7 +193,7 @@ export async function buildDynamicPrompt(
     codebase_legend: hasSelectedFiles(items, selectedItems)
       ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
       : '',
-    threshold_line_length: thresholdLineLength,
+    threshold_line_length: activeThresholdLineLength,
     ...codebaseContent, // Contains file_contents and modified file_tree
   };
 

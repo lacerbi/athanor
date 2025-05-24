@@ -1,6 +1,6 @@
 {
   "name": "athanor",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
@@ -81,7 +81,6 @@
     "stream-browserify": "^3.0.0",
     "timers-browserify": "^2.0.12",
     "xml2js": "^0.6.2",
-    "yaml": "^2.6.1",
     "zustand": "^5.0.2"
   }
 }

@@ -1,6 +1,7 @@
-// AI Summary: Handles finding and reading project information files from the project root.
+// AI Summary: Handles finding and reading project information files from the project root or specific paths.
 // Implements case-insensitive file search with specific basename and extension priorities.
-// Reuses normalizeContent from fileSystemService for consistent line ending handling.
+// Supports both auto-discovery and settings-specified file paths with consistent content normalization.
+
 import { PROJECT_INFO } from './constants';
 
 /**
@@ -24,6 +25,62 @@ export function normalizeContent(content: string, wrapInXml: boolean = true): st
   }
   
   return normalizedContent + '\n'; // Ensure single trailing newline
+}
+
+/**
+ * Read project information from a specific file path relative to the project root.
+ * This function is used when a specific file path is provided via settings.
+ * 
+ * @param basePath The root path of the project
+ * @param relativePath The relative path to the project info file
+ * @returns An object with the normalized content and absolute path of the file, or null if not found/invalid
+ */
+export async function readProjectInfoFromPath(basePath: string, relativePath: string): Promise<{ content: string; path: string } | null> {
+  try {
+    // Clean up the relative path
+    const cleanPath = relativePath.trim().replace(/^[/\\]+/, ''); // Remove leading slashes
+    
+    if (!cleanPath) {
+      console.warn('Empty project info file path provided');
+      return null;
+    }
+    
+    // Construct the full path
+    const filePath = await window.fileSystem.joinPaths(basePath, cleanPath);
+    
+    // Check if the file exists
+    const exists = await window.fileSystem.fileExists(filePath);
+    if (!exists) {
+      console.warn(`Project info file not found: ${filePath}`);
+      return null;
+    }
+    
+    // Check if it's a file (not a directory)
+    const isDir = await window.fileSystem.isDirectory(filePath);
+    if (isDir) {
+      console.warn(`Project info path is a directory, not a file: ${filePath}`);
+      return null;
+    }
+    
+    // Read the file content
+    const content = await window.fileSystem.readFile(filePath, {
+      encoding: 'utf8',
+    });
+    
+    if (typeof content !== 'string') {
+      console.warn(`Project info file content is not text: ${filePath}`);
+      return null;
+    }
+    
+    // Normalize the content and return it along with the file path
+    return {
+      content: normalizeContent(content),
+      path: filePath
+    };
+  } catch (error) {
+    console.error(`Error reading project info from path: ${relativePath}`, error);
+    return null;
+  }
 }
 
 /**
@@ -62,22 +119,33 @@ export async function readProjectInfo(basePath: string): Promise<{ content: stri
       if (match) {
         // Found a match - read the file using the original filename (preserving case)
         const filePath = await window.fileSystem.joinPaths(basePath, match.original);
-        const content = await window.fileSystem.readFile(filePath, {
-          encoding: 'utf8',
-        });
         
-        // Normalize the content and return it along with the file path
-        return {
-          content: normalizeContent(content as string),
-          path: filePath
-        };
+        try {
+          const content = await window.fileSystem.readFile(filePath, {
+            encoding: 'utf8',
+          });
+          
+          if (typeof content !== 'string') {
+            console.warn(`Project info file content is not text: ${filePath}`);
+            continue; // Try next candidate
+          }
+          
+          // Normalize the content and return it along with the file path
+          return {
+            content: normalizeContent(content),
+            path: filePath
+          };
+        } catch (fileError) {
+          console.warn(`Error reading project info file: ${filePath}`, fileError);
+          continue; // Try next candidate
+        }
       }
     }
 
     // No matching file found
     return null;
   } catch (error) {
-    console.error('Error reading project info file:', error);
+    console.error('Error during project info auto-discovery:', error);
     return null;
   }
 }

@@ -11,11 +11,6 @@ export const FILE_SYSTEM = {
   // Supplementary materials directory name
   materialsDirName: '.ath_materials',
 
-  // Maximum number of lines before a file is considered too long
-  thresholdLineLength: 200,
-  // Maximum/minimum lines for smart preview
-  minSmartPreviewLines: 10,
-  maxSmartPreviewLines: 20,
   // Refactoring thresholds
   refactoring: {
     // Files over this length are candidates for splitting
@@ -24,6 +19,27 @@ export const FILE_SYSTEM = {
     minSplitSize: 50,
     // Maximum recommended file size
     maxFileSize: 500,
+  },
+};
+
+// Settings configuration
+export const SETTINGS = {
+  // Filenames for settings files
+  PROJECT_SETTINGS_FILENAME: 'project_settings.json',
+  APP_SETTINGS_FILENAME: 'application_settings.json',
+  
+  // Default settings
+  defaults: {
+    project: {
+      projectNameOverride: '',
+      projectInfoFilePath: '',
+    },
+    application: {
+      enableExperimentalFeatures: false,
+      minSmartPreviewLines: 10,
+      maxSmartPreviewLines: 20,
+      thresholdLineLength: 200,
+    },
   },
 };
 

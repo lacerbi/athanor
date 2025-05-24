@@ -45,7 +45,7 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Each file should include a brief change summary
 - Include the full file path
 - Put the XML block inside markdown codeblocks
-- Make sure to enclose the code with ![CDATA[__CODE HERE__]]
+- Make sure to enclose the code with <![CDATA[__CODE HERE__]]>
 - You can write multiple `file` blocks in the same `ath` command
 - If the `ath` block is getting too long (>> 250 lines):
   - When you close the `file` tag, also close the `ath` tag and close the XML block
@@ -227,7 +227,7 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Each file should include a brief change summary
 - Include the full file path
 - Put the XML block inside markdown codeblocks
-- Make sure to enclose the code with ![CDATA[__CODE HERE__]]
+- Make sure to enclose the code with <![CDATA[__CODE HERE__]]>
 - You can write multiple `file` blocks in the same `ath` command
 
 ### File operations

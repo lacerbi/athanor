@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { FileItem, isEmptyFolder, getAllValidIds, getFileItemById } from '../utils/fileTree';
 import { getSelectableDescendants, calculateSelectionTotals } from '../utils/fileSelection';
 import { DOC_FORMAT } from '../utils/constants';
+import { AthanorConfig } from '../types/global';
 
 interface FileSystemState {
   selectedItems: Set<string>;
@@ -17,6 +18,10 @@ interface FileSystemState {
   // File tree state
   fileTree: FileItem[];
   setFileTree: (tree: FileItem[]) => void;
+
+  // Effective configuration (includes settings overrides)
+  effectiveConfig: AthanorConfig | null;
+  setEffectiveConfig: (config: AthanorConfig | null) => void;
 
   // Selection metrics
   selectedFileCount: number;
@@ -57,6 +62,9 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
   fileTree: [],
   setFileTree: (tree: FileItem[]) => set({ fileTree: tree }),
   
+  effectiveConfig: null,
+  setEffectiveConfig: (config: AthanorConfig | null) => set({ effectiveConfig: config }),
+  
   resetState: () => {
     return set({
       // Clear selection state
@@ -70,6 +78,9 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
       
       // Clear file system state
       fileTree: [],
+      
+      // Clear effective configuration
+      effectiveConfig: null,
       
       // Keep smart preview and file tree enabled by default
       smartPreviewEnabled: true,

@@ -5,6 +5,7 @@ import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
 import FileViewerPanel from './FileViewerPanel';
 import ApplyChangesPanel from './ApplyChangesPanel';
+import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { FileItem } from '../utils/fileTree';
@@ -50,7 +51,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   
   const { 
     selectedFileCount, 
-    selectedLinesTotal
+    selectedLinesTotal,
+    effectiveConfig
   } = useFileSystemStore();
 
   const handleFileView = () => {
@@ -115,7 +117,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               </button>
             </div>
           </div>
-          <div className="text-sm text-gray-600 mb-0">{currentDirectory}</div>
+          <div className="text-sm text-gray-600 mb-0">
+            <div className="font-medium">
+              {effectiveConfig?.project_name || 'Loading...'}
+            </div>
+            <div 
+              className="text-xs text-gray-500 mt-1 truncate min-w-0"
+              style={{ direction: 'rtl', textAlign: 'left' }}
+              title={currentDirectory}
+            >
+              {currentDirectory}
+            </div>
+          </div>
         </div>
 
         {/* Scrollable file explorer section */}
@@ -174,6 +187,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           )}
           {activeTab === 'viewer' && <FileViewerPanel />}
           {activeTab === 'apply-changes' && <ApplyChangesPanel />}
+          {activeTab === 'settings' && <SettingsPanel />}
         </div>
 
         {/* Log panel resize handle */}

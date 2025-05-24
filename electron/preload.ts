@@ -24,6 +24,18 @@ contextBridge.exposeInMainWorld('app', {
   getVersion: () => ipcRenderer.invoke('app:version'),
 });
 
+// Expose settings service API
+contextBridge.exposeInMainWorld('settingsService', {
+  getProjectSettings: (projectPath: string) => 
+    ipcRenderer.invoke('settings:get-project', projectPath),
+  saveProjectSettings: (projectPath: string, settings: any) => 
+    ipcRenderer.invoke('settings:save-project', projectPath, settings),
+  getApplicationSettings: () => 
+    ipcRenderer.invoke('settings:get-application'),
+  saveApplicationSettings: (settings: any) => 
+    ipcRenderer.invoke('settings:save-application', settings),
+});
+
 // Expose the new pathUtils API
 contextBridge.exposeInMainWorld('pathUtils', {
   // Path utilities (pure functions)
@@ -79,6 +91,7 @@ contextBridge.exposeInMainWorld('fileService', {
   
   // Project operations
   openFolder: () => ipcRenderer.invoke('fs:openFolder'),
+  selectProjectInfoFile: () => ipcRenderer.invoke('fs:selectProjectInfoFile'),
 });
 
 // Maintain legacy fileSystem API for backwards compatibility

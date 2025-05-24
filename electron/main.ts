@@ -6,9 +6,11 @@ import * as path from 'path';
 import { createWindow, mainWindow } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
 import { FileService } from './services/FileService';
+import { SettingsService } from './services/SettingsService';
 
-// Create a singleton instance of FileService
+// Create singleton instances
 export const fileService = new FileService();
+export const settingsService = new SettingsService(fileService);
 
 // Get the base directory of the Athanor application
 export function getAppBasePath(): string {
@@ -18,7 +20,7 @@ export function getAppBasePath(): string {
 // App lifecycle handlers
 app.whenReady().then(async () => {
   await fileService.reloadIgnoreRules();
-  setupIpcHandlers(fileService);
+  setupIpcHandlers(fileService, settingsService);
   createWindow();
 
   app.on('activate', () => {

@@ -83,7 +83,7 @@ class XmlParser {
           // - the </ath …> closing tag (optionally with command="...")
           const remaining = this.content.slice(fileCodeEnd);
           const closeTagsRegex =
-            /^<\/file_code>\s*<\/file>(?=\s*(?:<file>\s*<file_message>|<\/ath(?:\s+command(?:="[^"]*")?)?>))/;
+            /^<\/file_code>\s*<\/file>(?=\s*(?:<file>\s*<file_message>|<\/ath(?:\s+command(?:="[^"]*")?)?>|$))/;
           const match = remaining.match(closeTagsRegex);
 
           if (match) {
