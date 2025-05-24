@@ -9,6 +9,7 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
     - The user selects relevant files/folders within a dynamic file explorer.
     - Athanor then generates prompt text (optionally using multiple specialized “prompt templates” or “task templates”).
     - The user copies this prompt into an AI assistant (e.g., ChatGPT, Bard, Claude, etc.).
+    - **Tooltips**: Throughout the application, contextual help is provided via tooltips that appear when hovering over buttons, controls, and interface elements. This is the primary method for providing short helper information without cluttering the UI.
 
 2.  **Applying AI-Generated Changes**
     - The user copies the AI’s response from the assistant back into the clipboard.

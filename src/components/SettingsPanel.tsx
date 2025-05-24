@@ -229,14 +229,7 @@ const SettingsPanel: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full p-6 space-y-8">
-      <div className="flex-shrink-0">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Settings</h1>
-        <p className="text-gray-600">
-          Manage your project-specific and application-wide preferences.
-        </p>
-      </div>
-
+    <div className="flex flex-col h-full p-6">
       <div className="flex-1 space-y-8 overflow-y-auto">
         {/* Project Settings Section */}
         <div className="bg-white border rounded-lg p-6">
