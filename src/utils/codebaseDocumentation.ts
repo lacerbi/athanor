@@ -78,25 +78,25 @@ function generateFileTree(
 }
 
 // Smart content preview for non-selected files
-export function getSmartPreview(content: string): string {
+export function getSmartPreview(content: string, config: { minLines: number; maxLines: number }): string {
   const lines = content.split('\n');
 
   // If the file is not longer than maxLines, return it in full
-  if (lines.length <= FILE_SYSTEM.maxSmartPreviewLines) {
+  if (lines.length <= config.maxLines) {
     return content;
   }
 
   // Always show at least minLines
-  let endLine = FILE_SYSTEM.minSmartPreviewLines;
+  let endLine = config.minLines;
   let emptyLinesCount = lines
-    .slice(0, FILE_SYSTEM.minSmartPreviewLines)
+    .slice(0, config.minLines)
     .filter((line) => line.trim() === '').length;
 
   // If we haven't found at least two empty lines, keep looking up to maxLines
-  if (emptyLinesCount < 2 && lines.length > FILE_SYSTEM.minSmartPreviewLines) {
+  if (emptyLinesCount < 2 && lines.length > config.minLines) {
     for (
-      let i = FILE_SYSTEM.minSmartPreviewLines;
-      i < Math.min(lines.length, FILE_SYSTEM.maxSmartPreviewLines);
+      let i = config.minLines;
+      i < Math.min(lines.length, config.maxLines);
       i++
     ) {
       if (lines[i].trim() === '') {
@@ -157,7 +157,8 @@ export async function generateCodebaseDocumentation(
   config: AthanorConfig | null,
   includeNonSelected: boolean = true,
   formatType: string = DOC_FORMAT.MARKDOWN,
-  projectInfoFilePath?: string
+  projectInfoFilePath?: string,
+  smartPreviewConfig: { minLines: number; maxLines: number } = { minLines: 10, maxLines: 20 }
 ): Promise<{ file_contents: string; file_tree: string }> {
   const rawFileTreeContent = generateFileTree(items, selectedItems);
   const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>\n`;
@@ -202,7 +203,7 @@ export async function generateCodebaseDocumentation(
         const processedContent = isSelected
           ? contentString
           : includeNonSelected
-            ? getSmartPreview(contentString)
+            ? getSmartPreview(contentString, smartPreviewConfig)
             : '';
         if (processedContent) {
           fileContents +=

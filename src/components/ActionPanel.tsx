@@ -39,7 +39,8 @@ import { buildTaskAction } from '../actions';
 import { getActionTooltip, getTaskTooltip } from '../actions';
 import { useTaskStore } from '../stores/taskStore';
 import { useFileDrop } from '../hooks/useFileDrop';
-import { DRAG_DROP, DOC_FORMAT } from '../utils/constants';
+import { useSettingsStore } from '../stores/settingsStore';
+import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -147,11 +148,20 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
+  const { applicationSettings } = useSettingsStore();
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
     try {
       setIsLoading(true);
+      
+      // Get smart preview configuration from application settings
+      const defaults = SETTINGS.defaults.application;
+      const smartPreviewConfig = {
+        minLines: applicationSettings?.minSmartPreviewLines ?? defaults.minSmartPreviewLines,
+        maxLines: applicationSettings?.maxSmartPreviewLines ?? defaults.maxSmartPreviewLines,
+      };
+      
       const result = await buildDynamicPrompt(
         prompt,
         variant,
@@ -160,7 +170,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
         tabs[activeTabIndex].context, // Current tab's context
-        formatType // Pass the current format type
+        formatType, // Pass the current format type
+        smartPreviewConfig // Pass the smart preview configuration from settings
       );
       setOutputContent(result);
       addLog(`Generated ${prompt.label} prompt`);

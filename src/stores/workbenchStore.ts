@@ -4,6 +4,7 @@
 // and active tab state tracking.
 import { create } from 'zustand';
 import { TaskTab, WorkbenchState } from '../types/global';
+import { SETTINGS } from '../utils/constants';
 
 const PROMPT_GENERATION_TIMEOUT = 30000; // 30 seconds timeout
 
@@ -146,6 +147,18 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => {
           }
         }, PROMPT_GENERATION_TIMEOUT);
       }
+    },
+
+    // Get smart preview config for prompt generation
+    getSmartPreviewConfig: () => {
+      // Import settingsStore dynamically to avoid circular dependencies
+      const { useSettingsStore } = require('./settingsStore');
+      const { applicationSettings } = useSettingsStore.getState();
+      
+      return {
+        minLines: applicationSettings?.minSmartPreviewLines ?? SETTINGS.defaults.application.minSmartPreviewLines,
+        maxLines: applicationSettings?.maxSmartPreviewLines ?? SETTINGS.defaults.application.maxSmartPreviewLines,
+      };
     },
   };
 

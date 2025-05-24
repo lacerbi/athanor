@@ -24,7 +24,8 @@ export interface ProjectSettings {
 export interface ApplicationSettings {
   // Example application settings for demonstration
   enableExperimentalFeatures?: boolean;
-  defaultSmartPreviewLines?: number;
+  minSmartPreviewLines?: number;
+  maxSmartPreviewLines?: number;
   
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;

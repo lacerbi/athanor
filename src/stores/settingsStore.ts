@@ -4,6 +4,7 @@
 
 import { create } from 'zustand';
 import type { ProjectSettings, ApplicationSettings } from '../types/global';
+import { SETTINGS } from '../utils/constants';
 
 interface SettingsState {
   // Project settings state

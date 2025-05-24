@@ -94,7 +94,8 @@ export async function buildDynamicPrompt(
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',
-  passedFormatType: string = DOC_FORMAT.MARKDOWN
+  passedFormatType: string = DOC_FORMAT.MARKDOWN,
+  smartPreviewConfig: { minLines: number; maxLines: number } = { minLines: 10, maxLines: 20 }
 ): Promise<string> {
   // Get the store settings and effective configuration
   const {
@@ -140,7 +141,8 @@ export async function buildDynamicPrompt(
     config,
     smartPreviewEnabled,
     passedFormatType || formatType, // Use passed format or get from store
-    config.project_info_path // Pass project_info_path to avoid duplication
+    config.project_info_path, // Pass project_info_path to avoid duplication
+    smartPreviewConfig
   );
 
   // Format task context if non-empty

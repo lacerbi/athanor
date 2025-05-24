@@ -13,9 +13,6 @@ export const FILE_SYSTEM = {
 
   // Maximum number of lines before a file is considered too long
   thresholdLineLength: 200,
-  // Maximum/minimum lines for smart preview
-  minSmartPreviewLines: 10,
-  maxSmartPreviewLines: 20,
   // Refactoring thresholds
   refactoring: {
     // Files over this length are candidates for splitting
@@ -40,7 +37,9 @@ export const SETTINGS = {
       projectInfoFilePath: '',
     },
     application: {
-      // Future: global settings defaults
+      enableExperimentalFeatures: false,
+      minSmartPreviewLines: 10,
+      maxSmartPreviewLines: 20,
     },
   },
 };

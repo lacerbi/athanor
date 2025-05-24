@@ -5,6 +5,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { HelpCircle, Info } from 'lucide-react';
+import { SETTINGS } from '../utils/constants';
 
 
 const SettingsPanel: React.FC = () => {
@@ -33,7 +34,8 @@ const SettingsPanel: React.FC = () => {
 
   // Local state for application settings form inputs
   const [enableExperimentalFeatures, setEnableExperimentalFeatures] = useState(false);
-  const [defaultSmartPreviewLines, setDefaultSmartPreviewLines] = useState('15');
+  const [minSmartPreviewLines, setMinSmartPreviewLines] = useState('10');
+  const [maxSmartPreviewLines, setMaxSmartPreviewLines] = useState('20');
   const [isSavingApplication, setIsSavingApplication] = useState(false);
   const [applicationSaveError, setApplicationSaveError] = useState<string | null>(null);
 
@@ -64,13 +66,16 @@ const SettingsPanel: React.FC = () => {
 
   // Update local state when applicationSettings changes
   useEffect(() => {
+    const defaults = SETTINGS.defaults.application;
     if (applicationSettings) {
-      setEnableExperimentalFeatures(applicationSettings.enableExperimentalFeatures || false);
-      setDefaultSmartPreviewLines(String(applicationSettings.defaultSmartPreviewLines || 15));
+      setEnableExperimentalFeatures(applicationSettings.enableExperimentalFeatures ?? defaults.enableExperimentalFeatures);
+      setMinSmartPreviewLines(String(applicationSettings.minSmartPreviewLines ?? defaults.minSmartPreviewLines));
+      setMaxSmartPreviewLines(String(applicationSettings.maxSmartPreviewLines ?? defaults.maxSmartPreviewLines));
     } else {
       // Set default values when no application settings
-      setEnableExperimentalFeatures(false);
-      setDefaultSmartPreviewLines('15');
+      setEnableExperimentalFeatures(defaults.enableExperimentalFeatures);
+      setMinSmartPreviewLines(String(defaults.minSmartPreviewLines));
+      setMaxSmartPreviewLines(String(defaults.maxSmartPreviewLines));
     }
     // Clear any previous save errors when settings load
     setApplicationSaveError(null);
@@ -184,40 +189,80 @@ const SettingsPanel: React.FC = () => {
 
   // Application save button handler
   const handleSaveApplicationSettings = () => {
-    const numericValue = parseInt(defaultSmartPreviewLines, 10);
-    const validatedLines = isNaN(numericValue) || numericValue < 1 ? 15 : 
-                          numericValue > 100 ? 100 : numericValue;
+    const minValue = parseInt(minSmartPreviewLines, 10);
+    const maxValue = parseInt(maxSmartPreviewLines, 10);
+    
+    // Validate and apply defaults/limits
+    const validatedMin = isNaN(minValue) || minValue < 1 ? 10 : Math.min(minValue, 200);
+    const validatedMax = isNaN(maxValue) || maxValue < 1 ? 20 : Math.min(maxValue, 200);
+    
+    // Ensure max >= min
+    const finalMin = validatedMin;
+    const finalMax = Math.max(validatedMax, validatedMin);
     
     saveApplicationSettingsCallback({ 
       enableExperimentalFeatures,
-      defaultSmartPreviewLines: validatedLines
+      minSmartPreviewLines: finalMin,
+      maxSmartPreviewLines: finalMax
     });
   };
 
   // Check if application settings have unsaved changes
+  const defaults = SETTINGS.defaults.application;
   const hasUnsavedApplicationChanges = 
-    enableExperimentalFeatures !== (applicationSettings?.enableExperimentalFeatures || false) ||
-    defaultSmartPreviewLines !== String(applicationSettings?.defaultSmartPreviewLines || 15);
+    enableExperimentalFeatures !== (applicationSettings?.enableExperimentalFeatures ?? defaults.enableExperimentalFeatures) ||
+    minSmartPreviewLines !== String(applicationSettings?.minSmartPreviewLines ?? defaults.minSmartPreviewLines) ||
+    maxSmartPreviewLines !== String(applicationSettings?.maxSmartPreviewLines ?? defaults.maxSmartPreviewLines);
 
-  const handleSmartPreviewLinesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleMinSmartPreviewLinesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     // Allow only numeric input
     if (/^\d*$/.test(value) && value.length <= 3) {
-      setDefaultSmartPreviewLines(value);
+      setMinSmartPreviewLines(value);
     }
   };
 
-  const handleSmartPreviewLinesBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleMinSmartPreviewLinesBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const value = e.target.value.trim();
     const numericValue = parseInt(value, 10);
     
     // Validate and clamp the value
     if (isNaN(numericValue) || numericValue < 1) {
-      setDefaultSmartPreviewLines('15'); // Reset to default
-    } else if (numericValue > 100) {
-      setDefaultSmartPreviewLines('100'); // Max value
+      setMinSmartPreviewLines('10'); // Reset to default
+    } else if (numericValue > 200) {
+      setMinSmartPreviewLines('200'); // Max value
     } else {
-      setDefaultSmartPreviewLines(String(numericValue));
+      setMinSmartPreviewLines(String(numericValue));
+      // Ensure max is at least equal to min
+      const currentMax = parseInt(maxSmartPreviewLines, 10);
+      if (!isNaN(currentMax) && currentMax < numericValue) {
+        setMaxSmartPreviewLines(String(numericValue));
+      }
+    }
+  };
+
+  const handleMaxSmartPreviewLinesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Allow only numeric input
+    if (/^\d*$/.test(value) && value.length <= 3) {
+      setMaxSmartPreviewLines(value);
+    }
+  };
+
+  const handleMaxSmartPreviewLinesBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value.trim();
+    const numericValue = parseInt(value, 10);
+    
+    // Validate and clamp the value
+    if (isNaN(numericValue) || numericValue < 1) {
+      setMaxSmartPreviewLines('20'); // Reset to default
+    } else if (numericValue > 200) {
+      setMaxSmartPreviewLines('200'); // Max value
+    } else {
+      // Ensure max is at least equal to min
+      const currentMin = parseInt(minSmartPreviewLines, 10);
+      const finalMax = !isNaN(currentMin) ? Math.max(numericValue, currentMin) : numericValue;
+      setMaxSmartPreviewLines(String(finalMax));
     }
   };
 
@@ -428,27 +473,55 @@ const SettingsPanel: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Default Smart Preview Lines */}
+                  {/* Min Smart Preview Lines */}
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2">
-                      <label htmlFor="defaultSmartPreviewLines" className="block text-sm font-medium text-gray-700">
-                        Default Smart Preview Lines
+                      <label htmlFor="minSmartPreviewLines" className="block text-sm font-medium text-gray-700">
+                        Min Smart Preview Lines
                       </label>
                       <div 
                         className="relative group"
-                        title="Default number of lines to show in smart preview mode (1-100)."
+                        title="Minimum number of lines to show in smart preview mode (1-200)."
                       >
                         <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <input
-                        id="defaultSmartPreviewLines"
+                        id="minSmartPreviewLines"
                         type="text"
-                        value={defaultSmartPreviewLines}
-                        onChange={handleSmartPreviewLinesChange}
-                        onBlur={handleSmartPreviewLinesBlur}
-                        placeholder="15"
+                        value={minSmartPreviewLines}
+                        onChange={handleMinSmartPreviewLinesChange}
+                        onBlur={handleMinSmartPreviewLinesBlur}
+                        placeholder="10"
+                        className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                        disabled={isLoadingApplicationSettings || isSavingApplication}
+                      />
+                      <span className="text-sm text-gray-500">lines</span>
+                    </div>
+                  </div>
+
+                  {/* Max Smart Preview Lines */}
+                  <div className="space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <label htmlFor="maxSmartPreviewLines" className="block text-sm font-medium text-gray-700">
+                        Max Smart Preview Lines
+                      </label>
+                      <div 
+                        className="relative group"
+                        title="Maximum number of lines to show in smart preview mode (1-200). Must be >= min lines."
+                      >
+                        <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        id="maxSmartPreviewLines"
+                        type="text"
+                        value={maxSmartPreviewLines}
+                        onChange={handleMaxSmartPreviewLinesChange}
+                        onBlur={handleMaxSmartPreviewLinesBlur}
+                        placeholder="20"
                         className="w-20 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                         disabled={isLoadingApplicationSettings || isSavingApplication}
                       />
