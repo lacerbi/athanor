@@ -134,12 +134,16 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
 
   return (
     <div className="bg-white border rounded-lg p-6 h-fit">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900">
+      <div className="flex items-center justify-between mb-4 gap-4">
+        <h2 className="text-lg font-semibold text-gray-900 flex-shrink-0">
           Project Settings
         </h2>
         {hasProject && (
-          <span className="text-sm text-gray-500">
+          <span 
+            className="text-sm text-gray-500 truncate min-w-0"
+            style={{ direction: 'rtl', textAlign: 'left' }}
+            title={currentProjectPath || undefined}
+          >
             {currentProjectPath}
           </span>
         )}
