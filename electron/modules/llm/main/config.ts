@@ -7,6 +7,38 @@ import type {
   ModelInfo,
   ApiProviderId,
 } from '../common/types';
+import type { ILLMClientAdapter } from './clients/types';
+import { OpenAIClientAdapter } from './clients/OpenAIClientAdapter';
+import { AnthropicClientAdapter } from './clients/AnthropicClientAdapter';
+// Placeholder for future imports:
+// import { GeminiClientAdapter } from './clients/GeminiClientAdapter';
+// import { MistralClientAdapter } from './clients/MistralClientAdapter';
+
+/**
+ * Mapping from provider IDs to their corresponding adapter constructor classes
+ * This enables dynamic registration of client adapters in LLMServiceMain
+ */
+export const ADAPTER_CONSTRUCTORS: Partial<Record<ApiProviderId, new (config?: { baseURL?: string }) => ILLMClientAdapter>> = {
+  'openai': OpenAIClientAdapter,
+  'anthropic': AnthropicClientAdapter,
+  // 'gemini': GeminiClientAdapter, // Uncomment and add when Gemini adapter is ready
+  // 'mistral': MistralClientAdapter, // Uncomment and add when Mistral adapter is ready
+};
+
+/**
+ * Optional configuration objects for each adapter
+ * Allows passing parameters like baseURL during instantiation
+ */
+export const ADAPTER_CONFIGS: Partial<Record<ApiProviderId, { baseURL?: string }>> = {
+  'openai': { 
+    baseURL: process.env.OPENAI_API_BASE_URL || undefined 
+  },
+  'anthropic': { 
+    baseURL: process.env.ANTHROPIC_API_BASE_URL || undefined 
+  },
+  // 'gemini': { /* ... Gemini specific config ... */ },
+  // 'mistral': { /* ... Mistral specific config ... */ },
+};
 
 /**
  * Default settings applied to all LLM requests unless overridden

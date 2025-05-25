@@ -19,6 +19,8 @@ import {
   SUPPORTED_PROVIDERS, 
   SUPPORTED_MODELS, 
   DEFAULT_LLM_SETTINGS,
+  ADAPTER_CONSTRUCTORS,
+  ADAPTER_CONFIGS,
   getProviderById,
   getModelById,
   getModelsByProvider,
@@ -42,21 +44,38 @@ export class LLMServiceMain {
   private apiKeyService: ApiKeyServiceMain;
   private clientAdapters: Map<ApiProviderId, ILLMClientAdapter>;
   private mockClientAdapter: MockClientAdapter;
-  private openAIClientAdapter: OpenAIClientAdapter;
-  private anthropicClientAdapter: AnthropicClientAdapter;
 
   constructor(apiKeyService: ApiKeyServiceMain) {
     this.apiKeyService = apiKeyService;
     this.clientAdapters = new Map();
     this.mockClientAdapter = new MockClientAdapter();
-    this.openAIClientAdapter = new OpenAIClientAdapter();
-    this.anthropicClientAdapter = new AnthropicClientAdapter();
     
-    // Register the real adapters
-    this.registerClientAdapter('openai', this.openAIClientAdapter);
-    this.registerClientAdapter('anthropic', this.anthropicClientAdapter);
-    
-    console.log('LLMServiceMain initialized with OpenAI and Anthropic adapters');
+    // Dynamically register client adapters based on configuration
+    let registeredCount = 0;
+    const successfullyRegisteredProviders: ApiProviderId[] = [];
+
+    for (const provider of SUPPORTED_PROVIDERS) {
+      const AdapterClass = ADAPTER_CONSTRUCTORS[provider.id];
+      if (AdapterClass) {
+        try {
+          const adapterConfig = ADAPTER_CONFIGS[provider.id];
+          const adapterInstance = new AdapterClass(adapterConfig);
+          this.registerClientAdapter(provider.id, adapterInstance);
+          registeredCount++;
+          successfullyRegisteredProviders.push(provider.id);
+        } catch (error) {
+          console.error(`LLMServiceMain: Failed to instantiate adapter for provider '${provider.id}'. This provider will use the mock adapter. Error:`, error);
+        }
+      } else {
+        console.warn(`LLMServiceMain: No adapter constructor found for supported provider '${provider.id}'. This provider will use the mock adapter as a fallback.`);
+      }
+    }
+
+    if (registeredCount > 0) {
+      console.log(`LLMServiceMain: Initialized with ${registeredCount} dynamically registered adapter(s) for: ${successfullyRegisteredProviders.join(', ')}.`);
+    } else {
+      console.log(`LLMServiceMain: No real adapters were dynamically registered. All providers will use the mock adapter.`);
+    }
   }
 
   /**

@@ -40,62 +40,6 @@ Before diving into suggestions, it's important to acknowledge aspects that are a
 
 Here are some areas where the LLM module could be made more efficient and easier to maintain:
 
-### 3. Dynamic Client Adapter Registration in `LLMServiceMain`
-
-**Observation:**
-Client adapters are currently instantiated and registered manually in the `LLMServiceMain` constructor:
-
-```typescript
-// LLMServiceMain.ts constructor
-this.openAIClientAdapter = new OpenAIClientAdapter();
-this.anthropicClientAdapter = new AnthropicClientAdapter();
-
-this.registerClientAdapter('openai', this.openAIClientAdapter);
-this.registerClientAdapter('anthropic', this.anthropicClientAdapter);
-console.log('LLMServiceMain initialized with OpenAI and Anthropic adapters');
-```
-
-While manageable for a few adapters, this can become cumbersome as more providers are added.
-
-**Suggestion:**
-Implement a more dynamic, configuration-driven approach for adapter registration.
-
-* Define a mapping of `ApiProviderId` to adapter constructors, potentially in `config.ts` or a new `adapterRegistry.ts`.
-    ```typescript
-    // Example for a new registry file or config.ts
-    import { OpenAIClientAdapter } from './clients/OpenAIClientAdapter';
-    import { AnthropicClientAdapter } from './clients/AnthropicClientAdapter';
-    // Import other adapters as they are created
-
-    export const ADAPTER_CONSTRUCTORS: Record<string, new (config?: any) => ILLMClientAdapter> = {
-        'openai': OpenAIClientAdapter,
-        'anthropic': AnthropicClientAdapter,
-        // 'gemini': GeminiClientAdapter, // Future adapter
-    };
-    ```
-* In the `LLMServiceMain` constructor, iterate over `SUPPORTED_PROVIDERS` (from `config.ts`) and instantiate/register adapters if a corresponding constructor exists in `ADAPTER_CONSTRUCTORS`.
-    ```typescript
-    // LLMServiceMain.ts constructor (simplified)
-    this.clientAdapters = new Map();
-    this.mockClientAdapter = new MockClientAdapter(); // Keep mock as a fallback
-
-    let registeredCount = 0;
-    for (const provider of SUPPORTED_PROVIDERS) {
-        const AdapterClass = ADAPTER_CONSTRUCTORS[provider.id];
-        if (AdapterClass) {
-            // Pass baseURL or other adapter-specific config if needed, e.g., from a separate config structure
-            const adapterConfig = {/* ... */};
-            this.registerClientAdapter(provider.id, new AdapterClass(adapterConfig));
-            registeredCount++;
-        } else {
-            console.warn(`No adapter constructor found for supported provider: ${provider.id}`);
-        }
-    }
-    console.log(`LLMServiceMain initialized with ${registeredCount} adapters.`);
-    ```
-
-**Benefit:** Simplifies adding new providers. `LLMServiceMain` becomes less coupled to specific adapter implementations. Updates primarily involve adding the new adapter class, its entry in `SUPPORTED_PROVIDERS`/`SUPPORTED_MODELS` in `config.ts`, and its constructor to the `ADAPTER_CONSTRUCTORS` map.
-
 ### 4. Clarify System Message Handling (Documentation)
 
 **Observation:**
