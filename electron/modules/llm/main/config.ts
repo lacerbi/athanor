@@ -6,6 +6,9 @@ import type {
   ProviderInfo,
   ModelInfo,
   ApiProviderId,
+  GeminiSafetySetting,
+  GeminiHarmCategory,
+  GeminiHarmBlockThreshold,
 } from '../common/types';
 import type { ILLMClientAdapter } from './clients/types';
 import { OpenAIClientAdapter } from './clients/OpenAIClientAdapter';
@@ -51,6 +54,12 @@ export const DEFAULT_LLM_SETTINGS: Required<LLMSettings> = {
   frequencyPenalty: 0.0,
   presencePenalty: 0.0,
   user: undefined as any, // Will be filtered out when undefined
+  geminiSafetySettings: [
+    { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+    { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+    { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+    { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+  ],
 };
 
 /**
@@ -73,6 +82,14 @@ export const PROVIDER_DEFAULT_SETTINGS: Partial<
     temperature: 0.7,
     maxTokens: 8192, // Gemini models have very large context windows
     topP: 1.0,
+    geminiSafetySettings: [
+      { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_TOXICITY', threshold: 'BLOCK_NONE' },
+      { category: 'HARM_CATEGORY_VIOLENCE', threshold: 'BLOCK_NONE' },
+    ],
   },
   mistral: {
     temperature: 0.7,
@@ -364,6 +381,34 @@ export function getDefaultSettingsForModel(
 }
 
 /**
+ * Valid Gemini harm categories for validation
+ */
+const VALID_GEMINI_HARM_CATEGORIES: GeminiHarmCategory[] = [
+  'HARM_CATEGORY_UNSPECIFIED',
+  'HARM_CATEGORY_DEROGATORY',
+  'HARM_CATEGORY_TOXICITY',
+  'HARM_CATEGORY_VIOLENCE',
+  'HARM_CATEGORY_SEXUAL',
+  'HARM_CATEGORY_MEDICAL',
+  'HARM_CATEGORY_DANGEROUS',
+  'HARM_CATEGORY_HARASSMENT',
+  'HARM_CATEGORY_HATE_SPEECH',
+  'HARM_CATEGORY_SEXUALLY_EXPLICIT',
+  'HARM_CATEGORY_DANGEROUS_CONTENT',
+];
+
+/**
+ * Valid Gemini harm block thresholds for validation
+ */
+const VALID_GEMINI_HARM_BLOCK_THRESHOLDS: GeminiHarmBlockThreshold[] = [
+  'HARM_BLOCK_THRESHOLD_UNSPECIFIED',
+  'BLOCK_LOW_AND_ABOVE',
+  'BLOCK_MEDIUM_AND_ABOVE',
+  'BLOCK_ONLY_HIGH',
+  'BLOCK_NONE',
+];
+
+/**
  * Validates LLM settings values
  *
  * @param settings - The settings to validate
@@ -438,6 +483,28 @@ export function validateLLMSettings(settings: Partial<LLMSettings>): string[] {
 
   if (settings.user !== undefined && typeof settings.user !== 'string') {
     errors.push('user must be a string');
+  }
+
+  if (settings.geminiSafetySettings !== undefined) {
+    if (!Array.isArray(settings.geminiSafetySettings)) {
+      errors.push('geminiSafetySettings must be an array');
+    } else {
+      for (let i = 0; i < settings.geminiSafetySettings.length; i++) {
+        const setting = settings.geminiSafetySettings[i];
+        if (!setting || typeof setting !== 'object') {
+          errors.push(`geminiSafetySettings[${i}] must be an object with category and threshold`);
+          continue;
+        }
+        
+        if (!setting.category || !VALID_GEMINI_HARM_CATEGORIES.includes(setting.category)) {
+          errors.push(`geminiSafetySettings[${i}].category must be a valid Gemini harm category`);
+        }
+        
+        if (!setting.threshold || !VALID_GEMINI_HARM_BLOCK_THRESHOLDS.includes(setting.threshold)) {
+          errors.push(`geminiSafetySettings[${i}].threshold must be a valid Gemini harm block threshold`);
+        }
+      }
+    }
   }
 
   return errors;

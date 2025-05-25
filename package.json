@@ -70,6 +70,7 @@
     "@anthropic-ai/sdk": "^0.52.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
+    "@google/genai": "^1.0.1",
     "@mui/material": "^6.3.0",
     "chokidar": "^4.0.3",
     "diff": "^7.0.0",

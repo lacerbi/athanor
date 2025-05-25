@@ -22,6 +22,40 @@ export interface LLMMessage {
 }
 
 /**
+ * Gemini harm categories for safety settings
+ */
+export type GeminiHarmCategory =
+  | 'HARM_CATEGORY_UNSPECIFIED'
+  | 'HARM_CATEGORY_DEROGATORY'
+  | 'HARM_CATEGORY_TOXICITY'
+  | 'HARM_CATEGORY_VIOLENCE'
+  | 'HARM_CATEGORY_SEXUAL'
+  | 'HARM_CATEGORY_MEDICAL'
+  | 'HARM_CATEGORY_DANGEROUS'
+  | 'HARM_CATEGORY_HARASSMENT'
+  | 'HARM_CATEGORY_HATE_SPEECH'
+  | 'HARM_CATEGORY_SEXUALLY_EXPLICIT'
+  | 'HARM_CATEGORY_DANGEROUS_CONTENT';
+
+/**
+ * Gemini harm block thresholds for safety settings
+ */
+export type GeminiHarmBlockThreshold =
+  | 'HARM_BLOCK_THRESHOLD_UNSPECIFIED'
+  | 'BLOCK_LOW_AND_ABOVE'
+  | 'BLOCK_MEDIUM_AND_ABOVE'
+  | 'BLOCK_ONLY_HIGH'
+  | 'BLOCK_NONE';
+
+/**
+ * Individual Gemini safety setting
+ */
+export interface GeminiSafetySetting {
+  category: GeminiHarmCategory;
+  threshold: GeminiHarmBlockThreshold;
+}
+
+/**
  * Configurable settings for LLM requests
  */
 export interface LLMSettings {
@@ -39,6 +73,8 @@ export interface LLMSettings {
   presencePenalty?: number;
   /** A unique identifier representing your end-user, which can help monitor and detect abuse */
   user?: string;
+  /** Gemini-specific safety settings for content filtering */
+  geminiSafetySettings?: GeminiSafetySetting[];
 }
 
 /**

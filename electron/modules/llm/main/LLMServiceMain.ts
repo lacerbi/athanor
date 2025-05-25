@@ -334,7 +334,8 @@ export class LLMServiceMain {
       stopSequences: requestSettings?.stopSequences ?? modelDefaults.stopSequences,
       frequencyPenalty: requestSettings?.frequencyPenalty ?? modelDefaults.frequencyPenalty,
       presencePenalty: requestSettings?.presencePenalty ?? modelDefaults.presencePenalty,
-      user: requestSettings?.user ?? modelDefaults.user
+      user: requestSettings?.user ?? modelDefaults.user,
+      geminiSafetySettings: requestSettings?.geminiSafetySettings ?? modelDefaults.geminiSafetySettings
     };
 
     // Log the final settings for debugging
@@ -345,7 +346,8 @@ export class LLMServiceMain {
       hasStopSequences: mergedSettings.stopSequences.length > 0,
       frequencyPenalty: mergedSettings.frequencyPenalty,
       presencePenalty: mergedSettings.presencePenalty,
-      hasUser: !!mergedSettings.user
+      hasUser: !!mergedSettings.user,
+      geminiSafetySettingsCount: mergedSettings.geminiSafetySettings.length
     });
 
     return mergedSettings;
