@@ -3,7 +3,15 @@
 // and manage API keys for different providers with secure storage and display functionality.
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { HelpCircle, Info, Eye, EyeOff, Save, Trash2, Check } from 'lucide-react';
+import {
+  HelpCircle,
+  Info,
+  Eye,
+  EyeOff,
+  Save,
+  Trash2,
+  Check,
+} from 'lucide-react';
 import type { ApplicationSettings } from '../types/global';
 import { SETTINGS } from '../utils/constants';
 import { ApiKeyServiceRenderer } from '../../electron/modules/secure-api-storage/renderer';
@@ -44,15 +52,26 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
   >(null);
 
   // API Key Management state
-  const [apiKeyService, setApiKeyService] = useState<ApiKeyServiceRenderer | null>(null);
-  const [availableProviders, setAvailableProviders] = useState<ApiProvider[]>([]);
-  const [selectedProvider, setSelectedProvider] = useState<ApiProvider | null>(null);
+  const [apiKeyService, setApiKeyService] =
+    useState<ApiKeyServiceRenderer | null>(null);
+  const [availableProviders, setAvailableProviders] = useState<ApiProvider[]>(
+    []
+  );
+  const [selectedProvider, setSelectedProvider] = useState<ApiProvider | null>(
+    null
+  );
   const [apiKeyInput, setApiKeyInput] = useState<string>('');
-  const [currentKeyDisplayInfo, setCurrentKeyDisplayInfo] = useState<{ isStored: boolean, lastFourChars?: string } | null>(null);
+  const [currentKeyDisplayInfo, setCurrentKeyDisplayInfo] = useState<{
+    isStored: boolean;
+    lastFourChars?: string;
+  } | null>(null);
   const [isKeyInfoLoading, setIsKeyInfoLoading] = useState<boolean>(false);
   const [keyOpError, setKeyOpError] = useState<string | null>(null);
   const [isKeyProcessing, setIsKeyProcessing] = useState<boolean>(false);
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
+  const [providersWithKeys, setProvidersWithKeys] = useState<Set<ApiProvider>>(
+    new Set()
+  );
 
   // Initialize API Key Service
   useEffect(() => {
@@ -61,7 +80,9 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       setApiKeyService(service);
     } catch (error) {
       console.error('Failed to initialize ApiKeyServiceRenderer:', error);
-      setKeyOpError('Failed to initialize API key service. Please restart the application.');
+      setKeyOpError(
+        'Failed to initialize API key service. Please restart the application.'
+      );
     }
   }, []);
 
@@ -74,12 +95,49 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
         if (providers.length > 0 && !selectedProvider) {
           setSelectedProvider(providers[0]);
         }
+
+        // Load which providers have stored keys
+        loadProvidersWithKeys(providers);
       } catch (error) {
         console.error('Failed to get available providers:', error);
         setKeyOpError('Failed to load API providers.');
       }
     }
   }, [apiKeyService, selectedProvider]);
+
+  // Function to check which providers have stored keys
+  const loadProvidersWithKeys = useCallback(
+    async (providers: ApiProvider[]) => {
+      if (!apiKeyService) return;
+
+      try {
+        const providersWithStoredKeys = new Set<ApiProvider>();
+
+        // Check each provider for stored keys
+        await Promise.all(
+          providers.map(async (provider) => {
+            try {
+              const keyInfo =
+                await apiKeyService.getApiKeyDisplayInfo(provider);
+              if (keyInfo.isStored) {
+                providersWithStoredKeys.add(provider);
+              }
+            } catch (error) {
+              console.warn(
+                `Failed to check key for provider ${provider}:`,
+                error
+              );
+            }
+          })
+        );
+
+        setProvidersWithKeys(providersWithStoredKeys);
+      } catch (error) {
+        console.error('Failed to load providers with keys:', error);
+      }
+    },
+    [apiKeyService]
+  );
 
   // Fetch key display info when selected provider changes
   useEffect(() => {
@@ -88,14 +146,19 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       setKeyOpError(null);
       setApiKeyInput(''); // Clear input when switching providers
       setShowApiKey(false); // Reset visibility when switching providers
-      
-      apiKeyService.getApiKeyDisplayInfo(selectedProvider)
+
+      apiKeyService
+        .getApiKeyDisplayInfo(selectedProvider)
         .then((info) => {
           setCurrentKeyDisplayInfo(info);
         })
         .catch((error) => {
           console.error('Failed to get key display info:', error);
-          setKeyOpError(error instanceof ApiKeyStorageError ? error.message : 'Failed to get key information.');
+          setKeyOpError(
+            error instanceof ApiKeyStorageError
+              ? error.message
+              : 'Failed to get key information.'
+          );
           setCurrentKeyDisplayInfo(null);
         })
         .finally(() => {
@@ -250,13 +313,22 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
   };
 
   const handleSaveApiKey = async () => {
-    if (!selectedProvider || !apiKeyService || !apiKeyInput.trim() || currentKeyDisplayInfo?.isStored) {
+    if (
+      !selectedProvider ||
+      !apiKeyService ||
+      !apiKeyInput.trim() ||
+      currentKeyDisplayInfo?.isStored
+    ) {
       return;
     }
 
     // Client-side validation
-    if (!apiKeyService.validateApiKeyFormat(selectedProvider, apiKeyInput.trim())) {
-      setKeyOpError(`Invalid API key format for ${selectedProvider}. Please check your key and try again.`);
+    if (
+      !apiKeyService.validateApiKeyFormat(selectedProvider, apiKeyInput.trim())
+    ) {
+      setKeyOpError(
+        `Invalid API key format for ${selectedProvider}. Please check your key and try again.`
+      );
       return;
     }
 
@@ -265,26 +337,40 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
 
     try {
       await apiKeyService.storeKey(selectedProvider, apiKeyInput.trim());
-      
+
       // Clear input and reset visibility
       setApiKeyInput('');
       setShowApiKey(false);
-      
+
       // Refresh key display info
-      const updatedInfo = await apiKeyService.getApiKeyDisplayInfo(selectedProvider);
+      const updatedInfo =
+        await apiKeyService.getApiKeyDisplayInfo(selectedProvider);
       setCurrentKeyDisplayInfo(updatedInfo);
-      
+
+      // Update providers with keys state
+      if (updatedInfo.isStored) {
+        setProvidersWithKeys((prev) => new Set(prev).add(selectedProvider));
+      }
+
       console.log(`API key saved successfully for ${selectedProvider}`);
     } catch (error) {
       console.error('Failed to save API key:', error);
-      setKeyOpError(error instanceof ApiKeyStorageError ? error.message : 'Failed to save API key.');
+      setKeyOpError(
+        error instanceof ApiKeyStorageError
+          ? error.message
+          : 'Failed to save API key.'
+      );
     } finally {
       setIsKeyProcessing(false);
     }
   };
 
   const handleClearApiKey = async () => {
-    if (!selectedProvider || !apiKeyService || !currentKeyDisplayInfo?.isStored) {
+    if (
+      !selectedProvider ||
+      !apiKeyService ||
+      !currentKeyDisplayInfo?.isStored
+    ) {
       return;
     }
 
@@ -302,33 +388,50 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
 
     try {
       await apiKeyService.deleteKey(selectedProvider);
-      
-      console.log(`API key for ${selectedProvider} successfully requested for deletion. Optimistically updating UI.`);
-      
+
+      console.log(
+        `API key for ${selectedProvider} successfully requested for deletion. Optimistically updating UI.`
+      );
+
       // Immediate optimistic UI update for instant responsiveness
       // Use React.startTransition or batch updates to ensure immediate re-render
       setApiKeyInput(''); // Clear any stale text in the input
       setShowApiKey(false); // Reset password visibility toggle
       setCurrentKeyDisplayInfo({ isStored: false, lastFourChars: undefined }); // OPTIMISTIC UPDATE
+      setProvidersWithKeys((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(selectedProvider);
+        return newSet;
+      }); // Update providers with keys state
       setIsKeyProcessing(false); // Release processing lock immediately for UI responsiveness
-      
+
       // Refresh key display info for definitive backend confirmation (in background)
       // Don't block UI with this slow operation
-      apiKeyService.getApiKeyDisplayInfo(selectedProvider)
+      apiKeyService
+        .getApiKeyDisplayInfo(selectedProvider)
         .then((refreshedInfo) => {
           setCurrentKeyDisplayInfo(refreshedInfo); // Update with definitive state
-          console.log(`API key display info for ${selectedProvider} refreshed from backend.`);
+          console.log(
+            `API key display info for ${selectedProvider} refreshed from backend.`
+          );
         })
         .catch((refreshError) => {
-          console.warn(`Failed to re-fetch API key display info for ${selectedProvider} after deletion. UI is using optimistic state. Error:`, refreshError);
+          console.warn(
+            `Failed to re-fetch API key display info for ${selectedProvider} after deletion. UI is using optimistic state. Error:`,
+            refreshError
+          );
           // The UI already reflects a cleared state. This error means backend confirmation failed.
           // We might set a subtle, non-blocking warning if necessary, but avoid re-disabling the field.
         });
-      
+
       console.log(`API key cleared successfully for ${selectedProvider}`);
     } catch (error) {
       console.error('Failed to clear API key:', error);
-      setKeyOpError(error instanceof ApiKeyStorageError ? error.message : 'Failed to clear API key.');
+      setKeyOpError(
+        error instanceof ApiKeyStorageError
+          ? error.message
+          : 'Failed to clear API key.'
+      );
       setIsKeyProcessing(false);
     }
   };
@@ -513,7 +616,9 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                       id="apiProvider"
                       value={selectedProvider || ''}
                       onChange={handleProviderChange}
-                      disabled={!apiKeyService || availableProviders.length === 0}
+                      disabled={
+                        !apiKeyService || availableProviders.length === 0
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
                     >
                       {availableProviders.length === 0 ? (
@@ -521,7 +626,10 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                       ) : (
                         availableProviders.map((provider) => (
                           <option key={provider} value={provider}>
-                            {provider.charAt(0).toUpperCase() + provider.slice(1)}
+                            {providersWithKeys.has(provider)
+                              ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} ✓`
+                              : provider.charAt(0).toUpperCase() +
+                                provider.slice(1)}
                           </option>
                         ))
                       )}
@@ -550,7 +658,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                         onClick={toggleApiKeyVisibility}
                         disabled={isKeyInfoLoading || isKeyProcessing}
                         className="text-gray-400 hover:text-gray-600 disabled:text-gray-300"
-                        title={showApiKey ? "Hide API key" : "Show API key"}
+                        title={showApiKey ? 'Hide API key' : 'Show API key'}
                       >
                         {showApiKey ? (
                           <EyeOff className="h-4 w-4" />
@@ -564,13 +672,13 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                         id="apiKeyInput"
                         type={(() => {
                           if (currentKeyDisplayInfo?.isStored) {
-                            return "text";
+                            return 'text';
                           }
-                          return showApiKey ? "text" : "password";
+                          return showApiKey ? 'text' : 'password';
                         })()}
                         value={(() => {
                           if (currentKeyDisplayInfo?.isStored) {
-                            return showApiKey 
+                            return showApiKey
                               ? `••••${currentKeyDisplayInfo.lastFourChars || 'XXXX'}`
                               : '••••••••';
                           }
@@ -581,22 +689,35 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                           if (!selectedProvider) {
                             return 'Select an API provider first';
                           }
-                          
-                          const providerNameForPlaceholder = selectedProvider.charAt(0).toUpperCase() + selectedProvider.slice(1);
-                          
+
+                          const providerNameForPlaceholder =
+                            selectedProvider.charAt(0).toUpperCase() +
+                            selectedProvider.slice(1);
+
                           if (isKeyInfoLoading) {
                             return `Loading key for ${providerNameForPlaceholder}...`;
                           } else if (currentKeyDisplayInfo?.isStored) {
                             return '';
-                          } else if (currentKeyDisplayInfo && !currentKeyDisplayInfo.isStored) {
+                          } else if (
+                            currentKeyDisplayInfo &&
+                            !currentKeyDisplayInfo.isStored
+                          ) {
                             return `Enter ${providerNameForPlaceholder} API key`;
-                          } else if (!currentKeyDisplayInfo && !keyOpError && selectedProvider) {
+                          } else if (
+                            !currentKeyDisplayInfo &&
+                            !keyOpError &&
+                            selectedProvider
+                          ) {
                             return `Enter ${providerNameForPlaceholder} API key`;
                           }
-                          
+
                           return 'Enter API key';
                         })()}
-                        disabled={isKeyInfoLoading || isKeyProcessing || (currentKeyDisplayInfo?.isStored === true)}
+                        disabled={
+                          isKeyInfoLoading ||
+                          isKeyProcessing ||
+                          currentKeyDisplayInfo?.isStored === true
+                        }
                         className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
                           currentKeyDisplayInfo?.isStored ? 'text-gray-400' : ''
                         }`}
@@ -607,9 +728,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
 
                 {/* API Key Operation Error Display */}
                 {keyOpError && !isKeyInfoLoading && (
-                  <div className="text-red-600 text-sm mt-1">
-                    {keyOpError}
-                  </div>
+                  <div className="text-red-600 text-sm mt-1">{keyOpError}</div>
                 )}
 
                 {/* Action Buttons */}
