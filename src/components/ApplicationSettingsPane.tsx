@@ -548,7 +548,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                       <button
                         type="button"
                         onClick={toggleApiKeyVisibility}
-                        disabled={isKeyInfoLoading || isKeyProcessing || (currentKeyDisplayInfo?.isStored === true)}
+                        disabled={isKeyInfoLoading || isKeyProcessing}
                         className="text-gray-400 hover:text-gray-600 disabled:text-gray-300"
                         title={showApiKey ? "Hide API key" : "Show API key"}
                       >
@@ -562,11 +562,20 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                     <div className="relative">
                       <input
                         id="apiKeyInput"
-                        type={currentKeyDisplayInfo?.isStored ? "text" : (showApiKey ? "text" : "password")}
-                        value={currentKeyDisplayInfo?.isStored 
-                          ? `••••${currentKeyDisplayInfo.lastFourChars || 'XXXX'}`
-                          : apiKeyInput
-                        }
+                        type={(() => {
+                          if (currentKeyDisplayInfo?.isStored) {
+                            return "text";
+                          }
+                          return showApiKey ? "text" : "password";
+                        })()}
+                        value={(() => {
+                          if (currentKeyDisplayInfo?.isStored) {
+                            return showApiKey 
+                              ? `••••${currentKeyDisplayInfo.lastFourChars || 'XXXX'}`
+                              : '••••••••';
+                          }
+                          return apiKeyInput;
+                        })()}
                         onChange={handleApiKeyInputChange}
                         placeholder={(() => {
                           if (!selectedProvider) {
