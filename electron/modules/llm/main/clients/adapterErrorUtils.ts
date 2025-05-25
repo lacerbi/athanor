@@ -40,11 +40,13 @@ export function getCommonMappedErrorDetails(
 
   // Handle API errors with HTTP status codes
   if (error && typeof error.status === 'number') {
-    status = error.status;
-    errorMessage = providerMessageOverride || error.message || `HTTP ${status} error`;
+    const httpStatus = error.status;
+    status = httpStatus;
+    errorMessage = providerMessageOverride || error.message || `HTTP ${httpStatus} error`;
 
     // Map common HTTP status codes
-    switch (status) {
+    // TypeScript knows httpStatus is defined here due to the typeof check above
+    switch (httpStatus) {
       case 400:
         // Default mapping for 400 errors - adapters should refine based on message content
         errorCode = ADAPTER_ERROR_CODES.PROVIDER_ERROR;
@@ -74,10 +76,10 @@ export function getCommonMappedErrorDetails(
         errorType = 'server_error';
         break;
       default:
-        if (status >= 400 && status < 500) {
+        if (httpStatus >= 400 && httpStatus < 500) {
           errorCode = ADAPTER_ERROR_CODES.PROVIDER_ERROR;
           errorType = 'invalid_request_error';
-        } else if (status >= 500) {
+        } else if (httpStatus >= 500) {
           errorCode = ADAPTER_ERROR_CODES.PROVIDER_ERROR;
           errorType = 'server_error';
         } else {
