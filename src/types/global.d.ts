@@ -12,8 +12,6 @@ interface AthanorDragEvent extends DragEvent {
   dataTransfer: AthanorDataTransfer;
 }
 
-// Import types for secure API operations
-import type { InvokeApiCallPayload, InvokeApiCallResponse } from '../electron/modules/secure-api-storage/common/types';
 
 export {};
 
@@ -107,12 +105,6 @@ declare global {
         deleteKey: (providerId: string) => Promise<{ success: boolean }>;
         
         /**
-         * Invokes a secure API call using stored credentials
-         * The main process handles key decryption and HTTP request
-         */
-        invokeApiCall: (payload: InvokeApiCallPayload) => Promise<InvokeApiCallResponse>;
-        
-        /**
          * Checks if an API key is stored
          */
         isKeyStored: (providerId: string) => Promise<boolean>;
@@ -126,6 +118,69 @@ declare global {
          * Gets display information for an API key (status and last four chars)
          */
         getApiKeyDisplayInfo: (providerId: string) => Promise<{ isStored: boolean, lastFourChars?: string }>;
+      };
+      llmService: {
+        /**
+         * Gets list of supported LLM providers
+         */
+        getProviders: () => Promise<Array<{ id: string, name: string }>>;
+        
+        /**
+         * Gets list of supported models for a specific provider
+         */
+        getModels: (providerId: string) => Promise<Array<{
+          id: string,
+          name: string,
+          providerId: string,
+          contextWindow?: number,
+          inputPricing?: number,
+          outputPricing?: number,
+          supportsSystemMessage?: boolean,
+          notes?: string
+        }>>;
+        
+        /**
+         * Sends a chat message to an LLM provider
+         */
+        sendMessage: (request: {
+          providerId: string,
+          modelId: string,
+          messages: Array<{ role: 'user' | 'assistant' | 'system', content: string }>,
+          systemMessage?: string,
+          settings?: {
+            temperature?: number,
+            maxTokens?: number,
+            topP?: number,
+            stopSequences?: string[]
+          }
+        }) => Promise<{
+          id: string,
+          provider: string,
+          model: string,
+          created: number,
+          choices: Array<{
+            message: { role: string, content: string },
+            finish_reason: string | null,
+            index?: number
+          }>,
+          usage?: {
+            prompt_tokens?: number,
+            completion_tokens?: number,
+            total_tokens?: number
+          },
+          object: 'chat.completion'
+        } | {
+          provider: string,
+          model?: string,
+          error: {
+            message: string,
+            code?: string | number,
+            type?: string,
+            param?: string,
+            providerError?: any
+          },
+          object: 'error'
+        }>;
       };
       ui: {
         /**

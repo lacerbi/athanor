@@ -8,7 +8,7 @@ The module is divided into three main parts, following Electron's process model:
 
 1.  **`common/`**: Contains code shared between the main and renderer processes.
 
-    - `types.ts`: Defines core types like `ApiProvider` (e.g., 'openai', 'anthropic'), IPC channel names (`IPCChannelNames`), and payload/response structures for IPC communication (e.g., `StoreApiKeyPayload`, `InvokeApiCallPayload`, `InvokeApiCallResponse`).
+    - `types.ts`: Defines core types like `ApiProvider` (e.g., 'openai', 'anthropic'), IPC channel names (`IPCChannelNames`), and payload/response structures for IPC communication (e.g., `StoreApiKeyPayload`).
     - `errors.ts`: Defines `ApiKeyStorageError` for consistent error handling across the module.
     - `providers/`:
       - `ProviderInterface.ts`: Defines the `IApiProviderValidator` interface, which each API provider must implement for key format validation.
@@ -28,7 +28,6 @@ The module is divided into three main parts, following Electron's process model:
     - `ApiKeyServiceRenderer.ts`: Provides a clean, typed API for the UI to interact with the secure storage system. It does **not** handle plaintext keys directly but communicates with `ApiKeyServiceMain` via IPC. Key methods include:
       - `storeKey(providerId, apiKey)`: Sends a key to the main process for secure storage.
       - `deleteKey(providerId)`: Requests deletion of a key in the main process.
-      - `invokeApiCall(payload)`: Securely requests the main process to make an API call using a stored key. The renderer sends API call parameters, and the main process performs the call, returning only the response.
       - `isKeyStored(providerId)`: Checks if a key is stored for a given provider.
       - `getStoredProviderIds()`: Retrieves a list of providers for which keys are currently stored.
       - `getApiKeyDisplayInfo(providerId)`: Gets non-sensitive display information about a key (e.g., storage status, last four characters).
@@ -38,7 +37,7 @@ The module is divided into three main parts, following Electron's process model:
 
 ## IPC Communication
 
-- **`electron/handlers/secureApiKeyIpc.ts`**: Registers IPC handlers (e.g., `IPCChannelNames.SECURE_API_KEY_STORE`, `IPCChannelNames.SECURE_API_INVOKE_CALL`, `IPCChannelNames.SECURE_API_KEY_DELETE`, `IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO`) that receive requests from the renderer process. These handlers delegate the actual work to an instance of `ApiKeyServiceMain`. Note that there is no IPC handler to directly send a plaintext key from main to renderer.
+- **`electron/handlers/secureApiKeyIpc.ts`**: Registers IPC handlers (e.g., `IPCChannelNames.SECURE_API_KEY_STORE`, `IPCChannelNames.SECURE_API_KEY_DELETE`, `IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO`) that receive requests from the renderer process. These handlers delegate the actual work to an instance of `ApiKeyServiceMain`. Note that there is no IPC handler to directly send a plaintext key from main to renderer.
 - **`electron/preload.ts`**: Exposes the `electronBridge.secureApiKeyManager` object to the renderer process. This bridge defines methods that invoke the IPC channels handled by `secureApiKeyIpc.ts`.
 - **`src/types/global.d.ts`**: Provides TypeScript definitions for `window.electronBridge.secureApiKeyManager` for type-safe usage in the renderer.
 
@@ -63,32 +62,6 @@ The module is divided into three main parts, following Electron's process model:
       console.log('OpenAI key stored successfully.');
     } catch (error) {
       console.error('Failed to store key:', error.message);
-    }
-
-    // Invoke an API call securely (key is handled in the main process)
-    try {
-      const payload = {
-        providerId: 'openai',
-        requestPath: '/v1/chat/completions',
-        requestMethod: 'POST',
-        requestBody: {
-          model: 'gpt-3.5-turbo',
-          messages: [{ role: 'user', content: 'Hello!' }],
-        },
-      };
-      const response = await apiKeyService.invokeApiCall(payload);
-      if (response.success) {
-        console.log('API call successful:', response.data);
-      } else {
-        console.error(
-          'API call failed:',
-          response.error,
-          'Status:',
-          response.statusCode
-        );
-      }
-    } catch (error) {
-      console.error('Error invoking API call:', error.message);
     }
 
     // Get display information for a key (does not return the key itself)
@@ -123,6 +96,53 @@ The module is divided into three main parts, following Electron's process model:
 ### From the Main Process
 
 Direct interaction with `ApiKeyServiceMain` is typically managed by `electron/handlers/secureApiKeyIpc.ts` and initialized in `electron/main.ts`. If you need to extend functionality related to API key storage directly in the main process (e.g., new internal logic not exposed via IPC), you would modify or use `ApiKeyServiceMain`.
+
+### Inter-Module Usage in Main Process
+
+For scenarios where another main process module needs to use an API key directly (e.g., to interact with a provider's SDK), `ApiKeyServiceMain` provides a secure method `withDecryptedKey`:
+
+```typescript
+// Example usage within another main process service:
+// Assume 'apiKeyServiceMain' is an instance of ApiKeyServiceMain.
+
+async function performLLMOperation(
+  providerId: string,
+  prompt: string
+): Promise<string> {
+  return apiKeyServiceMain.withDecryptedKey(providerId, async (apiKey) => {
+    // Here, 'apiKey' is the plaintext API key for the specified provider
+    // Use it with the provider's SDK directly, for example:
+    // const anthropicClient = new Anthropic({ apiKey });
+    // const response = await anthropicClient.messages.create({ /* ... */ });
+    // return response.content[0].text;
+
+    // Placeholder implementation:
+    console.log(
+      `Processing "${prompt}" with ${providerId} key ending in ${apiKey.slice(-4)}`
+    );
+    return `Processed: ${prompt}`;
+  });
+}
+
+// Usage example:
+try {
+  const result = await performLLMOperation('anthropic', 'Hello, world!');
+  console.log('LLM response:', result);
+} catch (error) {
+  console.error('LLM operation failed:', error.message);
+}
+```
+
+**Key features of `withDecryptedKey`:**
+
+- **Callback Pattern**: Takes a `providerId` and an asynchronous callback function that receives the decrypted API key.
+- **On-Demand Decryption**: The API key is decrypted on-demand using `electron.safeStorage` only when needed.
+- **Transient Access**: The plaintext key scope is strictly limited to the callback's execution and is **never** cached by `ApiKeyServiceMain`.
+- **Main Process Only**: This method is intended for use **only within Electron's main process** by trusted application modules.
+- **Security Boundaries**: The key is **never** sent to the renderer process, maintaining strict security isolation.
+- **Error Handling**: Throws `ApiKeyStorageError` if the key cannot be retrieved or decrypted. Errors from the provided callback are propagated to the caller.
+
+This approach enables dedicated services (like a future `LLMServiceMain`) to securely access API keys while maintaining the security principles of the storage system.
 
 ## Adding a New API Provider
 
@@ -178,7 +198,7 @@ To add support for a new API provider (e.g., "MyNewAI"):
 ## Security Considerations
 
 - Plaintext API keys are only held in the memory of the main process **transiently** when they are decrypted on-demand from `safeStorage` for immediate use in an API call. They are **not cached** in plaintext.
-- The renderer process **never** receives plaintext API keys from storage. Communication always goes through IPC, primarily using the `invokeApiCall` pattern, which ensures keys remain within the main process.
+- The renderer process **never** receives plaintext API keys from storage. Communication always goes through IPC, with keys remaining securely within the main process.
 - `safeStorage` relies on OS-level encryption (e.g., Keychain on macOS, Credential Vault on Windows). The security of the stored keys is therefore tied to the security of the user's OS account and environment.
 - Encrypted keys are stored on disk in the application's user data directory.
 - Ensure that any new IPC channels or main process logic handling API keys maintains these strict security boundaries, particularly the isolation of plaintext keys from the renderer process.

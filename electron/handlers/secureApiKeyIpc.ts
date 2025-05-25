@@ -3,7 +3,7 @@
 
 import { ipcMain } from 'electron';
 import { ApiKeyServiceMain } from '../modules/secure-api-storage/main';
-import { IPCChannelNames, StoreApiKeyPayload, ApiKeyStorageError, InvokeApiCallPayload, InvokeApiCallResponse } from '../modules/secure-api-storage/common';
+import { IPCChannelNames, StoreApiKeyPayload, ApiKeyStorageError } from '../modules/secure-api-storage/common';
 
 /**
  * Registers IPC handlers for secure API key operations
@@ -82,33 +82,6 @@ export function registerSecureApiKeyIpc(apiKeyService: ApiKeyServiceMain): void 
     }
   });
 
-  // Invoke secure API call
-  ipcMain.handle(IPCChannelNames.SECURE_API_INVOKE_CALL, async (_event, payload: InvokeApiCallPayload): Promise<InvokeApiCallResponse> => {
-    try {
-      console.log(`Received secure API call request for ${payload.providerId}`);
-      return await apiKeyService.invokeApiCall(payload);
-    } catch (error) {
-      console.error('Error invoking secure API call:', error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error during API call invocation';
-      
-      // For security, don't expose detailed error information to renderer
-      // if it might contain sensitive information
-      if (error instanceof ApiKeyStorageError) {
-        return {
-          success: false,
-          error: `API Key Storage Error: ${error.message}`,
-          statusCode: 500
-        };
-      }
-      
-      return {
-        success: false,
-        error: `API call invocation failed: ${errorMessage}`,
-        statusCode: 500
-      };
-    }
-  });
 
   console.log('Secure API key IPC handlers registered');
 }

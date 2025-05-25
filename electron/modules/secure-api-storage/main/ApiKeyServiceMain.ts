@@ -5,7 +5,7 @@
 import { safeStorage, app } from 'electron';
 import * as fs from 'fs';
 import * as path from 'path';
-import { ApiProvider, ApiKeyStorageError, ProviderService, InvokeApiCallPayload, InvokeApiCallResponse } from '../common';
+import { ApiProvider, ApiKeyStorageError, ProviderService } from '../common';
 
 /**
  * Metadata stored for each API key without the key itself
@@ -338,82 +338,42 @@ export class ApiKeyServiceMain {
   }
 
   /**
-   * Invokes an API call using the stored API key for the specified provider
+   * Allows a trusted main-process callback to operate with a decrypted API key
    * 
-   * This method handles the secure API call flow:
-   * 1. Retrieves and decrypts the API key on-demand
-   * 2. Makes the HTTP request (currently mocked for testing)
-   * 3. Returns only the API response without exposing the key
+   * The key is fetched and decrypted on-demand and is not cached. Its scope is 
+   * limited to the execution of the provided callback. This method is intended 
+   * for use ONLY by other services within the main process.
    * 
-   * @param payload The API call payload containing provider, path, method, and body
-   * @returns Promise resolving to the API response or error
+   * @param providerId The provider ID for which to retrieve the key
+   * @param operationUsingKey An async callback function that receives the decrypted API key
+   * @returns The result of the operationUsingKey callback
+   * @throws ApiKeyStorageError if the key cannot be found, decrypted, or if OS encryption is unavailable
    */
-  async invokeApiCall(payload: InvokeApiCallPayload): Promise<InvokeApiCallResponse> {
+  async withDecryptedKey<T>(
+    providerId: ApiProvider,
+    operationUsingKey: (apiKey: string) => Promise<T>
+  ): Promise<T> {
+    const decryptedKey = await this._getDecryptedKey(providerId);
+
+    if (!decryptedKey) {
+      // _getDecryptedKey logs specific reasons for failure (e.g. encryption unavailable, invalid format post-decryption)
+      // This error message is for the caller of withDecryptedKey.
+      throw new ApiKeyStorageError(
+        `API key not found, could not be decrypted, or was invalid for provider: ${providerId}. Please check storage and OS encryption capabilities.`
+      );
+    }
+
     try {
-      // Decrypt the API key on-demand
-      const decryptedKey = await this._getDecryptedKey(payload.providerId);
-      
-      if (!decryptedKey) {
-        return {
-          success: false,
-          error: `API key not found or decryption failed for provider: ${payload.providerId}`
-        };
-      }
-
-      // Log the API call attempt (without exposing the full key)
-      console.log(`Invoking API call for ${payload.providerId}:`);
-      console.log(`  Path: ${payload.requestPath}`);
-      console.log(`  Method: ${payload.requestMethod}`);
-      console.log(`  Key (partial): ${decryptedKey.substring(0, 4)}...${decryptedKey.slice(-4)}`);
-      console.log(`  Request body:`, payload.requestBody);
-      console.log(`  Request headers:`, payload.requestHeaders);
-
-      // PLACEHOLDER: In a real implementation, this would make an actual HTTP request
-      // using a library like axios or Node's built-in https module.
-      // Example:
-      // const response = await axios({
-      //   method: payload.requestMethod.toLowerCase(),
-      //   url: `https://api.${payload.providerId}.com${payload.requestPath}`,
-      //   headers: {
-      //     'Authorization': `Bearer ${decryptedKey}`,
-      //     'Content-Type': 'application/json',
-      //     ...payload.requestHeaders
-      //   },
-      //   data: payload.requestBody
-      // });
-      // return { success: true, data: response.data, statusCode: response.status };
-
-      // Mock successful response for testing
-      const mockResponse = {
-        success: true,
-        data: {
-          message: 'API call mocked successfully',
-          provider: payload.providerId,
-          path: payload.requestPath,
-          method: payload.requestMethod,
-          receivedBody: payload.requestBody,
-          timestamp: new Date().toISOString()
-        },
-        statusCode: 200
-      };
-
-      console.log(`Mock API call completed successfully for ${payload.providerId}`);
-      
-      // Ensure decryptedKey variable goes out of scope quickly
-      return mockResponse;
-
+      // Execute the operation with the decrypted key
+      const result = await operationUsingKey(decryptedKey);
+      return result;
     } catch (error) {
-      console.error(`Error during API call for ${payload.providerId}:`, error);
-      
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error during API call';
-      
-      return {
-        success: false,
-        error: `API call failed: ${errorMessage}`,
-        statusCode: 500
-      };
+      // Log error from operationUsingKey but let it propagate to the caller
+      console.error(`Error during 'operationUsingKey' for provider ${providerId}:`, error);
+      throw error; // Re-throw the original error to the caller
     }
   }
+
 
   /**
    * Gets the file path for a provider's encrypted key

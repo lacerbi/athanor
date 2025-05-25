@@ -6,8 +6,6 @@ import {
   ApiProvider,
   ApiKeyStorageError,
   ProviderService,
-  InvokeApiCallPayload,
-  InvokeApiCallResponse,
 } from '../common';
 
 /**
@@ -86,82 +84,8 @@ export class ApiKeyServiceRenderer {
 
   // getKey method REMOVED for security reasons:
   // Plaintext API keys should never be accessible to the renderer process.
-  // Use invokeApiCall method instead for secure API operations.
-
-  /**
-   * Invokes a secure API call using stored credentials
-   *
-   * This method allows the renderer to make API calls without ever accessing
-   * the plaintext API key. The main process handles key decryption, HTTP request,
-   * and returns only the API response data.
-   *
-   * @param payload The API call payload containing provider, path, method, and body
-   * @returns Promise resolving to the API response or error information
-   * @throws ApiKeyStorageError if the operation fails
-   */
-  async invokeApiCall(
-    payload: InvokeApiCallPayload
-  ): Promise<InvokeApiCallResponse> {
-    // Validate payload
-    if (!payload.providerId) {
-      throw new ApiKeyStorageError('Provider ID is required for API call');
-    }
-
-    if (!payload.requestPath) {
-      throw new ApiKeyStorageError('Request path is required for API call');
-    }
-
-    if (!payload.requestMethod) {
-      throw new ApiKeyStorageError('Request method is required for API call');
-    }
-
-    // Check if the bridge method exists
-    if (!this.bridge.invokeApiCall) {
-      throw new ApiKeyStorageError(
-        'API call invocation bridge is not available. This may indicate a preload script issue.'
-      );
-    }
-
-    try {
-      console.log(
-        `Invoking secure API call for ${payload.providerId} via IPC bridge`
-      );
-      const result = await this.bridge.invokeApiCall(payload);
-
-      // Log successful call (without sensitive data)
-      if (result.success) {
-        console.log(
-          `Secure API call completed successfully for ${payload.providerId}`
-        );
-      } else {
-        console.warn(
-          `Secure API call failed for ${payload.providerId}:`,
-          result.error
-        );
-      }
-
-      return result;
-    } catch (error) {
-      console.error(
-        `Error during secure API call for ${payload.providerId}:`,
-        error
-      );
-
-      // If it's already an ApiKeyStorageError, re-throw it
-      if (error instanceof ApiKeyStorageError) {
-        throw error;
-      }
-
-      // Handle IPC errors
-      if (error && typeof error === 'object' && 'message' in error) {
-        throw new ApiKeyStorageError(error.message as string);
-      }
-
-      throw new ApiKeyStorageError(
-        `Failed to invoke secure API call for ${payload.providerId}: Unknown error`
-      );
-    }
-  }
+  // For secure API operations that require keys, functionality should be implemented
+  // in a main process service that utilizes ApiKeyServiceMain.withDecryptedKey.
 
   /**
    * Deletes an API key from secure storage

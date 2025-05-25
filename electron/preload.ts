@@ -2,7 +2,7 @@
 // Now includes FileService, PathUtils interfaces, and secure API key management.
 
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPCChannelNames, InvokeApiCallPayload } from './modules/secure-api-storage/common/types';
+import { IPCChannelNames } from './modules/secure-api-storage/common/types';
 
 // Channel name for confirmation dialog (must match coreHandlers.ts)
 const SHOW_CONFIRM_DIALOG_CHANNEL = 'dialog:show-confirm-dialog';
@@ -40,7 +40,10 @@ contextBridge.exposeInMainWorld('settingsService', {
     ipcRenderer.invoke('settings:save-application', settings),
 });
 
-// Expose secure API key management
+// Import LLM service renderer
+import { llmServiceRenderer } from './modules/llm/renderer/LLMServiceRenderer';
+
+// Expose secure API key management and LLM service
 contextBridge.exposeInMainWorld('electronBridge', {
   secureApiKeyManager: {
     storeKey: (providerId: string, apiKey: string) => 
@@ -48,14 +51,17 @@ contextBridge.exposeInMainWorld('electronBridge', {
     // getKey: REMOVED for security - plaintext keys should never be accessible to renderer
     deleteKey: (providerId: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_DELETE, providerId),
-    invokeApiCall: (payload: InvokeApiCallPayload) => 
-      ipcRenderer.invoke(IPCChannelNames.SECURE_API_INVOKE_CALL, payload),
     isKeyStored: (providerId: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_IS_STORED, providerId),
     getStoredProviderIds: () => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_STORED_PROVIDERS),
     getApiKeyDisplayInfo: (providerId: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO, providerId),
+  },
+  llmService: {
+    getProviders: () => llmServiceRenderer.getProviders(),
+    getModels: (providerId: string) => llmServiceRenderer.getModels(providerId as any),
+    sendMessage: (request: any) => llmServiceRenderer.sendMessage(request),
   },
   ui: {
     confirm: (message: string, title?: string): Promise<boolean> =>
