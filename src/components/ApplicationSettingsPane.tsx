@@ -3,7 +3,7 @@
 // and manage API keys for different providers with secure storage and display functionality.
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { HelpCircle, Info, Eye, EyeOff, Save, Trash2 } from 'lucide-react';
+import { HelpCircle, Info, Eye, EyeOff, Save, Trash2, Check } from 'lucide-react';
 import type { ApplicationSettings } from '../types/global';
 import { SETTINGS } from '../utils/constants';
 import { ApiKeyServiceRenderer } from '../../electron/modules/secure-api-storage/renderer';
@@ -51,7 +51,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
   const [currentKeyDisplayInfo, setCurrentKeyDisplayInfo] = useState<{ isStored: boolean, lastFourChars?: string } | null>(null);
   const [isKeyInfoLoading, setIsKeyInfoLoading] = useState<boolean>(false);
   const [keyOpError, setKeyOpError] = useState<string | null>(null);
-  const [isKeySaving, setIsKeySaving] = useState<boolean>(false);
+  const [isKeyProcessing, setIsKeyProcessing] = useState<boolean>(false);
   const [showApiKey, setShowApiKey] = useState<boolean>(false);
 
   // Initialize API Key Service
@@ -87,6 +87,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       setIsKeyInfoLoading(true);
       setKeyOpError(null);
       setApiKeyInput(''); // Clear input when switching providers
+      setShowApiKey(false); // Reset visibility when switching providers
       
       apiKeyService.getApiKeyDisplayInfo(selectedProvider)
         .then((info) => {
@@ -249,7 +250,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
   };
 
   const handleSaveApiKey = async () => {
-    if (!selectedProvider || !apiKeyService || !apiKeyInput.trim()) {
+    if (!selectedProvider || !apiKeyService || !apiKeyInput.trim() || currentKeyDisplayInfo?.isStored) {
       return;
     }
 
@@ -259,14 +260,15 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       return;
     }
 
-    setIsKeySaving(true);
+    setIsKeyProcessing(true);
     setKeyOpError(null);
 
     try {
       await apiKeyService.storeKey(selectedProvider, apiKeyInput.trim());
       
-      // Clear input and refresh display info
+      // Clear input and reset visibility
       setApiKeyInput('');
+      setShowApiKey(false);
       
       // Refresh key display info
       const updatedInfo = await apiKeyService.getApiKeyDisplayInfo(selectedProvider);
@@ -277,7 +279,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       console.error('Failed to save API key:', error);
       setKeyOpError(error instanceof ApiKeyStorageError ? error.message : 'Failed to save API key.');
     } finally {
-      setIsKeySaving(false);
+      setIsKeyProcessing(false);
     }
   };
 
@@ -291,14 +293,15 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       return;
     }
 
-    setIsKeySaving(true);
+    setIsKeyProcessing(true);
     setKeyOpError(null);
 
     try {
       await apiKeyService.deleteKey(selectedProvider);
       
-      // Clear input and refresh display info
+      // Clear input and reset visibility
       setApiKeyInput('');
+      setShowApiKey(false);
       
       // Refresh key display info
       const updatedInfo = await apiKeyService.getApiKeyDisplayInfo(selectedProvider);
@@ -309,7 +312,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       console.error('Failed to clear API key:', error);
       setKeyOpError(error instanceof ApiKeyStorageError ? error.message : 'Failed to clear API key.');
     } finally {
-      setIsKeySaving(false);
+      setIsKeyProcessing(false);
     }
   };
 
@@ -479,93 +482,109 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
               </div>
 
               <div className="space-y-4">
-                {/* Provider Selection */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="apiProvider"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    API Provider
-                  </label>
-                  <select
-                    id="apiProvider"
-                    value={selectedProvider || ''}
-                    onChange={handleProviderChange}
-                    disabled={!apiKeyService || availableProviders.length === 0}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                  >
-                    {availableProviders.length === 0 ? (
-                      <option value="">No providers available</option>
-                    ) : (
-                      availableProviders.map((provider) => (
-                        <option key={provider} value={provider}>
-                          {provider.charAt(0).toUpperCase() + provider.slice(1)}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                </div>
-
-                {/* Key Status Display */}
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Current Status
-                  </label>
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm">
-                    {isKeyInfoLoading ? (
-                      <div className="flex items-center text-gray-500">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
-                        Loading key information...
-                      </div>
-                    ) : keyOpError ? (
-                      <div className="text-red-600">{keyOpError}</div>
-                    ) : currentKeyDisplayInfo ? (
-                      currentKeyDisplayInfo.isStored ? (
-                        <div className="text-green-700">
-                          Key stored, ends with: <span className="font-mono font-medium">{currentKeyDisplayInfo.lastFourChars}</span>
-                        </div>
-                      ) : (
-                        <div className="text-gray-600">No key set for this provider</div>
-                      )
-                    ) : (
-                      <div className="text-gray-500">Select a provider to view status</div>
-                    )}
-                  </div>
-                </div>
-
-                {/* API Key Input */}
-                <div className="space-y-2">
-                  <label
-                    htmlFor="apiKeyInput"
-                    className="block text-sm font-medium text-gray-700"
-                  >
-                    API Key
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="apiKeyInput"
-                      type={showApiKey ? "text" : "password"}
-                      value={apiKeyInput}
-                      onChange={handleApiKeyInputChange}
-                      placeholder={`Enter your ${selectedProvider || 'API'} key`}
-                      disabled={!selectedProvider || isKeySaving}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={toggleApiKeyVisibility}
-                      disabled={!selectedProvider || isKeySaving}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 disabled:text-gray-300"
-                      title={showApiKey ? "Hide API key" : "Show API key"}
+                {/* Provider Selection and API Key Input - Horizontal Layout */}
+                <div className="flex items-start space-x-4">
+                  {/* Provider Selection Group */}
+                  <div className="flex-1 space-y-2">
+                    <label
+                      htmlFor="apiProvider"
+                      className="block text-sm font-medium text-gray-700"
                     >
-                      {showApiKey ? (
-                        <EyeOff className="h-4 w-4" />
+                      API Provider
+                    </label>
+                    <select
+                      id="apiProvider"
+                      value={selectedProvider || ''}
+                      onChange={handleProviderChange}
+                      disabled={!apiKeyService || availableProviders.length === 0}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    >
+                      {availableProviders.length === 0 ? (
+                        <option value="">No providers available</option>
                       ) : (
-                        <Eye className="h-4 w-4" />
+                        availableProviders.map((provider) => (
+                          <option key={provider} value={provider}>
+                            {provider.charAt(0).toUpperCase() + provider.slice(1)}
+                          </option>
+                        ))
                       )}
-                    </button>
+                    </select>
+                  </div>
+
+                  {/* API Key Input Group */}
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center space-x-2">
+                      <label
+                        htmlFor="apiKeyInput"
+                        className="block text-sm font-medium text-gray-700"
+                      >
+                        API Key
+                      </label>
+                      {currentKeyDisplayInfo?.isStored && (
+                        <div
+                          className="relative group"
+                          title="API key is securely stored for this provider"
+                        >
+                          <Check className="w-4 h-4 text-green-600" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <input
+                        id="apiKeyInput"
+                        type={currentKeyDisplayInfo?.isStored ? "text" : (showApiKey ? "text" : "password")}
+                        value={currentKeyDisplayInfo?.isStored 
+                          ? `••••${currentKeyDisplayInfo.lastFourChars || 'XXXX'}`
+                          : apiKeyInput
+                        }
+                        onChange={handleApiKeyInputChange}
+                        placeholder={(() => {
+                          if (!selectedProvider) {
+                            return 'Select an API provider first';
+                          }
+                          
+                          const providerNameForPlaceholder = selectedProvider.charAt(0).toUpperCase() + selectedProvider.slice(1);
+                          
+                          if (isKeyInfoLoading) {
+                            return `Loading key for ${providerNameForPlaceholder}...`;
+                          } else if (currentKeyDisplayInfo?.isStored) {
+                            return '';
+                          } else if (currentKeyDisplayInfo && !currentKeyDisplayInfo.isStored) {
+                            return `Enter ${providerNameForPlaceholder} API key`;
+                          } else if (!currentKeyDisplayInfo && !keyOpError && selectedProvider) {
+                            return `Enter ${providerNameForPlaceholder} API key`;
+                          }
+                          
+                          return 'Enter API key';
+                        })()}
+                        disabled={isKeyInfoLoading || isKeyProcessing || !!currentKeyDisplayInfo?.isStored}
+                        className={`w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
+                          currentKeyDisplayInfo?.isStored ? 'text-gray-400' : ''
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={toggleApiKeyVisibility}
+                        disabled={isKeyInfoLoading || isKeyProcessing || !!currentKeyDisplayInfo?.isStored}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 disabled:text-gray-300"
+                        title={showApiKey ? "Hide API key" : "Show API key"}
+                      >
+                        {showApiKey ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {/* API Key Operation Error Display */}
+                {keyOpError && !isKeyInfoLoading && (
+                  <div className="text-red-600 text-sm mt-1">
+                    {keyOpError}
+                  </div>
+                )}
 
                 {/* Action Buttons */}
                 <div className="flex items-center space-x-3">
@@ -575,17 +594,18 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                       !selectedProvider ||
                       !apiKeyService ||
                       !apiKeyInput.trim() ||
-                      isKeySaving ||
-                      isKeyInfoLoading
+                      isKeyProcessing ||
+                      isKeyInfoLoading ||
+                      !!currentKeyDisplayInfo?.isStored
                     }
                     className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isKeySaving ? (
+                    {isKeyProcessing ? (
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     ) : (
                       <Save className="h-4 w-4 mr-2" />
                     )}
-                    {currentKeyDisplayInfo?.isStored ? 'Update Key' : 'Save Key'}
+                    Save Key
                   </button>
 
                   <button
@@ -594,7 +614,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                       !selectedProvider ||
                       !apiKeyService ||
                       !currentKeyDisplayInfo?.isStored ||
-                      isKeySaving ||
+                      isKeyProcessing ||
                       isKeyInfoLoading
                     }
                     className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
