@@ -2,18 +2,24 @@
 // Provides typed API for UI components with client-side validation and error handling.
 // Acts as the interface between React components and the main process service.
 
-import { ApiProvider, ApiKeyStorageError, ProviderService } from '../common';
+import {
+  ApiProvider,
+  ApiKeyStorageError,
+  ProviderService,
+  InvokeApiCallPayload,
+  InvokeApiCallResponse,
+} from '../common';
 
 /**
  * Renderer-side client service for secure API key management
- * 
+ *
  * This service provides a clean, typed API for UI components to interact with
  * the secure API key storage system. It handles:
  * - Client-side validation before sending requests to main process
  * - Type-safe communication via the preload bridge
  * - Error handling and user-friendly error messages
  * - Provider enumeration for UI dropdowns/selection
- * 
+ *
  * All sensitive operations are delegated to the main process via IPC.
  */
 export class ApiKeyServiceRenderer {
@@ -22,28 +28,28 @@ export class ApiKeyServiceRenderer {
 
   /**
    * Creates a new ApiKeyServiceRenderer instance
-   * 
+   *
    * @throws ApiKeyStorageError if the preload bridge is not available
    */
   constructor() {
     this.providerService = new ProviderService();
-    
+
     // Ensure the preload bridge is available
     if (!window.electronBridge?.secureApiKeyManager) {
       throw new ApiKeyStorageError(
         'Secure API key bridge is not available. This may indicate a preload script issue.'
       );
     }
-    
+
     this.bridge = window.electronBridge.secureApiKeyManager;
   }
 
   /**
    * Stores an API key securely
-   * 
+   *
    * Performs client-side validation before delegating to the main process.
    * This provides immediate feedback to the user without a round-trip to main.
-   * 
+   *
    * @param providerId The provider to store the key for
    * @param apiKey The API key to store
    * @throws ApiKeyStorageError if validation fails or storage operation fails
@@ -66,45 +72,100 @@ export class ApiKeyServiceRenderer {
       if (error instanceof ApiKeyStorageError) {
         throw error;
       }
-      
+
       // Handle IPC errors
       if (error && typeof error === 'object' && 'message' in error) {
         throw new ApiKeyStorageError(error.message as string);
       }
-      
-      throw new ApiKeyStorageError('Failed to store API key due to an unexpected error');
+
+      throw new ApiKeyStorageError(
+        'Failed to store API key due to an unexpected error'
+      );
     }
   }
 
+  // getKey method REMOVED for security reasons:
+  // Plaintext API keys should never be accessible to the renderer process.
+  // Use invokeApiCall method instead for secure API operations.
+
   /**
-   * Retrieves an API key from secure storage
-   * 
-   * @param providerId The provider to get the key for
-   * @returns The API key or undefined if not found
-   * @throws ApiKeyStorageError if retrieval operation fails
+   * Invokes a secure API call using stored credentials
+   *
+   * This method allows the renderer to make API calls without ever accessing
+   * the plaintext API key. The main process handles key decryption, HTTP request,
+   * and returns only the API response data.
+   *
+   * @param payload The API call payload containing provider, path, method, and body
+   * @returns Promise resolving to the API response or error information
+   * @throws ApiKeyStorageError if the operation fails
    */
-  async getKey(providerId: ApiProvider): Promise<string | undefined> {
+  async invokeApiCall(
+    payload: InvokeApiCallPayload
+  ): Promise<InvokeApiCallResponse> {
+    // Validate payload
+    if (!payload.providerId) {
+      throw new ApiKeyStorageError('Provider ID is required for API call');
+    }
+
+    if (!payload.requestPath) {
+      throw new ApiKeyStorageError('Request path is required for API call');
+    }
+
+    if (!payload.requestMethod) {
+      throw new ApiKeyStorageError('Request method is required for API call');
+    }
+
+    // Check if the bridge method exists
+    if (!this.bridge.invokeApiCall) {
+      throw new ApiKeyStorageError(
+        'API call invocation bridge is not available. This may indicate a preload script issue.'
+      );
+    }
+
     try {
-      const result = await this.bridge.getKey(providerId);
-      return result || undefined;
+      console.log(
+        `Invoking secure API call for ${payload.providerId} via IPC bridge`
+      );
+      const result = await this.bridge.invokeApiCall(payload);
+
+      // Log successful call (without sensitive data)
+      if (result.success) {
+        console.log(
+          `Secure API call completed successfully for ${payload.providerId}`
+        );
+      } else {
+        console.warn(
+          `Secure API call failed for ${payload.providerId}:`,
+          result.error
+        );
+      }
+
+      return result;
     } catch (error) {
+      console.error(
+        `Error during secure API call for ${payload.providerId}:`,
+        error
+      );
+
       // If it's already an ApiKeyStorageError, re-throw it
       if (error instanceof ApiKeyStorageError) {
         throw error;
       }
-      
+
       // Handle IPC errors
       if (error && typeof error === 'object' && 'message' in error) {
         throw new ApiKeyStorageError(error.message as string);
       }
-      
-      throw new ApiKeyStorageError(`Failed to retrieve API key for ${providerId}`);
+
+      throw new ApiKeyStorageError(
+        `Failed to invoke secure API call for ${payload.providerId}: Unknown error`
+      );
     }
   }
 
   /**
    * Deletes an API key from secure storage
-   * 
+   *
    * @param providerId The provider to delete the key for
    * @throws ApiKeyStorageError if deletion operation fails
    */
@@ -112,26 +173,30 @@ export class ApiKeyServiceRenderer {
     try {
       const result = await this.bridge.deleteKey(providerId);
       if (!result.success) {
-        throw new ApiKeyStorageError(`Failed to delete API key for ${providerId}`);
+        throw new ApiKeyStorageError(
+          `Failed to delete API key for ${providerId}`
+        );
       }
     } catch (error) {
       // If it's already an ApiKeyStorageError, re-throw it
       if (error instanceof ApiKeyStorageError) {
         throw error;
       }
-      
+
       // Handle IPC errors
       if (error && typeof error === 'object' && 'message' in error) {
         throw new ApiKeyStorageError(error.message as string);
       }
-      
-      throw new ApiKeyStorageError(`Failed to delete API key for ${providerId}`);
+
+      throw new ApiKeyStorageError(
+        `Failed to delete API key for ${providerId}`
+      );
     }
   }
 
   /**
    * Checks if an API key is stored for a provider
-   * 
+   *
    * @param providerId The provider to check
    * @returns true if a key is stored, false otherwise
    * @throws ApiKeyStorageError if the check operation fails
@@ -144,19 +209,21 @@ export class ApiKeyServiceRenderer {
       if (error instanceof ApiKeyStorageError) {
         throw error;
       }
-      
+
       // Handle IPC errors
       if (error && typeof error === 'object' && 'message' in error) {
         throw new ApiKeyStorageError(error.message as string);
       }
-      
-      throw new ApiKeyStorageError(`Failed to check if API key is stored for ${providerId}`);
+
+      throw new ApiKeyStorageError(
+        `Failed to check if API key is stored for ${providerId}`
+      );
     }
   }
 
   /**
    * Gets all provider IDs that have stored keys
-   * 
+   *
    * @returns Array of provider IDs with stored keys
    * @throws ApiKeyStorageError if the operation fails
    */
@@ -169,28 +236,30 @@ export class ApiKeyServiceRenderer {
       if (error instanceof ApiKeyStorageError) {
         throw error;
       }
-      
+
       // Handle IPC errors
       if (error && typeof error === 'object' && 'message' in error) {
         throw new ApiKeyStorageError(error.message as string);
       }
-      
+
       throw new ApiKeyStorageError('Failed to get stored provider IDs');
     }
   }
 
   /**
    * Gets display information for an API key (status and last four chars)
-   * 
+   *
    * This method retrieves information about whether a key is stored and its
    * last four characters without requiring full decryption. Useful for UI
    * display purposes.
-   * 
+   *
    * @param providerId The provider to get display info for
    * @returns An object with isStored and optionally lastFourChars
    * @throws ApiKeyStorageError if the operation fails
    */
-  async getApiKeyDisplayInfo(providerId: ApiProvider): Promise<{ isStored: boolean, lastFourChars?: string }> {
+  async getApiKeyDisplayInfo(
+    providerId: ApiProvider
+  ): Promise<{ isStored: boolean; lastFourChars?: string }> {
     try {
       const result = await this.bridge.getApiKeyDisplayInfo(providerId);
       return result;
@@ -199,22 +268,24 @@ export class ApiKeyServiceRenderer {
       if (error instanceof ApiKeyStorageError) {
         throw error;
       }
-      
+
       // Handle IPC errors
       if (error && typeof error === 'object' && 'message' in error) {
         throw new ApiKeyStorageError(error.message as string);
       }
-      
-      throw new ApiKeyStorageError(`Failed to get API key display info for ${providerId}`);
+
+      throw new ApiKeyStorageError(
+        `Failed to get API key display info for ${providerId}`
+      );
     }
   }
 
   /**
    * Gets all available provider IDs (for UI listing)
-   * 
+   *
    * This is a synchronous operation that returns all providers that the system
    * supports, regardless of whether keys are stored for them.
-   * 
+   *
    * @returns Array of all available provider IDs
    */
   getAvailableProviders(): ApiProvider[] {
@@ -223,10 +294,10 @@ export class ApiKeyServiceRenderer {
 
   /**
    * Validates an API key format synchronously (for UI feedback)
-   * 
+   *
    * This provides immediate validation feedback in the UI without requiring
    * a round-trip to the main process. Useful for real-time form validation.
-   * 
+   *
    * @param providerId The provider to validate against
    * @param apiKey The API key to validate
    * @returns true if the API key has a valid format, false otherwise
@@ -237,7 +308,7 @@ export class ApiKeyServiceRenderer {
 
   /**
    * Gets a provider validator instance (for advanced UI needs)
-   * 
+   *
    * @param providerId The provider to get the validator for
    * @returns The provider validator or undefined if not found
    */

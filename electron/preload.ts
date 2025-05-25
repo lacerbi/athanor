@@ -2,7 +2,7 @@
 // Now includes FileService, PathUtils interfaces, and secure API key management.
 
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPCChannelNames } from './modules/secure-api-storage/common/types';
+import { IPCChannelNames, InvokeApiCallPayload } from './modules/secure-api-storage/common/types';
 
 // Channel name for confirmation dialog (must match coreHandlers.ts)
 const SHOW_CONFIRM_DIALOG_CHANNEL = 'dialog:show-confirm-dialog';
@@ -45,10 +45,11 @@ contextBridge.exposeInMainWorld('electronBridge', {
   secureApiKeyManager: {
     storeKey: (providerId: string, apiKey: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_STORE, { providerId, apiKey }),
-    getKey: (providerId: string) => 
-      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET, providerId),
+    // getKey: REMOVED for security - plaintext keys should never be accessible to renderer
     deleteKey: (providerId: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_DELETE, providerId),
+    invokeApiCall: (payload: InvokeApiCallPayload) => 
+      ipcRenderer.invoke(IPCChannelNames.SECURE_API_INVOKE_CALL, payload),
     isKeyStored: (providerId: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_IS_STORED, providerId),
     getStoredProviderIds: () => 

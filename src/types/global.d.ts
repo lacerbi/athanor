@@ -12,6 +12,9 @@ interface AthanorDragEvent extends DragEvent {
   dataTransfer: AthanorDataTransfer;
 }
 
+// Import types for secure API operations
+import type { InvokeApiCallPayload, InvokeApiCallResponse } from '../electron/modules/secure-api-storage/common/types';
+
 export {};
 
 // Settings types
@@ -96,15 +99,18 @@ declare global {
          */
         storeKey: (providerId: string, apiKey: string) => Promise<{ success: boolean }>;
         
-        /**
-         * Retrieves an API key
-         */
-        getKey: (providerId: string) => Promise<string | null>;
+        // getKey: REMOVED for security - plaintext keys should never be accessible to renderer
         
         /**
          * Deletes an API key
          */
         deleteKey: (providerId: string) => Promise<{ success: boolean }>;
+        
+        /**
+         * Invokes a secure API call using stored credentials
+         * The main process handles key decryption and HTTP request
+         */
+        invokeApiCall: (payload: InvokeApiCallPayload) => Promise<InvokeApiCallResponse>;
         
         /**
          * Checks if an API key is stored

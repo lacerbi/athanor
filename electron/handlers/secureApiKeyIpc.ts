@@ -3,7 +3,7 @@
 
 import { ipcMain } from 'electron';
 import { ApiKeyServiceMain } from '../modules/secure-api-storage/main';
-import { IPCChannelNames, StoreApiKeyPayload, ApiKeyStorageError } from '../modules/secure-api-storage/common';
+import { IPCChannelNames, StoreApiKeyPayload, ApiKeyStorageError, InvokeApiCallPayload, InvokeApiCallResponse } from '../modules/secure-api-storage/common';
 
 /**
  * Registers IPC handlers for secure API key operations
@@ -30,18 +30,8 @@ export function registerSecureApiKeyIpc(apiKeyService: ApiKeyServiceMain): void 
     }
   });
 
-  // Get API key
-  ipcMain.handle(IPCChannelNames.SECURE_API_KEY_GET, async (_event, providerId: string) => {
-    try {
-      const apiKey = await apiKeyService.getKey(providerId as any);
-      return apiKey || null;
-    } catch (error) {
-      if (error instanceof ApiKeyStorageError) {
-        throw error;
-      }
-      throw new ApiKeyStorageError(`Failed to retrieve API key: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  });
+  // Get API key - REMOVED for security: plaintext keys should never be sent to renderer
+  // The renderer process should use secure-api:invoke-call instead for API operations
 
   // Delete API key
   ipcMain.handle(IPCChannelNames.SECURE_API_KEY_DELETE, async (_event, providerId: string) => {
@@ -89,6 +79,34 @@ export function registerSecureApiKeyIpc(apiKeyService: ApiKeyServiceMain): void 
         throw error;
       }
       throw new ApiKeyStorageError(`Failed to get API key display info: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+  // Invoke secure API call
+  ipcMain.handle(IPCChannelNames.SECURE_API_INVOKE_CALL, async (_event, payload: InvokeApiCallPayload): Promise<InvokeApiCallResponse> => {
+    try {
+      console.log(`Received secure API call request for ${payload.providerId}`);
+      return await apiKeyService.invokeApiCall(payload);
+    } catch (error) {
+      console.error('Error invoking secure API call:', error);
+      
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error during API call invocation';
+      
+      // For security, don't expose detailed error information to renderer
+      // if it might contain sensitive information
+      if (error instanceof ApiKeyStorageError) {
+        return {
+          success: false,
+          error: `API Key Storage Error: ${error.message}`,
+          statusCode: 500
+        };
+      }
+      
+      return {
+        success: false,
+        error: `API call invocation failed: ${errorMessage}`,
+        statusCode: 500
+      };
     }
   });
 

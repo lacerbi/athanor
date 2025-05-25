@@ -1,5 +1,6 @@
 // AI Summary: Dedicated component for secure API key management with provider selection,
 // key storage/deletion, validation, and display functionality. Uses secure storage via IPC bridge.
+// Updated for enhanced security - no longer has access to plaintext keys in renderer process.
 
 import React, { useEffect, useState, useCallback } from 'react';
 import {
@@ -42,6 +43,7 @@ const ApiKeyManagementPane: React.FC = () => {
     try {
       const service = new ApiKeyServiceRenderer();
       setApiKeyService(service);
+      console.log('ApiKeyServiceRenderer initialized successfully with secure API operations');
     } catch (error) {
       console.error('Failed to initialize ApiKeyServiceRenderer:', error);
       setKeyOpError(
