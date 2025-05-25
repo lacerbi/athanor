@@ -42,28 +42,33 @@ const SettingsPanel: React.FC = () => {
     <div className="flex flex-col h-full p-6">
       <div className="flex-1 overflow-y-auto">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
-          {/* Project Settings Section */}
-          <ProjectSettingsPane
-            projectSettings={projectSettings}
-            isLoadingProjectSettings={isLoadingProjectSettings}
-            projectSettingsError={projectSettingsError}
-            currentProjectPath={currentProjectPath}
-            saveProjectSettings={saveProjectSettings}
-            hasProject={hasProject}
-            selectProjectInfoFile={window.fileService.selectProjectInfoFile}
-          />
+          {/* Left Column: Project Settings + API Key Management */}
+          <div className="flex flex-col space-y-8">
+            {/* Project Settings Section */}
+            <ProjectSettingsPane
+              projectSettings={projectSettings}
+              isLoadingProjectSettings={isLoadingProjectSettings}
+              projectSettingsError={projectSettingsError}
+              currentProjectPath={currentProjectPath}
+              saveProjectSettings={saveProjectSettings}
+              hasProject={hasProject}
+              selectProjectInfoFile={window.fileService.selectProjectInfoFile}
+            />
 
-          {/* Application Settings Section */}
-          <ApplicationSettingsPane
-            applicationSettings={applicationSettings}
-            isLoadingApplicationSettings={isLoadingApplicationSettings}
-            applicationSettingsError={applicationSettingsError}
-            saveApplicationSettings={saveApplicationSettings}
-            applicationDefaults={SETTINGS.defaults.application}
-          />
+            {/* API Key Management Section */}
+            <ApiKeyManagementPane />
+          </div>
 
-          {/* API Key Management Section */}
-          <ApiKeyManagementPane />
+          {/* Right Column: Application Settings */}
+          <div className="flex flex-col">
+            <ApplicationSettingsPane
+              applicationSettings={applicationSettings}
+              isLoadingApplicationSettings={isLoadingApplicationSettings}
+              applicationSettingsError={applicationSettingsError}
+              saveApplicationSettings={saveApplicationSettings}
+              applicationDefaults={SETTINGS.defaults.application}
+            />
+          </div>
         </div>
       </div>
     </div>
