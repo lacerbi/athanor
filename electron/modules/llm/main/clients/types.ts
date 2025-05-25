@@ -50,7 +50,6 @@ export interface ILLMClientAdapter {
     providerId: string;
     name: string;
     version?: string;
-    supportedModels?: string[];
   };
 }
 

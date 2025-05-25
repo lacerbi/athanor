@@ -104,12 +104,7 @@ export class AnthropicClientAdapter implements ILLMClientAdapter {
     return {
       providerId: 'anthropic' as const,
       name: 'Anthropic Client Adapter',
-      version: '1.0.0',
-      supportedModels: [
-        'claude-3-haiku-20240307',
-        'claude-3-5-sonnet-20241022',
-        'claude-3-opus-20240229'
-      ]
+      version: '1.0.0'
     };
   }
 

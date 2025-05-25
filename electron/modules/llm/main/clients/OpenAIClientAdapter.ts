@@ -113,13 +113,7 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
     return {
       providerId: 'openai' as const,
       name: 'OpenAI Client Adapter',
-      version: '1.0.0',
-      supportedModels: [
-        'gpt-4o-mini',
-        'gpt-4o',
-        'gpt-4-turbo',
-        'gpt-3.5-turbo'
-      ]
+      version: '1.0.0'
     };
   }
 
