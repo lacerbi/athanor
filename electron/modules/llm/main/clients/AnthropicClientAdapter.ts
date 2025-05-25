@@ -5,6 +5,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import type { LLMResponse, LLMFailureResponse, LLMMessage } from '../../common/types';
 import type { ILLMClientAdapter, InternalLLMChatRequest, AdapterErrorCode } from './types';
 import { ADAPTER_ERROR_CODES } from './types';
+import { getCommonMappedErrorDetails } from './adapterErrorUtils';
 
 /**
  * Client adapter for Anthropic API integration
@@ -273,65 +274,21 @@ export class AnthropicClientAdapter implements ILLMClientAdapter {
    * @returns Standardized LLM failure response
    */
   private createErrorResponse(error: any, request: InternalLLMChatRequest): LLMFailureResponse {
-    let errorCode: AdapterErrorCode = ADAPTER_ERROR_CODES.UNKNOWN_ERROR;
-    let errorMessage = 'Unknown error occurred';
-    let errorType = 'server_error';
-    let status: number | undefined;
+    // Use shared error mapping utility for common error patterns
+    const initialProviderMessage = (error instanceof Anthropic.APIError) ? error.message : undefined;
+    let { errorCode, errorMessage, errorType, status } = getCommonMappedErrorDetails(error, initialProviderMessage);
 
-    if (error instanceof Anthropic.APIError) {
-      status = error.status;
-      errorMessage = error.message;
-
-      // Map Anthropic error types to our standard codes
-      switch (error.status) {
-        case 401:
-          errorCode = ADAPTER_ERROR_CODES.INVALID_API_KEY;
-          errorType = 'authentication_error';
-          break;
-        case 402:
-          errorCode = ADAPTER_ERROR_CODES.INSUFFICIENT_CREDITS;
-          errorType = 'rate_limit_error';
-          break;
-        case 404:
-          errorCode = ADAPTER_ERROR_CODES.MODEL_NOT_FOUND;
-          errorType = 'invalid_request_error';
-          break;
-        case 429:
-          errorCode = ADAPTER_ERROR_CODES.RATE_LIMIT_EXCEEDED;
-          errorType = 'rate_limit_error';
-          break;
-        case 400:
-          // Check for specific error types in the message
-          if (error.message.toLowerCase().includes('context length') || 
-              error.message.toLowerCase().includes('too long')) {
-            errorCode = ADAPTER_ERROR_CODES.CONTEXT_LENGTH_EXCEEDED;
-          } else if (error.message.toLowerCase().includes('content policy') ||
-                     error.message.toLowerCase().includes('safety')) {
-            errorCode = ADAPTER_ERROR_CODES.CONTENT_FILTER;
-            errorType = 'content_filter_error';
-          } else {
-            errorCode = ADAPTER_ERROR_CODES.PROVIDER_ERROR;
-          }
-          errorType = 'invalid_request_error';
-          break;
-        case 500:
-        case 502:
-        case 503:
-        case 504:
-          errorCode = ADAPTER_ERROR_CODES.PROVIDER_ERROR;
-          errorType = 'server_error';
-          break;
-        default:
-          errorCode = ADAPTER_ERROR_CODES.PROVIDER_ERROR;
-          errorType = 'server_error';
+    // Apply Anthropic-specific refinements for 400 errors based on message content
+    if (error instanceof Anthropic.APIError && status === 400) {
+      if (error.message.toLowerCase().includes('context length') || 
+          error.message.toLowerCase().includes('too long')) {
+        errorCode = ADAPTER_ERROR_CODES.CONTEXT_LENGTH_EXCEEDED;
+      } else if (error.message.toLowerCase().includes('content policy') ||
+                 error.message.toLowerCase().includes('safety')) {
+        errorCode = ADAPTER_ERROR_CODES.CONTENT_FILTER;
+        errorType = 'content_filter_error';
       }
-    } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-      errorCode = ADAPTER_ERROR_CODES.NETWORK_ERROR;
-      errorType = 'connection_error';
-      errorMessage = 'Network connection failed';
-    } else if (error instanceof Error) {
-      errorMessage = error.message;
-      errorCode = ADAPTER_ERROR_CODES.UNKNOWN_ERROR;
+      // For other 400 errors, use the default mapping from the utility (PROVIDER_ERROR)
     }
 
     return {
