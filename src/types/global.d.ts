@@ -121,6 +121,12 @@ declare global {
          */
         getApiKeyDisplayInfo: (providerId: string) => Promise<{ isStored: boolean, lastFourChars?: string }>;
       };
+      ui: {
+        /**
+         * Shows a native confirmation dialog and returns user's choice
+         */
+        confirm: (message: string, title?: string) => Promise<boolean>;
+      };
     };
     
     // New path utilities API

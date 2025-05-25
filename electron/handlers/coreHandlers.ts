@@ -8,9 +8,47 @@ import { FileService } from '../services/FileService';
 // Store fileService instance
 let _fileService: FileService;
 
+// Define channel name for confirmation dialog
+const SHOW_CONFIRM_DIALOG_CHANNEL = 'dialog:show-confirm-dialog';
+
 export function setupCoreHandlers(fileService: FileService) {
   // Store the fileService instance for later use
   _fileService = fileService;
+
+  // Add handler for confirmation dialog
+  ipcMain.handle(
+    SHOW_CONFIRM_DIALOG_CHANNEL,
+    async (_event, message: string, title?: string): Promise<boolean> => {
+      try {
+        if (!mainWindow) {
+          console.error('Main window not available for dialog. Showing dialog without parent.');
+          // Fallback: Show dialog without a parent if mainWindow is somehow null
+          const resultNoParent = await dialog.showMessageBox({
+            type: 'question',
+            buttons: ['OK', 'Cancel'],
+            defaultId: 0, // OK
+            cancelId: 1,  // Cancel
+            message: message,
+            title: title || 'Confirmation',
+          });
+          return resultNoParent.response === 0;
+        }
+
+        const result = await dialog.showMessageBox(mainWindow, {
+          type: 'question',
+          buttons: ['OK', 'Cancel'],
+          defaultId: 0, // OK is the default
+          cancelId: 1,  // Cancel is the second button
+          message: message,
+          title: title || 'Confirmation',
+        });
+        return result.response === 0; // 0 for 'OK'
+      } catch (error) {
+        handleError(error, `showing confirmation dialog: ${message}`);
+        return false; // Ensure a boolean is returned in case of error
+      }
+    }
+  );
 
   // Add handler for checking if file exists
   ipcMain.handle('fs:fileExists', async (_, filePath: string) => {

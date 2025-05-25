@@ -288,8 +288,12 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       return;
     }
 
-    // Simple confirmation
-    if (!window.confirm(`Are you sure you want to clear the API key for ${selectedProvider}?`)) {
+    // Use asynchronous confirmation dialog
+    const confirmed = await window.electronBridge.ui.confirm(
+      `Are you sure you want to clear the API key for ${selectedProvider}? This action cannot be undone.`,
+      'Confirm Clear API Key'
+    );
+    if (!confirmed) {
       return;
     }
 
@@ -299,19 +303,32 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
     try {
       await apiKeyService.deleteKey(selectedProvider);
       
-      // Clear input and reset visibility
-      setApiKeyInput('');
-      setShowApiKey(false);
+      console.log(`API key for ${selectedProvider} successfully requested for deletion. Optimistically updating UI.`);
       
-      // Refresh key display info
-      const updatedInfo = await apiKeyService.getApiKeyDisplayInfo(selectedProvider);
-      setCurrentKeyDisplayInfo(updatedInfo);
+      // Immediate optimistic UI update for instant responsiveness
+      // Use React.startTransition or batch updates to ensure immediate re-render
+      setApiKeyInput(''); // Clear any stale text in the input
+      setShowApiKey(false); // Reset password visibility toggle
+      setCurrentKeyDisplayInfo({ isStored: false, lastFourChars: undefined }); // OPTIMISTIC UPDATE
+      setIsKeyProcessing(false); // Release processing lock immediately for UI responsiveness
+      
+      // Refresh key display info for definitive backend confirmation (in background)
+      // Don't block UI with this slow operation
+      apiKeyService.getApiKeyDisplayInfo(selectedProvider)
+        .then((refreshedInfo) => {
+          setCurrentKeyDisplayInfo(refreshedInfo); // Update with definitive state
+          console.log(`API key display info for ${selectedProvider} refreshed from backend.`);
+        })
+        .catch((refreshError) => {
+          console.warn(`Failed to re-fetch API key display info for ${selectedProvider} after deletion. UI is using optimistic state. Error:`, refreshError);
+          // The UI already reflects a cleared state. This error means backend confirmation failed.
+          // We might set a subtle, non-blocking warning if necessary, but avoid re-disabling the field.
+        });
       
       console.log(`API key cleared successfully for ${selectedProvider}`);
     } catch (error) {
       console.error('Failed to clear API key:', error);
       setKeyOpError(error instanceof ApiKeyStorageError ? error.message : 'Failed to clear API key.');
-    } finally {
       setIsKeyProcessing(false);
     }
   };
@@ -528,6 +545,19 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                           <Check className="w-4 h-4 text-green-600" />
                         </div>
                       )}
+                      <button
+                        type="button"
+                        onClick={toggleApiKeyVisibility}
+                        disabled={isKeyInfoLoading || isKeyProcessing || (currentKeyDisplayInfo?.isStored === true)}
+                        className="text-gray-400 hover:text-gray-600 disabled:text-gray-300"
+                        title={showApiKey ? "Hide API key" : "Show API key"}
+                      >
+                        {showApiKey ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
                     </div>
                     <div className="relative">
                       <input
@@ -557,24 +587,11 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                           
                           return 'Enter API key';
                         })()}
-                        disabled={isKeyInfoLoading || isKeyProcessing || !!currentKeyDisplayInfo?.isStored}
-                        className={`w-full px-3 py-2 pr-10 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
+                        disabled={isKeyInfoLoading || isKeyProcessing || (currentKeyDisplayInfo?.isStored === true)}
+                        className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
                           currentKeyDisplayInfo?.isStored ? 'text-gray-400' : ''
                         }`}
                       />
-                      <button
-                        type="button"
-                        onClick={toggleApiKeyVisibility}
-                        disabled={isKeyInfoLoading || isKeyProcessing || !!currentKeyDisplayInfo?.isStored}
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 disabled:text-gray-300"
-                        title={showApiKey ? "Hide API key" : "Show API key"}
-                      >
-                        {showApiKey ? (
-                          <EyeOff className="h-4 w-4" />
-                        ) : (
-                          <Eye className="h-4 w-4" />
-                        )}
-                      </button>
                     </div>
                   </div>
                 </div>

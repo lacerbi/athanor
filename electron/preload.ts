@@ -4,6 +4,9 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPCChannelNames } from './modules/secure-api-storage/common/types';
 
+// Channel name for confirmation dialog (must match coreHandlers.ts)
+const SHOW_CONFIRM_DIALOG_CHANNEL = 'dialog:show-confirm-dialog';
+
 // Expose protected methods for IPC communication
 contextBridge.exposeInMainWorld('electron', {
   send: (channel: string, data: any) => {
@@ -52,6 +55,10 @@ contextBridge.exposeInMainWorld('electronBridge', {
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_STORED_PROVIDERS),
     getApiKeyDisplayInfo: (providerId: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO, providerId),
+  },
+  ui: {
+    confirm: (message: string, title?: string): Promise<boolean> =>
+      ipcRenderer.invoke(SHOW_CONFIRM_DIALOG_CHANNEL, message, title),
   },
 });
 

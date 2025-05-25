@@ -47,7 +47,7 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Put the XML block inside markdown codeblocks
 - Make sure to enclose the code with <![CDATA[__CODE HERE__]]>
 - You can write multiple `file` blocks in the same `ath` command
-- If the `ath` block is getting too long (>> 250 lines):
+- **Only if the `ath` block is getting excessively long (> 400 lines):**
   - When you close the `file` tag, also close the `ath` tag and close the XML block
   - Start a new XML block with a new `ath` tag
 
@@ -67,7 +67,7 @@ You can provide changes in two formats:
    ]]></file_code>
    </file>
 
-   [keep adding files here if the current `ath` block is below ~250 lines]
+   [other files can be added here]
    </ath>
    ```
 
@@ -99,7 +99,7 @@ You can provide changes in two formats:
    ]]></file_code>
    </file>
 
-   [keep adding files here if the current `ath` block is below ~250 lines]   
+   [other files can be added here]   
    </ath>
    ```
 
