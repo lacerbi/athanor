@@ -26,6 +26,8 @@ import {
   Info,
   FileQuestion,
 } from 'lucide-react';
+import type { AthanorModelPreset } from '../types/athanorPresets';
+import { getAllAthanorPresets } from '../services/athanorPresetService';
 import PromptContextMenu from './PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
@@ -54,6 +56,14 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   isActive,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+
+  // State for LLM preset selection
+  const [availablePresets, setAvailablePresets] = useState<
+    AthanorModelPreset[]
+  >([]);
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('');
+  const [isLoadingPresets, setIsLoadingPresets] = useState(false);
+
   const {
     tabs,
     activeTabIndex,
@@ -85,7 +95,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     x: number;
     y: number;
   } | null>(null);
-  
+
   const [taskContextMenu, setTaskContextMenu] = useState<{
     taskId: string;
     x: number;
@@ -134,7 +144,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   // Handle Developer action trigger only when panel is active and a new trigger occurs
   const lastTriggerRef = useRef(developerActionTrigger);
 
-  const { 
+  const {
     selectedItems,
     smartPreviewEnabled,
     toggleSmartPreview,
@@ -143,26 +153,78 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     formatType,
     toggleFormatType,
     includeProjectInfo,
-    toggleProjectInfo
+    toggleProjectInfo,
   } = useFileSystemStore();
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
   const { applicationSettings } = useSettingsStore();
 
+  // Fetch and filter presets based on stored API keys
+  useEffect(() => {
+    const fetchAndFilterPresets = async () => {
+      if (!isActive) return; // Only fetch when panel is active
+
+      setIsLoadingPresets(true);
+      try {
+        const allPresets = await getAllAthanorPresets();
+        const filtered: AthanorModelPreset[] = [];
+
+        for (const preset of allPresets) {
+          // Check if API key is stored for the provider
+          if (window.electronBridge?.secureApiKeyManager) {
+            const isStored =
+              await window.electronBridge.secureApiKeyManager.isKeyStored(
+                preset.providerId
+              );
+            if (isStored) {
+              filtered.push(preset);
+            }
+          }
+        }
+
+        setAvailablePresets(filtered);
+
+        // Reset selection if current selection is no longer available
+        if (
+          selectedPresetId &&
+          !filtered.find((p) => p.id === selectedPresetId)
+        ) {
+          setSelectedPresetId('');
+        }
+      } catch (error) {
+        console.error('Error fetching or filtering presets:', error);
+        addLog(
+          `Error loading LLM presets for API sending: ${error instanceof Error ? error.message : String(error)}`
+        );
+        setAvailablePresets([]);
+      } finally {
+        setIsLoadingPresets(false);
+      }
+    };
+
+    void fetchAndFilterPresets();
+  }, [isActive, addLog, selectedPresetId]);
+
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
     try {
       setIsLoading(true);
-      
+
       // Get smart preview configuration and threshold line length from application settings
       const appDefaults = SETTINGS.defaults.application;
       const smartPreviewConfig = {
-        minLines: applicationSettings?.minSmartPreviewLines ?? appDefaults.minSmartPreviewLines,
-        maxLines: applicationSettings?.maxSmartPreviewLines ?? appDefaults.maxSmartPreviewLines,
+        minLines:
+          applicationSettings?.minSmartPreviewLines ??
+          appDefaults.minSmartPreviewLines,
+        maxLines:
+          applicationSettings?.maxSmartPreviewLines ??
+          appDefaults.maxSmartPreviewLines,
       };
-      const currentThresholdLineLength = applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
-      
+      const currentThresholdLineLength =
+        applicationSettings?.thresholdLineLength ??
+        appDefaults.thresholdLineLength;
+
       const result = await buildDynamicPrompt(
         prompt,
         variant,
@@ -187,6 +249,24 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
   const handleManualCopy = (content: string) => {
     void copyToClipboard({ content, addLog });
+  };
+
+  // Handler for Send via API button
+  const handleSendViaApi = () => {
+    if (!selectedPresetId || tabs[activeTabIndex].output.trim() === '') {
+      addLog('Cannot send: No model selected or prompt is empty.');
+      return;
+    }
+
+    const preset = availablePresets.find((p) => p.id === selectedPresetId);
+    if (preset) {
+      const promptPreview = tabs[activeTabIndex].output.substring(0, 50);
+      const message = `Mock Send: Sending prompt using ${preset.providerId} - ${preset.modelId} (${preset.displayName}). Prompt: "${promptPreview}${tabs[activeTabIndex].output.length > 50 ? '...' : ''}"`;
+      addLog(message);
+      // Actual API call would go here in the future
+    } else {
+      addLog(`Error: Selected preset with ID ${selectedPresetId} not found.`);
+    }
   };
 
   const isTaskEmpty =
@@ -270,7 +350,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               {...useFileDrop({
                 onInsert: (value, start, end) => {
                   const text = tabs[activeTabIndex].content;
-                  const newText = text.slice(0, start) + value + text.slice(end);
+                  const newText =
+                    text.slice(0, start) + value + text.slice(end);
                   setTabContent(activeTabIndex, newText);
                 },
                 currentValue: tabs[activeTabIndex].content,
@@ -293,7 +374,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   {...useFileDrop({
                     onInsert: (value, start, end) => {
                       const text = tabs[activeTabIndex].context;
-                      const newText = text.slice(0, start) + value + text.slice(end);
+                      const newText =
+                        text.slice(0, start) + value + text.slice(end);
                       setTabContext(activeTabIndex, newText);
                     },
                     currentValue: tabs[activeTabIndex].context,
@@ -355,56 +437,72 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="space-y-4">
               <div className="space-y-3">
                 <div className="pb-2 border-b flex justify-between items-center">
-                <h2 className="text-lg font-semibold">
-                  Preset Prompts and Tasks
-                </h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={toggleSmartPreview}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    title={smartPreviewEnabled ? "Smart Preview: ON (click to disable)" : "Smart Preview: OFF (click to enable)"}
-                  >
-                    {smartPreviewEnabled ? (
-                      <Eye size={20} className="text-blue-600" />
-                    ) : (
-                      <EyeOff size={20} className="text-gray-600" />
-                    )}
-                  </button>
-                  <button
-                    onClick={toggleFileTree}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    title={includeFileTree ? "Include File Tree: ON (click to disable)" : "Include File Tree: OFF (click to enable)"}
-                  >
-                    {includeFileTree ? (
-                      <Folder size={20} className="text-blue-600" />
-                    ) : (
-                      <FolderX size={20} className="text-gray-600" />
-                    )}
-                  </button>
-                  <button
-                    onClick={toggleProjectInfo}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    title={includeProjectInfo ? "Include Project Info: ON (click to disable)" : "Include Project Info: OFF (click to enable)"}
-                  >
-                    {includeProjectInfo ? (
-                      <Info size={20} className="text-blue-600" />
-                    ) : (
-                      <FileQuestion size={20} className="text-gray-600" />
-                    )}
-                  </button>
-                  <button
-                    onClick={toggleFormatType}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    title={formatType === DOC_FORMAT.XML ? "Format: XML Tags (click for Markdown)" : "Format: Markdown (click for XML Tags)"}
-                  >
-                    {formatType === DOC_FORMAT.XML ? (
-                      <Code size={20} className="text-blue-600" />
-                    ) : (
-                      <MarkdownIcon size={20} className="text-blue-600" />
-                    )}
-                  </button>
+                  <h2 className="text-lg font-semibold">
+                    Preset Prompts and Tasks
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={toggleSmartPreview}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      title={
+                        smartPreviewEnabled
+                          ? 'Smart Preview: ON (click to disable)'
+                          : 'Smart Preview: OFF (click to enable)'
+                      }
+                    >
+                      {smartPreviewEnabled ? (
+                        <Eye size={20} className="text-blue-600" />
+                      ) : (
+                        <EyeOff size={20} className="text-gray-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={toggleFileTree}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      title={
+                        includeFileTree
+                          ? 'Include File Tree: ON (click to disable)'
+                          : 'Include File Tree: OFF (click to enable)'
+                      }
+                    >
+                      {includeFileTree ? (
+                        <Folder size={20} className="text-blue-600" />
+                      ) : (
+                        <FolderX size={20} className="text-gray-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={toggleProjectInfo}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      title={
+                        includeProjectInfo
+                          ? 'Include Project Info: ON (click to disable)'
+                          : 'Include Project Info: OFF (click to enable)'
+                      }
+                    >
+                      {includeProjectInfo ? (
+                        <Info size={20} className="text-blue-600" />
+                      ) : (
+                        <FileQuestion size={20} className="text-gray-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={toggleFormatType}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      title={
+                        formatType === DOC_FORMAT.XML
+                          ? 'Format: XML Tags (click for Markdown)'
+                          : 'Format: Markdown (click for XML Tags)'
+                      }
+                    >
+                      {formatType === DOC_FORMAT.XML ? (
+                        <Code size={20} className="text-blue-600" />
+                      ) : (
+                        <MarkdownIcon size={20} className="text-blue-600" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
                 {/* Dynamic Prompts Row */}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl mb-4">
                   {prompts.map((prompt) => {
@@ -458,9 +556,17 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 {/* Dynamic Tasks Row */}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl">
                   {useTaskStore((state) => state.tasks).map((task) => {
-                    const IconComponent = task.icon ? (Icons as any)[task.icon] : null;
-                    const isDisabled = isLoading || (task.requires === 'selected' && hasNoSelection);
-                    const reason = isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null;
+                    const IconComponent = task.icon
+                      ? (Icons as any)[task.icon]
+                      : null;
+                    const isDisabled =
+                      isLoading ||
+                      (task.requires === 'selected' && hasNoSelection);
+                    const reason = isLoading
+                      ? 'loading'
+                      : hasNoSelection
+                        ? 'noSelection'
+                        : null;
 
                     return (
                       <button
@@ -475,7 +581,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             setOutputContent,
                             addLog,
                             setIsLoading,
-                            currentThresholdLineLength: applicationSettings?.thresholdLineLength ?? SETTINGS.defaults.application.thresholdLineLength,
+                            currentThresholdLineLength:
+                              applicationSettings?.thresholdLineLength ??
+                              SETTINGS.defaults.application.thresholdLineLength,
                           })
                         }
                         disabled={isDisabled}
@@ -491,7 +599,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         data-edge="left"
                         aria-label={task.label}
                         aria-haspopup="true"
-                        aria-expanded={taskContextMenu?.taskId === task.id ? 'true' : 'false'}
+                        aria-expanded={
+                          taskContextMenu?.taskId === task.id ? 'true' : 'false'
+                        }
                       >
                         {IconComponent && (
                           <>
@@ -546,19 +656,27 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         {/* Task Context Menu */}
         {taskContextMenu && (
           <TaskContextMenu
-            task={useTaskStore.getState().tasks.find(t => t.id === taskContextMenu.taskId)!}
+            task={
+              useTaskStore
+                .getState()
+                .tasks.find((t) => t.id === taskContextMenu.taskId)!
+            }
             x={taskContextMenu.x}
             y={taskContextMenu.y}
             onClose={() => setTaskContextMenu(null)}
             onSelectVariant={(variantId: string) => {
               if (taskContextMenu?.taskId) {
-                useTaskStore.getState().setActiveVariant(taskContextMenu.taskId, variantId);
+                useTaskStore
+                  .getState()
+                  .setActiveVariant(taskContextMenu.taskId, variantId);
               }
               setTaskContextMenu(null);
             }}
             activeVariantId={
               taskContextMenu?.taskId
-                ? useTaskStore.getState().getActiveVariant(taskContextMenu.taskId)?.id
+                ? useTaskStore
+                    .getState()
+                    .getActiveVariant(taskContextMenu.taskId)?.id
                 : undefined
             }
           />
@@ -591,6 +709,54 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               currentValue: tabs[activeTabIndex].output,
             })}
           />
+
+          {/* Send via API controls */}
+          <div className="flex items-center gap-2 mt-2">
+            <button
+              onClick={handleSendViaApi}
+              className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={
+                isLoadingPresets ||
+                !selectedPresetId ||
+                tabs[activeTabIndex].output.trim() === ''
+              }
+              title={
+                !selectedPresetId
+                  ? 'Select a model first'
+                  : tabs[activeTabIndex].output.trim() === ''
+                    ? 'Generate a prompt first'
+                    : 'Send prompt via API'
+              }
+            >
+              Send via API
+            </button>
+
+            <select
+              value={selectedPresetId}
+              onChange={(e) => setSelectedPresetId(e.target.value)}
+              className="px-2 py-1.5 text-sm border rounded disabled:opacity-50 bg-white max-w-[200px] truncate"
+              disabled={isLoadingPresets || availablePresets.length === 0}
+            >
+              <option value="">
+                {isLoadingPresets ? 'Loading...' : 'Select Model...'}
+              </option>
+              {availablePresets.map((preset) => (
+                <option key={preset.id} value={preset.id} className="truncate">
+                  {preset.displayName}
+                </option>
+              ))}
+            </select>
+
+            <div className="relative group">
+              <Info size={18} className="text-gray-500 cursor-help" />
+              <div className="absolute bottom-full mb-2 right-0 px-3 py-2 text-xs text-white bg-gray-800 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-normal pointer-events-none w-64 z-10">
+                Directly sends the generated prompt to a LLM via API, intended
+                for simple calls (e.g., Autoselect prompts). Athanor's standard
+                workflow is to copy/paste prompts into external chat interfaces,
+                copy the output, and apply it via the Apply AI Output button.
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
