@@ -1,8 +1,8 @@
 // AI Summary: Wrapper component around VariantsContextMenu to handle task-specific variant selection
 import React from 'react';
-import { TaskData } from '../types/taskTypes';
+import { TaskData } from '../../types/taskTypes';
 import VariantsContextMenu from './VariantsContextMenu';
-import { useLogStore } from '../stores/logStore';
+import { useLogStore } from '../../stores/logStore';
 
 interface TaskContextMenuProps {
   task: TaskData;
@@ -22,9 +22,9 @@ const TaskContextMenu: React.FC<TaskContextMenuProps> = ({
   activeVariantId,
 }) => {
   const { addLog } = useLogStore();
-  
+
   const handleVariantSelect = (variantId: string) => {
-    const variant = task.variants.find(v => v.id === variantId);
+    const variant = task.variants.find((v) => v.id === variantId);
     if (variant) {
       addLog(`Selected variant '${variant.label}' for task '${task.label}'`);
     }

@@ -1,8 +1,8 @@
 // AI Summary: Generic context menu component for displaying and selecting variants.
 // Handles positioning, keyboard navigation, and selection with viewport boundary detection.
 import React, { useEffect, useState } from 'react';
-import { UI } from '../utils/constants';
-import { useLogStore } from '../stores/logStore';
+import { UI } from '../../utils/constants';
+import { useLogStore } from '../../stores/logStore';
 
 export interface Variant {
   id: string;

@@ -2,7 +2,7 @@
 // Provides UI controls for task description, dynamic prompt generators, and preset tasks.
 // Manages state for task inputs, generated prompts, and clipboard operations with contextual tooltips.
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import TaskContextMenu from './TaskContextMenu';
+import TaskContextMenu from './action-panel/TaskContextMenu';
 import {
   detectContexts,
   formatContext,
@@ -26,7 +26,7 @@ import {
   Info,
   FileQuestion,
 } from 'lucide-react';
-import PromptContextMenu from './PromptContextMenu';
+import PromptContextMenu from './action-panel/PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
