@@ -49,6 +49,9 @@ export type { ActionType, ActionState } from '../actions';
 export type { PromptData, PromptVariant } from './promptTypes';
 export type { TaskData, TaskVariant } from './taskTypes';
 
+// Re-export log types
+export type { LogEntry } from '../stores/logStore';
+
 // Task tab types for workbench multi-tab support
 export interface TaskTab {
   id: string;
