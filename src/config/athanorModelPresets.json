@@ -104,15 +104,15 @@
     }
   },
   {
-    "id": "gemini-flash-efficient",
-    "displayName": "Google Gemini - 2.5 Flash (Efficient)",
+    "id": "gemini-flash",
+    "displayName": "Google - Gemini 2.5 Flash",
     "description": "Fast and cost-effective configuration for routine development tasks",
     "providerId": "gemini",
     "modelId": "gemini-2.5-flash-preview-05-20",
     "settings": {
       "temperature": 0.7,
-      "maxTokens": 4000,
-      "topP": 0.9,
+      "maxTokens": 65535,
+      "topP": 0.95,
       "geminiSafetySettings": [
         { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
         {
@@ -128,50 +128,15 @@
     }
   },
   {
-    "id": "gemini-pro-custom-safety",
-    "displayName": "Google Gemini - 2.5 Pro (Custom Safety)",
-    "description": "Gemini Pro with specific safety configurations optimized for Athanor development tasks",
+    "id": "gemini-pro",
+    "displayName": "Google - Gemini 2.5 Pro",
+    "description": "Maximum capability Gemini Pro",
     "providerId": "gemini",
     "modelId": "gemini-2.5-pro-preview-05-06",
     "settings": {
-      "temperature": 0.6,
-      "maxTokens": 6000,
+      "temperature": 1.0,
+      "maxTokens": 65535,
       "topP": 0.95,
-      "geminiSafetySettings": [
-        {
-          "category": "HARM_CATEGORY_HATE_SPEECH",
-          "threshold": "BLOCK_ONLY_HIGH"
-        },
-        {
-          "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-          "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-        },
-        {
-          "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-          "threshold": "BLOCK_ONLY_HIGH"
-        },
-        {
-          "category": "HARM_CATEGORY_HARASSMENT",
-          "threshold": "BLOCK_ONLY_HIGH"
-        },
-        { "category": "HARM_CATEGORY_TOXICITY", "threshold": "BLOCK_NONE" },
-        {
-          "category": "HARM_CATEGORY_VIOLENCE",
-          "threshold": "BLOCK_MEDIUM_AND_ABOVE"
-        }
-      ]
-    }
-  },
-  {
-    "id": "gemini-pro-unrestricted",
-    "displayName": "Google Gemini - 2.5 Pro (Unrestricted)",
-    "description": "Maximum capability Gemini Pro with minimal safety restrictions for technical development",
-    "providerId": "gemini",
-    "modelId": "gemini-2.5-pro-preview-05-06",
-    "settings": {
-      "temperature": 0.8,
-      "maxTokens": 8000,
-      "topP": 1.0,
       "geminiSafetySettings": [
         { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
         {
