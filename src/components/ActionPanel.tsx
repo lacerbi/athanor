@@ -39,9 +39,11 @@ import { FileItem } from '../utils/fileTree';
 import { copyToClipboard } from '../actions/ManualCopyAction';
 import { buildTaskAction } from '../actions';
 import { getActionTooltip, getTaskTooltip } from '../actions';
+import { processAiResponseContent } from '../actions/ApplyAiOutputAction';
 import { useTaskStore } from '../stores/taskStore';
 import { useFileDrop } from '../hooks/useFileDrop';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
 
 interface ActionPanelProps {
@@ -273,10 +275,20 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     setIsLoading(true);
 
     try {
-      // Construct hardcoded messages for testing
+      // Define system and user messages
+      const systemMessageContent = "You are a helpful AI assistant. Follow the provided instructions carefully.";
+      const userMessageContent = tabs[activeTabIndex].output;
+
+      // Double-check that user message is not empty
+      if (userMessageContent.trim() === '') {
+        addLog('Cannot send: Generated prompt is empty.');
+        return;
+      }
+
+      // Construct messages for LLM request
       const messages = [
-        { role: 'system' as const, content: 'Talk like Yoda' },
-        { role: 'user' as const, content: 'What is the capital of France?' },
+        { role: 'system' as const, content: systemMessageContent },
+        { role: 'user' as const, content: userMessageContent },
       ];
 
       // Construct the LLM request
@@ -287,7 +299,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         settings: preset.settings,
       };
 
-      addLog(`Sending mock request to LLM using ${preset.displayName}...`);
+      addLog(`Sending prompt to ${preset.displayName} via API...`);
 
       // Send the request via electron bridge
       const response =
@@ -296,8 +308,27 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       // Process the response
       if (response.object === 'chat.completion') {
         if (response.choices && response.choices.length > 0) {
-          const content = response.choices[0].message.content;
-          addLog(`LLM Response: ${content}`);
+          const aiContent = response.choices[0].message.content;
+          
+          // Debug: Log the full LLM response to console
+          console.log('LLM Response Content:', aiContent);
+          
+          if (aiContent && aiContent.trim() !== '') {
+            addLog('Received response from LLM. Attempting to process commands...');
+            
+            // Get necessary functions for processAiResponseContent
+            const { setOperations, clearOperations } = useApplyChangesStore.getState();
+            
+            // Process the AI response for commands
+            await processAiResponseContent(aiContent, {
+              addLog,
+              setOperations,
+              clearOperations,
+              setActiveTab: setActivePanelTab
+            });
+          } else {
+            addLog('LLM Response: Received empty content.');
+          }
         } else {
           addLog('LLM Response: No choices returned in response.');
         }
