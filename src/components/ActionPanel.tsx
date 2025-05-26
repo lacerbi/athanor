@@ -45,6 +45,7 @@ import { useFileDrop } from '../hooks/useFileDrop';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
+import type { ApplicationSettings } from '../types/global';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -63,7 +64,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const [availablePresets, setAvailablePresets] = useState<
     AthanorModelPreset[]
   >([]);
-  const [selectedPresetId, setSelectedPresetId] = useState<string>('');
   const [isLoadingPresets, setIsLoadingPresets] = useState(false);
 
   const {
@@ -160,7 +160,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
-  const { applicationSettings } = useSettingsStore();
+  const { applicationSettings, saveApplicationSettings } = useSettingsStore();
 
   // Fetch and filter presets based on stored API keys
   useEffect(() => {
@@ -187,13 +187,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
         setAvailablePresets(filtered);
 
-        // Reset selection if current selection is no longer available
-        if (
-          selectedPresetId &&
-          !filtered.find((p) => p.id === selectedPresetId)
-        ) {
-          setSelectedPresetId('');
-        }
+        // Note: Invalid preset validation is handled by useEffect below
       } catch (error) {
         console.error('Error fetching or filtering presets:', error);
         addLog(
@@ -206,7 +200,38 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     };
 
     void fetchAndFilterPresets();
-  }, [isActive, addLog, selectedPresetId]);
+  }, [isActive, addLog]);
+
+  // Handle preset selection change
+  const handlePresetDropdownChange = async (newPresetId: string) => {
+    if (applicationSettings) {
+      const updatedSettings: ApplicationSettings = {
+        ...applicationSettings,
+        lastSelectedApiPresetId: newPresetId || null, // Store null if selection is cleared
+      };
+      try {
+        await saveApplicationSettings(updatedSettings);
+        addLog(`Preferred API model selection saved: ${newPresetId || 'None'}.`);
+      } catch (error) {
+        addLog(`Failed to save preferred API model: ${error instanceof Error ? error.message : String(error)}.`);
+      }
+    }
+  };
+
+  // Validate persisted preset ID and clear if invalid
+  useEffect(() => {
+    if (applicationSettings && applicationSettings.lastSelectedApiPresetId && availablePresets.length > 0 && !isLoadingPresets) {
+      const persistedId = applicationSettings.lastSelectedApiPresetId;
+      const isValid = availablePresets.some(p => p.id === persistedId);
+
+      if (!isValid) {
+        addLog(`Persisted API model ID "${persistedId}" is no longer valid. Clearing from settings.`);
+        const updatedSettings = { ...applicationSettings, lastSelectedApiPresetId: null };
+        saveApplicationSettings(updatedSettings)
+          .catch(error => addLog(`Error clearing invalid persisted API model ID: ${error instanceof Error ? error.message : String(error)}`));
+      }
+    }
+  }, [applicationSettings, availablePresets, isLoadingPresets, saveApplicationSettings, addLog]);
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
@@ -255,6 +280,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
   // Handler for Send via API button
   const handleSendViaApi = async () => {
+    const selectedPresetId = applicationSettings?.lastSelectedApiPresetId;
     if (!selectedPresetId || tabs[activeTabIndex].output.trim() === '') {
       addLog('Cannot send: No model selected or prompt is empty.');
       return;
@@ -796,11 +822,11 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
               disabled={
                 isLoadingPresets ||
-                !selectedPresetId ||
+                !applicationSettings?.lastSelectedApiPresetId ||
                 tabs[activeTabIndex].output.trim() === ''
               }
               title={
-                !selectedPresetId
+                !applicationSettings?.lastSelectedApiPresetId
                   ? 'Select a model first'
                   : tabs[activeTabIndex].output.trim() === ''
                     ? 'Generate a prompt first'
@@ -811,8 +837,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </button>
 
             <select
-              value={selectedPresetId}
-              onChange={(e) => setSelectedPresetId(e.target.value)}
+              value={applicationSettings?.lastSelectedApiPresetId || ''}
+              onChange={(e) => handlePresetDropdownChange(e.target.value)}
               className="px-2 py-1.5 text-sm border rounded disabled:opacity-50 bg-white max-w-[240px] truncate"
               disabled={isLoadingPresets || availablePresets.length === 0}
             >

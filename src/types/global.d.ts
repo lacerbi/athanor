@@ -28,6 +28,7 @@ export interface ApplicationSettings {
   minSmartPreviewLines?: number;
   maxSmartPreviewLines?: number;
   thresholdLineLength?: number;
+  lastSelectedApiPresetId?: string | null;
   
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;
