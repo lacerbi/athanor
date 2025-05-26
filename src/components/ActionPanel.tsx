@@ -782,7 +782,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <select
               value={selectedPresetId}
               onChange={(e) => setSelectedPresetId(e.target.value)}
-              className="px-2 py-1.5 text-sm border rounded disabled:opacity-50 bg-white max-w-[200px] truncate"
+              className="px-2 py-1.5 text-sm border rounded disabled:opacity-50 bg-white max-w-[240px] truncate"
               disabled={isLoadingPresets || availablePresets.length === 0}
             >
               <option value="">

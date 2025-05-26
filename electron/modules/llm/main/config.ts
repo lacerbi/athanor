@@ -134,11 +134,11 @@ export const MODEL_DEFAULT_SETTINGS: Record<string, Partial<LLMSettings>> = {
   },
 
   // Gemini model-specific overrides
-  'gemini-1.5-flash-002': {
+  'gemini-2.5-flash-preview-05-20': {
     maxTokens: 8192,
-    temperature: 0.8,
+    temperature: 0.7,
   },
-  'gemini-1.5-pro-002': {
+  'gemini-2.5-pro-preview-05-06': {
     maxTokens: 8192,
     temperature: 0.7,
   },
@@ -236,24 +236,26 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
 
   // Google Gemini Models
   {
-    id: 'gemini-1.5-flash-002',
-    name: 'Gemini 1.5 Flash',
+    id: 'gemini-2.5-flash-preview-05-20',
+    name: 'Gemini 2.5 Flash 05-20',
     providerId: 'gemini',
-    contextWindow: 1000000,
-    inputPricing: 0.075, // per 1M tokens
-    outputPricing: 0.3, // per 1M tokens
+    contextWindow: 1048576,
+    inputPricing: 0.15, // per 1M tokens
+    outputPricing: 0.6, // per 1M tokens
     supportsSystemMessage: true,
-    notes: 'Fast model with large context window and multimodal capabilities',
+    notes:
+      'Fast, efficient model with large context, reasoning, and multimodal capabilities',
   },
   {
-    id: 'gemini-1.5-pro-002',
-    name: 'Gemini 1.5 Pro',
+    id: 'gemini-2.5-pro-preview-05-06',
+    name: 'Gemini 2.5 Pro 05-06',
     providerId: 'gemini',
-    contextWindow: 2000000,
+    contextWindow: 1048576,
     inputPricing: 1.25, // per 1M tokens
-    outputPricing: 5.0, // per 1M tokens
+    outputPricing: 10.0, // per 1M tokens
     supportsSystemMessage: true,
-    notes: 'Most capable Gemini model with massive context window',
+    notes:
+      'Most advanced Gemini model for complex reasoning, coding, and multimodal tasks',
   },
 
   // Mistral AI Models
