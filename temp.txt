@@ -8,82 +8,89 @@
 
 ---
 
-The LLM (Large Language Model) module in the Athanor project is responsible for interactions with various AI providers. It's structured with a main service (`LLMServiceMain`) orchestrating requests, client adapters for provider-specific communication (`OpenAIClientAdapter`, `AnthropicClientAdapter`), common type definitions, and configuration. Here's an analysis of the module with suggestions for enhancing efficiency and maintainability:
+## Athanor Model Presets
 
-## Current Strengths of the LLM Module
+**1. Goal:**
+To introduce Athanor-specific model presets. These presets will offer pre-configured `LLMSettings` optimized for Athanor's use cases, associated with specific provider/model combinations. This aims to streamline LLM configuration for common tasks within the application.
 
-Before diving into suggestions, it's important to acknowledge aspects that are already well-implemented:
+**2. Core Concept:**
+* **Preset Definition:** Each preset will represent a specific `providerId` and `modelId` combination, augmented with a set of Athanor-specific default `LLMSettings`. This includes both common parameters (like `temperature`) and provider-specific parameters (like `geminiSafetySettings`) if applicable.
+* **Naming Convention:** The `displayName` for each preset will directly correspond to the "Provider Name - Model Name" (e.g., "Google Gemini - gemini-1.5-pro-002"). This transparency is necessary due to API key requirements tied to specific providers.
+* **Layer on `llm` Module:** This system is an Athanor-specific configuration layer built on top of the existing generic `electron/modules/llm/` module. It will *reference* providers and models defined in `electron/modules/llm/main/config.ts` but will not duplicate their core definitions. The primary role of presets is to provide tailored default settings.
+* **API Key Dependency:** Presets are inherently linked to a `providerId`, for which the user must have a corresponding API key managed by the `secure-api-storage` module.
 
-1.  **Centralized Configuration (`electron/modules/llm/main/config.ts`):**
-    * This file excellently centralizes definitions for `SUPPORTED_PROVIDERS`, `SUPPORTED_MODELS`, default `LLMSettings` (`DEFAULT_LLM_SETTINGS`), and provider/model-specific overrides (`PROVIDER_DEFAULT_SETTINGS`, `MODEL_DEFAULT_SETTINGS`).
-    * Utility functions like `getProviderById`, `getModelById`, `getDefaultSettingsForModel`, and `validateLLMSettings` promote consistency and reduce lookup logic elsewhere.
+**3. Implementation Details:**
 
-2.  **Clear Type Definitions (`electron/modules/llm/common/types.ts` and `electron/modules/llm/main/clients/types.ts`):**
-    * Shared types (`LLMChatRequest`, `LLMResponse`, `LLMFailureResponse`, `ModelInfo`, `ProviderInfo`, etc.) establish a clear data contract across the module.
-    * The `ILLMClientAdapter` interface and `InternalLLMChatRequest` (which ensures `settings` is `Required<LLMSettings>`) provide a strong contract for client adapters.
-    * `ADAPTER_ERROR_CODES` offers a standardized set of error identifiers.
+* **A. Preset Data Storage (JSON):**
+    * **Interface:** Define a TypeScript interface, e.g., `AthanorModelPreset`, likely in `src/types/athanorPresets.ts` or within the preset service file.
+        * Fields: `id: string` (unique preset identifier), `displayName: string` (formatted as "Provider Name - Model Name"), `description?: string` (optional details about the preset's intended use or configuration), `providerId: ApiProviderId`, `modelId: string`, `settings: Partial<LLMSettings>`.
+        * The `settings` field (of type `Partial<LLMSettings>`) can hold any valid setting defined in the `LLMSettings` interface from `electron/modules/llm/common/types.ts`, including provider-specific ones like `geminiSafetySettings`.
+    * **Data File:** Store an array of preset objects in a new JSON file: `src/config/athanorModelPresets.json`.
+        * *Example Entry with Provider-Specific Setting:*
+            ```json
+            {
+              "id": "gemini-pro-custom-safety",
+              "displayName": "Google Gemini - gemini-1.5-pro-002",
+              "description": "Gemini Pro with specific safety configurations for Athanor tasks.",
+              "providerId": "gemini",
+              "modelId": "gemini-1.5-pro-002",
+              "settings": {
+                "temperature": 0.6,
+                "maxTokens": 4096,
+                "geminiSafetySettings": [
+                  { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH" },
+                  { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" }
+                ]
+              }
+            }
+            ```
 
-3.  **Robust `LLMServiceMain` Orchestration (`electron/modules/llm/main/LLMServiceMain.ts`):**
-    * Effectively manages client adapters and integrates with `ApiKeyServiceMain` for secure API key handling.
-    * Performs comprehensive request validation (provider, model, message structure, settings).
-    * The logic for merging settings (`mergeSettingsForModel`) correctly applies overrides: request settings > model-specific > provider-specific > global defaults.
+* **B. Preset Loading & Management (TypeScript Service):**
+    * **Service File:** Create a new service, e.g., `src/services/athanorPresetService.ts`.
+    * **Responsibilities:**
+        1.  **Load Data:** Import and parse `athanorModelPresets.json`.
+        2.  **Provide Access:** Offer functions like `getAllAthanorPresets(): AthanorModelPreset[]` and `getAthanorPresetById(id: string): AthanorModelPreset | undefined`.
+        3.  **Referential Integrity & Filtering (Runtime):**
+            * Fetch the current list of actually available/supported providers and models from the main process using `LLMServiceRenderer.getProviders()` and `LLMServiceRenderer.getModels(providerId)`.
+            * Filter out presets from the JSON if their `providerId` or `modelId` is not found in the currently available lists.
+            * Log warnings (via `logStore.addLog`) for any filtered-out/invalid presets.
 
-4.  **Effective `MockClientAdapter` (`electron/modules/llm/main/clients/MockClientAdapter.ts`):**
-    * Provides a valuable tool for development and testing without making real API calls, capable of simulating various responses and error conditions.
+* **C. Renderer Process Integration:**
+    * The renderer process logic will use `athanorPresetService.ts` to obtain the list of valid presets.
+    * When a user action corresponds to using a preset, the application will retrieve the preset's details (`providerId`, `modelId`, and the full `settings` object, including any provider-specific options).
+    * These details will be used to construct the `LLMChatRequest` object, which is then sent via `LLMServiceRenderer.sendMessage()`.
 
-5.  **Separation of Concerns (Main/Renderer):**
-    * `LLMServiceMain.ts` handles backend logic in the main process.
-    * `LLMServiceRenderer.ts` provides a clean IPC interface for the renderer process.
-    * IPC channels are clearly defined in `LLM_IPC_CHANNELS` (`electron/modules/llm/common/types.ts`).
+* **D. Backend Interaction (`LLMServiceMain` - Main Process):**
+    * **No Changes Needed for this Feature:** `LLMServiceMain` will operate as-is.
+        * It receives the `LLMChatRequest` with the `settings` object (potentially containing provider-specific fields like `geminiSafetySettings`).
+        * The `mergeSettingsForModel` method in `LLMServiceMain` combines these request-specific settings with model/provider/global defaults.
+        * The complete `InternalLLMChatRequest` (with all resolved settings) is passed to the appropriate client adapter (e.g., `GeminiClientAdapter.ts`).
+        * **Client Adapters:** Provider-specific client adapters (e.g., `GeminiClientAdapter`) are responsible for interpreting and applying any provider-specific settings they receive (as `GeminiClientAdapter` already does for `geminiSafetySettings`).
+        * API key retrieval remains handled by `LLMServiceMain` via `ApiKeyServiceMain`.
 
-## Suggestions for Improvement
+**4. Key Files & Modules Involved:**
 
-Here are some areas where the LLM module could be made more efficient and easier to maintain:
+* **New Files:**
+    * `src/config/athanorModelPresets.json`
+    * `src/services/athanorPresetService.ts`
+    * (Potentially) `src/types/athanorPresets.ts`
+* **Existing Key Files/Modules:**
+    * `electron/modules/llm/main/config.ts` (Source of LLM models, base defaults including provider-specific ones like default `geminiSafetySettings`)
+    * `electron/modules/llm/common/types.ts` (Defines `LLMSettings` which includes fields for provider-specific settings)
+    * `electron/modules/llm/main/clients/*ClientAdapter.ts` (e.g., `GeminiClientAdapter.ts`, responsible for using the provider-specific settings)
+    * `electron/modules/llm/main/LLMServiceMain.ts`
+    * `electron/modules/llm/renderer/LLMServiceRenderer.ts`
+    * `electron/modules/secure-api-storage/`
+    * `src/stores/logStore.ts`
 
-### 4. Clarify System Message Handling (Documentation)
+**5. Benefits:**
+* Allows Athanor to define highly tailored LLM configurations, including provider-specific nuances, for its presets.
+* Maintains transparency in preset naming while offering optimized settings.
+* Leverages the existing `llm` module's capability to handle provider-specific settings through its `LLMSettings` type and client adapters.
+* Keeps Athanor-specific configurations separate from the generic `llm` module.
 
-**Observation:**
-The `LLMChatRequest` allows a top-level `systemMessage?: string;` and also messages with `role: 'system'` within the `messages` array. Different providers (like Anthropic) have specific ways they prefer system messages. `AnthropicClientAdapter` currently merges them:
+**6. Future Considerations:**
+* If new providers introduce settings that require new fields not yet in `LLMSettings`, the `LLMSettings` interface in `electron/modules/llm/common/types.ts` would need to be updated, along with the relevant client adapter. The Athanor preset system would then be able to use these new fields.
+* User-defined presets.
 
-```typescript
-// AnthropicClientAdapter.ts - formatMessagesForAnthropic
-let systemMessage = request.systemMessage;
-// ...
-for (const message of request.messages) {
-  if (message.role === 'system') {
-    if (systemMessage) {
-      systemMessage += '\n\n' + message.content;
-    } else {
-      systemMessage = message.content;
-    }
-  }
-}
-```
-This behavior is reasonable but might not be immediately obvious.
-
-**Suggestion:**
-Add clear JSDoc comments to the `LLMChatRequest` interface in `electron/modules/llm/common/types.ts` and/or the `sendMessage` method in `ILLMClientAdapter` (`electron/modules/llm/main/clients/types.ts`) to explain:
-* How the top-level `systemMessage` and in-array `system` messages should ideally be handled or prioritized by adapters.
-* The expected behavior if both are provided (e.g., merged, top-level takes precedence, etc.).
-
-**Benefit:** Improves clarity for developers implementing new client adapters or using the `LLMServiceMain`.
-
-### 5. Base URL Configuration for Adapters
-
-**Observation:**
-Both `OpenAIClientAdapter` and `AnthropicClientAdapter` accept an optional `baseURL` in their constructors:
-```typescript
-constructor(config?: { baseURL?: string }) {
-  this.baseURL = config?.baseURL;
-}
-```
-This is a good feature for flexibility (e.g., using proxies or OpenAI-compatible alternative APIs).
-
-**Suggestion:**
-If not already planned, ensure that this `baseURL` can be configured from a central application settings mechanism, allowing users or administrators to specify custom endpoints for each provider if needed. This is more of an integration point with a settings service rather than a direct refactor of the LLM module itself, but important for the usability of this feature. If dynamic adapter registration (Suggestion 3) is implemented, the adapter configuration (including `baseURL`) could be sourced from such a settings service.
-
-**Benefit:** Enhances the flexibility of the application to work with different API endpoints.
-
-## Conclusion
-
-The LLM module in Athanor has a solid foundation, particularly in its configuration management and type safety. The suggestions above aim to reduce code duplication (especially in error handling), further centralize information (model support), improve scalability for adding new providers, and enhance clarity. By addressing these areas, the module can become even more efficient to maintain and extend in the future.
+This approach ensures that your preset system is flexible enough to handle current and future provider-specific settings that are managed within the `llm` module's `LLMSettings` structure.

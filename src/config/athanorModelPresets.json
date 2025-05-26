@@ -1,0 +1,188 @@
+[
+  {
+    "id": "openai-gpt4o-mini-balanced",
+    "displayName": "OpenAI - GPT-4o Mini (Balanced)",
+    "description": "A balanced configuration for GPT-4o Mini suitable for general coding and documentation tasks",
+    "providerId": "openai",
+    "modelId": "gpt-4o-mini",
+    "settings": {
+      "temperature": 0.7,
+      "maxTokens": 3000,
+      "topP": 0.9,
+      "frequencyPenalty": 0.1,
+      "presencePenalty": 0.1
+    }
+  },
+  {
+    "id": "openai-gpt4o-mini-creative",
+    "displayName": "OpenAI - GPT-4o Mini (Creative)",
+    "description": "Higher temperature setting for creative writing and brainstorming tasks",
+    "providerId": "openai",
+    "modelId": "gpt-4o-mini",
+    "settings": {
+      "temperature": 0.9,
+      "maxTokens": 4000,
+      "topP": 1.0,
+      "frequencyPenalty": 0.2,
+      "presencePenalty": 0.3
+    }
+  },
+  {
+    "id": "openai-gpt4o-mini-precise",
+    "displayName": "OpenAI - GPT-4o Mini (Precise)",
+    "description": "Low temperature setting for code generation and technical documentation",
+    "providerId": "openai",
+    "modelId": "gpt-4o-mini",
+    "settings": {
+      "temperature": 0.3,
+      "maxTokens": 2500,
+      "topP": 0.8,
+      "frequencyPenalty": 0.0,
+      "presencePenalty": 0.0
+    }
+  },
+  {
+    "id": "openai-gpt4o-comprehensive",
+    "displayName": "OpenAI - GPT-4o (Comprehensive)",
+    "description": "Full-featured GPT-4o configuration for complex analysis and large-scale code generation",
+    "providerId": "openai",
+    "modelId": "gpt-4o",
+    "settings": {
+      "temperature": 0.6,
+      "maxTokens": 4096,
+      "topP": 0.95,
+      "frequencyPenalty": 0.1,
+      "presencePenalty": 0.1
+    }
+  },
+  {
+    "id": "anthropic-haiku-fast",
+    "displayName": "Anthropic - Claude 3 Haiku (Fast)",
+    "description": "Quick responses for simple queries and code reviews",
+    "providerId": "anthropic",
+    "modelId": "claude-3-haiku-20240307",
+    "settings": {
+      "temperature": 0.7,
+      "maxTokens": 2048,
+      "topP": 0.9
+    }
+  },
+  {
+    "id": "anthropic-sonnet-balanced",
+    "displayName": "Anthropic - Claude 3.5 Sonnet (Balanced)",
+    "description": "Optimal balance of intelligence and speed for most development tasks",
+    "providerId": "anthropic",
+    "modelId": "claude-3-5-sonnet-20241022",
+    "settings": {
+      "temperature": 0.7,
+      "maxTokens": 6000,
+      "topP": 1.0
+    }
+  },
+  {
+    "id": "anthropic-sonnet-analytical",
+    "displayName": "Anthropic - Claude 3.5 Sonnet (Analytical)",
+    "description": "Lower temperature for precise code analysis and architecture decisions",
+    "providerId": "anthropic",
+    "modelId": "claude-3-5-sonnet-20241022",
+    "settings": {
+      "temperature": 0.4,
+      "maxTokens": 8000,
+      "topP": 0.85
+    }
+  },
+  {
+    "id": "anthropic-opus-comprehensive",
+    "displayName": "Anthropic - Claude 3 Opus (Comprehensive)",
+    "description": "Maximum capability configuration for complex reasoning and large-scale refactoring",
+    "providerId": "anthropic",
+    "modelId": "claude-3-opus-20240229",
+    "settings": {
+      "temperature": 0.6,
+      "maxTokens": 4096,
+      "topP": 0.9
+    }
+  },
+  {
+    "id": "gemini-flash-efficient",
+    "displayName": "Google Gemini - 1.5 Flash (Efficient)",
+    "description": "Fast and cost-effective configuration for routine development tasks",
+    "providerId": "gemini",
+    "modelId": "gemini-1.5-flash-002",
+    "settings": {
+      "temperature": 0.7,
+      "maxTokens": 4000,
+      "topP": 0.9,
+      "geminiSafetySettings": [
+        { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" }
+      ]
+    }
+  },
+  {
+    "id": "gemini-pro-custom-safety",
+    "displayName": "Google Gemini - 1.5 Pro (Custom Safety)",
+    "description": "Gemini Pro with specific safety configurations optimized for Athanor development tasks",
+    "providerId": "gemini",
+    "modelId": "gemini-1.5-pro-002",
+    "settings": {
+      "temperature": 0.6,
+      "maxTokens": 6000,
+      "topP": 0.95,
+      "geminiSafetySettings": [
+        { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_ONLY_HIGH" },
+        { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_MEDIUM_AND_ABOVE" },
+        { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_ONLY_HIGH" },
+        { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_ONLY_HIGH" },
+        { "category": "HARM_CATEGORY_TOXICITY", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_VIOLENCE", "threshold": "BLOCK_MEDIUM_AND_ABOVE" }
+      ]
+    }
+  },
+  {
+    "id": "gemini-pro-unrestricted",
+    "displayName": "Google Gemini - 1.5 Pro (Unrestricted)",
+    "description": "Maximum capability Gemini Pro with minimal safety restrictions for technical development",
+    "providerId": "gemini",
+    "modelId": "gemini-1.5-pro-002",
+    "settings": {
+      "temperature": 0.8,
+      "maxTokens": 8000,
+      "topP": 1.0,
+      "geminiSafetySettings": [
+        { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_DANGEROUS_CONTENT", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_TOXICITY", "threshold": "BLOCK_NONE" },
+        { "category": "HARM_CATEGORY_VIOLENCE", "threshold": "BLOCK_NONE" }
+      ]
+    }
+  },
+  {
+    "id": "mistral-large-comprehensive",
+    "displayName": "Mistral AI - Large (Comprehensive)",
+    "description": "Full-featured Mistral Large configuration for complex reasoning and multilingual tasks",
+    "providerId": "mistral",
+    "modelId": "mistral-large-latest",
+    "settings": {
+      "temperature": 0.7,
+      "maxTokens": 4000,
+      "topP": 0.9
+    }
+  },
+  {
+    "id": "mistral-small-efficient",
+    "displayName": "Mistral AI - Small (Efficient)",
+    "description": "Cost-effective Mistral Small for simple tasks and high-volume usage",
+    "providerId": "mistral",
+    "modelId": "mistral-small-latest",
+    "settings": {
+      "temperature": 0.8,
+      "maxTokens": 2000,
+      "topP": 0.95
+    }
+  }
+]
