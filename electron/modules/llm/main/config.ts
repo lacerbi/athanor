@@ -13,18 +13,23 @@ import type {
 import type { ILLMClientAdapter } from './clients/types';
 import { OpenAIClientAdapter } from './clients/OpenAIClientAdapter';
 import { AnthropicClientAdapter } from './clients/AnthropicClientAdapter';
+import { GeminiClientAdapter } from './clients/GeminiClientAdapter';
 // Placeholder for future imports:
-// import { GeminiClientAdapter } from './clients/GeminiClientAdapter';
 // import { MistralClientAdapter } from './clients/MistralClientAdapter';
 
 /**
  * Mapping from provider IDs to their corresponding adapter constructor classes
  * This enables dynamic registration of client adapters in LLMServiceMain
  */
-export const ADAPTER_CONSTRUCTORS: Partial<Record<ApiProviderId, new (config?: { baseURL?: string }) => ILLMClientAdapter>> = {
-  'openai': OpenAIClientAdapter,
-  'anthropic': AnthropicClientAdapter,
-  // 'gemini': GeminiClientAdapter, // Uncomment and add when Gemini adapter is ready
+export const ADAPTER_CONSTRUCTORS: Partial<
+  Record<
+    ApiProviderId,
+    new (config?: { baseURL?: string }) => ILLMClientAdapter
+  >
+> = {
+  openai: OpenAIClientAdapter,
+  anthropic: AnthropicClientAdapter,
+  gemini: GeminiClientAdapter,
   // 'mistral': MistralClientAdapter, // Uncomment and add when Mistral adapter is ready
 };
 
@@ -32,12 +37,14 @@ export const ADAPTER_CONSTRUCTORS: Partial<Record<ApiProviderId, new (config?: {
  * Optional configuration objects for each adapter
  * Allows passing parameters like baseURL during instantiation
  */
-export const ADAPTER_CONFIGS: Partial<Record<ApiProviderId, { baseURL?: string }>> = {
-  'openai': { 
-    baseURL: process.env.OPENAI_API_BASE_URL || undefined 
+export const ADAPTER_CONFIGS: Partial<
+  Record<ApiProviderId, { baseURL?: string }>
+> = {
+  openai: {
+    baseURL: process.env.OPENAI_API_BASE_URL || undefined,
   },
-  'anthropic': { 
-    baseURL: process.env.ANTHROPIC_API_BASE_URL || undefined 
+  anthropic: {
+    baseURL: process.env.ANTHROPIC_API_BASE_URL || undefined,
   },
   // 'gemini': { /* ... Gemini specific config ... */ },
   // 'mistral': { /* ... Mistral specific config ... */ },
@@ -48,7 +55,7 @@ export const ADAPTER_CONFIGS: Partial<Record<ApiProviderId, { baseURL?: string }
  */
 export const DEFAULT_LLM_SETTINGS: Required<LLMSettings> = {
   temperature: 0.7,
-  maxTokens: 2048,
+  maxTokens: 4096,
   topP: 1.0,
   stopSequences: [],
   frequencyPenalty: 0.0,
@@ -492,16 +499,28 @@ export function validateLLMSettings(settings: Partial<LLMSettings>): string[] {
       for (let i = 0; i < settings.geminiSafetySettings.length; i++) {
         const setting = settings.geminiSafetySettings[i];
         if (!setting || typeof setting !== 'object') {
-          errors.push(`geminiSafetySettings[${i}] must be an object with category and threshold`);
+          errors.push(
+            `geminiSafetySettings[${i}] must be an object with category and threshold`
+          );
           continue;
         }
-        
-        if (!setting.category || !VALID_GEMINI_HARM_CATEGORIES.includes(setting.category)) {
-          errors.push(`geminiSafetySettings[${i}].category must be a valid Gemini harm category`);
+
+        if (
+          !setting.category ||
+          !VALID_GEMINI_HARM_CATEGORIES.includes(setting.category)
+        ) {
+          errors.push(
+            `geminiSafetySettings[${i}].category must be a valid Gemini harm category`
+          );
         }
-        
-        if (!setting.threshold || !VALID_GEMINI_HARM_BLOCK_THRESHOLDS.includes(setting.threshold)) {
-          errors.push(`geminiSafetySettings[${i}].threshold must be a valid Gemini harm block threshold`);
+
+        if (
+          !setting.threshold ||
+          !VALID_GEMINI_HARM_BLOCK_THRESHOLDS.includes(setting.threshold)
+        ) {
+          errors.push(
+            `geminiSafetySettings[${i}].threshold must be a valid Gemini harm block threshold`
+          );
         }
       }
     }

@@ -252,20 +252,68 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   };
 
   // Handler for Send via API button
-  const handleSendViaApi = () => {
+  const handleSendViaApi = async () => {
     if (!selectedPresetId || tabs[activeTabIndex].output.trim() === '') {
       addLog('Cannot send: No model selected or prompt is empty.');
       return;
     }
 
     const preset = availablePresets.find((p) => p.id === selectedPresetId);
-    if (preset) {
-      const promptPreview = tabs[activeTabIndex].output.substring(0, 50);
-      const message = `Mock Send: Sending prompt using ${preset.providerId} - ${preset.modelId} (${preset.displayName}). Prompt: "${promptPreview}${tabs[activeTabIndex].output.length > 50 ? '...' : ''}"`;
-      addLog(message);
-      // Actual API call would go here in the future
-    } else {
+    if (!preset) {
       addLog(`Error: Selected preset with ID ${selectedPresetId} not found.`);
+      return;
+    }
+
+    // Check if LLM service bridge is available
+    if (!window.electronBridge?.llmService) {
+      addLog('Error: LLM Service bridge not available.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Construct hardcoded messages for testing
+      const messages = [
+        { role: 'system' as const, content: 'Talk like Yoda' },
+        { role: 'user' as const, content: 'What is the capital of France?' },
+      ];
+
+      // Construct the LLM request
+      const request = {
+        providerId: preset.providerId,
+        modelId: preset.modelId,
+        messages: messages,
+        settings: preset.settings,
+      };
+
+      addLog(`Sending mock request to LLM using ${preset.displayName}...`);
+
+      // Send the request via electron bridge
+      const response =
+        await window.electronBridge.llmService.sendMessage(request);
+
+      // Process the response
+      if (response.object === 'chat.completion') {
+        if (response.choices && response.choices.length > 0) {
+          const content = response.choices[0].message.content;
+          addLog(`LLM Response: ${content}`);
+        } else {
+          addLog('LLM Response: No choices returned in response.');
+        }
+      } else if (response.object === 'error') {
+        addLog(
+          `LLM Error: ${response.error.message} (Code: ${response.error.code || 'N/A'}, Type: ${response.error.type || 'N/A'})`
+        );
+      } else {
+        addLog(`Unexpected response format: ${JSON.stringify(response)}`);
+      }
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      addLog(`Error during LLM request: ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -752,8 +800,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <div className="absolute bottom-full mb-2 right-0 px-3 py-2 text-xs text-white bg-gray-800 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-normal pointer-events-none w-64 z-10">
                 Directly sends the generated prompt to a LLM via API, intended
                 for simple calls (e.g., Autoselect prompts). Athanor's standard
-                workflow is to copy/paste prompts into external chat interfaces,
-                copy the output, and apply it via the Apply AI Output button.
+                workflow is to paste prompts into external chat interfaces, copy
+                the output, and apply it via the Apply AI Output button.
               </div>
             </div>
           </div>
