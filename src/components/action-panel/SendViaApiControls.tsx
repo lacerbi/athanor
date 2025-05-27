@@ -15,8 +15,9 @@ interface SendViaApiControlsProps {
   saveApplicationSettings: (settings: ApplicationSettings) => Promise<void>;
   addLog: (message: string | Omit<LogEntry, 'id' | 'timestamp'>) => void;
   setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
-  setIsLoading: (loading: boolean) => void;
+  setParentIsLoading: (loading: boolean) => void;
   isSendingRequest: boolean;
+  setStoreIsGeneratingPrompt: (loading: boolean) => void;
 }
 
 const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
@@ -26,8 +27,9 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
   saveApplicationSettings,
   addLog,
   setActivePanelTab,
-  setIsLoading,
+  setParentIsLoading,
   isSendingRequest,
+  setStoreIsGeneratingPrompt,
 }) => {
   // State for LLM preset selection
   const [availablePresets, setAvailablePresets] = useState<AthanorModelPreset[]>([]);
@@ -124,7 +126,8 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
       return;
     }
 
-    setIsLoading(true);
+    setParentIsLoading(true);
+    setStoreIsGeneratingPrompt(true);
 
     try {
       // Define system and user messages
@@ -196,7 +199,8 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
         error instanceof Error ? error.message : String(error);
       addLog(`Error during LLM request: ${errorMessage}`);
     } finally {
-      setIsLoading(false);
+      setStoreIsGeneratingPrompt(false);
+      setParentIsLoading(false);
     }
   };
 

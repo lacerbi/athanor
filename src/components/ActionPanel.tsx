@@ -152,12 +152,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
   const { applicationSettings, saveApplicationSettings } = useSettingsStore();
-  const { isGeneratingPrompt } = useWorkbenchStore();
+  const { isGeneratingPrompt, setIsGeneratingPrompt } = useWorkbenchStore();
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
     try {
       setIsLoading(true);
+      setIsGeneratingPrompt(true);
 
       // Get smart preview configuration and threshold line length from application settings
       const appDefaults = SETTINGS.defaults.application;
@@ -191,6 +192,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     } catch (error) {
       addLog(`Error generating prompt: ${error}`);
     } finally {
+      setIsGeneratingPrompt(false);
       setIsLoading(false);
     }
   };
@@ -461,7 +463,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             y: e.clientY,
                           });
                         }}
-                        disabled={isLoading || isTaskEmpty}
+                        disabled={isLoading || isGeneratingPrompt || isTaskEmpty}
                         data-edge={getFloatingLabelPosition(prompt.id)}
                         data-prompt-id={prompt.id}
                         aria-label={prompt.label}
@@ -490,7 +492,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       ? (Icons as any)[task.icon]
                       : null;
                     const isDisabled =
-                      isLoading ||
+                      isLoading || isGeneratingPrompt ||
                       (task.requires === 'selected' && hasNoSelection);
                     const reason = isLoading
                       ? 'loading'
@@ -648,8 +650,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             saveApplicationSettings={saveApplicationSettings}
             addLog={addLog}
             setActivePanelTab={setActivePanelTab}
-            setIsLoading={setIsLoading}
+            setParentIsLoading={setIsLoading}
             isSendingRequest={isGeneratingPrompt}
+            setStoreIsGeneratingPrompt={setIsGeneratingPrompt}
           />
         </div>
       </div>
