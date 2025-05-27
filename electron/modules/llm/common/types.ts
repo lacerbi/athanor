@@ -73,6 +73,8 @@ export interface LLMSettings {
   presencePenalty?: number;
   /** A unique identifier representing your end-user, which can help monitor and detect abuse */
   user?: string;
+  /** Whether the LLM supports system message (almost all LLMs do nowadays) */
+  supportsSystemMessage?: boolean;
   /** Gemini-specific safety settings for content filtering */
   geminiSafetySettings?: GeminiSafetySetting[];
 }
@@ -177,10 +179,11 @@ export interface ModelInfo {
 export const LLM_IPC_CHANNELS = {
   GET_PROVIDERS: 'llm:get-providers',
   GET_MODELS: 'llm:get-models',
-  SEND_MESSAGE: 'llm:send-message'
+  SEND_MESSAGE: 'llm:send-message',
 } as const;
 
 /**
  * Type for LLM IPC channel names
  */
-export type LLMIPCChannelName = typeof LLM_IPC_CHANNELS[keyof typeof LLM_IPC_CHANNELS];
+export type LLMIPCChannelName =
+  (typeof LLM_IPC_CHANNELS)[keyof typeof LLM_IPC_CHANNELS];

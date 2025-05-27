@@ -60,6 +60,7 @@ export const DEFAULT_LLM_SETTINGS: Required<LLMSettings> = {
   stopSequences: [],
   frequencyPenalty: 0.0,
   presencePenalty: 0.0,
+  supportsSystemMessage: true,
   user: undefined as any, // Will be filtered out when undefined
   geminiSafetySettings: [
     { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
@@ -124,6 +125,8 @@ export const SUPPORTED_PROVIDERS: ProviderInfo[] = [
 
 /**
  * Supported LLM models with their configurations
+ * ModelInfo is similar to Cline model info
+ * See: https://github.com/cline/cline/blob/main/src/shared/api.ts
  */
 export const SUPPORTED_MODELS: ModelInfo[] = [
   // Anthropic Models
@@ -134,7 +137,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 200000,
     inputPrice: 3.0,
     outputPrice: 15.0,
-    supportsSystemMessage: true,
     description: 'Latest Claude Sonnet model with enhanced capabilities',
     maxTokens: 8192,
     supportsImages: true,
@@ -149,7 +151,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 200000,
     inputPrice: 15.0,
     outputPrice: 75.0,
-    supportsSystemMessage: true,
     description: 'Most powerful Claude model for highly complex tasks',
     maxTokens: 8192,
     supportsImages: true,
@@ -164,7 +165,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 200000,
     inputPrice: 3.0,
     outputPrice: 15.0,
-    supportsSystemMessage: true,
     description: 'Advanced Claude model with improved reasoning',
     maxTokens: 8192,
     supportsImages: true,
@@ -179,7 +179,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 200000,
     inputPrice: 3.0,
     outputPrice: 15.0,
-    supportsSystemMessage: true,
     description: 'Best balance of intelligence, speed, and cost',
     maxTokens: 8192,
     supportsImages: true,
@@ -194,7 +193,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 200000,
     inputPrice: 0.8,
     outputPrice: 4.0,
-    supportsSystemMessage: true,
     description: 'Fastest and most cost-effective Claude model',
     maxTokens: 8192,
     supportsImages: false,
@@ -211,7 +209,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 1048576,
     inputPrice: 2.5,
     outputPrice: 15,
-    supportsSystemMessage: true,
     description:
       'Most advanced Gemini model for complex reasoning and multimodal tasks',
     maxTokens: 65536,
@@ -226,7 +223,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 1048576,
     inputPrice: 0.15,
     outputPrice: 0.6,
-    supportsSystemMessage: true,
     description:
       'Fast, efficient model with large context and reasoning capabilities',
     maxTokens: 65536,
@@ -244,7 +240,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 1048576,
     inputPrice: 0.1,
     outputPrice: 0.4,
-    supportsSystemMessage: true,
     description: 'High-performance model with multimodal capabilities',
     maxTokens: 8192,
     supportsImages: true,
@@ -259,7 +254,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 1048576,
     inputPrice: 0.075,
     outputPrice: 0.3,
-    supportsSystemMessage: true,
     description: 'Lightweight version of Gemini 2.0 Flash',
     maxTokens: 8192,
     supportsImages: true,
@@ -274,7 +268,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 200000,
     inputPrice: 1.1,
     outputPrice: 4.4,
-    supportsSystemMessage: true,
     description: 'Advanced reasoning model with high token capacity',
     maxTokens: 100000,
     supportsImages: true,
@@ -288,7 +281,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 1047576,
     inputPrice: 2,
     outputPrice: 8,
-    supportsSystemMessage: true,
     description: 'Latest GPT-4 model with enhanced capabilities',
     maxTokens: 32768,
     supportsImages: true,
@@ -302,7 +294,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 1047576,
     inputPrice: 0.4,
     outputPrice: 1.6,
-    supportsSystemMessage: true,
     description: 'Smaller version of GPT-4.1 for cost-effective tasks',
     maxTokens: 32768,
     supportsImages: true,
@@ -316,7 +307,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 1047576,
     inputPrice: 0.1,
     outputPrice: 0.4,
-    supportsSystemMessage: true,
     description: 'Ultra-efficient version of GPT-4.1',
     maxTokens: 32768,
     supportsImages: true,
@@ -332,7 +322,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 256000,
     inputPrice: 0.3,
     outputPrice: 0.9,
-    supportsSystemMessage: true,
     description: 'Specialized model for code generation and programming tasks',
     maxTokens: 256000,
     supportsImages: false,
@@ -345,7 +334,6 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     contextWindow: 131072,
     inputPrice: 0.1,
     outputPrice: 0.3,
-    supportsSystemMessage: true,
     description: 'Compact development-focused model',
     maxTokens: 128000,
     supportsImages: false,
