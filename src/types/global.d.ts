@@ -1,7 +1,6 @@
-// AI Summary: Global type definitions for the application including file system interface,
-// Tiktoken types, and store functionality. Defines core interfaces for file operations,
-// command parsing, and application configuration. Extends Window interface with custom
-// file system methods.
+// AI Summary: Global type definitions for Athanor. Includes interfaces for Electron bridge (file system, LLM service, UI, API keys, settings),
+// application state (task tabs, panel resizing), core types (FileItem, FileOperation, commands), and external libraries (Tiktoken).
+// Defines window extensions for IPC and custom DragEvent types. Updated to reflect new LLM ModelInfo structure in electronBridge.
 // Augment DragEvent to include custom file path data
 interface AthanorDataTransfer extends DataTransfer {
   setData(format: 'application/x-athanor-filepath', data: string): void;
@@ -133,14 +132,20 @@ declare global {
          * Gets list of supported models for a specific provider
          */
         getModels: (providerId: string) => Promise<Array<{
-          id: string,
-          name: string,
-          providerId: string,
-          contextWindow?: number,
-          inputPricing?: number,
-          outputPricing?: number,
-          supportsSystemMessage?: boolean,
-          notes?: string
+          id: string;
+          name: string;
+          providerId: string;
+          contextWindow?: number;
+          inputPrice?: number;
+          outputPrice?: number;
+          supportsSystemMessage?: boolean;
+          description?: string;
+          maxTokens?: number;
+          supportsImages?: boolean;
+          supportsPromptCache: boolean;
+          thinkingConfig?: { maxBudget?: number; outputPrice?: number; };
+          cacheWritesPrice?: number;
+          cacheReadsPrice?: number;
         }>>;
         
         /**
@@ -152,10 +157,17 @@ declare global {
           messages: Array<{ role: 'user' | 'assistant' | 'system', content: string }>,
           systemMessage?: string,
           settings?: {
-            temperature?: number,
-            maxTokens?: number,
-            topP?: number,
-            stopSequences?: string[]
+            temperature?: number;
+            maxTokens?: number;
+            topP?: number;
+            stopSequences?: string[];
+            frequencyPenalty?: number;
+            presencePenalty?: number;
+            user?: string;
+            geminiSafetySettings?: Array<{
+              category: | 'HARM_CATEGORY_UNSPECIFIED' | 'HARM_CATEGORY_DEROGATORY' | 'HARM_CATEGORY_TOXICITY' | 'HARM_CATEGORY_VIOLENCE' | 'HARM_CATEGORY_SEXUAL' | 'HARM_CATEGORY_MEDICAL' | 'HARM_CATEGORY_DANGEROUS' | 'HARM_CATEGORY_HARASSMENT' | 'HARM_CATEGORY_HATE_SPEECH' | 'HARM_CATEGORY_SEXUALLY_EXPLICIT' | 'HARM_CATEGORY_DANGEROUS_CONTENT';
+              threshold: | 'HARM_BLOCK_THRESHOLD_UNSPECIFIED' | 'BLOCK_LOW_AND_ABOVE' | 'BLOCK_MEDIUM_AND_ABOVE' | 'BLOCK_ONLY_HIGH' | 'BLOCK_NONE';
+            }>;
           }
         }) => Promise<{
           id: string,

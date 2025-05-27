@@ -54,9 +54,9 @@ export const ADAPTER_CONFIGS: Partial<
  * Default settings applied to all LLM requests unless overridden
  */
 export const DEFAULT_LLM_SETTINGS: Required<LLMSettings> = {
-  temperature: 0.7,
+  temperature: 0.5,
   maxTokens: 4096,
-  topP: 1.0,
+  topP: 0.95,
   stopSequences: [],
   frequencyPenalty: 0.0,
   presencePenalty: 0.0,
@@ -75,20 +75,9 @@ export const DEFAULT_LLM_SETTINGS: Required<LLMSettings> = {
 export const PROVIDER_DEFAULT_SETTINGS: Partial<
   Record<ApiProviderId, Partial<LLMSettings>>
 > = {
-  openai: {
-    temperature: 0.7,
-    maxTokens: 4096, // OpenAI models generally handle larger outputs well
-    topP: 1.0,
-  },
-  anthropic: {
-    temperature: 0.7,
-    maxTokens: 4096, // Claude models have large context windows
-    topP: 1.0,
-  },
+  openai: {},
+  anthropic: {},
   gemini: {
-    temperature: 0.7,
-    maxTokens: 8192, // Gemini models have very large context windows
-    topP: 1.0,
     geminiSafetySettings: [
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
@@ -98,11 +87,7 @@ export const PROVIDER_DEFAULT_SETTINGS: Partial<
       { category: 'HARM_CATEGORY_VIOLENCE', threshold: 'BLOCK_NONE' },
     ],
   },
-  mistral: {
-    temperature: 0.7,
-    maxTokens: 2048,
-    topP: 1.0,
-  },
+  mistral: {},
 };
 
 /**
@@ -110,48 +95,9 @@ export const PROVIDER_DEFAULT_SETTINGS: Partial<
  */
 export const MODEL_DEFAULT_SETTINGS: Record<string, Partial<LLMSettings>> = {
   // OpenAI model-specific overrides
-  'gpt-4o-mini': {
-    maxTokens: 16384, // Mini model optimized for smaller outputs
-    temperature: 0.7,
-  },
-  'gpt-4o': {
-    maxTokens: 4096,
-    temperature: 0.7,
-  },
-
   // Anthropic model-specific overrides
-  'claude-3-haiku-20240307': {
-    maxTokens: 4096,
-    temperature: 0.7,
-  },
-  'claude-3-5-sonnet-20241022': {
-    maxTokens: 8192,
-    temperature: 0.7,
-  },
-  'claude-3-opus-20240229': {
-    maxTokens: 4096,
-    temperature: 0.6, // Slightly lower for more focused responses
-  },
-
   // Gemini model-specific overrides
-  'gemini-2.5-flash-preview-05-20': {
-    maxTokens: 8192,
-    temperature: 0.7,
-  },
-  'gemini-2.5-pro-preview-05-06': {
-    maxTokens: 8192,
-    temperature: 0.7,
-  },
-
   // Mistral model-specific overrides
-  'mistral-large-latest': {
-    maxTokens: 4096,
-    temperature: 0.7,
-  },
-  'mistral-small-latest': {
-    maxTokens: 2048,
-    temperature: 0.8,
-  },
 };
 
 /**
@@ -180,117 +126,230 @@ export const SUPPORTED_PROVIDERS: ProviderInfo[] = [
  * Supported LLM models with their configurations
  */
 export const SUPPORTED_MODELS: ModelInfo[] = [
-  // OpenAI Models
-  {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini',
-    providerId: 'openai',
-    contextWindow: 128000,
-    inputPricing: 0.15, // per 1M tokens
-    outputPricing: 0.6, // per 1M tokens
-    supportsSystemMessage: true,
-    notes: 'Most cost-effective model for everyday tasks',
-  },
-  {
-    id: 'gpt-4o',
-    name: 'GPT-4o',
-    providerId: 'openai',
-    contextWindow: 128000,
-    inputPricing: 2.5, // per 1M tokens
-    outputPricing: 10.0, // per 1M tokens
-    supportsSystemMessage: true,
-    notes: 'Latest GPT-4 model with enhanced multimodal capabilities',
-  },
-
   // Anthropic Models
   {
-    id: 'claude-3-haiku-20240307',
-    name: 'Claude 3 Haiku',
+    id: 'claude-sonnet-4-20250514',
+    name: 'Claude Sonnet 4',
     providerId: 'anthropic',
     contextWindow: 200000,
-    inputPricing: 0.25, // per 1M tokens
-    outputPricing: 1.25, // per 1M tokens
+    inputPrice: 3.0,
+    outputPrice: 15.0,
     supportsSystemMessage: true,
-    notes: 'Fastest and most cost-effective Claude model',
+    description: 'Latest Claude Sonnet model with enhanced capabilities',
+    maxTokens: 8192,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheWritesPrice: 3.75,
+    cacheReadsPrice: 0.3,
+  },
+  {
+    id: 'claude-opus-4-20250514',
+    name: 'Claude Opus 4',
+    providerId: 'anthropic',
+    contextWindow: 200000,
+    inputPrice: 15.0,
+    outputPrice: 75.0,
+    supportsSystemMessage: true,
+    description: 'Most powerful Claude model for highly complex tasks',
+    maxTokens: 8192,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheWritesPrice: 18.75,
+    cacheReadsPrice: 1.5,
+  },
+  {
+    id: 'claude-3-7-sonnet-20250219',
+    name: 'Claude 3.7 Sonnet',
+    providerId: 'anthropic',
+    contextWindow: 200000,
+    inputPrice: 3.0,
+    outputPrice: 15.0,
+    supportsSystemMessage: true,
+    description: 'Advanced Claude model with improved reasoning',
+    maxTokens: 8192,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheWritesPrice: 3.75,
+    cacheReadsPrice: 0.3,
   },
   {
     id: 'claude-3-5-sonnet-20241022',
     name: 'Claude 3.5 Sonnet',
     providerId: 'anthropic',
     contextWindow: 200000,
-    inputPricing: 3.0, // per 1M tokens
-    outputPricing: 15.0, // per 1M tokens
+    inputPrice: 3.0,
+    outputPrice: 15.0,
     supportsSystemMessage: true,
-    notes: 'Best balance of intelligence, speed, and cost',
+    description: 'Best balance of intelligence, speed, and cost',
+    maxTokens: 8192,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheWritesPrice: 3.75,
+    cacheReadsPrice: 0.3,
   },
   {
-    id: 'claude-3-opus-20240229',
-    name: 'Claude 3 Opus',
+    id: 'claude-3-5-haiku-20241022',
+    name: 'Claude 3.5 Haiku',
     providerId: 'anthropic',
     contextWindow: 200000,
-    inputPricing: 15.0, // per 1M tokens
-    outputPricing: 75.0, // per 1M tokens
+    inputPrice: 0.8,
+    outputPrice: 4.0,
     supportsSystemMessage: true,
-    notes: 'Most capable Claude model for highly complex tasks',
+    description: 'Fastest and most cost-effective Claude model',
+    maxTokens: 8192,
+    supportsImages: false,
+    supportsPromptCache: true,
+    cacheWritesPrice: 1.0,
+    cacheReadsPrice: 0.08,
   },
 
   // Google Gemini Models
   {
-    id: 'gemini-2.5-flash-preview-05-20',
-    name: 'Gemini 2.5 Flash 05-20',
+    id: 'gemini-2.5-pro-preview-05-06',
+    name: 'Gemini 2.5 Pro',
     providerId: 'gemini',
     contextWindow: 1048576,
-    inputPricing: 0.15, // per 1M tokens
-    outputPricing: 0.6, // per 1M tokens
+    inputPrice: 2.5,
+    outputPrice: 15,
     supportsSystemMessage: true,
-    notes:
-      'Fast, efficient model with large context, reasoning, and multimodal capabilities',
+    description:
+      'Most advanced Gemini model for complex reasoning and multimodal tasks',
+    maxTokens: 65536,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheReadsPrice: 0.31,
   },
   {
-    id: 'gemini-2.5-pro-preview-05-06',
-    name: 'Gemini 2.5 Pro 05-06',
+    id: 'gemini-2.5-flash-preview-05-20',
+    name: 'Gemini 2.5 Flash',
     providerId: 'gemini',
     contextWindow: 1048576,
-    inputPricing: 1.25, // per 1M tokens
-    outputPricing: 10.0, // per 1M tokens
+    inputPrice: 0.15,
+    outputPrice: 0.6,
     supportsSystemMessage: true,
-    notes:
-      'Most advanced Gemini model for complex reasoning, coding, and multimodal tasks',
+    description:
+      'Fast, efficient model with large context and reasoning capabilities',
+    maxTokens: 65536,
+    supportsImages: true,
+    supportsPromptCache: false,
+    thinkingConfig: {
+      maxBudget: 24576,
+      outputPrice: 3.5,
+    },
+  },
+  {
+    id: 'gemini-2.0-flash',
+    name: 'Gemini 2.0 Flash',
+    providerId: 'gemini',
+    contextWindow: 1048576,
+    inputPrice: 0.1,
+    outputPrice: 0.4,
+    supportsSystemMessage: true,
+    description: 'High-performance model with multimodal capabilities',
+    maxTokens: 8192,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheReadsPrice: 0.025,
+    cacheWritesPrice: 1.0,
+  },
+  {
+    id: 'gemini-2.0-flash-lite',
+    name: 'Gemini 2.0 Flash Lite',
+    providerId: 'gemini',
+    contextWindow: 1048576,
+    inputPrice: 0.075,
+    outputPrice: 0.3,
+    supportsSystemMessage: true,
+    description: 'Lightweight version of Gemini 2.0 Flash',
+    maxTokens: 8192,
+    supportsImages: true,
+    supportsPromptCache: false,
+  },
+
+  // OpenAI Models
+  {
+    id: 'o4-mini',
+    name: 'o4-mini',
+    providerId: 'openai',
+    contextWindow: 200000,
+    inputPrice: 1.1,
+    outputPrice: 4.4,
+    supportsSystemMessage: true,
+    description: 'Advanced reasoning model with high token capacity',
+    maxTokens: 100000,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheReadsPrice: 0.275,
+  },
+  {
+    id: 'gpt-4.1',
+    name: 'GPT-4.1',
+    providerId: 'openai',
+    contextWindow: 1047576,
+    inputPrice: 2,
+    outputPrice: 8,
+    supportsSystemMessage: true,
+    description: 'Latest GPT-4 model with enhanced capabilities',
+    maxTokens: 32768,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheReadsPrice: 0.5,
+  },
+  {
+    id: 'gpt-4.1-mini',
+    name: 'GPT-4.1 Mini',
+    providerId: 'openai',
+    contextWindow: 1047576,
+    inputPrice: 0.4,
+    outputPrice: 1.6,
+    supportsSystemMessage: true,
+    description: 'Smaller version of GPT-4.1 for cost-effective tasks',
+    maxTokens: 32768,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheReadsPrice: 0.1,
+  },
+  {
+    id: 'gpt-4.1-nano',
+    name: 'GPT-4.1 Nano',
+    providerId: 'openai',
+    contextWindow: 1047576,
+    inputPrice: 0.1,
+    outputPrice: 0.4,
+    supportsSystemMessage: true,
+    description: 'Ultra-efficient version of GPT-4.1',
+    maxTokens: 32768,
+    supportsImages: true,
+    supportsPromptCache: true,
+    cacheReadsPrice: 0.025,
   },
 
   // Mistral AI Models
   {
-    id: 'mistral-large-latest',
-    name: 'Mistral Large',
+    id: 'codestral-2501',
+    name: 'Codestral',
     providerId: 'mistral',
-    contextWindow: 32000,
-    inputPricing: 2.0, // per 1M tokens
-    outputPricing: 6.0, // per 1M tokens
+    contextWindow: 256000,
+    inputPrice: 0.3,
+    outputPrice: 0.9,
     supportsSystemMessage: true,
-    notes:
-      'Flagship model optimized for complex reasoning and multilingual tasks',
+    description: 'Specialized model for code generation and programming tasks',
+    maxTokens: 256000,
+    supportsImages: false,
+    supportsPromptCache: false,
   },
   {
-    id: 'mistral-small-latest',
-    name: 'Mistral Small',
+    id: 'devstral-small-2505',
+    name: 'Devstral Small',
     providerId: 'mistral',
-    contextWindow: 32000,
-    inputPricing: 0.2, // per 1M tokens
-    outputPricing: 0.6, // per 1M tokens
+    contextWindow: 131072,
+    inputPrice: 0.1,
+    outputPrice: 0.3,
     supportsSystemMessage: true,
-    notes:
-      'Cost-effective model suitable for simple tasks and high-volume usage',
-  },
-  {
-    id: 'mistral-medium-latest',
-    name: 'Mistral Medium',
-    providerId: 'mistral',
-    contextWindow: 32000,
-    inputPricing: 0.7, // per 1M tokens
-    outputPricing: 2.1, // per 1M tokens
-    supportsSystemMessage: true,
-    notes:
-      'Balanced model offering good performance for intermediate complexity tasks',
+    description: 'Compact development-focused model',
+    maxTokens: 128000,
+    supportsImages: false,
+    supportsPromptCache: false,
   },
 ];
 
@@ -365,28 +424,28 @@ export function getDefaultSettingsForModel(
   modelId: string,
   providerId: ApiProviderId
 ): Required<LLMSettings> {
-  // Start with global defaults
+  // Base settings: global defaults, then provider-specific, then model-specific overrides
   const baseDefaults = { ...DEFAULT_LLM_SETTINGS };
-
-  // Apply provider-specific defaults
   const providerDefaults = PROVIDER_DEFAULT_SETTINGS[providerId] || {};
-
-  // Apply model-specific defaults (highest priority)
   const modelDefaults = MODEL_DEFAULT_SETTINGS[modelId] || {};
 
-  // Merge all settings
+  // Merge settings in order of precedence
   const mergedSettings = {
     ...baseDefaults,
     ...providerDefaults,
     ...modelDefaults,
   };
 
-  // Filter out undefined values for optional fields
-  const cleanedSettings = Object.fromEntries(
+  // Override maxTokens from ModelInfo if available
+  const modelInfo = getModelById(modelId, providerId);
+  if (modelInfo && modelInfo.maxTokens !== undefined) {
+    mergedSettings.maxTokens = modelInfo.maxTokens;
+  }
+
+  // Filter out undefined values and ensure required fields
+  return Object.fromEntries(
     Object.entries(mergedSettings).filter(([_, value]) => value !== undefined)
   ) as Required<LLMSettings>;
-
-  return cleanedSettings;
 }
 
 /**

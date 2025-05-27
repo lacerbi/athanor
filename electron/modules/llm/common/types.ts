@@ -156,10 +156,19 @@ export interface ModelInfo {
   name: string;
   providerId: ApiProviderId;
   contextWindow?: number;
-  inputPricing?: number;
-  outputPricing?: number;
+  inputPrice?: number;
+  outputPrice?: number;
   supportsSystemMessage?: boolean;
-  notes?: string;
+  description?: string;
+  maxTokens?: number;
+  supportsImages?: boolean;
+  supportsPromptCache: boolean;
+  thinkingConfig?: {
+    maxBudget?: number;
+    outputPrice?: number;
+  };
+  cacheWritesPrice?: number;
+  cacheReadsPrice?: number;
 }
 
 /**
