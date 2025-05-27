@@ -5,17 +5,3 @@
 # RESOURCES
 
 - https://www.reddit.com/r/LocalLLaMA/comments/1ftjbz3/shockingly_good_superintelligent_summarization/
-
----
-
-Let's remove the old Claude 3 models. We should have
-
-- Claude 3.5 Haiku
-- Claude 4 Sonnet
-- Claude 4 Opus
-
-Search online on the official Anthropic docs to find the stats and necessary info (e.g., exact model names and other properties) for the new models.
-
-Remove the old models and add the new ones. You will need to do that in at least two places:
-- the LLM module
-- Athanor's LLM config json file
