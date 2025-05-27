@@ -152,29 +152,5 @@
         { "category": "HARM_CATEGORY_VIOLENCE", "threshold": "BLOCK_NONE" }
       ]
     }
-  },
-  {
-    "id": "mistral-large-comprehensive",
-    "displayName": "Mistral AI - Large (Comprehensive)",
-    "description": "Full-featured Mistral Large configuration for complex reasoning and multilingual tasks",
-    "providerId": "mistral",
-    "modelId": "mistral-large-latest",
-    "settings": {
-      "temperature": 0.7,
-      "maxTokens": 4000,
-      "topP": 0.9
-    }
-  },
-  {
-    "id": "mistral-small-efficient",
-    "displayName": "Mistral AI - Small (Efficient)",
-    "description": "Cost-effective Mistral Small for simple tasks and high-volume usage",
-    "providerId": "mistral",
-    "modelId": "mistral-small-latest",
-    "settings": {
-      "temperature": 0.8,
-      "maxTokens": 2000,
-      "topP": 0.95
-    }
   }
 ]

@@ -14,6 +14,7 @@ import {
 import { ApiKeyServiceRenderer } from '../../electron/modules/secure-api-storage/renderer';
 import type { ApiProvider } from '../../electron/modules/secure-api-storage/common';
 import { ApiKeyStorageError } from '../../electron/modules/secure-api-storage/common';
+import { getAllAthanorPresets } from '../services/athanorPresetService';
 
 const ApiKeyManagementPane: React.FC = () => {
   // API Key Management state
@@ -22,6 +23,7 @@ const ApiKeyManagementPane: React.FC = () => {
   const [availableProviders, setAvailableProviders] = useState<ApiProvider[]>(
     []
   );
+  const [areProvidersLoading, setAreProvidersLoading] = useState<boolean>(true);
   const [selectedProvider, setSelectedProvider] = useState<ApiProvider | null>(
     null
   );
@@ -51,25 +53,6 @@ const ApiKeyManagementPane: React.FC = () => {
       );
     }
   }, []);
-
-  // Load available providers when service is ready
-  useEffect(() => {
-    if (apiKeyService) {
-      try {
-        const providers = apiKeyService.getAvailableProviders();
-        setAvailableProviders(providers);
-        if (providers.length > 0 && !selectedProvider) {
-          setSelectedProvider(providers[0]);
-        }
-
-        // Load which providers have stored keys
-        loadProvidersWithKeys(providers);
-      } catch (error) {
-        console.error('Failed to get available providers:', error);
-        setKeyOpError('Failed to load API providers.');
-      }
-    }
-  }, [apiKeyService, selectedProvider]);
 
   // Function to check which providers have stored keys
   const loadProvidersWithKeys = useCallback(
@@ -104,6 +87,62 @@ const ApiKeyManagementPane: React.FC = () => {
     },
     [apiKeyService]
   );
+
+  // Load available providers when service is ready
+  useEffect(() => {
+    if (apiKeyService) {
+      setAreProvidersLoading(true);
+      setAvailableProviders([]);
+      setProvidersWithKeys(new Set());
+      setKeyOpError(null);
+
+      // Fetch Athanor presets and filter providers
+      getAllAthanorPresets()
+        .then((presets) => {
+          // Extract unique provider IDs from presets
+          const presetProviderIdSet = new Set<string>(
+            presets.map(preset => preset.providerId)
+          );
+
+          // Get providers supported by API key service
+          const actualServiceProviders = apiKeyService.getAvailableProviders();
+
+          // Compute intersection: providers in presets AND supported by service
+          const newAvailableProviders = actualServiceProviders.filter(
+            provider => presetProviderIdSet.has(provider)
+          );
+
+          setAvailableProviders(newAvailableProviders);
+
+          // Update selected provider
+          if (newAvailableProviders.length > 0) {
+            if (!selectedProvider || !newAvailableProviders.includes(selectedProvider)) {
+              setSelectedProvider(newAvailableProviders[0]);
+            }
+          } else {
+            setSelectedProvider(null);
+          }
+
+          // Load which providers have stored keys
+          loadProvidersWithKeys(newAvailableProviders);
+        })
+        .catch((error) => {
+          console.error('Failed to load Athanor presets for provider filtering:', error);
+          setKeyOpError('Failed to load API providers from preset configuration.');
+          setAvailableProviders([]);
+          setSelectedProvider(null);
+          setProvidersWithKeys(new Set());
+        })
+        .finally(() => {
+          setAreProvidersLoading(false);
+        });
+    } else {
+      setAvailableProviders([]);
+      setSelectedProvider(null);
+      setProvidersWithKeys(new Set());
+      setAreProvidersLoading(false);
+    }
+  }, [apiKeyService, loadProvidersWithKeys]);
 
   // Fetch key display info when selected provider changes
   useEffect(() => {
@@ -310,11 +349,13 @@ const ApiKeyManagementPane: React.FC = () => {
                 value={selectedProvider || ''}
                 onChange={handleProviderChange}
                 disabled={
-                  !apiKeyService || availableProviders.length === 0
+                  !apiKeyService || areProvidersLoading || availableProviders.length === 0
                 }
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
               >
-                {availableProviders.length === 0 ? (
+                {areProvidersLoading ? (
+                  <option value="">Loading providers...</option>
+                ) : availableProviders.length === 0 ? (
                   <option value="">No providers available</option>
                 ) : (
                   availableProviders.map((provider) => (
@@ -379,6 +420,10 @@ const ApiKeyManagementPane: React.FC = () => {
                   })()}
                   onChange={handleApiKeyInputChange}
                   placeholder={(() => {
+                    if (areProvidersLoading) {
+                      return 'Loading providers...';
+                    }
+
                     if (!selectedProvider) {
                       return 'Select an API provider first';
                     }
@@ -407,6 +452,7 @@ const ApiKeyManagementPane: React.FC = () => {
                     return 'Enter API key';
                   })()}
                   disabled={
+                    areProvidersLoading ||
                     isKeyInfoLoading ||
                     isKeyProcessing ||
                     currentKeyDisplayInfo?.isStored === true
