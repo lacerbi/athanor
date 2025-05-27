@@ -84,8 +84,6 @@ export const PROVIDER_DEFAULT_SETTINGS: Partial<
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_TOXICITY', threshold: 'BLOCK_NONE' },
-      { category: 'HARM_CATEGORY_VIOLENCE', threshold: 'BLOCK_NONE' },
     ],
   },
   mistral: {},
@@ -441,19 +439,14 @@ export function getDefaultSettingsForModel(
 
 /**
  * Valid Gemini harm categories for validation
+ * Only includes categories supported by the API for safety setting rules
  */
 const VALID_GEMINI_HARM_CATEGORIES: GeminiHarmCategory[] = [
-  'HARM_CATEGORY_UNSPECIFIED',
-  'HARM_CATEGORY_DEROGATORY',
-  'HARM_CATEGORY_TOXICITY',
-  'HARM_CATEGORY_VIOLENCE',
-  'HARM_CATEGORY_SEXUAL',
-  'HARM_CATEGORY_MEDICAL',
-  'HARM_CATEGORY_DANGEROUS',
-  'HARM_CATEGORY_HARASSMENT',
   'HARM_CATEGORY_HATE_SPEECH',
   'HARM_CATEGORY_SEXUALLY_EXPLICIT',
   'HARM_CATEGORY_DANGEROUS_CONTENT',
+  'HARM_CATEGORY_HARASSMENT',
+  'HARM_CATEGORY_CIVIC_INTEGRITY',
 ];
 
 /**
