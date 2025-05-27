@@ -1,6 +1,6 @@
 // AI Summary: Component for managing "Send via API" functionality including LLM preset selection,
 // API key validation, and sending prompts to LLM services with response processing.
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Info } from 'lucide-react';
 import type { AthanorModelPreset } from '../../types/athanorPresets';
 import type { ApplicationSettings, LogEntry } from '../../types/global';
@@ -34,6 +34,11 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
   // State for LLM preset selection
   const [availablePresets, setAvailablePresets] = useState<AthanorModelPreset[]>([]);
   const [isLoadingPresets, setIsLoadingPresets] = useState(false);
+  
+  // State for tracking active API request for cancellation
+  const [activeApiRequestId, setActiveApiRequestId] = useState<string | null>(null);
+  // Ref to track current active request ID to avoid stale closure issues
+  const activeApiRequestIdRef = useRef<string | null>(null);
 
   // Fetch and filter presets based on stored API keys
   useEffect(() => {
@@ -106,6 +111,15 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
     }
   }, [applicationSettings, availablePresets, isLoadingPresets, saveApplicationSettings, addLog]);
 
+  // Handler for cancelling API request
+  const handleCancelApiRequest = () => {
+    addLog('API request cancelled by user.');
+    setActiveApiRequestId(null); // Clear the active request ID
+    activeApiRequestIdRef.current = null; // Also clear the ref
+    setParentIsLoading(false); // Reset parent loading state
+    setStoreIsGeneratingPrompt(false); // Reset global prompt generation state
+  };
+
   // Handler for Send via API button
   const handleSendViaApi = async () => {
     const selectedPresetId = applicationSettings?.lastSelectedApiPresetId;
@@ -126,6 +140,11 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
       return;
     }
 
+    // Generate unique request ID and set as active
+    const currentRequestId = self.crypto?.randomUUID?.() || Date.now().toString();
+    setActiveApiRequestId(currentRequestId);
+    activeApiRequestIdRef.current = currentRequestId; // Also set in ref for reliable access
+    
     setParentIsLoading(true);
     setStoreIsGeneratingPrompt(true);
 
@@ -159,6 +178,12 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
       // Send the request via electron bridge
       const response =
         await window.electronBridge.llmService.sendMessage(request);
+
+      // Check if this request is still active before processing response
+      if (activeApiRequestIdRef.current !== currentRequestId) {
+        addLog(`Ignoring response for outdated/cancelled request ID: ${currentRequestId}. Active: ${activeApiRequestIdRef.current || 'None'}`);
+        return;
+      }
 
       // Process the response
       if (response.object === 'chat.completion') {
@@ -195,12 +220,27 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
         addLog(`Unexpected response format: ${JSON.stringify(response)}`);
       }
     } catch (error) {
+      // Check if this request is still active before processing error
+      if (activeApiRequestIdRef.current !== currentRequestId) {
+        addLog(`Ignoring error for outdated/cancelled request ID: ${currentRequestId}. Active: ${activeApiRequestIdRef.current || 'None'}`);
+        return;
+      }
+      
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       addLog(`Error during LLM request: ${errorMessage}`);
     } finally {
-      setStoreIsGeneratingPrompt(false);
-      setParentIsLoading(false);
+      // Only reset loading states and clear request ID if this was the active request
+      if (activeApiRequestIdRef.current === currentRequestId) {
+        setStoreIsGeneratingPrompt(false);
+        setParentIsLoading(false);
+        setActiveApiRequestId(null); // Clear the ID as this request is now complete
+        activeApiRequestIdRef.current = null; // Also clear the ref
+      }
+      // If activeApiRequestId !== currentRequestId, it means either:
+      // 1. The request was cancelled (activeApiRequestId is null, loading states already reset by cancel handler)
+      // 2. A new request was started (activeApiRequestId is different, loading states managed by the new request's lifecycle)
+      // In these cases, this finally block should not interfere.
     }
   };
 
@@ -212,11 +252,14 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
         disabled={
           isLoadingPresets ||
           isSendingRequest ||
+          activeApiRequestId !== null ||
           !applicationSettings?.lastSelectedApiPresetId ||
           outputContent.trim() === ''
         }
         title={
-          isSendingRequest
+          activeApiRequestId !== null
+            ? 'API request in progress...'
+            : isSendingRequest
             ? 'Sending request...'
             : !applicationSettings?.lastSelectedApiPresetId
             ? 'Select a model first'
@@ -227,6 +270,16 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
       >
         Send via API
       </button>
+
+      {activeApiRequestId && (
+        <button
+          onClick={handleCancelApiRequest}
+          className="px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600"
+          title="Cancel the ongoing API request"
+        >
+          Cancel Request
+        </button>
+      )}
 
       <select
         value={applicationSettings?.lastSelectedApiPresetId || ''}
