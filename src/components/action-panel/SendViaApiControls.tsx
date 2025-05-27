@@ -16,6 +16,7 @@ interface SendViaApiControlsProps {
   addLog: (message: string | Omit<LogEntry, 'id' | 'timestamp'>) => void;
   setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
   setIsLoading: (loading: boolean) => void;
+  isSendingRequest: boolean;
 }
 
 const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
@@ -26,6 +27,7 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
   addLog,
   setActivePanelTab,
   setIsLoading,
+  isSendingRequest,
 }) => {
   // State for LLM preset selection
   const [availablePresets, setAvailablePresets] = useState<AthanorModelPreset[]>([]);
@@ -205,11 +207,14 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
         className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
         disabled={
           isLoadingPresets ||
+          isSendingRequest ||
           !applicationSettings?.lastSelectedApiPresetId ||
           outputContent.trim() === ''
         }
         title={
-          !applicationSettings?.lastSelectedApiPresetId
+          isSendingRequest
+            ? 'Sending request...'
+            : !applicationSettings?.lastSelectedApiPresetId
             ? 'Select a model first'
             : outputContent.trim() === ''
               ? 'Generate a prompt first'

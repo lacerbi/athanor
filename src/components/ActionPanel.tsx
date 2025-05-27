@@ -152,6 +152,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
   const { applicationSettings, saveApplicationSettings } = useSettingsStore();
+  const { isGeneratingPrompt } = useWorkbenchStore();
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
@@ -648,6 +649,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             addLog={addLog}
             setActivePanelTab={setActivePanelTab}
             setIsLoading={setIsLoading}
+            isSendingRequest={isGeneratingPrompt}
           />
         </div>
       </div>
