@@ -220,15 +220,53 @@ export class LLMServiceMain {
         request.providerId,
         request.settings
       );
+
+      // Filter out unsupported parameters based on model and provider configuration
+      let filteredSettings = { ...finalSettings }; // Create a mutable copy
+
+      // Get provider info for parameter filtering (modelInfo is already available from earlier validation)
+      const providerInfo = getProviderById(request.providerId);
+
+      const paramsToExclude = new Set<keyof LLMSettings>();
+
+      // Add provider-level exclusions
+      if (providerInfo?.unsupportedParameters) {
+        providerInfo.unsupportedParameters.forEach(param => paramsToExclude.add(param));
+      }
+      // Add model-level exclusions (these will be added to any provider-level ones)
+      if (modelInfo?.unsupportedParameters) {
+        modelInfo.unsupportedParameters.forEach(param => paramsToExclude.add(param));
+      }
+
+      if (paramsToExclude.size > 0) {
+        console.log(`LLMServiceMain: Potential parameters to exclude for provider '${request.providerId}', model '${request.modelId}':`, Array.from(paramsToExclude));
+      }
+      
+      paramsToExclude.forEach(param => {
+        // Check if the parameter key actually exists in filteredSettings before trying to delete
+        // (it might have been undefined initially and thus not part of finalSettings depending on merge logic)
+        // Using 'in' operator is robust for checking presence of properties, including those from prototype chain.
+        // For direct properties of an object, hasOwnProperty is more specific.
+        // Given finalSettings is Required<LLMSettings>, all keys should be present, potentially as undefined.
+        if (param in filteredSettings) {
+          console.log(`LLMServiceMain: Removing excluded parameter '${String(param)}' for provider '${request.providerId}', model '${request.modelId}'. Value was:`, filteredSettings[param]);
+          delete (filteredSettings as Partial<LLMSettings>)[param]; // Cast to allow deletion
+        } else {
+          // This case should ideally not happen if finalSettings truly is Required<LLMSettings>
+          // and mergeSettingsForModel ensures all keys are present (even if undefined).
+          console.log(`LLMServiceMain: Parameter '${String(param)}' marked for exclusion was not found in settings for provider '${request.providerId}', model '${request.modelId}'.`);
+        }
+      });
+
       const internalRequest: InternalLLMChatRequest = {
         ...request,
-        settings: finalSettings,
+        settings: filteredSettings,
       };
 
-      console.log(`Processing LLM request with settings:`, {
+      console.log(`Processing LLM request with (potentially filtered) settings:`, {
+        provider: request.providerId,
         model: request.modelId,
-        temperature: finalSettings.temperature,
-        maxTokens: finalSettings.maxTokens,
+        settings: filteredSettings,
         messageCount: request.messages.length,
       });
 

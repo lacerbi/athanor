@@ -96,6 +96,7 @@ export const PROVIDER_DEFAULT_SETTINGS: Partial<
  */
 export const MODEL_DEFAULT_SETTINGS: Record<string, Partial<LLMSettings>> = {
   // OpenAI model-specific overrides
+  'o4-mini': { temperature: 1.0 },
   // Anthropic model-specific overrides
   // Gemini model-specific overrides
   // Mistral model-specific overrides
@@ -108,6 +109,7 @@ export const SUPPORTED_PROVIDERS: ProviderInfo[] = [
   {
     id: 'openai',
     name: 'OpenAI',
+    unsupportedParameters: ['frequencyPenalty'],
   },
   {
     id: 'anthropic',
@@ -273,6 +275,7 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     supportsImages: true,
     supportsPromptCache: true,
     cacheReadsPrice: 0.275,
+    unsupportedParameters: ['topP'],
   },
   {
     id: 'gpt-4.1',

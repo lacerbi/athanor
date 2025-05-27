@@ -51,7 +51,7 @@
   },
   {
     "id": "gemini-gemini-2.5-pro-preview-05-06-default",
-    "displayName": "Google Gemini - Gemini 2.5 Pro",
+    "displayName": "Google - Gemini 2.5 Pro",
     "description": "Default preset for Gemini 2.5 Pro.",
     "providerId": "gemini",
     "modelId": "gemini-2.5-pro-preview-05-06",
@@ -75,7 +75,7 @@
   },
   {
     "id": "gemini-gemini-2.5-flash-preview-05-20-default",
-    "displayName": "Google Gemini - Gemini 2.5 Flash",
+    "displayName": "Google - Gemini 2.5 Flash",
     "description": "Default preset for Gemini 2.5 Flash.",
     "providerId": "gemini",
     "modelId": "gemini-2.5-flash-preview-05-20",
@@ -99,7 +99,7 @@
   },
   {
     "id": "gemini-gemini-2.0-flash-default",
-    "displayName": "Google Gemini - Gemini 2.0 Flash",
+    "displayName": "Google - Gemini 2.0 Flash",
     "description": "Default preset for Gemini 2.0 Flash.",
     "providerId": "gemini",
     "modelId": "gemini-2.0-flash",
@@ -123,7 +123,7 @@
   },
   {
     "id": "gemini-gemini-2.0-flash-lite-default",
-    "displayName": "Google Gemini - Gemini 2.0 Flash Lite",
+    "displayName": "Google - Gemini 2.0 Flash Lite",
     "description": "Default preset for Gemini 2.0 Flash Lite.",
     "providerId": "gemini",
     "modelId": "gemini-2.0-flash-lite",
@@ -152,7 +152,7 @@
     "providerId": "openai",
     "modelId": "o4-mini",
     "settings": {
-      "temperature": 0.3
+      "temperature": 1.0
     }
   },
   {

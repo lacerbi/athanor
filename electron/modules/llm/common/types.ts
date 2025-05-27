@@ -148,6 +148,7 @@ export interface LLMFailureResponse {
 export interface ProviderInfo {
   id: ApiProviderId;
   name: string;
+  unsupportedParameters?: (keyof LLMSettings)[];
 }
 
 /**
@@ -171,6 +172,7 @@ export interface ModelInfo {
   };
   cacheWritesPrice?: number;
   cacheReadsPrice?: number;
+  unsupportedParameters?: (keyof LLMSettings)[];
 }
 
 /**

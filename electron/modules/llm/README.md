@@ -21,7 +21,7 @@ The module is structured across Electron's main and renderer processes, with sha
         * `LLMMessageRole`, `LLMMessage`: Structures for conversation messages.
         * `LLMSettings`: Configurable parameters for LLM requests.
         * `LLMChatRequest`, `LLMResponse`, `LLMFailureResponse`: Standardized request and response formats.
-        * `ProviderInfo`, `ModelInfo`: Structures for provider and model metadata.
+        * `ProviderInfo`, `ModelInfo`: Structures for provider and model metadata, including optional `unsupportedParameters` field.
         * `LLM_IPC_CHANNELS`: Constants for IPC communication channel names.
 
 2.  **`main/`**: Contains the core backend logic running in Electron's main process.
@@ -29,6 +29,7 @@ The module is structured across Electron's main and renderer processes, with sha
         * Managing instances of LLM client adapters.
         * Integrating with `ApiKeyServiceMain` (from the `secure-api-storage` module) to securely access API keys.
         * Validating requests, applying default and user-defined settings.
+        * Filtering out unsupported parameters based on model and provider configuration.
         * Routing requests to the appropriate client adapter.
     * `clients/`: Directory for provider-specific client adapters.
         * `types.ts`: Defines the `ILLMClientAdapter` interface that all provider adapters must implement, and `AdapterErrorCode` for standardized error codes. It also defines `InternalLLMChatRequest` which ensures settings are always present.
@@ -42,7 +43,7 @@ The module is structured across Electron's main and renderer processes, with sha
         * `PROVIDER_DEFAULT_SETTINGS`: Overrides for default settings on a per-provider basis.
         * `MODEL_DEFAULT_SETTINGS`: Overrides for default settings on a per-model basis (highest precedence).
         * `SUPPORTED_PROVIDERS`: An array of `ProviderInfo` objects detailing supported LLM providers.
-        * `SUPPORTED_MODELS`: An array of `ModelInfo` objects detailing supported models, their capabilities, pricing (example), and default configurations.
+        * `SUPPORTED_MODELS`: An array of `ModelInfo` objects detailing supported models, their capabilities, pricing (example), default configurations, and optional `unsupportedParameters` lists.
         * Helper functions like `getProviderById`, `getModelById`, `getDefaultSettingsForModel`, `validateLLMSettings`.
 
 3.  **`renderer/`**: Contains the client-side service used by UI components in Electron's renderer process.
@@ -58,6 +59,7 @@ The module is structured across Electron's main and renderer processes, with sha
     * Dynamically instantiates and manages client adapters based on `config.ts`.
     * Securely retrieves API keys using `ApiKeyServiceMain.withDecryptedKey` before passing them to adapters.
     * Applies a hierarchy of settings: global defaults -> provider defaults -> model defaults -> request-specific settings.
+    * Filters out unsupported parameters based on model and provider configuration before sending to adapters.
     * Validates incoming `LLMChatRequest` objects.
 -   **`LLMServiceRenderer`**:
     * Acts as the primary interface for the renderer process (UI) to access LLM functionalities.
@@ -106,6 +108,11 @@ The LLM module's behavior is heavily driven by `electron/modules/llm/main/config
 -   **Providers and Models**:
     * `SUPPORTED_PROVIDERS`: Array defining all usable LLM providers (ID, name).
     * `SUPPORTED_MODELS`: Array defining specific models for each provider, including their ID, name, context window size, pricing hints, and other notes.
+-   **Parameter Filtering**: Both `ProviderInfo` and `ModelInfo` can specify an optional `unsupportedParameters` field:
+    * Type: `(keyof LLMSettings)[]` - an array of LLM setting keys that should not be sent to the API
+    * Purpose: Prevents API errors when models or providers don't support certain parameters (e.g., `topP` for OpenAI's `o4-mini`)
+    * Precedence: Provider-level and model-level unsupported parameters are combined (union of both lists)
+    * Implementation: `LLMServiceMain` filters these parameters from the final settings before passing to client adapters
 -   **Adapter Configuration**:
     * `ADAPTER_CONSTRUCTORS`: Maps provider IDs to their client adapter classes.
     * `ADAPTER_CONFIGS`: Allows passing constructor arguments to adapters, like custom base URLs which can be sourced from environment variables (e.g., `process.env.OPENAI_API_BASE_URL`).
@@ -243,6 +250,11 @@ To add support for a new LLM provider (e.g., "MyNewAIProvider"):
         ];
         ```
       * **Provider/Model Default Settings (Optional)**: If this provider or its models have specific default settings that differ from global defaults, add entries to `PROVIDER_DEFAULT_SETTINGS` and/or `MODEL_DEFAULT_SETTINGS`.
+      * **Unsupported Parameters (Optional)**: If this provider or its models don't support certain LLM parameters, add `unsupportedParameters` arrays to the provider info and/or model info:
+        ```typescript
+        // In SUPPORTED_PROVIDERS or SUPPORTED_MODELS:
+        unsupportedParameters: ['topP', 'frequencyPenalty'], // Example: exclude these parameters
+        ```
 
 4.  **Restart and Test**: After these changes, restart the Electron application. The new provider and its models should be available via `LLMServiceRenderer.getProviders()` and `LLMServiceRenderer.getModels()`, and `LLMServiceRenderer.sendMessage()` should route requests to your new adapter.
 

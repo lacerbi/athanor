@@ -50,6 +50,7 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - If the `ath` block is getting too long (>> 250 lines):
   - When you close the `file` tag, also close the `ath` tag and close he XML block
   - Start a new XML block with a new `ath` tag
+- Ensure to write valid XML by opening and closing all tags as appropriate
 
 ### File operations
 
@@ -371,6 +372,7 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Put the XML block inside markdown codeblocks
 - Make sure to enclose the code with ![CDATA[__CODE HERE__]]
 - You can write multiple `file` blocks in the same `ath` command
+- Ensure to write valid XML by opening and closing all tags as appropriate
 
 ### File operations
 

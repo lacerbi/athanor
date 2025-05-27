@@ -3,13 +3,17 @@
 
 import OpenAI from 'openai';
 import type { LLMResponse, LLMFailureResponse } from '../../common/types';
-import type { ILLMClientAdapter, InternalLLMChatRequest, AdapterErrorCode } from './types';
+import type {
+  ILLMClientAdapter,
+  InternalLLMChatRequest,
+  AdapterErrorCode,
+} from './types';
 import { ADAPTER_ERROR_CODES } from './types';
 import { getCommonMappedErrorDetails } from './adapterErrorUtils';
 
 /**
  * Client adapter for OpenAI API integration
- * 
+ *
  * This adapter:
  * - Formats requests according to OpenAI's chat completions API
  * - Handles OpenAI-specific authentication and headers
@@ -21,7 +25,7 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
 
   /**
    * Creates a new OpenAI client adapter
-   * 
+   *
    * @param config Optional configuration for the adapter
    * @param config.baseURL Custom base URL for OpenAI-compatible APIs
    */
@@ -31,52 +35,56 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
 
   /**
    * Sends a chat message to OpenAI's API
-   * 
+   *
    * @param request - The internal LLM request with applied settings
    * @param apiKey - The decrypted OpenAI API key
    * @returns Promise resolving to success or failure response
    */
-  async sendMessage(request: InternalLLMChatRequest, apiKey: string): Promise<LLMResponse | LLMFailureResponse> {
+  async sendMessage(
+    request: InternalLLMChatRequest,
+    apiKey: string
+  ): Promise<LLMResponse | LLMFailureResponse> {
     try {
       // Initialize OpenAI client
-      const openai = new OpenAI({ 
+      const openai = new OpenAI({
         apiKey,
-        ...(this.baseURL && { baseURL: this.baseURL })
+        ...(this.baseURL && { baseURL: this.baseURL }),
       });
 
       // Format messages for OpenAI API
       const messages = this.formatMessages(request);
 
       // Prepare API call parameters
-      const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParams = {
-        model: request.modelId,
-        messages: messages,
-        temperature: request.settings.temperature,
-        max_tokens: request.settings.maxTokens,
-        top_p: request.settings.topP,
-        ...(request.settings.stopSequences.length > 0 && { 
-          stop: request.settings.stopSequences 
-        }),
-        ...(request.settings.frequencyPenalty !== 0 && {
-          frequency_penalty: request.settings.frequencyPenalty
-        }),
-        ...(request.settings.presencePenalty !== 0 && {
-          presence_penalty: request.settings.presencePenalty
-        }),
-        ...(request.settings.user && {
-          user: request.settings.user
-        })
-      };
+      const completionParams: OpenAI.Chat.Completions.ChatCompletionCreateParams =
+        {
+          model: request.modelId,
+          messages: messages,
+          temperature: request.settings.temperature,
+          max_completion_tokens: request.settings.maxTokens,
+          top_p: request.settings.topP,
+          ...(request.settings.stopSequences.length > 0 && {
+            stop: request.settings.stopSequences,
+          }),
+          ...(request.settings.frequencyPenalty !== 0 && {
+            frequency_penalty: request.settings.frequencyPenalty,
+          }),
+          ...(request.settings.presencePenalty !== 0 && {
+            presence_penalty: request.settings.presencePenalty,
+          }),
+          ...(request.settings.user && {
+            user: request.settings.user,
+          }),
+        };
 
       console.log(`OpenAI API parameters:`, {
         model: completionParams.model,
         temperature: completionParams.temperature,
-        max_tokens: completionParams.max_tokens,
+        max_completion_tokens: completionParams.max_completion_tokens,
         top_p: completionParams.top_p,
         hasStop: !!completionParams.stop,
         frequency_penalty: completionParams.frequency_penalty,
         presence_penalty: completionParams.presence_penalty,
-        hasUser: !!completionParams.user
+        hasUser: !!completionParams.user,
       });
 
       console.log(`Making OpenAI API call for model: ${request.modelId}`);
@@ -88,7 +96,6 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
 
       // Convert to standardized response format
       return this.createSuccessResponse(completion, request);
-
     } catch (error) {
       console.error('OpenAI API error:', error);
       return this.createErrorResponse(error, request);
@@ -97,7 +104,7 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
 
   /**
    * Validates OpenAI API key format
-   * 
+   *
    * @param apiKey - The API key to validate
    * @returns True if the key format appears valid
    */
@@ -113,24 +120,26 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
     return {
       providerId: 'openai' as const,
       name: 'OpenAI Client Adapter',
-      version: '1.0.0'
+      version: '1.0.0',
     };
   }
 
   /**
    * Formats messages for OpenAI API
-   * 
+   *
    * @param request - The internal LLM request
    * @returns Formatted messages array for OpenAI
    */
-  private formatMessages(request: InternalLLMChatRequest): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
+  private formatMessages(
+    request: InternalLLMChatRequest
+  ): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
 
     // Add system message if provided
     if (request.systemMessage) {
       messages.push({
         role: 'system',
-        content: request.systemMessage
+        content: request.systemMessage,
       });
     }
 
@@ -140,17 +149,17 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
         // Handle system messages in conversation
         messages.push({
           role: 'system',
-          content: message.content
+          content: message.content,
         });
       } else if (message.role === 'user') {
         messages.push({
           role: 'user',
-          content: message.content
+          content: message.content,
         });
       } else if (message.role === 'assistant') {
         messages.push({
           role: 'assistant',
-          content: message.content
+          content: message.content,
         });
       }
     }
@@ -160,17 +169,17 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
 
   /**
    * Creates a standardized success response from OpenAI's response
-   * 
+   *
    * @param completion - Raw OpenAI completion response
    * @param request - Original request for context
    * @returns Standardized LLM response
    */
   private createSuccessResponse(
-    completion: OpenAI.Chat.Completions.ChatCompletion, 
+    completion: OpenAI.Chat.Completions.ChatCompletion,
     request: InternalLLMChatRequest
   ): LLMResponse {
     const choice = completion.choices[0];
-    
+
     if (!choice || !choice.message) {
       throw new Error('Invalid completion structure from OpenAI API');
     }
@@ -180,34 +189,43 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
       provider: request.providerId,
       model: completion.model || request.modelId,
       created: completion.created,
-      choices: [{
-        message: {
-          role: choice.message.role as 'assistant',
-          content: choice.message.content || ''
+      choices: [
+        {
+          message: {
+            role: choice.message.role as 'assistant',
+            content: choice.message.content || '',
+          },
+          finish_reason: choice.finish_reason,
+          index: choice.index,
         },
-        finish_reason: choice.finish_reason,
-        index: choice.index
-      }],
-      usage: completion.usage ? {
-        prompt_tokens: completion.usage.prompt_tokens,
-        completion_tokens: completion.usage.completion_tokens,
-        total_tokens: completion.usage.total_tokens
-      } : undefined,
-      object: 'chat.completion'
+      ],
+      usage: completion.usage
+        ? {
+            prompt_tokens: completion.usage.prompt_tokens,
+            completion_tokens: completion.usage.completion_tokens,
+            total_tokens: completion.usage.total_tokens,
+          }
+        : undefined,
+      object: 'chat.completion',
     };
   }
 
   /**
    * Creates a standardized error response from OpenAI errors
-   * 
+   *
    * @param error - The error from OpenAI API
    * @param request - Original request for context
    * @returns Standardized LLM failure response
    */
-  private createErrorResponse(error: any, request: InternalLLMChatRequest): LLMFailureResponse {
+  private createErrorResponse(
+    error: any,
+    request: InternalLLMChatRequest
+  ): LLMFailureResponse {
     // Use shared error mapping utility for common error patterns
-    const initialProviderMessage = (error instanceof OpenAI.APIError) ? error.message : undefined;
-    let { errorCode, errorMessage, errorType, status } = getCommonMappedErrorDetails(error, initialProviderMessage);
+    const initialProviderMessage =
+      error instanceof OpenAI.APIError ? error.message : undefined;
+    let { errorCode, errorMessage, errorType, status } =
+      getCommonMappedErrorDetails(error, initialProviderMessage);
 
     // Apply OpenAI-specific refinements for 400 errors based on message content
     if (error instanceof OpenAI.APIError && status === 400) {
@@ -228,9 +246,9 @@ export class OpenAIClientAdapter implements ILLMClientAdapter {
         code: errorCode,
         type: errorType,
         ...(status && { status }),
-        providerError: error
+        providerError: error,
       },
-      object: 'error'
+      object: 'error',
     };
   }
 }

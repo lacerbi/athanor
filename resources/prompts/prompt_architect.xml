@@ -118,6 +118,8 @@ Important guidelines for commits:
 - Order commits to minimize integration complexity
 - 1 or 2 commits should suffice for simple features
 - Complex features might require 3-5 commits
+
+Ensure to write valid XML by opening and closing all tags as appropriate
 </current_task>
 </ath_prompt_variant>
 
@@ -182,6 +184,8 @@ The XML block should include:
   * This list may match the list of highlighted (*) files above (if any), but might include additional files, or remove some which are clearly not needed
   * Use the relative path of each file
 
+Ensure to write valid XML by opening and closing all tags as appropriate
+
 <example>
 ```xml
 <ath command="task">
@@ -199,7 +203,6 @@ The XML block should include:
   2. Detailed step 2
   ...
 - Verification: How to verify this plan works
-
 </ath>
 
 <ath command="select">
