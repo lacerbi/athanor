@@ -1,8 +1,8 @@
 // AI Summary: Wrapper component around VariantsContextMenu to handle prompt-specific variant selection.
 import React from 'react';
-import { PromptData } from '../types/promptTypes';
+import { PromptData } from '../../types/promptTypes';
 import VariantsContextMenu from './VariantsContextMenu';
-import { useLogStore } from '../stores/logStore';
+import { useLogStore } from '../../stores/logStore';
 
 interface PromptContextMenuProps {
   prompt: PromptData;
@@ -22,11 +22,13 @@ const PromptContextMenu: React.FC<PromptContextMenuProps> = ({
   activeVariantId,
 }) => {
   const { addLog } = useLogStore();
-  
+
   const handleVariantSelect = (variantId: string) => {
-    const variant = prompt.variants.find(v => v.id === variantId);
+    const variant = prompt.variants.find((v) => v.id === variantId);
     if (variant) {
-      addLog(`Selected variant '${variant.label}' for prompt '${prompt.label}'`);
+      addLog(
+        `Selected variant '${variant.label}' for prompt '${prompt.label}'`
+      );
     }
     onSelectVariant(variantId);
   };

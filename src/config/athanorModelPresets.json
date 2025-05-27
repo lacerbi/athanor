@@ -1,0 +1,200 @@
+[
+  {
+    "id": "anthropic-claude-sonnet-4-20250514-default",
+    "displayName": "Anthropic - Claude Sonnet 4",
+    "description": "Default preset for Claude Sonnet 4.",
+    "providerId": "anthropic",
+    "modelId": "claude-sonnet-4-20250514",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "anthropic-claude-opus-4-20250514-default",
+    "displayName": "Anthropic - Claude Opus 4",
+    "description": "Default preset for Claude Opus 4.",
+    "providerId": "anthropic",
+    "modelId": "claude-opus-4-20250514",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "anthropic-claude-3-7-sonnet-20250219-default",
+    "displayName": "Anthropic - Claude 3.7 Sonnet",
+    "description": "Default preset for Claude 3.7 Sonnet.",
+    "providerId": "anthropic",
+    "modelId": "claude-3-7-sonnet-20250219",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "anthropic-claude-3-5-sonnet-20241022-default",
+    "displayName": "Anthropic - Claude 3.5 Sonnet",
+    "description": "Default preset for Claude 3.5 Sonnet.",
+    "providerId": "anthropic",
+    "modelId": "claude-3-5-sonnet-20241022",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "anthropic-claude-3-5-haiku-20241022-default",
+    "displayName": "Anthropic - Claude 3.5 Haiku",
+    "description": "Default preset for Claude 3.5 Haiku.",
+    "providerId": "anthropic",
+    "modelId": "claude-3-5-haiku-20241022",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "gemini-gemini-2.5-pro-preview-05-06-default",
+    "displayName": "Google - Gemini 2.5 Pro",
+    "description": "Default preset for Gemini 2.5 Pro.",
+    "providerId": "gemini",
+    "modelId": "gemini-2.5-pro-preview-05-06",
+    "settings": {
+      "temperature": 0.3,
+      "geminiSafetySettings": [
+        { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+        {
+          "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          "threshold": "BLOCK_NONE"
+        },
+        {
+          "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+          "threshold": "BLOCK_NONE"
+        },
+        { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" }
+      ]
+    }
+  },
+  {
+    "id": "gemini-gemini-2.5-flash-preview-05-20-default",
+    "displayName": "Google - Gemini 2.5 Flash",
+    "description": "Default preset for Gemini 2.5 Flash.",
+    "providerId": "gemini",
+    "modelId": "gemini-2.5-flash-preview-05-20",
+    "settings": {
+      "temperature": 0.3,
+      "geminiSafetySettings": [
+        { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+        {
+          "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          "threshold": "BLOCK_NONE"
+        },
+        {
+          "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+          "threshold": "BLOCK_NONE"
+        },
+        { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" }
+      ]
+    }
+  },
+  {
+    "id": "gemini-gemini-2.0-flash-default",
+    "displayName": "Google - Gemini 2.0 Flash",
+    "description": "Default preset for Gemini 2.0 Flash.",
+    "providerId": "gemini",
+    "modelId": "gemini-2.0-flash",
+    "settings": {
+      "temperature": 0.3,
+      "geminiSafetySettings": [
+        { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+        {
+          "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          "threshold": "BLOCK_NONE"
+        },
+        {
+          "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+          "threshold": "BLOCK_NONE"
+        },
+        { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" }
+      ]
+    }
+  },
+  {
+    "id": "gemini-gemini-2.0-flash-lite-default",
+    "displayName": "Google - Gemini 2.0 Flash Lite",
+    "description": "Default preset for Gemini 2.0 Flash Lite.",
+    "providerId": "gemini",
+    "modelId": "gemini-2.0-flash-lite",
+    "settings": {
+      "temperature": 0.3,
+      "geminiSafetySettings": [
+        { "category": "HARM_CATEGORY_HATE_SPEECH", "threshold": "BLOCK_NONE" },
+        {
+          "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+          "threshold": "BLOCK_NONE"
+        },
+        {
+          "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+          "threshold": "BLOCK_NONE"
+        },
+        { "category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE" }
+      ]
+    }
+  },
+  {
+    "id": "openai-o4-mini-default",
+    "displayName": "OpenAI - o4-mini",
+    "description": "Default preset for o4-mini.",
+    "providerId": "openai",
+    "modelId": "o4-mini",
+    "settings": {
+      "temperature": 1.0
+    }
+  },
+  {
+    "id": "openai-gpt-4.1-default",
+    "displayName": "OpenAI - GPT-4.1",
+    "description": "Default preset for GPT-4.1.",
+    "providerId": "openai",
+    "modelId": "gpt-4.1",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "openai-gpt-4.1-mini-default",
+    "displayName": "OpenAI - GPT-4.1 Mini",
+    "description": "Default preset for GPT-4.1 Mini.",
+    "providerId": "openai",
+    "modelId": "gpt-4.1-mini",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "openai-gpt-4.1-nano-default",
+    "displayName": "OpenAI - GPT-4.1 Nano",
+    "description": "Default preset for GPT-4.1 Nano.",
+    "providerId": "openai",
+    "modelId": "gpt-4.1-nano",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "mistral-codestral-2501-default",
+    "displayName": "Mistral AI - Codestral",
+    "description": "Default preset for Codestral.",
+    "providerId": "mistral",
+    "modelId": "codestral-2501",
+    "settings": {
+      "temperature": 0.3
+    }
+  },
+  {
+    "id": "mistral-devstral-small-2505-default",
+    "displayName": "Mistral AI - Devstral Small",
+    "description": "Default preset for Devstral Small.",
+    "providerId": "mistral",
+    "modelId": "devstral-small-2505",
+    "settings": {
+      "temperature": 0.3
+    }
+  }
+]

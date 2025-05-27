@@ -2,7 +2,7 @@
 // Provides UI controls for task description, dynamic prompt generators, and preset tasks.
 // Manages state for task inputs, generated prompts, and clipboard operations with contextual tooltips.
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import TaskContextMenu from './TaskContextMenu';
+import TaskContextMenu from './action-panel/TaskContextMenu';
 import {
   detectContexts,
   formatContext,
@@ -26,7 +26,7 @@ import {
   Info,
   FileQuestion,
 } from 'lucide-react';
-import PromptContextMenu from './PromptContextMenu';
+import PromptContextMenu from './action-panel/PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
@@ -41,6 +41,8 @@ import { useTaskStore } from '../stores/taskStore';
 import { useFileDrop } from '../hooks/useFileDrop';
 import { useSettingsStore } from '../stores/settingsStore';
 import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
+import type { ApplicationSettings } from '../types/global';
+import SendViaApiControls from './action-panel/SendViaApiControls';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -54,6 +56,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   isActive,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+
   const {
     tabs,
     activeTabIndex,
@@ -85,7 +88,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     x: number;
     y: number;
   } | null>(null);
-  
+
   const [taskContextMenu, setTaskContextMenu] = useState<{
     taskId: string;
     x: number;
@@ -134,7 +137,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   // Handle Developer action trigger only when panel is active and a new trigger occurs
   const lastTriggerRef = useRef(developerActionTrigger);
 
-  const { 
+  const {
     selectedItems,
     smartPreviewEnabled,
     toggleSmartPreview,
@@ -143,26 +146,34 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     formatType,
     toggleFormatType,
     includeProjectInfo,
-    toggleProjectInfo
+    toggleProjectInfo,
   } = useFileSystemStore();
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
-  const { applicationSettings } = useSettingsStore();
+  const { applicationSettings, saveApplicationSettings } = useSettingsStore();
+  const { isGeneratingPrompt, setIsGeneratingPrompt } = useWorkbenchStore();
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
     try {
       setIsLoading(true);
-      
+      setIsGeneratingPrompt(true);
+
       // Get smart preview configuration and threshold line length from application settings
       const appDefaults = SETTINGS.defaults.application;
       const smartPreviewConfig = {
-        minLines: applicationSettings?.minSmartPreviewLines ?? appDefaults.minSmartPreviewLines,
-        maxLines: applicationSettings?.maxSmartPreviewLines ?? appDefaults.maxSmartPreviewLines,
+        minLines:
+          applicationSettings?.minSmartPreviewLines ??
+          appDefaults.minSmartPreviewLines,
+        maxLines:
+          applicationSettings?.maxSmartPreviewLines ??
+          appDefaults.maxSmartPreviewLines,
       };
-      const currentThresholdLineLength = applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
-      
+      const currentThresholdLineLength =
+        applicationSettings?.thresholdLineLength ??
+        appDefaults.thresholdLineLength;
+
       const result = await buildDynamicPrompt(
         prompt,
         variant,
@@ -181,6 +192,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     } catch (error) {
       addLog(`Error generating prompt: ${error}`);
     } finally {
+      setIsGeneratingPrompt(false);
       setIsLoading(false);
     }
   };
@@ -270,7 +282,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               {...useFileDrop({
                 onInsert: (value, start, end) => {
                   const text = tabs[activeTabIndex].content;
-                  const newText = text.slice(0, start) + value + text.slice(end);
+                  const newText =
+                    text.slice(0, start) + value + text.slice(end);
                   setTabContent(activeTabIndex, newText);
                 },
                 currentValue: tabs[activeTabIndex].content,
@@ -293,7 +306,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   {...useFileDrop({
                     onInsert: (value, start, end) => {
                       const text = tabs[activeTabIndex].context;
-                      const newText = text.slice(0, start) + value + text.slice(end);
+                      const newText =
+                        text.slice(0, start) + value + text.slice(end);
                       setTabContext(activeTabIndex, newText);
                     },
                     currentValue: tabs[activeTabIndex].context,
@@ -355,56 +369,72 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="space-y-4">
               <div className="space-y-3">
                 <div className="pb-2 border-b flex justify-between items-center">
-                <h2 className="text-lg font-semibold">
-                  Preset Prompts and Tasks
-                </h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={toggleSmartPreview}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    title={smartPreviewEnabled ? "Smart Preview: ON (click to disable)" : "Smart Preview: OFF (click to enable)"}
-                  >
-                    {smartPreviewEnabled ? (
-                      <Eye size={20} className="text-blue-600" />
-                    ) : (
-                      <EyeOff size={20} className="text-gray-600" />
-                    )}
-                  </button>
-                  <button
-                    onClick={toggleFileTree}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    title={includeFileTree ? "Include File Tree: ON (click to disable)" : "Include File Tree: OFF (click to enable)"}
-                  >
-                    {includeFileTree ? (
-                      <Folder size={20} className="text-blue-600" />
-                    ) : (
-                      <FolderX size={20} className="text-gray-600" />
-                    )}
-                  </button>
-                  <button
-                    onClick={toggleProjectInfo}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    title={includeProjectInfo ? "Include Project Info: ON (click to disable)" : "Include Project Info: OFF (click to enable)"}
-                  >
-                    {includeProjectInfo ? (
-                      <Info size={20} className="text-blue-600" />
-                    ) : (
-                      <FileQuestion size={20} className="text-gray-600" />
-                    )}
-                  </button>
-                  <button
-                    onClick={toggleFormatType}
-                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                    title={formatType === DOC_FORMAT.XML ? "Format: XML Tags (click for Markdown)" : "Format: Markdown (click for XML Tags)"}
-                  >
-                    {formatType === DOC_FORMAT.XML ? (
-                      <Code size={20} className="text-blue-600" />
-                    ) : (
-                      <MarkdownIcon size={20} className="text-blue-600" />
-                    )}
-                  </button>
+                  <h2 className="text-lg font-semibold">
+                    Preset Prompts and Tasks
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={toggleSmartPreview}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      title={
+                        smartPreviewEnabled
+                          ? 'Smart Preview: ON (click to disable)'
+                          : 'Smart Preview: OFF (click to enable)'
+                      }
+                    >
+                      {smartPreviewEnabled ? (
+                        <Eye size={20} className="text-blue-600" />
+                      ) : (
+                        <EyeOff size={20} className="text-gray-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={toggleFileTree}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      title={
+                        includeFileTree
+                          ? 'Include File Tree: ON (click to disable)'
+                          : 'Include File Tree: OFF (click to enable)'
+                      }
+                    >
+                      {includeFileTree ? (
+                        <Folder size={20} className="text-blue-600" />
+                      ) : (
+                        <FolderX size={20} className="text-gray-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={toggleProjectInfo}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      title={
+                        includeProjectInfo
+                          ? 'Include Project Info: ON (click to disable)'
+                          : 'Include Project Info: OFF (click to enable)'
+                      }
+                    >
+                      {includeProjectInfo ? (
+                        <Info size={20} className="text-blue-600" />
+                      ) : (
+                        <FileQuestion size={20} className="text-gray-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={toggleFormatType}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                      title={
+                        formatType === DOC_FORMAT.XML
+                          ? 'Format: XML Tags (click for Markdown)'
+                          : 'Format: Markdown (click for XML Tags)'
+                      }
+                    >
+                      {formatType === DOC_FORMAT.XML ? (
+                        <Code size={20} className="text-blue-600" />
+                      ) : (
+                        <MarkdownIcon size={20} className="text-blue-600" />
+                      )}
+                    </button>
+                  </div>
                 </div>
-              </div>
                 {/* Dynamic Prompts Row */}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl mb-4">
                   {prompts.map((prompt) => {
@@ -433,7 +463,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             y: e.clientY,
                           });
                         }}
-                        disabled={isLoading || isTaskEmpty}
+                        disabled={
+                          isLoading || isGeneratingPrompt || isTaskEmpty
+                        }
                         data-edge={getFloatingLabelPosition(prompt.id)}
                         data-prompt-id={prompt.id}
                         aria-label={prompt.label}
@@ -458,9 +490,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 {/* Dynamic Tasks Row */}
                 <div className="grid grid-cols-[repeat(auto-fill,minmax(2.5rem,1fr))] gap-2 max-w-2xl">
                   {useTaskStore((state) => state.tasks).map((task) => {
-                    const IconComponent = task.icon ? (Icons as any)[task.icon] : null;
-                    const isDisabled = isLoading || (task.requires === 'selected' && hasNoSelection);
-                    const reason = isLoading ? 'loading' : hasNoSelection ? 'noSelection' : null;
+                    const IconComponent = task.icon
+                      ? (Icons as any)[task.icon]
+                      : null;
+                    const isDisabled =
+                      isLoading ||
+                      isGeneratingPrompt ||
+                      (task.requires === 'selected' && hasNoSelection);
+                    const reason = isLoading
+                      ? 'loading'
+                      : hasNoSelection
+                        ? 'noSelection'
+                        : null;
 
                     return (
                       <button
@@ -475,7 +516,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             setOutputContent,
                             addLog,
                             setIsLoading,
-                            currentThresholdLineLength: applicationSettings?.thresholdLineLength ?? SETTINGS.defaults.application.thresholdLineLength,
+                            currentThresholdLineLength:
+                              applicationSettings?.thresholdLineLength ??
+                              SETTINGS.defaults.application.thresholdLineLength,
                           })
                         }
                         disabled={isDisabled}
@@ -491,7 +534,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         data-edge="left"
                         aria-label={task.label}
                         aria-haspopup="true"
-                        aria-expanded={taskContextMenu?.taskId === task.id ? 'true' : 'false'}
+                        aria-expanded={
+                          taskContextMenu?.taskId === task.id ? 'true' : 'false'
+                        }
                       >
                         {IconComponent && (
                           <>
@@ -546,19 +591,27 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         {/* Task Context Menu */}
         {taskContextMenu && (
           <TaskContextMenu
-            task={useTaskStore.getState().tasks.find(t => t.id === taskContextMenu.taskId)!}
+            task={
+              useTaskStore
+                .getState()
+                .tasks.find((t) => t.id === taskContextMenu.taskId)!
+            }
             x={taskContextMenu.x}
             y={taskContextMenu.y}
             onClose={() => setTaskContextMenu(null)}
             onSelectVariant={(variantId: string) => {
               if (taskContextMenu?.taskId) {
-                useTaskStore.getState().setActiveVariant(taskContextMenu.taskId, variantId);
+                useTaskStore
+                  .getState()
+                  .setActiveVariant(taskContextMenu.taskId, variantId);
               }
               setTaskContextMenu(null);
             }}
             activeVariantId={
               taskContextMenu?.taskId
-                ? useTaskStore.getState().getActiveVariant(taskContextMenu.taskId)?.id
+                ? useTaskStore
+                    .getState()
+                    .getActiveVariant(taskContextMenu.taskId)?.id
                 : undefined
             }
           />
@@ -590,6 +643,19 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               },
               currentValue: tabs[activeTabIndex].output,
             })}
+          />
+
+          {/* Send via API Controls */}
+          <SendViaApiControls
+            isActive={isActive}
+            outputContent={tabs[activeTabIndex].output}
+            applicationSettings={applicationSettings}
+            saveApplicationSettings={saveApplicationSettings}
+            addLog={addLog}
+            setActivePanelTab={setActivePanelTab}
+            setParentIsLoading={setIsLoading}
+            isSendingRequest={isGeneratingPrompt}
+            setStoreIsGeneratingPrompt={setIsGeneratingPrompt}
           />
         </div>
       </div>

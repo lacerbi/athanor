@@ -1,23 +1,31 @@
-// AI Summary: Orchestrates command execution from clipboard content using dedicated command handlers.
+// AI Summary: Orchestrates command execution from AI content using dedicated command handlers.
 // Processes SELECT, TASK, and APPLY CHANGES commands through modular command system.
 import type { FileOperation } from '../types/global';
 import * as commands from '../commands';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 
-export async function applyAiOutput(params: {
-  addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
-  setOperations: (ops: FileOperation[]) => void;
-  clearOperations: () => void;
-  setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
-}): Promise<void> {
+/**
+ * Process AI response content for commands, independent of clipboard
+ * 
+ * @param aiContent - The AI response content to process
+ * @param params - Parameters for command execution
+ */
+export async function processAiResponseContent(
+  aiContent: string,
+  params: {
+    addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
+    setOperations: (ops: FileOperation[]) => void;
+    clearOperations: () => void;
+    setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+  }
+): Promise<void> {
   const { addLog, setOperations, clearOperations, setActiveTab } = params;
 
   try {
-    const clipboardContent = await navigator.clipboard.readText();
-    const parsedCommands = commands.parseCommand(clipboardContent);
+    const parsedCommands = commands.parseCommand(aiContent);
 
     if (!parsedCommands) {
-      addLog('No valid commands found in clipboard');
+      addLog('No valid commands found in AI response');
       return;
     }
 
@@ -63,6 +71,26 @@ export async function applyAiOutput(params: {
         addLog(`Failed to execute ${command.type} command`);
       }
     }
+  } catch (err) {
+    console.error('Failed to process AI content:', err);
+    addLog(`Failed to process AI content: ${err instanceof Error ? err.message : String(err)}`);
+  }
+}
+
+/**
+ * Apply AI output from clipboard (legacy function)
+ */
+export async function applyAiOutput(params: {
+  addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
+  setOperations: (ops: FileOperation[]) => void;
+  clearOperations: () => void;
+  setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+}): Promise<void> {
+  const { addLog } = params;
+
+  try {
+    const clipboardContent = await navigator.clipboard.readText();
+    await processAiResponseContent(clipboardContent, params);
   } catch (err) {
     console.error('Failed to read clipboard:', err);
     addLog('Failed to read clipboard content');

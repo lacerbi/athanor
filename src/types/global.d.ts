@@ -1,7 +1,6 @@
-// AI Summary: Global type definitions for the application including file system interface,
-// Tiktoken types, and store functionality. Defines core interfaces for file operations,
-// command parsing, and application configuration. Extends Window interface with custom
-// file system methods.
+// AI Summary: Global type definitions for Athanor. Includes interfaces for Electron bridge (file system, LLM service, UI, API keys, settings),
+// application state (task tabs, panel resizing), core types (FileItem, FileOperation, commands), and external libraries (Tiktoken).
+// Defines window extensions for IPC and custom DragEvent types. Updated to reflect new LLM ModelInfo structure in electronBridge.
 // Augment DragEvent to include custom file path data
 interface AthanorDataTransfer extends DataTransfer {
   setData(format: 'application/x-athanor-filepath', data: string): void;
@@ -11,6 +10,7 @@ interface AthanorDataTransfer extends DataTransfer {
 interface AthanorDragEvent extends DragEvent {
   dataTransfer: AthanorDataTransfer;
 }
+
 
 export {};
 
@@ -27,6 +27,7 @@ export interface ApplicationSettings {
   minSmartPreviewLines?: number;
   maxSmartPreviewLines?: number;
   thresholdLineLength?: number;
+  lastSelectedApiPresetId?: string | null;
   
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;
@@ -46,6 +47,9 @@ export type { ActionType, ActionState } from '../actions';
 // Re-export prompt and task types
 export type { PromptData, PromptVariant } from './promptTypes';
 export type { TaskData, TaskVariant } from './taskTypes';
+
+// Re-export log types
+export type { LogEntry } from '../stores/logStore';
 
 // Task tab types for workbench multi-tab support
 export interface TaskTab {
@@ -86,6 +90,120 @@ declare global {
   interface Window {
     app: {
       getVersion: () => Promise<string>;
+    };
+    
+    // Electron bridge for secure operations
+    electronBridge: {
+      secureApiKeyManager: {
+        /**
+         * Stores an API key securely
+         */
+        storeKey: (providerId: string, apiKey: string) => Promise<{ success: boolean }>;
+        
+        // getKey: REMOVED for security - plaintext keys should never be accessible to renderer
+        
+        /**
+         * Deletes an API key
+         */
+        deleteKey: (providerId: string) => Promise<{ success: boolean }>;
+        
+        /**
+         * Checks if an API key is stored
+         */
+        isKeyStored: (providerId: string) => Promise<boolean>;
+        
+        /**
+         * Gets all provider IDs with stored keys
+         */
+        getStoredProviderIds: () => Promise<string[]>;
+        
+        /**
+         * Gets display information for an API key (status and last four chars)
+         */
+        getApiKeyDisplayInfo: (providerId: string) => Promise<{ isStored: boolean, lastFourChars?: string }>;
+      };
+      llmService: {
+        /**
+         * Gets list of supported LLM providers
+         */
+        getProviders: () => Promise<Array<{ id: string, name: string }>>;
+        
+        /**
+         * Gets list of supported models for a specific provider
+         */
+        getModels: (providerId: string) => Promise<Array<{
+          id: string;
+          name: string;
+          providerId: string;
+          contextWindow?: number;
+          inputPrice?: number;
+          outputPrice?: number;
+          supportsSystemMessage?: boolean;
+          description?: string;
+          maxTokens?: number;
+          supportsImages?: boolean;
+          supportsPromptCache: boolean;
+          thinkingConfig?: { maxBudget?: number; outputPrice?: number; };
+          cacheWritesPrice?: number;
+          cacheReadsPrice?: number;
+        }>>;
+        
+        /**
+         * Sends a chat message to an LLM provider
+         */
+        sendMessage: (request: {
+          providerId: string,
+          modelId: string,
+          messages: Array<{ role: 'user' | 'assistant' | 'system', content: string }>,
+          systemMessage?: string,
+          settings?: {
+            temperature?: number;
+            maxTokens?: number;
+            topP?: number;
+            stopSequences?: string[];
+            frequencyPenalty?: number;
+            presencePenalty?: number;
+            user?: string;
+            geminiSafetySettings?: Array<{
+              category: | 'HARM_CATEGORY_UNSPECIFIED' | 'HARM_CATEGORY_HATE_SPEECH' | 'HARM_CATEGORY_SEXUALLY_EXPLICIT' | 'HARM_CATEGORY_DANGEROUS_CONTENT' | 'HARM_CATEGORY_HARASSMENT' | 'HARM_CATEGORY_CIVIC_INTEGRITY';
+              threshold: | 'HARM_BLOCK_THRESHOLD_UNSPECIFIED' | 'BLOCK_LOW_AND_ABOVE' | 'BLOCK_MEDIUM_AND_ABOVE' | 'BLOCK_ONLY_HIGH' | 'BLOCK_NONE';
+            }>;
+          }
+        }) => Promise<{
+          id: string,
+          provider: string,
+          model: string,
+          created: number,
+          choices: Array<{
+            message: { role: string, content: string },
+            finish_reason: string | null,
+            index?: number
+          }>,
+          usage?: {
+            prompt_tokens?: number,
+            completion_tokens?: number,
+            total_tokens?: number
+          },
+          object: 'chat.completion'
+        } | {
+          provider: string,
+          model?: string,
+          error: {
+            message: string,
+            code?: string | number,
+            type?: string,
+            param?: string,
+            providerError?: any
+          },
+          object: 'error'
+        }>;
+      };
+      ui: {
+        /**
+         * Shows a native confirmation dialog and returns user's choice
+         */
+        confirm: (message: string, title?: string) => Promise<boolean>;
+      };
     };
     
     // New path utilities API

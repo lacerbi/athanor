@@ -35,10 +35,10 @@ Consider the next_task described above
 SELECT which files you will need to read in full, change or delete from the file_tree provided above
 - Consider broadly which files you *might* need to see for the feature, even if not immediately related
 - These might include preloaders, utility or global constant files, etc.
-- If in doubt whether you need to include a file, include it.
+- If in doubt whether you need to include a file, include it
 
 First, write your reasoning in a detailed summary paragraph and mention all files
-you think you should select.
+you think you should select
 
 Then, write the selected files in a code block as:
 ```
@@ -47,7 +47,8 @@ file1 file2 [...]
 </ath>
 ```
 
-Use the relative path of each file.
+Use the relative path of each file
+Ensure to write valid XML by opening and closing the `ath` tag
 </current_task>
 </ath_prompt_variant>
 

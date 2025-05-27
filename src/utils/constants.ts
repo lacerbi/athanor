@@ -39,6 +39,7 @@ export const SETTINGS = {
       minSmartPreviewLines: 10,
       maxSmartPreviewLines: 20,
       thresholdLineLength: 200,
+      lastSelectedApiPresetId: null,
     },
   },
 };

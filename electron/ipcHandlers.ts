@@ -5,12 +5,18 @@ import { setupCoreHandlers } from './handlers/coreHandlers';
 import { setupFileOperationHandlers } from './handlers/fileOperationHandlers';
 import { setupFileWatchHandlers } from './handlers/fileWatchHandlers';
 import { setupSettingsHandlers } from './handlers/settingsHandlers';
+import { registerSecureApiKeyIpc } from './handlers/secureApiKeyIpc';
+import { registerLlmIpc } from './handlers/llmIpc';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
+import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
+import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 
-export function setupIpcHandlers(fileService: FileService, settingsService: SettingsService) {
+export function setupIpcHandlers(fileService: FileService, settingsService: SettingsService, apiKeyService: ApiKeyServiceMain, llmService: LLMServiceMain) {
   setupCoreHandlers(fileService);
   setupFileOperationHandlers(fileService);
   setupFileWatchHandlers(fileService);
   setupSettingsHandlers(settingsService);
+  registerSecureApiKeyIpc(apiKeyService);
+  registerLlmIpc(llmService);
 }
