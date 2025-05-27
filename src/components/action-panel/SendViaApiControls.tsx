@@ -32,11 +32,15 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
   setStoreIsGeneratingPrompt,
 }) => {
   // State for LLM preset selection
-  const [availablePresets, setAvailablePresets] = useState<AthanorModelPreset[]>([]);
+  const [availablePresets, setAvailablePresets] = useState<
+    AthanorModelPreset[]
+  >([]);
   const [isLoadingPresets, setIsLoadingPresets] = useState(false);
-  
+
   // State for tracking active API request for cancellation
-  const [activeApiRequestId, setActiveApiRequestId] = useState<string | null>(null);
+  const [activeApiRequestId, setActiveApiRequestId] = useState<string | null>(
+    null
+  );
   // Ref to track current active request ID to avoid stale closure issues
   const activeApiRequestIdRef = useRef<string | null>(null);
 
@@ -89,27 +93,50 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
       };
       try {
         await saveApplicationSettings(updatedSettings);
-        addLog(`Preferred API model selection saved: ${newPresetId || 'None'}.`);
+        addLog(
+          `Preferred API model selection saved: ${newPresetId || 'None'}.`
+        );
       } catch (error) {
-        addLog(`Failed to save preferred API model: ${error instanceof Error ? error.message : String(error)}.`);
+        addLog(
+          `Failed to save preferred API model: ${error instanceof Error ? error.message : String(error)}.`
+        );
       }
     }
   };
 
   // Validate persisted preset ID and clear if invalid
   useEffect(() => {
-    if (applicationSettings && applicationSettings.lastSelectedApiPresetId && availablePresets.length > 0 && !isLoadingPresets) {
+    if (
+      applicationSettings &&
+      applicationSettings.lastSelectedApiPresetId &&
+      availablePresets.length > 0 &&
+      !isLoadingPresets
+    ) {
       const persistedId = applicationSettings.lastSelectedApiPresetId;
-      const isValid = availablePresets.some(p => p.id === persistedId);
+      const isValid = availablePresets.some((p) => p.id === persistedId);
 
       if (!isValid) {
-        addLog(`Persisted API model ID "${persistedId}" is no longer valid. Clearing from settings.`);
-        const updatedSettings = { ...applicationSettings, lastSelectedApiPresetId: null };
-        saveApplicationSettings(updatedSettings)
-          .catch(error => addLog(`Error clearing invalid persisted API model ID: ${error instanceof Error ? error.message : String(error)}`));
+        addLog(
+          `Persisted API model ID "${persistedId}" is no longer valid. Clearing from settings.`
+        );
+        const updatedSettings = {
+          ...applicationSettings,
+          lastSelectedApiPresetId: null,
+        };
+        saveApplicationSettings(updatedSettings).catch((error) =>
+          addLog(
+            `Error clearing invalid persisted API model ID: ${error instanceof Error ? error.message : String(error)}`
+          )
+        );
       }
     }
-  }, [applicationSettings, availablePresets, isLoadingPresets, saveApplicationSettings, addLog]);
+  }, [
+    applicationSettings,
+    availablePresets,
+    isLoadingPresets,
+    saveApplicationSettings,
+    addLog,
+  ]);
 
   // Handler for cancelling API request
   const handleCancelApiRequest = () => {
@@ -141,16 +168,18 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
     }
 
     // Generate unique request ID and set as active
-    const currentRequestId = self.crypto?.randomUUID?.() || Date.now().toString();
+    const currentRequestId =
+      self.crypto?.randomUUID?.() || Date.now().toString();
     setActiveApiRequestId(currentRequestId);
     activeApiRequestIdRef.current = currentRequestId; // Also set in ref for reliable access
-    
+
     setParentIsLoading(true);
     setStoreIsGeneratingPrompt(true);
 
     try {
       // Define system and user messages
-      const systemMessageContent = "You are a helpful AI assistant. Follow the provided instructions carefully.";
+      const systemMessageContent =
+        'You are a helpful AI assistant. Follow the provided instructions carefully.';
       const userMessageContent = outputContent;
 
       // Double-check that user message is not empty
@@ -181,7 +210,9 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
 
       // Check if this request is still active before processing response
       if (activeApiRequestIdRef.current !== currentRequestId) {
-        addLog(`Ignoring response for outdated/cancelled request ID: ${currentRequestId}. Active: ${activeApiRequestIdRef.current || 'None'}`);
+        console.log(
+          `Ignoring response for outdated/cancelled request ID: ${currentRequestId}. Active: ${activeApiRequestIdRef.current || 'None'}`
+        );
         return;
       }
 
@@ -189,22 +220,25 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
       if (response.object === 'chat.completion') {
         if (response.choices && response.choices.length > 0) {
           const aiContent = response.choices[0].message.content;
-          
+
           // Debug: Log the full LLM response to console
           console.log('LLM Response Content:', aiContent);
-          
+
           if (aiContent && aiContent.trim() !== '') {
-            addLog('Received response from LLM. Attempting to process commands...');
-            
+            addLog(
+              'Received response from LLM. Attempting to process commands...'
+            );
+
             // Get necessary functions for processAiResponseContent
-            const { setOperations, clearOperations } = useApplyChangesStore.getState();
-            
+            const { setOperations, clearOperations } =
+              useApplyChangesStore.getState();
+
             // Process the AI response for commands
             await processAiResponseContent(aiContent, {
               addLog,
               setOperations,
               clearOperations,
-              setActiveTab: setActivePanelTab
+              setActiveTab: setActivePanelTab,
             });
           } else {
             addLog('LLM Response: Received empty content.');
@@ -222,10 +256,12 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
     } catch (error) {
       // Check if this request is still active before processing error
       if (activeApiRequestIdRef.current !== currentRequestId) {
-        addLog(`Ignoring error for outdated/cancelled request ID: ${currentRequestId}. Active: ${activeApiRequestIdRef.current || 'None'}`);
+        console.log(
+          `Ignoring error for outdated/cancelled request ID: ${currentRequestId}. Active: ${activeApiRequestIdRef.current || 'None'}`
+        );
         return;
       }
-      
+
       const errorMessage =
         error instanceof Error ? error.message : String(error);
       addLog(`Error during LLM request: ${errorMessage}`);
@@ -247,39 +283,33 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
   return (
     <div className="flex items-center gap-2 mt-2">
       <button
-        onClick={handleSendViaApi}
-        className="px-3 py-1.5 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+        onClick={activeApiRequestId ? handleCancelApiRequest : handleSendViaApi}
+        className={`px-3 py-1.5 text-sm text-white rounded disabled:opacity-50 disabled:cursor-not-allowed w-26 ${
+          activeApiRequestId
+            ? 'bg-red-500 hover:bg-red-600'
+            : 'bg-blue-500 hover:bg-blue-600'
+        }`}
         disabled={
-          isLoadingPresets ||
-          isSendingRequest ||
-          activeApiRequestId !== null ||
-          !applicationSettings?.lastSelectedApiPresetId ||
-          outputContent.trim() === ''
+          !activeApiRequestId &&
+          (isLoadingPresets ||
+            isSendingRequest ||
+            !applicationSettings?.lastSelectedApiPresetId ||
+            outputContent.trim() === '')
         }
         title={
-          activeApiRequestId !== null
-            ? 'API request in progress...'
+          activeApiRequestId
+            ? 'Cancel the ongoing API request'
             : isSendingRequest
-            ? 'Sending request...'
-            : !applicationSettings?.lastSelectedApiPresetId
-            ? 'Select a model first'
-            : outputContent.trim() === ''
-              ? 'Generate a prompt first'
-              : 'Send prompt via API'
+              ? 'Sending request...'
+              : !applicationSettings?.lastSelectedApiPresetId
+                ? 'Select a model first'
+                : outputContent.trim() === ''
+                  ? 'Generate a prompt first'
+                  : 'Send prompt via API'
         }
       >
-        Send via API
+        {activeApiRequestId ? 'Cancel Request' : 'Send via API'}
       </button>
-
-      {activeApiRequestId && (
-        <button
-          onClick={handleCancelApiRequest}
-          className="px-3 py-1.5 text-sm bg-red-500 text-white rounded hover:bg-red-600"
-          title="Cancel the ongoing API request"
-        >
-          Cancel Request
-        </button>
-      )}
 
       <select
         value={applicationSettings?.lastSelectedApiPresetId || ''}
@@ -300,10 +330,10 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
       <div className="relative group">
         <Info size={18} className="text-gray-500 cursor-help" />
         <div className="absolute bottom-full mb-2 right-0 px-3 py-2 text-xs text-white bg-gray-800 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-normal pointer-events-none w-64 z-10">
-          Directly sends the generated prompt to a LLM via API, intended
-          for simple calls (e.g., Autoselect prompts). Athanor's standard
-          workflow is to paste prompts into external chat interfaces, copy
-          the output, and apply it via the Apply AI Output button.
+          Directly sends the generated prompt to a LLM via API, intended for
+          simple calls (e.g., Autoselect prompts). Athanor's standard workflow
+          is to paste prompts into external chat interfaces, copy the output,
+          and apply it via the Apply AI Output button.
         </div>
       </div>
     </div>

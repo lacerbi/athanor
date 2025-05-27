@@ -463,7 +463,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             y: e.clientY,
                           });
                         }}
-                        disabled={isLoading || isGeneratingPrompt || isTaskEmpty}
+                        disabled={
+                          isLoading || isGeneratingPrompt || isTaskEmpty
+                        }
                         data-edge={getFloatingLabelPosition(prompt.id)}
                         data-prompt-id={prompt.id}
                         aria-label={prompt.label}
@@ -492,7 +494,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       ? (Icons as any)[task.icon]
                       : null;
                     const isDisabled =
-                      isLoading || isGeneratingPrompt ||
+                      isLoading ||
+                      isGeneratingPrompt ||
                       (task.requires === 'selected' && hasNoSelection);
                     const reason = isLoading
                       ? 'loading'
