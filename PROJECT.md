@@ -125,10 +125,12 @@ Athanor follows Electron's recommended **“secure by default”** pattern, sepa
 - **TailwindCSS 3 + Lucide Icons**: Provides a flexible styling system and icon library for a clean UI.
 - **Material-UI (MUI) 5**: Partially integrated for certain UI elements (used in some components).
 - **ESLint / Prettier**: Linting & formatting for consistent code style.
+- **Jest & ts-jest**: Provide the unit testing framework. Tests are typically colocated with the source code they validate (e.g., `FileService.test.ts` alongside `FileService.ts`).
+- **Testing Mocks**: Key dependencies, including Electron itself (via `tests/__mocks__/electron.ts`) and Node.js modules like `fs/promises`, are mocked to ensure isolated and reliable unit tests.
 
 ### Future Considerations
 
-- **Testing**: Integrate unit tests for the main process (handlers) and React components.
+- **Testing**: Enhance and expand the current unit test coverage, particularly for more complex main process handlers and a broader range of React components to ensure robustness and catch regressions effectively.
 - **Database or Extended Persistence**: If user data or historical tasks become more complex, a storage layer might be beneficial.
 - **Refined Prompt Templates**: Additional dynamic placeholders or user-defined placeholders.
 - **Advanced Visual Diffs**: Implement more advanced color-coded diffs for large or complex changes.
