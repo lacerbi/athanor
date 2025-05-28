@@ -1,0 +1,80 @@
+<ath_task
+    id="generate-unit-tests"
+    order="3"
+    label="Generate Unit Tests"
+    icon="TestTube2"
+    tooltip="Generate unit tests for the selected files"
+    requires="selected">
+
+<ath_task_variant
+    id="default"
+    label="Default"
+    tooltip="Default unit test generation">
+# Target files
+
+{{selected_files_with_info}}
+
+# Task
+
+Generate comprehensive unit tests for the target file(s) specified above. Your goal is to create effective tests that ensure code correctness, improve maintainability, and follow established best practices and project conventions.
+
+## I. General Unit Testing Best Practices:
+
+When generating tests, please adhere to these universal principles:
+
+1.  **Isolation**:
+    * Focus on testing individual units (functions, methods, classes, modules) in isolation from other parts of the system.
+    * Mock or stub external dependencies (e.g., other modules, services, network requests, file system interactions, database calls) to ensure the test focuses solely on the behavior of the unit under test.
+
+2.  **Coverage**:
+    * Aim for thorough test coverage that instills confidence in the unit's correctness. This includes:
+        * **Happy Paths**: Test the typical, expected behavior with valid inputs.
+        * **Edge Cases & Boundary Conditions**: Test with inputs at the extremes of valid ranges, empty inputs, nulls, and other unusual but permissible inputs.
+        * **Error Handling & Invalid Inputs**: Verify that the code handles errors gracefully, throws appropriate exceptions or returns error codes when given invalid or unexpected inputs.
+
+3.  **Clarity & Readability (DAMP - Descriptive and Meaningful Phrases)**:
+    * Write tests that are easy to understand and maintain. Test code is production code.
+    * Use descriptive names for test suites (e.g., `describe` blocks) and individual test cases (e.g., `it` or `test` blocks) that clearly convey their purpose and the scenario being tested.
+    * The test structure should be clear: Arrange (set up test conditions), Act (execute the unit under test), Assert (verify the outcome).
+
+4.  **Repeatability & Reliability (FIRST - Fast, Independent, Repeatable, Self-Validating, Timely)**:
+    * Tests must be deterministic, producing the same results every time they are run, regardless of the environment or the order of execution.
+    * Avoid tests that rely on mutable external state, current time, or other volatile conditions unless specifically testing those aspects with proper controls.
+    * Each test should be independent and not rely on the state or outcome of other tests.
+
+5.  **Speed**:
+    * Unit tests should execute quickly. Fast tests encourage frequent execution, providing rapid feedback to developers.
+
+## II. Project-Specific Instructions & Conventions:
+
+It is crucial that the generated tests integrate seamlessly with the existing project.
+
+1.  **Identify Language, Frameworks, and Libraries**:
+    * Automatically detect the programming language of the selected files.
+    * Identify any testing frameworks (e.g., Jest, Mocha, PyTest, JUnit, NUnit, RSpec), assertion libraries (e.g., Chai, AssertJ), and mocking libraries (e.g., Jest mocks, Moq, Sinon.JS) already in use within the project.
+
+2.  **Follow Existing Conventions**:
+    * **Consistency is Key**: Adhere strictly to the project's established testing patterns, styles, and practices.
+    * **Naming Conventions**: Follow existing naming conventions for test files (e.g., `*.test.ts`, `*.spec.js`, `test_*.py`), test suites, and individual test cases.
+    * **Directory Structure**: Place new test files in the conventional location for the project (e.g., alongside source files in a `__tests__` subfolder, in a separate `tests/` or `src/tests` directory mirroring the source structure). Configuration files for testing frameworks (e.g., `jest.config.js`, `vitest.config.ts`, `pytest.ini`, `karma.conf.js`) often define test file locations, patterns, or root directories; check these for guidance if present.
+    * **Existing Tests as a Guide**: Use existing unit tests in the project as the primary reference for style, structure, and common helper utilities.
+    * **Project Documentation**: If present, refer to the content provided in `project_info` or other project documentation for any specific guidelines on testing.
+
+3.  **Mocking & Stubbing**:
+    * Employ appropriate mocking and stubbing techniques idiomatic to the identified testing framework.
+    * Mock dependencies effectively to ensure tests are true unit tests, focusing on the isolated behavior of the code unit.
+
+4.  **Assertions**:
+    * Use the assertion style and library idiomatic to the identified framework.
+
+5.  **Code Style**:
+    * Ensure the generated test code adheres to the general coding style, formatting (e.g., as enforced by linters or formatters like ESLint, Prettier, Black, RuboCop), and conventions of the project.
+
+## III. Action Points for AI:
+
+1.  **Analyze**: Thoroughly analyze the selected files to understand their public API, core logic, dependencies, inputs, and outputs.
+2.  **Design Tests**: Devise a set of test cases that cover the aspects mentioned in "General Unit Testing Best Practices" and are relevant to the specific functionality of the target files.
+3.  **Generate Code**: Write the test code using the Athanor XML commands for file creation or modification.
+4.  **Focus**: Prioritize tests that provide the most value in terms of verifying critical functionality and preventing regressions.
+</ath_task_variant>
+</ath_task>
