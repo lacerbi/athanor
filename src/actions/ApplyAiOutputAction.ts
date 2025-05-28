@@ -6,14 +6,16 @@ import { useApplyChangesStore } from '../stores/applyChangesStore';
 
 /**
  * Process AI response content for commands, independent of clipboard
- * 
+ *
  * @param aiContent - The AI response content to process
  * @param params - Parameters for command execution
  */
 export async function processAiResponseContent(
   aiContent: string,
   params: {
-    addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
+    addLog: (
+      message: string | { message: string; onClick: () => Promise<void> }
+    ) => void;
     setOperations: (ops: FileOperation[]) => void;
     clearOperations: () => void;
     setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
@@ -24,7 +26,7 @@ export async function processAiResponseContent(
   try {
     const parsedCommands = commands.parseCommand(aiContent);
 
-    if (!parsedCommands) {
+    if (!parsedCommands || parsedCommands.length === 0) {
       addLog('No valid commands found in AI response');
       return;
     }
@@ -73,7 +75,9 @@ export async function processAiResponseContent(
     }
   } catch (err) {
     console.error('Failed to process AI content:', err);
-    addLog(`Failed to process AI content: ${err instanceof Error ? err.message : String(err)}`);
+    addLog(
+      `Failed to process AI content: ${err instanceof Error ? err.message : String(err)}`
+    );
   }
 }
 
@@ -81,7 +85,9 @@ export async function processAiResponseContent(
  * Apply AI output from clipboard (legacy function)
  */
 export async function applyAiOutput(params: {
-  addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
+  addLog: (
+    message: string | { message: string; onClick: () => Promise<void> }
+  ) => void;
   setOperations: (ops: FileOperation[]) => void;
   clearOperations: () => void;
   setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
