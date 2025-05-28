@@ -11,4 +11,4 @@ export { copyToClipboard } from './ManualCopyAction';
 export { getActionTooltip, getTaskTooltip } from './descriptions';
 
 // Action types
-export type { ActionType, ActionState, BaseActionParams } from './types';
+export type { ActionState, BaseActionParams } from './types';
