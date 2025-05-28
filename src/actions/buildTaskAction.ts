@@ -38,7 +38,11 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     return;
   }
 
+  // Get workbench store methods for state management
+  const { setIsGeneratingPrompt, resetGeneratingPrompt, setTaskDescription } = useWorkbenchStore.getState();
+
   setIsLoading(true);
+  setIsGeneratingPrompt(true); // Set global loading state
   try {
     // Get current directory for path resolution
     const currentDir = await window.fileSystem.getCurrentDirectory();
@@ -48,9 +52,6 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     if (!defaultVariant) {
       throw new Error(`No variant found for task ${task.id}`);
     }
-
-    // Get current workbench state
-    const { setTaskDescription, triggerDeveloperAction } = useWorkbenchStore.getState();
 
     // Build prompt with task content
     const processedTaskDescription = await buildDynamicPrompt(
@@ -70,8 +71,7 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     setTaskDescription(processedTaskDescription);
     addLog(`${task.label} task prompt loaded and processed`);
 
-    // Trigger Developer action
-    triggerDeveloperAction();
+    // No longer triggering developer action automatically from here
   } catch (error) {
     console.error(`Error processing ${task.label} task:`, error);
     setOutputContent(
@@ -79,9 +79,9 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     );
     addLog(`Failed to process ${task.label} task`);
     // Ensure state is reset on error
-    const { resetGeneratingPrompt } = useWorkbenchStore.getState();
     resetGeneratingPrompt();
   } finally {
     setIsLoading(false);
+    setIsGeneratingPrompt(false); // Reset global loading state
   }
 }
