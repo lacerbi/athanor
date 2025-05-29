@@ -34,10 +34,13 @@ jest.mock('../windowManager', () => ({
 // Mock FileService
 jest.mock('../services/FileService');
 
+// Create a single, persistent mock function instance for fs.promises.access
+const persistentMockFsAccess = jest.fn();
+
 // Mock fs.promises.access (used inline in coreHandlers)
 jest.mock('fs', () => ({
   promises: {
-    access: jest.fn(),
+    access: persistentMockFsAccess, // Use the persistent instance
   },
   constants: {
     R_OK: 4,
@@ -58,7 +61,8 @@ import * as fs from 'fs';
 const mockIpcMain = ipcMain as jest.Mocked<typeof ipcMain>;
 const mockDialog = dialog as jest.Mocked<typeof dialog>;
 const mockApp = app as jest.Mocked<typeof app>;
-const mockFsAccess = fs.promises.access as jest.MockedFunction<typeof fs.promises.access>;
+// Ensure mockFsAccess uses the persistent instance
+const mockFsAccess = persistentMockFsAccess as jest.MockedFunction<typeof fs.promises.access>;
 
 describe('setupCoreHandlers', () => {
   let mockFileService: jest.Mocked<FileService>;
@@ -179,20 +183,43 @@ describe('setupCoreHandlers', () => {
     });
 
     it('should handle null mainWindow gracefully', async () => {
-      // Temporarily mock mainWindow as null
-      jest.doMock('../windowManager', () => ({
-        mainWindow: null,
+      jest.resetModules(); // Reset module cache to allow fresh mocks for this test
+
+      // Define local mocks for this specific test context
+      const localMockDialog = { showMessageBox: jest.fn() };
+      const localMockIpcMain = { handle: jest.fn() };
+      // mockFileService and mockEvent are from the outer scope and can be reused.
+
+      jest.doMock('electron', () => ({
+        ipcMain: localMockIpcMain,
+        dialog: localMockDialog,
+        app: { getVersion: jest.fn() }, // Stub 'app' as it's part of the original electron mock structure
       }));
+      jest.doMock('../windowManager', () => ({
+        mainWindow: null, // Crucial: Ensure mainWindow is null in this context
+      }));
+      // '../services/FileService' is globally mocked. setupCoreHandlers receives an instance.
+      // No need to jest.doMock FileService here again as we pass the existing mockFileService instance.
+
+      // Re-require coreHandlers to get it with the new mocks, and re-setup its handlers
+      const { setupCoreHandlers: localSetupCoreHandlers } = require('./coreHandlers');
+      const localIpcHandlers = new Map<string, Function>();
+      localMockIpcMain.handle.mockImplementation((channel: string, handlerFn: Function) => {
+        localIpcHandlers.set(channel, handlerFn);
+      });
+
+      localSetupCoreHandlers(mockFileService); // Use the mockFileService from the outer scope
+      const handlerForNullWindowTest = localIpcHandlers.get('dialog:show-confirm-dialog')!;
       
-      mockDialog.showMessageBox.mockResolvedValue({ 
+      localMockDialog.showMessageBox.mockResolvedValue({ 
         response: 0, 
         checkboxChecked: false 
       });
 
-      const result = await handler(mockEvent, 'Test message');
+      const result = await handlerForNullWindowTest(mockEvent, 'Test message');
 
       expect(result).toBe(true);
-      expect(mockDialog.showMessageBox).toHaveBeenCalledWith({
+      expect(localMockDialog.showMessageBox).toHaveBeenCalledWith({ // Assert options only
         type: 'question',
         buttons: ['OK', 'Cancel'],
         defaultId: 0,
