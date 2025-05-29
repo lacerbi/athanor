@@ -30,7 +30,7 @@
   ],
   "author": "Luigi Acerbi",
   "license": "Apache-2.0",
-  "description": "Electron app for developers that orchestrates local code context into effective AI prompts, streamlining interaction with LLM chat interfaces for efficient and controlled code integration.",
+  "description": "Athanor is a desktop app for managing relevant project context to build effective AI prompts, streamlining interaction with LLM chat interfaces, with primary usage in code development and integration -- while keeping full control.",
   "devDependencies": {
     "@electron-forge/cli": "^7.6.0",
     "@electron-forge/maker-deb": "^7.6.0",
