@@ -37,7 +37,7 @@ export async function copySelectedFilesContent(
   params: CopySelectedParams
 ): Promise<void> {
   const { addLog, rootPath } = params;
-  const { selectedItems, fileTree, smartPreviewEnabled, formatType } =
+  const { selectedItems, fileTree, formatType } =
     useFileSystemStore.getState();
 
   try {
@@ -46,7 +46,7 @@ export async function copySelectedFilesContent(
       selectedItems,
       rootPath,
       null,
-      smartPreviewEnabled, // Use the smartPreviewEnabled setting from the store
+      false, // Always exclude non-selected files for manual copy
       formatType // Use the format preference from the store
     );
 
