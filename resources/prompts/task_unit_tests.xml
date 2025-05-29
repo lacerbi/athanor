@@ -16,7 +16,7 @@
 
 # Task
 
-Generate comprehensive unit tests for the target file(s) specified above. Your goal is to create effective tests that ensure code correctness, improve maintainability, and follow established best practices and project conventions.
+Generate comprehensive unit tests for the target file(s) specified above. Your goal is to create effective tests that ensure code correctness, improve maintainability, and follow established best practices and project conventions. If unit tests already exist, your goal is to update and extend them.
 
 ## I. General Unit Testing Best Practices:
 
@@ -70,11 +70,34 @@ It is crucial that the generated tests integrate seamlessly with the existing pr
 5.  **Code Style**:
     * Ensure the generated test code adheres to the general coding style, formatting (e.g., as enforced by linters or formatters like ESLint, Prettier, Black, RuboCop), and conventions of the project.
 
-## III. Action Points for AI:
+## III. Handling Existing Unit Tests:
 
-1.  **Analyze**: Thoroughly analyze the selected files to understand their public API, core logic, dependencies, inputs, and outputs.
-2.  **Design Tests**: Devise a set of test cases that cover the aspects mentioned in "General Unit Testing Best Practices" and are relevant to the specific functionality of the target files.
-3.  **Generate Code**: Write the test code using the Athanor XML commands for file creation or modification.
-4.  **Focus**: Prioritize tests that provide the most value in terms of verifying critical functionality and preventing regressions.
+If unit tests already exist for the selected file(s), the primary goal is to ensure the test suite remains comprehensive, up-to-date, and aligned with the current implementation.
+
+1.  **Analyze Existing Tests**:
+    * Carefully review the existing tests to understand their current coverage, structure, and intent.
+    * Identify which parts of the source code are already tested and how.
+
+2.  **Align with Implementation**:
+    * Verify that existing tests accurately reflect the current behavior of the code.
+    * Update tests (e.g., assertions, mock setups, inputs) that have become outdated due to changes in the source code.
+    * Ensure that existing tests still adhere to the best practices (Section I) and project conventions (Section II).
+
+3.  **Extend Coverage**:
+    * Identify any new functionalities, code paths, edge cases, or error conditions in the source code that are not covered by existing tests.
+    * Generate additional test cases to address these gaps, aiming for thorough coverage as described in Section I.2. New tests should seamlessly integrate with the style and structure of existing ones.
+
+4.  **Prune Obsolete Tests**:
+    * Identify any test cases that are no longer relevant (e.g., testing functionality that has been removed or significantly refactored such that the original test's intent is void).
+    * Propose the removal or modification of such obsolete tests, clearly stating the reason.
+
+## IV. Action Points for AI:
+
+1.  **Analyze**: Thoroughly analyze the selected files to understand their public API, core logic, dependencies, inputs, and outputs. If existing tests are present, analyze them as well (as per Section III.1).
+2.  **Design Tests**:
+    * If no tests exist: Devise a set of test cases that cover the aspects mentioned in "General Unit Testing Best Practices" and are relevant to the specific functionality of the target files.
+    * If tests exist: Identify necessary updates, extensions, and potential pruning as outlined in "Handling Existing Unit Tests." Design new test cases to fill coverage gaps.
+3.  **Generate/Modify Code**: Write the test code (for new tests) or suggest modifications (for existing tests) using the Athanor XML commands for file creation or modification.
+4.  **Focus**: Prioritize tests and modifications that provide the most value in terms of verifying critical functionality, covering recent changes, and preventing regressions.
 </ath_task_variant>
 </ath_task>
