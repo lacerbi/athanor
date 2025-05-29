@@ -5,6 +5,7 @@ import { CircleSlashed, CircleDashed } from 'lucide-react';
 import CommandButton from './CommandButton';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useLogStore } from '../stores/logStore';
+import { useSettingsStore } from '../stores/settingsStore';
 
 export type TabType = 'workbench' | 'viewer' | 'apply-changes' | 'settings';
 
@@ -20,6 +21,10 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({
   const { addLog } = useLogStore();
   const { setOperations, clearOperations, diffMode, setDiffMode } =
     useApplyChangesStore();
+  const { applicationSettings } = useSettingsStore();
+
+  // Determine if experimental features should be shown
+  const showExperimentalFeatures = applicationSettings?.enableExperimentalFeatures ?? false;
 
   return (
     <div className="flex-shrink-0 border-b p-2 flex items-center justify-between">
@@ -70,27 +75,29 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({
         </button>
       </div>
       <div className="flex items-center">
-        <button
-          className={`p-2 rounded mr-2 ${
-            diffMode === 'strict'
-              ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
-              : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-          }`}
-          onClick={() =>
-            setDiffMode(diffMode === 'strict' ? 'fuzzy' : 'strict')
-          }
-          title={`Diff Mode: ${
-            diffMode === 'strict'
-              ? 'Strict (Exact Match Only)'
-              : 'Fuzzy (Fallback to Fuzzy Matching - EXPERIMENTAL)'
-          }`}
-        >
-          {diffMode === 'strict' ? (
-            <CircleSlashed className="w-5 h-5" />
-          ) : (
-            <CircleDashed className="w-5 h-5" />
-          )}
-        </button>
+        {showExperimentalFeatures && (
+          <button
+            className={`p-2 rounded mr-2 ${
+              diffMode === 'strict'
+                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }`}
+            onClick={() =>
+              setDiffMode(diffMode === 'strict' ? 'fuzzy' : 'strict')
+            }
+            title={`Diff Mode: ${
+              diffMode === 'strict'
+                ? 'Strict (Exact Match Only)'
+                : 'Fuzzy (Fallback to Fuzzy Matching - EXPERIMENTAL)'
+            }`}
+          >
+            {diffMode === 'strict' ? (
+              <CircleSlashed className="w-5 h-5" />
+            ) : (
+              <CircleDashed className="w-5 h-5" />
+            )}
+          </button>
+        )}
         <CommandButton
           addLog={addLog}
           setOperations={setOperations}

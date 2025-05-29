@@ -1,7 +1,7 @@
 // AI Summary: Main electron process that coordinates window management, file system operations,
 // and IPC communication between processes. Handles application lifecycle events, path resolution,
 // and uncaught exception handling with proper cleanup of file watchers.
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, Menu } from 'electron';
 import * as path from 'path';
 import { createWindow, mainWindow } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
@@ -24,14 +24,135 @@ export function getAppBasePath(): string {
 // App lifecycle handlers
 app.whenReady().then(async () => {
   await fileService.reloadIgnoreRules();
-  
+
   // Initialize secure API key service
   apiKeyService = new ApiKeyServiceMain(app.getPath('userData'));
-  
+
   // Initialize LLM service with API key service
   llmService = new LLMServiceMain(apiKeyService);
-  
+
   setupIpcHandlers(fileService, settingsService, apiKeyService, llmService);
+
+  // Read package.json for About panel information
+  const packageJson = require('../package.json');
+
+  // Configure About panel
+  app.setAboutPanelOptions({
+    applicationName:
+      packageJson.name.charAt(0).toUpperCase() + packageJson.name.slice(1),
+    applicationVersion: `Version ${packageJson.version}`,
+    authors: [packageJson.author],
+    copyright: `Copyright © ${new Date().getFullYear()} ${packageJson.author}`,
+    credits: `${packageJson.description}`,
+  });
+
+  // Create application menu
+  const menuTemplate: Electron.MenuItemConstructorOptions[] = [
+    // macOS app menu
+    ...(process.platform === 'darwin'
+      ? [
+          {
+            label: app.getName(),
+            submenu: [
+              { role: 'about' as const },
+              { type: 'separator' as const },
+              { role: 'services' as const },
+              { type: 'separator' as const },
+              { role: 'hide' as const },
+              { role: 'hideOthers' as const },
+              { role: 'unhide' as const },
+              { type: 'separator' as const },
+              { role: 'quit' as const },
+            ] as Electron.MenuItemConstructorOptions[],
+          },
+        ]
+      : []),
+    // File menu
+    {
+      label: 'File',
+      submenu: [
+        process.platform === 'darwin'
+          ? { role: 'close' as const }
+          : { role: 'quit' as const },
+      ],
+    },
+    // Edit menu
+    {
+      label: 'Edit',
+      submenu: [
+        { role: 'undo' as const },
+        { role: 'redo' as const },
+        { type: 'separator' as const },
+        { role: 'cut' as const },
+        { role: 'copy' as const },
+        { role: 'paste' as const },
+        ...(process.platform === 'darwin'
+          ? [
+              { role: 'pasteAndMatchStyle' as const },
+              { role: 'delete' as const },
+              { role: 'selectAll' as const },
+              { type: 'separator' as const },
+              {
+                label: 'Speech',
+                submenu: [
+                  { role: 'startSpeaking' as const },
+                  { role: 'stopSpeaking' as const },
+                ],
+              },
+            ]
+          : [
+              { role: 'delete' as const },
+              { type: 'separator' as const },
+              { role: 'selectAll' as const },
+            ]),
+      ],
+    },
+    // View menu
+    {
+      label: 'View',
+      submenu: [
+        { role: 'reload' as const },
+        { role: 'forceReload' as const },
+        { role: 'toggleDevTools' as const },
+        { type: 'separator' as const },
+        { role: 'resetZoom' as const },
+        { role: 'zoomIn' as const },
+        { role: 'zoomOut' as const },
+        { type: 'separator' as const },
+        { role: 'togglefullscreen' as const },
+      ],
+    },
+    // Window menu
+    {
+      label: 'Window',
+      submenu: [
+        { role: 'minimize' as const },
+        { role: 'zoom' as const },
+        ...(process.platform === 'darwin'
+          ? [
+              { type: 'separator' as const },
+              { role: 'front' as const },
+              { type: 'separator' as const },
+              { role: 'window' as const },
+            ]
+          : [{ role: 'close' as const }]),
+      ],
+    },
+    // Help menu
+    {
+      role: 'help' as const,
+      submenu: [
+        {
+          label: `About ${packageJson.name.charAt(0).toUpperCase() + packageJson.name.slice(1)}`,
+          role: 'about' as const,
+        },
+      ],
+    },
+  ];
+
+  const menu = Menu.buildFromTemplate(menuTemplate);
+  Menu.setApplicationMenu(menu);
+
   createWindow();
 
   app.on('activate', () => {
@@ -42,7 +163,7 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', () => {
-  fileService.cleanupWatchers().catch(err => {
+  fileService.cleanupWatchers().catch((err) => {
     console.error('Error cleaning up FileService watchers:', err);
   });
 

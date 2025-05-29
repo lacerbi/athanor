@@ -1,13 +1,22 @@
 // AI Summary: Displays file content with text file detection. Handles both text and binary files
 // with appropriate feedback. Maintains line count and path display for valid text files.
+// Now includes a "Replace with Clipboard" button that stages changes and navigates to Apply Changes tab.
 import React, { useEffect, useState } from 'react';
-import { Copy, FileCode } from 'lucide-react';
+import { Copy, FileCode, ClipboardPaste } from 'lucide-react';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
+import { useCommandStore } from '../stores/commandStore';
+import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { copyToClipboard } from '../actions/ManualCopyAction';
 import { isTextFile } from '../utils/fileTextDetection';
+import { TabType } from './AthanorTabs';
+import { FileOperation } from '../types/global';
 
-const FileViewerPanel: React.FC = () => {
+interface FileViewerPanelProps {
+  onTabChange: (tab: TabType) => void;
+}
+
+const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
   const { previewedFilePath } = useFileSystemStore();
   const { addLog } = useLogStore();
   const [fileContent, setFileContent] = useState<string>('');
@@ -78,9 +87,9 @@ const FileViewerPanel: React.FC = () => {
         <>
           <div className="flex items-center justify-between text-sm mb-2">
             <div className="flex-grow text-gray-600">
-              {osPath}
+              <span className="truncate" title={osPath}>{osPath}</span>
               {lineCount > 0 && (
-                <span className="text-gray-500 ml-2">({lineCount} lines)</span>
+                <span className="text-gray-500 ml-2 flex-shrink-0">({lineCount} lines)</span>
               )}
             </div>
             {isText && (
@@ -120,6 +129,65 @@ const FileViewerPanel: React.FC = () => {
                 >
                   <FileCode className="w-4 h-4" />
                   <span>Formatted Copy</span>
+                </button>
+                <button
+                  className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+                  onClick={async () => {
+                    const { addLog: log } = useLogStore.getState(); // Renamed to avoid conflict
+                    const { setOperations, clearOperations } = useApplyChangesStore.getState();
+                    const clipboardContent = useCommandStore.getState().clipboardContent;
+
+                    // Use osPath for relativization; ensure it's available.
+                    // previewedFilePath is the primary key from the store, osPath is its absolute representation.
+                    if (!previewedFilePath || !osPath || !fileContent || !clipboardContent || typeof clipboardContent !== 'string') {
+                      log('Replace failed: Invalid state (no file/osPath, empty content, or empty/invalid clipboard).');
+                      return;
+                    }
+
+                    try {
+                      const relativePathForOperation = await window.fileService.relativize(osPath);
+                      if (!relativePathForOperation) {
+                          log(`Replace failed: Could not determine relative path for ${osPath}.`);
+                          return;
+                      }
+                    
+                      const operation: FileOperation = {
+                        file_message: `Replace content of ${relativePathForOperation} with clipboard content.`,
+                        file_operation: 'UPDATE_FULL',
+                        file_path: relativePathForOperation,
+                        new_code: clipboardContent,
+                        old_code: fileContent,
+                        accepted: false,
+                        rejected: false,
+                      };
+                    
+                      clearOperations();
+                      setOperations([operation]);
+                    
+                      log(`Prepared to replace ${relativePathForOperation} with clipboard content. Review in Apply Changes tab.`);
+                      
+                      if (onTabChange) {
+                        onTabChange('apply-changes');
+                      } else {
+                        console.error("onTabChange callback is not available in FileViewerPanel.");
+                        log("Error: Could not navigate to Apply Changes tab.");
+                      }
+                    } catch (error) {
+                      console.error("Error during replace with clipboard action:", error);
+                      log(`Error preparing replacement for ${osPath}: ${error instanceof Error ? error.message : String(error)}`);
+                    }
+                  }}
+                  title="Replace file content with clipboard"
+                  disabled={
+                    !previewedFilePath ||
+                    !isText ||
+                    !!error ||
+                    !useCommandStore.getState().clipboardContent ||
+                    typeof useCommandStore.getState().clipboardContent !== 'string'
+                  }
+                >
+                  <ClipboardPaste className="w-4 h-4" />
+                  <span>Replace</span>
                 </button>
               </div>
             )}

@@ -7,8 +7,9 @@
 
 > 🚧 **WORK IN PROGRESS**: 🚧 This project is currently under active development. It is being developed by [Luigi Acerbi](https://lacerbi.github.io/) for use in the [Machine and Human Intelligence Group](https://www.helsinki.fi/en/researchgroups/machine-and-human-intelligence).
 
-Athanor is an Electron-based desktop application that integrates AI coding assistants via chat interfaces into a developer's local workflow.
-It streamlines the process of creating prompts with relevant code context and applying AI-generated changes back to your codebase.
+Athanor is an Electron desktop app for local AI-assisted workflows. It helps you prepare project context by selecting relevant information to create effective prompts for use with any LLM chat interface (like ChatGPT, Claude, or Gemini), without need of API access.
+
+Athanor then assists in integrating AI-generated responses back into your project, ensuring you remain in full control of all changes while reducing tedious copy-paste. While primarily designed for developers and coding tasks, Athanor can help with other project-based AI interactions.
 
 ## 📋 Table of Contents
 

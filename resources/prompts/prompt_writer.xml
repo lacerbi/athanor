@@ -46,6 +46,9 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Include the full file path
 - Put the XML block inside markdown codeblocks
 - Make sure to enclose the code with ![CDATA[__CODE HERE__]]
+- **Regarding file content within `CDATA` blocks:**
+    - By default use standard space characters (U+0020)
+    - Avoid introducing non-breaking spaces (U+00A0) and other non-standard whitespace, unless there is a reason (e.g., within a string literal)
 - You can write multiple `file` blocks in the same `ath` command
 - If the `ath` block is getting too long (>> 250 lines):
   - When you close the `file` tag, also close the `ath` tag and close he XML block
@@ -221,10 +224,14 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Include the full file path
 - Put the XML block inside markdown codeblocks
 - Make sure to enclose the code with ![CDATA[__CODE HERE__]]
+- **Regarding file content within `CDATA` blocks:**
+  - For non-breaking spaces, use LaTeX's `~` notation
+  - Do not introduce literal non-breaking space characters (U+00A0) or other raw non-standard Unicode whitespace
 - You can write multiple `file` blocks in the same `ath` command
 - If the `ath` block is getting too long (>> 250 lines):
   - When you close the `file` tag, also close the `ath` tag and close he XML block
   - Start a new XML block with a new `ath` tag
+- Ensure to write valid XML by opening and closing all tags as appropriate
 
 ### File operations
 
@@ -371,6 +378,9 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Include the full file path
 - Put the XML block inside markdown codeblocks
 - Make sure to enclose the code with ![CDATA[__CODE HERE__]]
+- **Regarding file content within `CDATA` blocks:**
+    - By default use standard space characters (U+0020)
+    - Avoid introducing non-breaking spaces (U+00A0) and other non-standard whitespace, unless there is a reason (e.g., within a string literal)
 - You can write multiple `file` blocks in the same `ath` command
 - Ensure to write valid XML by opening and closing all tags as appropriate
 
