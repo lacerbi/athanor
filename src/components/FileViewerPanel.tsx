@@ -137,31 +137,44 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
                     const { setOperations, clearOperations } = useApplyChangesStore.getState();
                     const clipboardContent = useCommandStore.getState().clipboardContent;
 
-                    if (!previewedFilePath || !fileContent || !clipboardContent || typeof clipboardContent !== 'string') {
-                      log('Replace failed: Invalid state (no file, empty content, or empty/invalid clipboard).');
+                    // Use osPath for relativization; ensure it's available.
+                    // previewedFilePath is the primary key from the store, osPath is its absolute representation.
+                    if (!previewedFilePath || !osPath || !fileContent || !clipboardContent || typeof clipboardContent !== 'string') {
+                      log('Replace failed: Invalid state (no file/osPath, empty content, or empty/invalid clipboard).');
                       return;
                     }
 
-                    const operation: FileOperation = {
-                      file_message: `Replace content of ${previewedFilePath} with clipboard content.`,
-                      file_operation: 'UPDATE_FULL',
-                      file_path: previewedFilePath,
-                      new_code: clipboardContent,
-                      old_code: fileContent,
-                      accepted: false,
-                      rejected: false,
-                    };
-
-                    clearOperations();
-                    setOperations([operation]);
-
-                    log(`Prepared to replace ${previewedFilePath} with clipboard content. Review in Apply Changes tab.`);
+                    try {
+                      const relativePathForOperation = await window.fileService.relativize(osPath);
+                      if (!relativePathForOperation) {
+                          log(`Replace failed: Could not determine relative path for ${osPath}.`);
+                          return;
+                      }
                     
-                    if (onTabChange) {
-                      onTabChange('apply-changes');
-                    } else {
-                      console.error("onTabChange callback is not available in FileViewerPanel.");
-                      log("Error: Could not navigate to Apply Changes tab.");
+                      const operation: FileOperation = {
+                        file_message: `Replace content of ${relativePathForOperation} with clipboard content.`,
+                        file_operation: 'UPDATE_FULL',
+                        file_path: relativePathForOperation,
+                        new_code: clipboardContent,
+                        old_code: fileContent,
+                        accepted: false,
+                        rejected: false,
+                      };
+                    
+                      clearOperations();
+                      setOperations([operation]);
+                    
+                      log(`Prepared to replace ${relativePathForOperation} with clipboard content. Review in Apply Changes tab.`);
+                      
+                      if (onTabChange) {
+                        onTabChange('apply-changes');
+                      } else {
+                        console.error("onTabChange callback is not available in FileViewerPanel.");
+                        log("Error: Could not navigate to Apply Changes tab.");
+                      }
+                    } catch (error) {
+                      console.error("Error during replace with clipboard action:", error);
+                      log(`Error preparing replacement for ${osPath}: ${error instanceof Error ? error.message : String(error)}`);
                     }
                   }}
                   title="Replace file content with clipboard"
