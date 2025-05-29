@@ -1,6 +1,6 @@
 {
   "name": "athanor",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
@@ -30,7 +30,7 @@
   ],
   "author": "Luigi Acerbi",
   "license": "Apache-2.0",
-  "description": "Athanor is a desktop app for managing relevant project context to build effective AI prompts, streamlining interaction with LLM chat interfaces, with primary usage in code development and integration -- while keeping full control.",
+  "description": "Athanor is a desktop app for AI-assisted workflows, from coding to technical writing. Quickly orchestrate the relevant context to create effective prompts to paste into any LLM chat interface, and then efficiently integrate the AI response back into your project or codebase, always in control.",
   "devDependencies": {
     "@electron-forge/cli": "^7.6.0",
     "@electron-forge/maker-deb": "^7.6.0",

@@ -1,8 +1,8 @@
-# Athanor - AI Code Nexus
+# Athanor - AI Workbench
 
 ## App Description
 
-Athanor is an **Electron-based desktop application** that integrates AI coding assistants into a developer’s local workflow. Its primary goal is to streamline two main flows:
+Athanor is an **Electron-based desktop application** that integrates AI coding assistants into a developer’s workflow. Its primary goal is to streamline two main flows:
 
 1.  **Prompt Creation & Refinement**
 

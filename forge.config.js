@@ -3,15 +3,18 @@ module.exports = {
     name: 'Athanor',
     asar: true,
     prune: true,
+    icon: 'resources/images/athanor',
     // Ensure resources directory is not packed into asar
     asarUnpack: ['resources/**/*'],
     // Copy specific resources subfolders
-    extraResource: ['resources/files', 'resources/prompts'],
+    extraResource: ['resources/files', 'resources/prompts', 'resources/images'],
   },
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
-      config: {},
+      config: {
+        setupIcon: 'resources/images/athanor.ico',
+      },
     },
     {
       name: '@electron-forge/maker-zip',
