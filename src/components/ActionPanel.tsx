@@ -154,6 +154,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { applicationSettings, saveApplicationSettings } = useSettingsStore();
   const { isGeneratingPrompt, setIsGeneratingPrompt } = useWorkbenchStore();
 
+  // Determine if experimental features should be shown
+  const showExperimentalFeatures = applicationSettings?.enableExperimentalFeatures ?? false;
+
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
     try {
@@ -645,18 +648,20 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             })}
           />
 
-          {/* Send via API Controls */}
-          <SendViaApiControls
-            isActive={isActive}
-            outputContent={tabs[activeTabIndex].output}
-            applicationSettings={applicationSettings}
-            saveApplicationSettings={saveApplicationSettings}
-            addLog={addLog}
-            setActivePanelTab={setActivePanelTab}
-            setParentIsLoading={setIsLoading}
-            isSendingRequest={isGeneratingPrompt}
-            setStoreIsGeneratingPrompt={setIsGeneratingPrompt}
-          />
+          {/* Send via API Controls - Only show if experimental features are enabled */}
+          {showExperimentalFeatures && (
+            <SendViaApiControls
+              isActive={isActive}
+              outputContent={tabs[activeTabIndex].output}
+              applicationSettings={applicationSettings}
+              saveApplicationSettings={saveApplicationSettings}
+              addLog={addLog}
+              setActivePanelTab={setActivePanelTab}
+              setParentIsLoading={setIsLoading}
+              isSendingRequest={isGeneratingPrompt}
+              setStoreIsGeneratingPrompt={setIsGeneratingPrompt}
+            />
+          )}
         </div>
       </div>
     </div>
