@@ -259,12 +259,12 @@ describe('setupCoreHandlers', () => {
       expect(mockApp.getVersion).toHaveBeenCalled();
     });
 
-    it('should handle app.getVersion errors', async () => {
+    it('should handle app.getVersion errors', () => { // No longer async
       mockApp.getVersion.mockImplementation(() => {
         throw new Error('Version error');
       });
 
-      await expect(handler(mockEvent)).rejects.toThrow('Version error');
+      expect(() => handler(mockEvent)).toThrow('Version error');
     });
   });
 
@@ -275,21 +275,21 @@ describe('setupCoreHandlers', () => {
       handler = ipcHandlers.get('fs:getCurrentDirectory')!;
     });
 
-    it('should return current directory', async () => {
+    it('should return current directory', () => { // No longer necessarily async if handler is sync
       mockFileService.getBaseDir.mockReturnValue('/current/dir');
 
-      const result = await handler(mockEvent);
+      const result = handler(mockEvent); // Call synchronously
 
       expect(result).toBe('/current/dir');
       expect(mockFileService.getBaseDir).toHaveBeenCalled();
     });
 
-    it('should handle service errors', async () => {
+    it('should handle service errors', () => { // No longer async
       mockFileService.getBaseDir.mockImplementation(() => {
         throw new Error('Directory error');
       });
 
-      await expect(handler(mockEvent)).rejects.toThrow('Directory error');
+      expect(() => handler(mockEvent)).toThrow('Directory error');
     });
   });
 
@@ -625,12 +625,12 @@ describe('setupCoreHandlers', () => {
       expect(mockFileService.getMaterialsDir).toHaveBeenCalled();
     });
 
-    it('should handle service errors', async () => {
+    it('should handle service errors', () => { // No longer async
       mockFileService.getMaterialsDir.mockImplementation(() => {
         throw new Error('Materials dir error');
       });
 
-      await expect(handler(mockEvent)).rejects.toThrow('Materials dir error');
+      expect(() => handler(mockEvent)).toThrow('Materials dir error');
     });
   });
 
@@ -652,7 +652,7 @@ describe('setupCoreHandlers', () => {
       expect(mockFileService.relativize).toHaveBeenCalledWith('/absolute/path');
     });
 
-    it('should handle service errors', async () => {
+    it('should handle service errors', async () => { // This handler is async, so .rejects.toThrow is correct
       mockFileService.toUnix.mockImplementation(() => {
         throw new Error('Path conversion error');
       });
