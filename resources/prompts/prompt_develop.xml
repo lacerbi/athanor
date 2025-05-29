@@ -46,6 +46,9 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Include the full file path
 - Put the XML block inside markdown codeblocks
 - Make sure to enclose the code with <![CDATA[__CODE HERE__]]>
+- **Regarding file content within `CDATA` blocks:**
+  - By default use standard space characters (U+0020)
+  - Avoid introducing non-breaking spaces (U+00A0) and other non-standard whitespace, unless there is a reason (e.g., within a string literal)
 - You can write multiple `file` blocks in the same `ath` command
 - **Only if the `ath` block is getting excessively long (> 400 lines):**
   - When you close the `file` tag, also close the `ath` tag and close the XML block
@@ -229,6 +232,9 @@ You will respond with 2 sections: A summary section and one or more XML section(
 - Include the full file path
 - Put the XML block inside markdown codeblocks
 - Make sure to enclose the code with <![CDATA[__CODE HERE__]]>
+- **Regarding file content within `CDATA` blocks:**
+  - By default use standard space characters (U+0020)
+  - Avoid introducing non-breaking spaces (U+00A0) and other non-standard whitespace, unless there is a reason (e.g., within a string literal)
 - You can write multiple `file` blocks in the same `ath` command
 - **Ensure to write valid XML by opening and closing all tags as appropriate**
 
