@@ -185,7 +185,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               isActive={activeTab === 'workbench'}
             />
           )}
-          {activeTab === 'viewer' && <FileViewerPanel />}
+          {activeTab === 'viewer' && <FileViewerPanel onTabChange={onTabChange} />}
           {activeTab === 'apply-changes' && <ApplyChangesPanel />}
           {activeTab === 'settings' && <SettingsPanel />}
         </div>
