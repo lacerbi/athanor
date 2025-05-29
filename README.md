@@ -1,30 +1,32 @@
-# ⚗️ Athanor - AI Code Nexus
+# ⚗️ <img src="./resources/images/athanor_logo.png" alt="Athanor Logo" height="32"> — AI Workbench  <sub><sub></sub></sub>
+> *where modern alchemists cook*
 
 [![Status: WIP](https://img.shields.io/badge/Status-Work%20In%20Progress-yellow)](https://github.com/lacerbi/athanor)
 [![Stage: Pre-Alpha](https://img.shields.io/badge/Stage-Pre--Alpha-orange)](https://github.com/lacerbi/athanor)
 [![Node.js >=18.x](https://img.shields.io/badge/Node.js-%3E%3D18.x-brightgreen)](https://nodejs.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-> 🚧 **WORK IN PROGRESS**: 🚧 This project is currently under active development. It is being developed by [Luigi Acerbi](https://lacerbi.github.io/) for use in the [Machine and Human Intelligence Group](https://www.helsinki.fi/en/researchgroups/machine-and-human-intelligence).
+Athanor is a desktop app for AI-assisted workflows, from coding to technical writing. **Athanor does not require API keys.**
 
-Athanor is an Electron desktop app for local AI-assisted workflows. It helps you prepare project context by selecting relevant information to create effective prompts for use with any LLM chat interface (like ChatGPT, Claude, or Gemini), without need of API access.
+Open a project folder, select files, specify your task, and quickly create effective prompts with all the relevant context to paste into any LLM chat interface like ChatGPT, Claude, or Gemini.
+Athanor then assists in efficiently integrating the AI-generated responses back into your project or codebase, ensuring **you remain in full control of all changes while minimizing tedious copy-paste**.
 
-Athanor then assists in integrating AI-generated responses back into your project, ensuring you remain in full control of all changes while reducing tedious copy-paste. While primarily designed for developers and coding tasks, Athanor can help with other project-based AI interactions.
+> 🚧 **WORK IN PROGRESS**: 🚧 This project is in pre-alpha stage, so expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes.
 
 ## 📋 Table of Contents
 
 - [Key Features](#key-features)
 - [Installation Setup](#installation-setup)
 - [Basic Usage](#basic-usage)
-- [Contributing](#contributing)
+- [Development](#development)
 - [License](#license)
 
 ## ✨ Key Features
 
-- **Smart Context Selection**: Easily choose files & folders for your AI prompt, or let the "Autoselect" feature intelligently pick relevant context directly from your local codebase.
+- **Smart Context Selection**: Easily choose files & folders for your AI prompt, or let the "Autoselect" feature intelligently pick relevant context directly from your local project or codebase.
 - **Seamless AI Chat Integration**: Works effortlessly with your favorite AI assistants (like ChatGPT, Claude, Gemini). Just copy from Athanor to your AI, and paste the response back – no API keys needed for the core workflow!
-- **Workflow-Tailored Prompts**: Jumpstart your coding tasks with specialized prompt templates designed for a natural development flow: "Query" your project, "Architect" new features, "Code" implementations, or "Autoselect" relevant files.
-- **Controlled Code Application**: Paste AI responses with Athanor's custom XML commands. Preview all proposed file changes (creations, updates, deletions) in a clear visual diff viewer, then accept or reject each one individually before any code is written to disk.
+- **Workflow-Tailored Prompts**: Jumpstart your coding tasks with specialized prompt templates designed for a natural development flow: "Autoselect" relevant files, "Query" your project, "Architect" new features, "Code" implementations or "Write" text.
+- **Controlled Changes**: Paste AI responses into Athanor. Preview all proposed file changes (creations, updates, deletions) in a clear visual diff viewer, then accept or reject each one individually before any edit is written to disk.
 - **Optional Direct API Automation**: For advanced users or specific automated tasks (like "Autoselect"), Athanor allows direct connection to LLMs via API keys.
 - **Organized Multi-Task Workspace**: Manage several coding challenges at once using dedicated "task tabs," each with its own description, context, and AI output area, keeping your work focused and efficient.
 
@@ -67,7 +69,9 @@ Athanor is currently available in developer mode.
 
 Read the [**full tutorial**](TUTORIAL.md).
 
-## 👥 Contributing
+## 👥 Development
+
+Athanor is being developed by [Luigi Acerbi](https://lacerbi.github.io/) for use in the [Machine and Human Intelligence Group](https://www.helsinki.fi/en/researchgroups/machine-and-human-intelligence).
 
 Contributions are welcome! Please follow standard GitHub fork & pull request workflows.
 

@@ -1,2 +1,3 @@
 # athanor
-Athanor - AI Code Nexus
+
+Athanor - AI Workbench
