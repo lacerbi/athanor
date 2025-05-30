@@ -20,7 +20,7 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
 <p align="center">
   <img src="./resources/images/athanor_snapshot_apply_changes.png" alt="Athanor AI Workbench Apply Changes Snapshot" width="750">
   <br>
-  <em>'Apply Changes' panel: Review and apply diffs generated from prompts pasted into any AI chat assistant.</em>
+  <em>'Apply Changes' panel: Review and accept/reject diffs generated using any AI chat assistant.</em>
 </p>
 
 > 🚧 **WORK IN PROGRESS**: 🚧 This project is in pre-alpha stage, so expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes.
