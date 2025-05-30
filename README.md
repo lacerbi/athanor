@@ -1,5 +1,6 @@
-# ⚗️ <img src="./resources/images/athanor_logo.png" alt="Athanor Logo" height="32"> — AI Workbench  <sub><sub></sub></sub>
-> *where modern alchemists cook*
+# ⚗️ <img src="./resources/images/athanor_logo.png" alt="Athanor Logo" height="32"> — AI Workbench <sub><sub></sub></sub>
+
+> _where modern alchemists cook_
 
 [![Status: WIP](https://img.shields.io/badge/Status-Work%20In%20Progress-yellow)](https://github.com/lacerbi/athanor)
 [![Stage: Pre-Alpha](https://img.shields.io/badge/Stage-Pre--Alpha-orange)](https://github.com/lacerbi/athanor)
@@ -10,6 +11,12 @@ Athanor is a desktop app for AI-assisted workflows, from coding to technical wri
 
 Open a project folder, select files, specify your task, and quickly create effective prompts with all the relevant context to paste into any LLM chat interface like ChatGPT, Claude, or Gemini.
 Athanor then assists in efficiently integrating the AI-generated responses back into your project or codebase, ensuring **you remain in full control of all changes while minimizing tedious copy-paste**.
+
+<p align="center">
+  <img src="./resources/images/athanor_snapshot.png" alt="Athanor AI Workbench Snapshot" width="750">
+  <br>
+  <em>Athanor's interface: File explorer (left), task management and AI interaction (right).</em>
+</p>
 
 > 🚧 **WORK IN PROGRESS**: 🚧 This project is in pre-alpha stage, so expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes.
 
