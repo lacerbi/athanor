@@ -1,3 +1,0 @@
-# athanor
-
-Athanor - AI Workbench

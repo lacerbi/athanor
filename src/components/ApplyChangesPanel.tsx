@@ -22,11 +22,11 @@ const DiffLine: React.FC<DiffLineProps> = ({ content, type }) => {
 
   switch (type) {
     case 'add':
-      lineClass += ' bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100';
+      lineClass += ' bg-green-100 dark:bg-blue-900/30 text-green-900 dark:text-blue-100';
       prefix = '+';
       break;
     case 'remove':
-      lineClass += ' bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100';
+      lineClass += ' bg-red-100 dark:bg-orange-900/30 text-red-900 dark:text-orange-100';
       prefix = '-';
       break;
     case 'header':
@@ -64,7 +64,7 @@ const DiffView: React.FC<{
 
   if (normalizedOld === normalizedNew) {
     return (
-      <div className="p-4 text-gray-500 italic">
+      <div className="p-4 text-gray-500 dark:text-gray-400 italic">
         No changes (files are identical after normalizing line endings)
       </div>
     );
@@ -92,7 +92,7 @@ const DiffView: React.FC<{
   };
 
   return (
-    <div className="overflow-x-auto bg-gray-50 rounded border p-2">
+    <div className="overflow-x-auto bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 p-2">
       <div className="space-y-0">
         {lines.map((line, index) => renderDiffLine(line, index))}
       </div>
@@ -166,14 +166,14 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
   }, [op.file_path, op.file_operation, selectedItems, applicationSettings]);
 
   return (
-    <div className="border rounded p-4 bg-white shadow-sm">
+    <div className="border border-gray-200 dark:border-gray-600 rounded p-4 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/20">
       <div className="flex justify-between items-start mb-4">
         <div className="flex flex-col gap-1">
           <div className="flex items-start gap-2">
-            <p className="font-semibold break-all">{op.file_path}</p>
+            <p className="font-semibold break-all text-gray-900 dark:text-gray-100">{op.file_path}</p>
             {showWarning && (
               <div
-                className="text-amber-500 flex-shrink-0"
+                className="text-amber-500 dark:text-amber-400 flex-shrink-0"
                 title="This file is not currently in focus (checkbox marked). The AI might not have had access to its full content."
               >
                 <AlertTriangle className="w-4 h-4" />
@@ -181,7 +181,7 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
             )}
           </div>
           {op.file_message && (
-            <p className="text-sm text-gray-500 break-words">
+            <p className="text-sm text-gray-500 dark:text-gray-400 break-words">
               {op.file_message}
             </p>
           )}
@@ -210,14 +210,14 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
       <div className="mt-4 flex justify-between items-center">
         <div className="flex gap-2">
           <button
-            className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
             disabled={op.accepted || op.rejected}
             onClick={() => onAccept(index)}
           >
             Accept
           </button>
           <button
-            className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+            className="px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
             disabled={op.accepted || op.rejected}
             onClick={() => onReject(index)}
           >
@@ -228,7 +228,7 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
         {(op.accepted || op.rejected) && (
           <span
             className={`text-sm font-medium ${
-              op.accepted ? 'text-green-600' : 'text-red-600'
+              op.accepted ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
             }`}
           >
             {op.accepted ? 'Changes Accepted' : 'Changes Rejected'}
@@ -246,7 +246,7 @@ const ApplyChangesPanel: React.FC = () => {
   if (!activeOperations.length) {
     return (
       <div className="p-4">
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           No active operations to display.
         </p>
       </div>
