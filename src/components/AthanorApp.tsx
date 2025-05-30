@@ -7,6 +7,7 @@ import ProjectCreationDialog from './ProjectCreationDialog';
 import { useFileSystemLifecycle } from '../hooks/useFileSystemLifecycle';
 import { useLogStore, LogEntry } from '../stores/logStore';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
+import { useSettingsStore } from '../stores/settingsStore';
 import { TabType } from './AthanorTabs';
 
 const AthanorApp: React.FC = () => {
@@ -23,6 +24,7 @@ const AthanorApp: React.FC = () => {
     addLog: (message: string | Omit<LogEntry, 'id' | 'timestamp'>) => void;
   };
   const { setChangeAppliedCallback } = useApplyChangesStore();
+  const { applicationSettings, loadApplicationSettings } = useSettingsStore();
 
   // File System Lifecycle
   const {
@@ -46,6 +48,67 @@ const AthanorApp: React.FC = () => {
       logsRef.current.scrollTop = logsRef.current.scrollHeight;
     }
   }, [logs]);
+
+  // Load application settings on mount
+  useEffect(() => {
+    loadApplicationSettings();
+  }, [loadApplicationSettings]);
+
+  // Theme switching logic
+  useEffect(() => {
+    const applyTheme = async () => {
+      const uiTheme = applicationSettings?.uiTheme || 'Auto';
+      
+      if (uiTheme === 'Light') {
+        document.documentElement.classList.remove('dark');
+      } else if (uiTheme === 'Dark') {
+        document.documentElement.classList.add('dark');
+      } else if (uiTheme === 'Auto') {
+        try {
+          // Get initial system theme
+          const shouldUseDarkColors = await window.nativeThemeBridge.getInitialDarkMode();
+          if (shouldUseDarkColors) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (error) {
+          console.error('Failed to get initial dark mode preference:', error);
+          // Fallback to light mode
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    };
+
+    applyTheme();
+  }, [applicationSettings?.uiTheme]);
+
+  // Listen for system theme changes when in Auto mode
+  useEffect(() => {
+    const uiTheme = applicationSettings?.uiTheme || 'Auto';
+    
+    if (uiTheme === 'Auto') {
+      let cleanup: (() => void) | undefined;
+      
+      try {
+        cleanup = window.nativeThemeBridge.onNativeThemeUpdated((shouldUseDarkColors: boolean) => {
+          if (shouldUseDarkColors) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        });
+      } catch (error) {
+        console.error('Failed to listen for native theme updates:', error);
+      }
+
+      return () => {
+        if (cleanup) {
+          cleanup();
+        }
+      };
+    }
+  }, [applicationSettings?.uiTheme]);
 
   // Register refresh callback
   useEffect(() => {

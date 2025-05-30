@@ -1,7 +1,7 @@
 // AI Summary: Main electron process that coordinates window management, file system operations,
 // and IPC communication between processes. Handles application lifecycle events, path resolution,
 // and uncaught exception handling with proper cleanup of file watchers.
-import { app, BrowserWindow, Menu } from 'electron';
+import { app, BrowserWindow, Menu, nativeTheme } from 'electron';
 import * as path from 'path';
 import { createWindow, mainWindow } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
@@ -154,6 +154,13 @@ app.whenReady().then(async () => {
   Menu.setApplicationMenu(menu);
 
   createWindow();
+
+  // Listen for system theme changes and notify renderer
+  nativeTheme.on('updated', () => {
+    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
+      mainWindow.webContents.send('native-theme-updated', nativeTheme.shouldUseDarkColors);
+    }
+  });
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

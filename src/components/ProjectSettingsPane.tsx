@@ -133,14 +133,14 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     projectInfoFilePath !== (projectSettings?.projectInfoFilePath || '');
 
   return (
-    <div className="bg-white border rounded-lg p-6 h-fit">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 h-fit">
       <div className="flex items-center justify-between mb-4 gap-4">
-        <h2 className="text-lg font-semibold text-gray-900 flex-shrink-0">
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex-shrink-0">
           Project Settings
         </h2>
         {hasProject && (
           <span 
-            className="text-sm text-gray-500 truncate min-w-0"
+            className="text-sm text-gray-500 dark:text-gray-400 truncate min-w-0"
             style={{ direction: 'rtl', textAlign: 'left' }}
             title={currentProjectPath || undefined}
           >
@@ -152,8 +152,8 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
       {!hasProject ? (
         <div className="text-center py-8">
           <div className="text-gray-400 text-lg mb-2">📁</div>
-          <p className="text-gray-500">No project loaded</p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-gray-500 dark:text-gray-400">No project loaded</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
             Open a project to view and edit project-specific settings.
           </p>
         </div>
@@ -161,7 +161,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
         <div className="space-y-6">
           {isLoadingProjectSettings ? (
             <div className="flex items-center justify-center py-4">
-              <div className="text-gray-500">
+              <div className="text-gray-500 dark:text-gray-400">
                 Loading project settings...
               </div>
             </div>
@@ -169,11 +169,11 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
             <>
               {/* Error Display */}
               {(projectSettingsError || projectSaveError) && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                  <div className="text-red-800 font-medium">
+                <div className="bg-red-50 dark:bg-red-900/50 border border-red-200 dark:border-red-800 rounded-md p-4">
+                  <div className="text-red-800 dark:text-red-200 font-medium">
                     Error with project settings
                   </div>
-                  <div className="text-red-600 text-sm mt-1">
+                  <div className="text-red-600 dark:text-red-300 text-sm mt-1">
                     {projectSaveError || projectSettingsError}
                   </div>
                 </div>
@@ -184,7 +184,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                 <div className="flex items-center space-x-2">
                   <label
                     htmlFor="projectNameOverride"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Project Name
                   </label>
@@ -192,7 +192,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                     className="relative group"
                     title="If provided, this name will be used instead of the folder name in prompts and display."
                   >
-                    <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                    <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
                   </div>
                 </div>
                 <input
@@ -202,7 +202,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                   onChange={handleProjectNameChange}
                   onBlur={handleProjectNameBlur}
                   placeholder="Custom project display name (leave empty for default)"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:bg-gray-50 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400"
                   disabled={isLoadingProjectSettings || isSavingProject}
                 />
               </div>
@@ -212,7 +212,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                 <div className="flex items-center space-x-2">
                   <label
                     htmlFor="projectInfoFilePath"
-                    className="block text-sm font-medium text-gray-700"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Project Info File
                   </label>
@@ -220,7 +220,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                     className="relative group"
                     title="File with project information. If empty or invalid, Athanor will search for PROJECT.md, README.md, etc."
                   >
-                    <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+                    <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -231,7 +231,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                     onChange={handleInfoFilePathChange}
                     onBlur={handleInfoFilePathBlur}
                     placeholder="Relative path to project info file (e.g., docs/about.md)"
-                    className="flex-grow px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                    className="flex-grow px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:bg-gray-50 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400"
                     disabled={isLoadingProjectSettings || isSavingProject}
                   />
                   <button
@@ -242,7 +242,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                       isLoadingProjectSettings ||
                       isSavingProject
                     }
-                    className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Browse for project info file"
                   >
                     Browse...
@@ -256,14 +256,14 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                       isSavingProject ||
                       !projectInfoFilePath
                     }
-                    className="px-3 py-2 text-sm bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="px-3 py-2 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Clear project info file path"
                   >
                     Clear
                   </button>
                 </div>
                 {browseError && (
-                  <p className="text-sm text-red-600 mt-1">
+                  <p className="text-sm text-red-600 dark:text-red-400 mt-1">
                     {browseError}
                   </p>
                 )}
@@ -279,7 +279,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                     !hasUnsavedProjectChanges ||
                     !hasProject
                   }
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save Project Settings
                 </button>
@@ -287,8 +287,8 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                 <div className="flex items-center">
                   {/* Save Status */}
                   {isSavingProject && (
-                    <div className="flex items-center text-sm text-blue-600 mr-3">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
+                    <div className="flex items-center text-sm text-blue-600 dark:text-blue-400 mr-3">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 dark:border-blue-400 mr-2"></div>
                       Saving project settings...
                     </div>
                   )}
@@ -306,7 +306,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                         `Settings are stored in .ath_materials/project_settings.json`
                       }
                     >
-                      <Info className="w-5 h-5 text-gray-500 cursor-help hover:text-gray-700" />
+                      <Info className="w-5 h-5 text-gray-500 dark:text-gray-400 cursor-help hover:text-gray-700 dark:hover:text-gray-300" />
                     </div>
                   )}
                 </div>

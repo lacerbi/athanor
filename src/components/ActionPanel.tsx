@@ -228,8 +228,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-t border-t border-x transition-colors whitespace-nowrap
                         ${
                           index === activeTabIndex
-                            ? 'bg-white border-gray-300 text-gray-900 font-semibold'
-                            : 'bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100'
+                            ? 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 font-semibold'
+                            : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
                         }`}
                       >
                         <span className="truncate max-w-[120px]">
@@ -248,7 +248,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                               removeTab(index);
                             }
                           }}
-                          className="ml-1 p-0.5 hover:bg-gray-200 rounded cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-400"
+                          className="ml-1 p-0.5 hover:bg-gray-200 dark:hover:bg-gray-600 rounded cursor-pointer focus:outline-none focus:ring-1 focus:ring-gray-400 dark:focus:ring-gray-500"
                           title={tabs.length > 1 ? 'Close tab' : 'Clear tab'}
                         >
                           ×
@@ -257,7 +257,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     ))}
                     <button
                       onClick={() => createTab()}
-                      className="flex items-center justify-center w-7 h-7 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                      className="flex items-center justify-center w-7 h-7 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 rounded"
                       title="New tab"
                     >
                       +
@@ -268,7 +268,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               <div className="flex-none">
                 <button
                   onClick={() => handleManualCopy(tabs[activeTabIndex].content)}
-                  className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+                  className="flex items-center px-2 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
                   title="Copy to clipboard"
                 >
                   <Copy className="w-4 h-4 mr-1" />
@@ -278,7 +278,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             </div>
             {/* Text Area */}
             <textarea
-              className="flex-1 p-2 border rounded resize-none overflow-auto mb-2"
+              className="flex-1 p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded resize-none overflow-auto mb-2 placeholder-gray-500 dark:placeholder-gray-400"
               placeholder="Describe your task or query here - whether it's implementing a feature, asking about the codebase, or discussing code improvements..."
               value={tabs[activeTabIndex].content}
               onChange={(e) => setTabContent(activeTabIndex, e.target.value)}
@@ -319,7 +319,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 {tabs[activeTabIndex].context && (
                   <button
                     onClick={() => setTabContext(activeTabIndex, '')}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                     aria-label="Clear context"
                   >
                     <Eraser className="w-4 h-4" />
@@ -331,7 +331,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       e.stopPropagation();
                       setShowContextDropdown(!showContextDropdown);
                     }}
-                    className="text-gray-400 hover:text-gray-600"
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                     aria-label={
                       showContextDropdown
                         ? 'Hide suggestions'
@@ -371,7 +371,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             {/* Prompt Generators Section */}
             <div className="space-y-4">
               <div className="space-y-3">
-                <div className="pb-2 border-b flex justify-between items-center">
+                <div className="pb-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                   <h2 className="text-lg font-semibold">
                     Preset Prompts and Tasks
                   </h2>
@@ -626,7 +626,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <h2 className="text-lg font-semibold">Generated Prompt</h2>
             <button
               onClick={() => handleManualCopy(tabs[activeTabIndex].output)}
-              className="flex items-center px-2 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+              className="flex items-center px-2 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
               title="Copy to clipboard"
             >
               <Copy className="w-4 h-4 mr-1" />
@@ -636,7 +636,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
           <textarea
             value={tabs[activeTabIndex].output}
             onChange={(e) => setTabOutput(activeTabIndex, e.target.value)}
-            className="flex-1 p-2 border rounded font-mono text-sm resize-none overflow-auto whitespace-pre"
+            className="flex-1 p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded font-mono text-sm resize-none overflow-auto whitespace-pre placeholder-gray-500 dark:placeholder-gray-400"
             placeholder="Generated prompt to be pasted into an AI assistant will appear here..."
             {...useFileDrop({
               onInsert: (value, start, end) => {

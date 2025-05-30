@@ -22,19 +22,19 @@ const DiffLine: React.FC<DiffLineProps> = ({ content, type }) => {
 
   switch (type) {
     case 'add':
-      lineClass += ' bg-green-100 text-green-900';
+      lineClass += ' bg-green-100 dark:bg-green-900/30 text-green-900 dark:text-green-100';
       prefix = '+';
       break;
     case 'remove':
-      lineClass += ' bg-red-100 text-red-900';
+      lineClass += ' bg-red-100 dark:bg-red-900/30 text-red-900 dark:text-red-100';
       prefix = '-';
       break;
     case 'header':
-      lineClass += ' bg-blue-100 text-blue-900 font-semibold';
+      lineClass += ' bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-semibold';
       prefix = '@';
       break;
     default:
-      lineClass += ' text-gray-700';
+      lineClass += ' text-gray-700 dark:text-gray-300';
       prefix = ' ';
   }
 
@@ -255,7 +255,7 @@ const ApplyChangesPanel: React.FC = () => {
 
   return (
     <div className="p-4 space-y-4">
-      <div className="bg-amber-100 border-l-4 border-amber-500 p-4 text-amber-700">
+      <div className="bg-amber-100 dark:bg-amber-900/30 border-l-4 border-amber-500 dark:border-amber-400 p-4 text-amber-700 dark:text-amber-200">
         <div className="flex items-center">
           <svg className="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20">
             <path

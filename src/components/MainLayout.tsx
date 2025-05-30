@@ -68,11 +68,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   };
 
   return (
-    <div className="flex h-screen bg-white">
+    <div className="flex h-screen bg-white dark:bg-gray-900">
       {/* Left Panel - File Explorer */}
       <div
         style={{ width: leftPanelWidth }}
-        className="flex-shrink-0 flex flex-col border-r h-full"
+        className="flex-shrink-0 flex flex-col border-r border-gray-200 dark:border-gray-700 h-full"
       >
         {/* Fixed top section */}
         <div className="p-4 flex-none">
@@ -141,7 +141,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         </div>
 
         {/* Fixed bottom section */}
-        <div className="border-t p-2 bg-gray-50 text-sm text-gray-600 flex items-center justify-between flex-none">
+        <div className="border-t border-gray-200 dark:border-gray-700 p-2 bg-gray-50 dark:bg-gray-800 text-sm text-gray-600 dark:text-gray-300 flex items-center justify-between flex-none">
           <div className="flex items-center gap-4">
             <div
               className="flex items-center gap-1"
@@ -158,7 +158,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               <span>{selectedLinesTotal}</span>
             </div>
           </div>
-          <div className="text-gray-500" title="Athanor application version">
+          <div className="text-gray-500 dark:text-gray-400" title="Athanor application version">
             {appVersion}
           </div>
         </div>
@@ -167,7 +167,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       {/* Resize Handle */}
       <div
         ref={resizeRef}
-        className="w-1 cursor-col-resize bg-gray-200 hover:bg-blue-500 active:bg-blue-700"
+        className="w-1 cursor-col-resize bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-400 active:bg-blue-700 dark:active:bg-blue-600"
         onMouseDown={startResize}
       />
 
@@ -193,7 +193,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         {/* Log panel resize handle */}
         <div
           ref={logResizeRef}
-          className="h-1 cursor-ns-resize bg-gray-200 hover:bg-blue-500 active:bg-blue-700"
+          className="h-1 cursor-ns-resize bg-gray-200 dark:bg-gray-700 hover:bg-blue-500 dark:hover:bg-blue-400 active:bg-blue-700 dark:active:bg-blue-600"
           onMouseDown={startLogResize}
         />
 
@@ -201,14 +201,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         <div
           ref={logsRef}
           style={{ height: logPanelHeight }}
-          className="border-t p-2 bg-gray-50 overflow-y-auto font-mono text-sm"
+          className="border-t border-gray-200 dark:border-gray-700 p-2 bg-gray-50 dark:bg-gray-800 overflow-y-auto font-mono text-sm"
         >
           {logs.map((log) => (
-            <div key={log.id} className="text-gray-700">
+            <div key={log.id} className="text-gray-700 dark:text-gray-300">
               {log.onClick ? (
                 <button
                   onClick={log.onClick}
-                  className="text-left text-purple-600 hover:underline active:bg-purple-100 transition-colors"
+                  className="text-left text-purple-600 dark:text-purple-400 hover:underline active:bg-purple-100 dark:active:bg-purple-900 transition-colors"
                 >
                   [{log.timestamp}] {log.message}
                 </button>

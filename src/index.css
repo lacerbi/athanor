@@ -4,6 +4,18 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  html.dark {
+    color-scheme: dark; /* Helps with native element styling like scrollbars */
+  }
+  body {
+    @apply bg-white text-gray-900;
+  }
+  html.dark body {
+    @apply bg-gray-900 text-gray-100;
+  }
+}
+
 /* Custom utilities for flex container height management */
 .min-h-0 {
   min-height: 0;
@@ -36,6 +48,15 @@
 
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   background-color: rgba(156, 163, 175, 0.7);
+}
+
+/* Dark mode scrollbar styles */
+html.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background-color: rgba(107, 114, 128, 0.5); /* gray-500 with opacity */
+}
+
+html.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(107, 114, 128, 0.7); /* gray-500 with higher opacity */
 }
 
 /* Tab container specific scrollbar */
@@ -110,17 +131,17 @@
 /* Context field styles */
 .context-field {
   @apply flex items-center gap-2 px-3 py-1.5 mb-2;
-  @apply bg-gray-50 border border-gray-300 rounded-md;
-  @apply text-sm text-gray-600;
+  @apply bg-gray-50 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md;
+  @apply text-sm text-gray-600 dark:text-gray-300;
   @apply transition-all duration-150;
 }
 
 .context-field:hover {
-  @apply border-gray-400 bg-gray-100;
+  @apply border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-700;
 }
 
 .context-field:focus-within {
-  @apply border-blue-500 ring-1 ring-blue-200 bg-white;
+  @apply border-blue-500 dark:border-blue-400 ring-1 ring-blue-200 dark:ring-blue-800 bg-white dark:bg-gray-900;
 }
 
 .context-field input {
@@ -129,25 +150,25 @@
 }
 
 .context-field button {
-  @apply p-1 rounded hover:bg-gray-200 transition-colors;
+  @apply p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors;
   @apply ml-1; /* Add spacing between buttons */
 }
 
 .context-dropdown {
   @apply absolute z-50 w-full mt-0.5;
-  @apply bg-white border border-gray-200 rounded-md shadow-lg;
-  @apply divide-y divide-gray-100;
+  @apply bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg;
+  @apply divide-y divide-gray-100 dark:divide-gray-700;
   @apply max-h-48 overflow-y-auto;
 }
 
 .context-dropdown-item {
-  @apply px-4 py-2 text-sm text-gray-700;
-  @apply hover:bg-gray-50 cursor-pointer;
+  @apply px-4 py-2 text-sm text-gray-700 dark:text-gray-200;
+  @apply hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer;
   @apply transition-all duration-150;
 }
 
 .context-dropdown-item.active {
-  @apply bg-blue-50 text-blue-700;
+  @apply bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200;
 }
 
 /* Configure tooltips with proper pointer event handling */
