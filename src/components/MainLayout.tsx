@@ -80,14 +80,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             <div className="flex items-center gap-2">
               <button
                 onClick={onOpenFolder}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 title="Open folder"
               >
-                <FolderOpen size={20} className="text-gray-600" />
+                <FolderOpen size={20} className="text-gray-600 dark:text-gray-300" />
               </button>
               <button
                 onClick={() => onRefresh()}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 disabled={isRefreshing}
                 title="Refresh file system"
               >
@@ -95,34 +95,34 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   size={20}
                   className={`${
                     isRefreshing
-                      ? 'animate-spin text-gray-400'
-                      : 'text-gray-600'
+                      ? 'animate-spin text-gray-400 dark:text-gray-500'
+                      : 'text-gray-600 dark:text-gray-300'
                   }`}
                 />
               </button>
               <button
                 onClick={handleCopySelectedFiles}
                 disabled={selectedFileCount === 0}
-                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 title="Copy selected files"
               >
                 <ClipboardCopy
                   size={20}
                   className={`${
                     selectedFileCount === 0
-                      ? 'text-gray-400'
-                      : 'text-gray-600'
+                      ? 'text-gray-400 dark:text-gray-500'
+                      : 'text-gray-600 dark:text-gray-300'
                   }`}
                 />
               </button>
             </div>
           </div>
-          <div className="text-sm text-gray-600 mb-0">
+          <div className="text-sm text-gray-600 dark:text-gray-300 mb-0">
             <div className="font-medium">
               {effectiveConfig?.project_name || 'Loading...'}
             </div>
             <div 
-              className="text-xs text-gray-500 mt-1 truncate min-w-0"
+              className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate min-w-0"
               style={{ direction: 'rtl', textAlign: 'left' }}
               title={currentDirectory}
             >
@@ -147,14 +147,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               className="flex items-center gap-1"
               title="Number of selected files"
             >
-              <File size={14} />
+              <File size={14} className="text-gray-600 dark:text-gray-300" />
               <span>{selectedFileCount}</span>
             </div>
             <div
               className="flex items-center gap-1"
               title="Total lines across selected files"
             >
-              <FileText size={14} />
+              <FileText size={14} className="text-gray-600 dark:text-gray-300" />
               <span>{selectedLinesTotal}</span>
             </div>
           </div>
