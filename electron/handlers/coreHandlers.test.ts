@@ -24,6 +24,11 @@ jest.mock('electron', () => ({
   app: {
     getVersion: jest.fn(),
   },
+  nativeTheme: {
+    get shouldUseDarkColors() {
+      return false; // Default mock value, will be overridden in tests
+    },
+  },
 }));
 
 // Mock windowManager - mockMainWindowObject is now defined and initialized.
@@ -53,7 +58,7 @@ import { setupCoreHandlers } from './coreHandlers';
 import { FileService } from '../services/FileService'; // Type import or relies on prior mock
 
 // Import mocked modules (these will be the mocked versions)
-import { ipcMain, dialog, app } from 'electron';
+import { ipcMain, dialog, app, nativeTheme } from 'electron';
 import { mainWindow } from '../windowManager';
 import * as fs from 'fs';
 
@@ -61,6 +66,7 @@ import * as fs from 'fs';
 const mockIpcMain = ipcMain as jest.Mocked<typeof ipcMain>;
 const mockDialog = dialog as jest.Mocked<typeof dialog>;
 const mockApp = app as jest.Mocked<typeof app>;
+const mockNativeTheme = nativeTheme as jest.Mocked<typeof nativeTheme>;
 // Ensure mockFsAccess uses the persistent instance
 const mockFsAccess = persistentMockFsAccess as jest.MockedFunction<typeof fs.promises.access>;
 
@@ -115,6 +121,7 @@ describe('setupCoreHandlers', () => {
         'dialog:show-confirm-dialog',
         'fs:fileExists',
         'app:version',
+        'get-initial-dark-mode',
         'fs:getCurrentDirectory',
         'fs:normalizeToUnix',
         'fs:joinPaths',
@@ -785,6 +792,51 @@ describe('setupCoreHandlers', () => {
       });
 
       await expect(handler(mockEvent)).rejects.toThrow('Path conversion error');
+    });
+  });
+
+  describe('get-initial-dark-mode handler', () => {
+    let handler: Function;
+
+    beforeEach(() => {
+      handler = ipcHandlers.get('get-initial-dark-mode')!;
+    });
+
+    it('should return true when nativeTheme.shouldUseDarkColors is true', () => {
+      // Mock the getter to return true
+      Object.defineProperty(mockNativeTheme, 'shouldUseDarkColors', {
+        get: jest.fn(() => true),
+        configurable: true,
+      });
+
+      const result = handler(mockEvent); // This handler is synchronous
+
+      expect(result).toBe(true);
+    });
+
+    it('should return false when nativeTheme.shouldUseDarkColors is false', () => {
+      // Mock the getter to return false
+      Object.defineProperty(mockNativeTheme, 'shouldUseDarkColors', {
+        get: jest.fn(() => false),
+        configurable: true,
+      });
+
+      const result = handler(mockEvent);
+
+      expect(result).toBe(false);
+    });
+
+    it('should handle errors when nativeTheme.shouldUseDarkColors throws', () => {
+      // Mock the getter to throw an error
+      Object.defineProperty(mockNativeTheme, 'shouldUseDarkColors', {
+        get: jest.fn(() => {
+          throw new Error('NativeTheme error');
+        }),
+        configurable: true,
+      });
+      
+      // The handler in coreHandlers.ts catches the error and re-throws it via handleError.
+      expect(() => handler(mockEvent)).toThrow('NativeTheme error');
     });
   });
 });
