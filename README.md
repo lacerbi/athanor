@@ -15,12 +15,12 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
 <p align="center">
   <img src="./resources/images/athanor_snapshot.png" alt="Athanor AI Workbench Snapshot" width="750">
   <br>
-  <em>Athanor's interface: File explorer (left), task management and AI interaction (right).</em>
+  <em>Athanor's interface: File explorer (left), task management and prompt generation (right).</em>
 </p>
 <p align="center">
   <img src="./resources/images/athanor_snapshot_apply_changes.png" alt="Athanor AI Workbench Apply Changes Snapshot" width="750">
   <br>
-  <em>Athanor's 'Apply Changes' panel: Reviewing and applying AI-generated diffs.</em>
+  <em>Athanor's 'Apply Changes' panel: Reviewing and applying diffs generated from prompts pasted into any AI chat assistant.</em>
 </p>
 
 > 🚧 **WORK IN PROGRESS**: 🚧 This project is in pre-alpha stage, so expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes.
