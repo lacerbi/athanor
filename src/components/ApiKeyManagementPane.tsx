@@ -315,20 +315,20 @@ const ApiKeyManagementPane: React.FC = () => {
   };
 
   return (
-    <div className="bg-white border rounded-lg p-6 h-fit">
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 h-fit">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             API Key Management
           </h2>
           <div
             className="relative group"
             title="Manage API keys for different AI providers. Keys are stored securely using OS-level encryption."
           >
-            <HelpCircle className="w-4 h-4 text-gray-400 cursor-help" />
+            <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
           </div>
         </div>
-        <span className="text-sm text-gray-500">Global</span>
+        <span className="text-sm text-gray-500 dark:text-gray-400">Global</span>
       </div>
 
       <div className="space-y-6">
@@ -340,7 +340,7 @@ const ApiKeyManagementPane: React.FC = () => {
             <div className="flex-1 space-y-2">
               <label
                 htmlFor="apiProvider"
-                className="block text-sm font-medium text-gray-700"
+                className="block text-sm font-medium text-gray-700 dark:text-gray-300"
               >
                 API Provider
               </label>
@@ -351,7 +351,7 @@ const ApiKeyManagementPane: React.FC = () => {
                 disabled={
                   !apiKeyService || areProvidersLoading || availableProviders.length === 0
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:bg-gray-50 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400"
               >
                 {areProvidersLoading ? (
                   <option value="">Loading providers...</option>
@@ -375,7 +375,7 @@ const ApiKeyManagementPane: React.FC = () => {
               <div className="flex items-center space-x-2">
                 <label
                   htmlFor="apiKeyInput"
-                  className="block text-sm font-medium text-gray-700"
+                  className="block text-sm font-medium text-gray-700 dark:text-gray-300"
                 >
                   API Key
                 </label>
@@ -384,14 +384,14 @@ const ApiKeyManagementPane: React.FC = () => {
                     className="relative group"
                     title="API key is securely stored for this provider"
                   >
-                    <Check className="w-4 h-4 text-green-600" />
+                    <Check className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
                 )}
                 <button
                   type="button"
                   onClick={toggleApiKeyVisibility}
                   disabled={isKeyInfoLoading || isKeyProcessing}
-                  className="text-gray-400 hover:text-gray-600 disabled:text-gray-300"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 disabled:text-gray-300 dark:disabled:text-gray-600"
                   title={showApiKey ? 'Hide API key' : 'Show API key'}
                 >
                   {showApiKey ? (
@@ -457,8 +457,8 @@ const ApiKeyManagementPane: React.FC = () => {
                     isKeyProcessing ||
                     currentKeyDisplayInfo?.isStored === true
                   }
-                  className={`w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
-                    currentKeyDisplayInfo?.isStored ? 'text-gray-400' : ''
+                  className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:bg-gray-50 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400 ${
+                    currentKeyDisplayInfo?.isStored ? 'text-gray-400 dark:text-gray-500' : ''
                   }`}
                 />
               </div>
@@ -467,7 +467,7 @@ const ApiKeyManagementPane: React.FC = () => {
 
           {/* API Key Operation Error Display */}
           {keyOpError && !isKeyInfoLoading && (
-            <div className="text-red-600 text-sm mt-1">{keyOpError}</div>
+            <div className="text-red-600 dark:text-red-400 text-sm mt-1">{keyOpError}</div>
           )}
 
           {/* Action Buttons */}
@@ -482,7 +482,7 @@ const ApiKeyManagementPane: React.FC = () => {
                 isKeyInfoLoading ||
                 !!currentKeyDisplayInfo?.isStored
               }
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isKeyProcessing ? (
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -501,7 +501,7 @@ const ApiKeyManagementPane: React.FC = () => {
                 isKeyProcessing ||
                 isKeyInfoLoading
               }
-              className="flex items-center px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center px-4 py-2 bg-red-600 dark:bg-red-700 text-white rounded-md hover:bg-red-700 dark:hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 dark:focus:ring-red-400 focus:ring-offset-2 dark:focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Trash2 className="h-4 w-4 mr-2" />
               Clear Key

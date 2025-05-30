@@ -27,10 +27,10 @@ export interface ApplicationSettings {
   maxSmartPreviewLines?: number;
   thresholdLineLength?: number;
   lastSelectedApiPresetId?: string | null;
+  uiTheme?: string;
 
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;
-  // uiTheme?: 'light' | 'dark' | 'auto';
 }
 
 // Panel resizing types
@@ -89,6 +89,12 @@ declare global {
   interface Window {
     app: {
       getVersion: () => Promise<string>;
+    };
+
+    // Native theme bridge for system theme detection
+    nativeThemeBridge: {
+      getInitialDarkMode: () => Promise<boolean>;
+      onNativeThemeUpdated: (callback: (shouldUseDarkColors: boolean) => void) => () => void;
     };
 
     // Electron bridge for secure operations

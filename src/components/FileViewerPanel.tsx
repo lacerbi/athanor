@@ -86,16 +86,16 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
       {previewedFilePath ? (
         <>
           <div className="flex items-center justify-between text-sm mb-2">
-            <div className="flex-grow text-gray-600">
+            <div className="flex-grow text-gray-600 dark:text-gray-300">
               <span className="truncate" title={osPath}>{osPath}</span>
               {lineCount > 0 && (
-                <span className="text-gray-500 ml-2 flex-shrink-0">({lineCount} lines)</span>
+                <span className="text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">({lineCount} lines)</span>
               )}
             </div>
             {isText && (
               <div className="flex gap-2">
                 <button
-                  className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+                  className="px-2 py-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center gap-1"
                   onClick={() => {
                     if (fileContent) {
                       void copyToClipboard({
@@ -112,7 +112,7 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
                   <span>Copy</span>
                 </button>
                 <button
-                  className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+                  className="px-2 py-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center gap-1"
                   onClick={() => {
                     if (fileContent && previewedFilePath) {
                       void copyToClipboard({
@@ -131,7 +131,7 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
                   <span>Formatted Copy</span>
                 </button>
                 <button
-                  className="px-2 py-1 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded flex items-center gap-1"
+                  className="px-2 py-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center gap-1"
                   onClick={async () => {
                     const { addLog: log } = useLogStore.getState(); // Renamed to avoid conflict
                     const { setOperations, clearOperations } = useApplyChangesStore.getState();
@@ -193,19 +193,19 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
             )}
           </div>
           {error && (
-            <div className="text-red-600 text-sm border p-2 rounded bg-red-50 mb-2">
+            <div className="text-red-600 dark:text-red-400 text-sm border border-red-200 dark:border-red-800 p-2 rounded bg-red-50 dark:bg-red-900/50 mb-2">
               {error}
             </div>
           )}
         </>
       ) : (
-        <div className="text-sm text-gray-400 mb-2">
+        <div className="text-sm text-gray-400 dark:text-gray-500 mb-2">
           No file selected for preview
         </div>
       )}
       {isText && !error && (
         <textarea
-          className="w-full h-full p-2 border rounded font-mono text-sm resize-none overflow-auto"
+          className="w-full h-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded font-mono text-sm resize-none overflow-auto"
           value={fileContent}
           readOnly
           placeholder="File content will appear here..."

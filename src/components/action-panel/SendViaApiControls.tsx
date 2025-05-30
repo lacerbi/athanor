@@ -314,7 +314,7 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
       <select
         value={applicationSettings?.lastSelectedApiPresetId || ''}
         onChange={(e) => handlePresetDropdownChange(e.target.value)}
-        className="px-2 py-1.5 text-sm border rounded disabled:opacity-50 bg-white max-w-[240px] truncate"
+        className="px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded disabled:opacity-50 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 max-w-[240px] truncate"
         disabled={isLoadingPresets || availablePresets.length === 0}
       >
         <option value="">

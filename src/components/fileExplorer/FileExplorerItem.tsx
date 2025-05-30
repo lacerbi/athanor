@@ -117,7 +117,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   return (
     <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
-        className="flex items-center py-1 hover:bg-gray-100"
+        className="flex items-center py-1 hover:bg-gray-100 dark:hover:bg-gray-700"
         onClick={handleFileClick}
         onContextMenu={(e) => onContextMenu(e, item)}
       >
@@ -151,7 +151,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
                 e.stopPropagation();
                 onToggleFolder(item.id);
               }}
-              className="p-1 hover:bg-gray-200 rounded flex-shrink-0"
+              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded flex-shrink-0"
             >
               {isExpanded ? (
                 <ChevronDown size={16} className="flex-shrink-0" />
@@ -161,11 +161,11 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
             </button>
           ) : level === 0 && item.name === 'External Resources' ? (
             <div className="p-1">
-              <Book size={16} className="text-purple-600" />
+              <Book size={16} className="text-purple-600 dark:text-purple-400" />
             </div>
           ) : (
             <div className="p-1">
-              <File size={16} className="file-icon" />
+              <File size={16} className="file-icon text-gray-600 dark:text-gray-400" />
             </div>
           )}
         </div>
@@ -174,7 +174,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           <span
             className={`truncate file-name cursor-pointer
               ${isRoot ? 'font-bold' : ''}
-              ${isCurrentlyViewed ? 'font-bold text-blue-600' : ''}
+              ${isCurrentlyViewed ? 'font-bold text-blue-600 dark:text-blue-400' : ''}
             `}
           >
             {displayName}
@@ -184,7 +184,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           {/* Scissors icon for long files */}
           {isLongFile && (
             <div
-              className="ml-2 text-gray-500"
+              className="ml-2 text-gray-500 dark:text-gray-400"
               title={`File has ${item.lineCount} lines (threshold: ${currentThresholdLineLength})`} // Use dynamic threshold
             >
               <Scissors size={14} />

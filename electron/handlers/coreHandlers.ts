@@ -1,7 +1,7 @@
 // AI Summary: Handles core IPC operations for file system functionality including folder selection,
 // path conversion, directory access, and ignore rule management. Now uses FileService for all operations.
 
-import { ipcMain, dialog, app } from 'electron';
+import { ipcMain, dialog, app, nativeTheme } from 'electron';
 import { mainWindow } from '../windowManager';
 import { FileService } from '../services/FileService';
 
@@ -65,6 +65,15 @@ export function setupCoreHandlers(fileService: FileService) {
       return app.getVersion();
     } catch (error) {
       handleError(error, 'getting app version');
+    }
+  });
+
+  // Add handler for getting initial dark mode preference
+  ipcMain.handle('get-initial-dark-mode', () => {
+    try {
+      return nativeTheme.shouldUseDarkColors;
+    } catch (error) {
+      handleError(error, 'getting initial dark mode preference');
     }
   });
 

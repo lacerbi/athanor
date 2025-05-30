@@ -28,6 +28,19 @@ contextBridge.exposeInMainWorld('app', {
   getVersion: () => ipcRenderer.invoke('app:version'),
 });
 
+// Expose native theme bridge for system theme detection
+contextBridge.exposeInMainWorld('nativeThemeBridge', {
+  getInitialDarkMode: () => ipcRenderer.invoke('get-initial-dark-mode'),
+  onNativeThemeUpdated: (callback: (shouldUseDarkColors: boolean) => void) => {
+    const channel = 'native-theme-updated';
+    ipcRenderer.on(channel, (_event, shouldUseDarkColors: boolean) => callback(shouldUseDarkColors));
+    // Return a cleanup function
+    return () => {
+      ipcRenderer.removeAllListeners(channel);
+    };
+  }
+});
+
 // Expose settings service API
 contextBridge.exposeInMainWorld('settingsService', {
   getProjectSettings: (projectPath: string) => 
