@@ -454,8 +454,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     return (
                       <button
                         key={prompt.id}
-                        className={`icon-btn bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 ${isUserDefined ? 'user-defined-template' : ''}`}
-                        title={prompt.tooltip || prompt.label}
+                        className="icon-btn relative bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
+                        title={isUserDefined ? "Custom: " + (prompt.tooltip || prompt.label) : (prompt.tooltip || prompt.label)}
                         onClick={async () => {
                           if (isLoading || isTaskEmpty) return;
                           await generatePrompt(prompt, variant);
@@ -488,6 +488,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             </span>
                           </>
                         )}
+                        {isUserDefined && (
+                          <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-yellow-400 rounded-full shadow-sm"></div>
+                        )}
                       </button>
                     );
                   })}
@@ -515,8 +518,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                     return (
                       <button
                         key={task.id}
-                        className={`icon-btn bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 ${isUserDefined ? 'user-defined-template' : ''}`}
-                        title={getTaskTooltip(task, isDisabled, reason)}
+                        className="icon-btn relative bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
+                        title={isUserDefined ? "Custom: " + getTaskTooltip(task, isDisabled, reason) : getTaskTooltip(task, isDisabled, reason)}
                         onClick={() =>
                           buildTaskAction({
                             task,
@@ -552,6 +555,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             <IconComponent className="w-5 h-5 icon-btn-icon" />
                             <span className="floating-label">{task.label}</span>
                           </>
+                        )}
+                        {isUserDefined && (
+                          <div className="absolute top-1 right-1 w-1.5 h-1.5 bg-yellow-400 rounded-full shadow-sm"></div>
                         )}
                       </button>
                     );

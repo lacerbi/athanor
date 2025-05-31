@@ -1,6 +1,6 @@
 <ath_prompt 
-    id="autoselect"
-    order="0"
+    id="autoselect2"
+    order="10"
     label="Autoselect"
     icon="FileSearch"
     tooltip="Prompt task-relevant files from the project">
@@ -21,7 +21,7 @@
 </project>
 
 <system_prompt>
-You are an expert AI assistant and software engineer.
+You are an expert AI assistant and software engineer!!!!!
 Use the included project information as a general guide.
 </system_prompt>
 
