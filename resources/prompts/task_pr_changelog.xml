@@ -23,6 +23,20 @@ You will base these on the provided commit messages and any relevant project-spe
 
 ## PR and Changelog Task
 
+**0. Verify Commit Messages (from `task_context`):**
+    * **Crucial Prerequisite:** This task relies entirely on commit messages to generate meaningful PR descriptions and changelog entries.
+    * **Check `task_context`:** Please verify if `task_context` contains the commit messages for the changes you want to document.
+    * **If `task_context` is empty or missing commit messages:**
+        * Politely inform the user that commit messages are required for this task.
+        * Request the user to provide the commit messages in the `task_context` field.
+        * You can suggest a helpful command for them to retrieve these messages, for example:
+            ```bash
+            git log --oneline --no-merges $(git merge-base HEAD main)..HEAD
+            ```
+            (This command lists commits on the current branch that are not yet in 'main'. The user might need to adapt it to their specific branching strategy.)
+        * Clearly state that you cannot proceed with generating the PR and Changelog without the commit messages. **Do not attempt to generate any output if commit messages are not available.** Return a message asking for the commits.
+    * **If commit messages are provided:** Proceed with the steps below.
+
 Based on the commit messages provided in `task_context` and project details from `project_info` or `file_contents` (e.g., `CONTRIBUTING.md`, `CHANGELOG.md` or similar files):
 
 1.  **Analyze Project Conventions (from `file_contents`):**
