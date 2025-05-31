@@ -107,7 +107,7 @@ const VariantsContextMenu: React.FC<VariantsContextMenuProps> = ({
 
   return (
     <div
-      className="variants-context-menu fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[200px]"
+      className="variants-context-menu fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 min-w-[200px]"
       style={{
         left: position.x,
         top: position.y,
@@ -116,15 +116,15 @@ const VariantsContextMenu: React.FC<VariantsContextMenuProps> = ({
       role="menu"
       aria-label={menuTitle}
     >
-      <div className="px-3 py-2 border-b border-gray-100 font-medium text-sm text-gray-600">
+      <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 font-medium text-sm text-gray-600 dark:text-gray-300">
         {menuTitle}
       </div>
       <div className="py-1" role="none">
         {variants.map((variant) => (
           <button
             key={variant.id}
-            className={`variant-menu-item w-full px-4 py-2 text-left text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none ${
-              variant.id === activeVariantId ? 'bg-blue-50 font-medium' : ''
+            className={`variant-menu-item w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none ${
+              variant.id === activeVariantId ? 'bg-blue-50 dark:bg-blue-900 font-medium dark:text-blue-200' : 'dark:text-gray-200'
             }`}
             onClick={() => handleSelectVariant(variant)}
             onKeyPress={(e) => {
