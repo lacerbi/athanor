@@ -23,6 +23,7 @@ jest.mock('electron', () => ({
   },
   app: {
     getVersion: jest.fn(),
+    getPath: jest.fn(),
   },
   nativeTheme: {
     get shouldUseDarkColors() {
@@ -121,6 +122,7 @@ describe('setupCoreHandlers', () => {
         'dialog:show-confirm-dialog',
         'fs:fileExists',
         'app:version',
+        'app:get-user-data-path',
         'get-initial-dark-mode',
         'fs:getCurrentDirectory',
         'fs:normalizeToUnix',
@@ -299,6 +301,31 @@ describe('setupCoreHandlers', () => {
       });
 
       expect(() => handler(mockEvent)).toThrow('Version error');
+    });
+  });
+
+  describe('app:get-user-data-path handler', () => {
+    let handler: Function;
+
+    beforeEach(() => {
+      handler = ipcHandlers.get('app:get-user-data-path')!;
+    });
+
+    it('should return app user data path', () => {
+      mockApp.getPath.mockReturnValue('/fake/user/data/path');
+
+      const result = handler(mockEvent);
+
+      expect(result).toBe('/fake/user/data/path');
+      expect(mockApp.getPath).toHaveBeenCalledWith('userData');
+    });
+
+    it('should handle app.getPath errors', () => {
+      mockApp.getPath.mockImplementation(() => {
+        throw new Error('UserDataPath error');
+      });
+
+      expect(() => handler(mockEvent)).toThrow('UserDataPath error');
     });
   });
 
