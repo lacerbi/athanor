@@ -228,6 +228,27 @@ declare global {
             }
         >;
       };
+      appShell: {
+        /**
+         * Opens an external URL in the default browser
+         */
+        openExternalURL: (url: string) => Promise<void>;
+
+        /**
+         * Opens a local path in the default file manager
+         */
+        openPath: (path: string) => Promise<void>;
+
+        /**
+         * Gets the global user custom prompts directory path
+         */
+        getGlobalPromptsPath: () => Promise<string>;
+
+        /**
+         * Gets the project-specific custom prompts directory path
+         */
+        getProjectPromptsPath: () => Promise<string>;
+      };
       ui: {
         /**
          * Shows a native confirmation dialog and returns user's choice

@@ -6,6 +6,9 @@
 > - `tooltip`: Hover text description
 > - `order` (only `ath_prompt`): Numeric value for sorting (lower numbers appear first; used for overriding)
 > - `icon`(only `ath_prompt`): Lucide React icon name (e.g., "Search", "Code", "Zap")
+>
+> The file needs to be named `prompt_[name].xml` and placed in either the project
+> or global `prompts` folder.
 > REMOVE THIS SECTION -->
 
 <ath_prompt

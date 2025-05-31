@@ -25,6 +25,7 @@ import {
   FileText as MarkdownIcon,
   Info,
   FileQuestion,
+  HelpCircle,
 } from 'lucide-react';
 import PromptContextMenu from './action-panel/PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
@@ -43,6 +44,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
 import type { ApplicationSettings } from '../types/global';
 import SendViaApiControls from './action-panel/SendViaApiControls';
+import CustomPromptsHelpModal from './action-panel/CustomPromptsHelpModal';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -56,6 +58,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   isActive,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isHelpModalOpen, setIsHelpModalOpen] = useState(false);
 
   const {
     tabs,
@@ -372,9 +375,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             <div className="space-y-4">
               <div className="space-y-3">
                 <div className="pb-2 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-                  <h2 className="text-lg font-semibold">
-                    Preset Prompts and Tasks
-                  </h2>
+                  <div className="flex items-center gap-2">
+                    <h2 className="text-lg font-semibold">
+                      Preset Prompts and Tasks
+                    </h2>
+                    <button
+                      onClick={() => setIsHelpModalOpen(true)}
+                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                      title="Help with Custom Prompts & Tasks"
+                    >
+                      <HelpCircle size={18} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
+                    </button>
+                  </div>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={toggleSmartPreview}
@@ -674,6 +686,12 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               setStoreIsGeneratingPrompt={setIsGeneratingPrompt}
             />
           )}
+
+          {/* Custom Prompts Help Modal */}
+          <CustomPromptsHelpModal
+            isOpen={isHelpModalOpen}
+            onClose={() => setIsHelpModalOpen(false)}
+          />
         </div>
       </div>
     </div>

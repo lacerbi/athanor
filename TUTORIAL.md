@@ -189,6 +189,11 @@ This means:
 
 #### Creating Custom Templates
 
+Create a new file in either the global or project-specific `prompts` folder following this naming convention:
+
+- Prompt templates are named `prompt_[name].xml`.
+- Task templates are named `task_[name].xml`.
+
 ##### XML File Structure
 
 Custom templates follow the same XML structure as the [default templates](https://github.com/lacerbi/athanor/tree/dev/resources/prompts).
