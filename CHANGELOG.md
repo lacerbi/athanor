@@ -9,6 +9,24 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.5.5] - 2025-05-31
+
+### Added
+
+- New "PR & Changelog" task (`task_pr_changelog.xml`) to automate the generation of Pull Request descriptions and changelog entries from commit messages.
+- Comprehensive `CONTRIBUTING.md` guide for prospective contributors.
+- Project `CHANGELOG.md` for tracking notable changes and releases.
+
+### Fixed
+
+- Resolved rendering issues with dark theme for context menus and tooltips in the file manager, preset prompts, and tasks.
+
+### Documentation
+
+- Added "Quick Start" and "Example Workflows" sections to `README.md`.
+- Updated `TUTORIAL.md` with the latest information and usage examples.
+- Updated `README.md` with references to `CONTRIBUTING.md`.
+
 ## [0.5.4] - 2025-05-30
 
 _Corresponds to "Dark Theme (#13)" and "Dark Theme Fixes (#14)"_
