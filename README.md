@@ -23,7 +23,7 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
   <em>'Apply Changes' panel: Review and accept/reject diffs generated using any AI chat assistant.</em>
 </p>
 
-> 🚧 **WORK IN PROGRESS**: 🚧 This project is in pre-alpha stage, so expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes.
+> 🚧 **WORK IN PROGRESS & PRE-ALPHA STAGE**: 🚧 Expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes. Features may evolve, and your feedback during this critical phase is invaluable for shaping Athanor's development. Please see our "Development and Feedback" section below for how to contribute.
 
 ## 📋 Table of Contents
 
@@ -61,31 +61,76 @@ Athanor is currently available in developer mode.
 
 1. **Clone the repository**: `git clone https://github.com/lacerbi/athanor.git`
 
-- Or simply [**download it**](https://github.com/lacerbi/athanor/archive/refs/heads/llm-api-calls.zip)
+   - Or simply [**download it**](https://github.com/lacerbi/athanor/archive/refs/heads/llm-api-calls.zip)
 
 2. **Navigate to the project directory**: `cd athanor`
 3. **Install dependencies**: `npm install`
 4. **Run the application in development mode**: `npm run dev`
 
-- You can also compile it into an executable with `npm run package`
+   - You can also compile it into an executable with `npm run package`
 
-## 💡 Basic Usage
+## 💡 Quick Start
 
 1. When Athanor launches, you'll be prompted to select a project folder
 2. The application will scan your project files and display them in the file explorer
-3. Select relevant files or folders for your task
-4. Use the prompt templates to generate context-aware prompts for your AI assistant
-5. Copy the generated prompt to your AI assistant (we recommend Claude, but others such as ChatGPT, Gemini, etc. might work)
-6. When you receive AI-generated code changes, copy them back to Athanor
-7. Preview the changes in the diff viewer and apply them to your project
+3. Describe the desired task in the Task Description area (e.g., "implement a new function to sort users by registration date")
+4. Select relevant files or folders for your task from the file manager
+5. Use the prompt templates to generate prompts for your AI assistant, including:
 
-Read the [**full tutorial**](TUTORIAL.md).
+   - **Autoselect**: Ask an LLM to select the best files for your task
+   - **Query**: Ask questions about your existing codebase
+   - **Coder**: Directly implement the desired feature
+   - **Architect**: Plan a complex feature over possibly multiple steps
 
-## 👥 Development
+6. Copy the generated prompt into your AI assistant interface (e.g., Claude, Gemini, ChatGPT)
 
-Athanor is being developed by [Luigi Acerbi](https://lacerbi.github.io/) for use in the [Machine and Human Intelligence Group](https://www.helsinki.fi/en/researchgroups/machine-and-human-intelligence).
+   - We recommend strong models, such as Claude 4 Sonnet or Gemini 2.5 Pro, but others might work
 
-Contributions are welcome! Please follow standard GitHub fork & pull request workflows.
+7. Copy the AI generated response and click on **Apply AI Output** in Athanor
+
+   - Preview proposed changes in the diff viewer and apply them to your project
+
+<details>
+  <summary><strong>View Example Workflows (Click to expand)</strong></summary>
+
+### Example Workflows
+
+- **Simple Feature**: Add a dark mode toggle to the application.
+
+  1.  Task Description: `"Implement a dark mode toggle switch in the settings panel that saves the user's preference."`
+  2.  Select files manually (e.g., `SettingsPanel.tsx`, `themeStore.ts`) or use the **Autoselect** prompt, then **Apply AI Output**.
+  3.  Use the **Coder** prompt, then **Apply AI Output**.
+  4.  Review and apply changes in the diff viewer.
+
+- **Complex Feature**: Integrate a new payment gateway (e.g., Stripe) for subscriptions.
+
+  1.  Task Description: `"Integrate Stripe for handling monthly user subscriptions. This should include creating subscription plans, handling webhooks for payment success/failure, and updating user subscription status."`
+  2.  Use the **Autoselect** prompt to identify relevant files, then **Apply AI Output**.
+  3.  Use the **Architect** prompt to break down the integration into manageable steps, denoted as Commits (e.g., Commit 1: Setup Stripe SDK and API keys; Commit 2: Implement plan selection UI; Commit 3: Handle checkout session creation; Commit 4: Implement webhook endpoint). Then **Apply AI Output**.
+  4.  Select Commit 1 from the "Context" area just below the Task description and use the **Coder** prompt.
+  5.  After each **Coder** response, **Apply AI Output**, review the changes for that step in the diff viewer, and accept/reject.
+  6.  If needed, discuss with your AI assistant to fix issues and apply further changes.
+  7.  Once the commit is completed, proceed to the next step from the Architect's plan either in the same chat (e.g., "Proceed with Commit 2"), or generating a new **Coder** prompt with "Commit 2" as context.
+
+- **Query Project**: Understand how user authentication is currently handled.
+  1.  Task Description: `"Explain the current user authentication flow, including token generation, storage, and validation. Which files are primarily involved?"`
+  2.  Use the **Autoselect** prompt to identify potentially relevant auth-related files, then **Apply AI Output**.
+  3.  Use the **Query** prompt to ask your question, then review the AI's explanation.
+  4.  Continue the discussion in the AI chat if you have follow-up questions based on the AI's response.
+
+</details>
+
+Read the [**full tutorial**](TUTORIAL.md) for more detailed information.
+
+## 👥 Development and Feedback
+
+Athanor is being developed by [Luigi Acerbi](https://lacerbi.github.io/) for use in the [Machine and Human Intelligence Group](https://www.helsinki.fi/en/researchgroups/machine-and-human-intelligence) and collaborators.
+
+This project is in its pre-alpha stage, and we actively encourage your feedback to help us improve.
+
+- **Bug Reports & Specific Feature Requests:** Please submit them via [GitHub Issues](https://github.com/lacerbi/athanor/issues). _(Consider using our issue templates for bugs and features.)_
+- **General Questions, Ideas & Discussions:** Join the conversation on [GitHub Discussions](https://github.com/lacerbi/athanor/discussions).
+- **Code Contributions:** We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed guidelines on how to contribute, including our coding standards, commit message conventions, and testing procedures. By contributing, you agree that your contributions will be licensed under the Apache License 2.0 and you agree to the Developer Certificate of Origin (DCO) by signing off on your commits. If you're planning a larger contribution, please discuss it in an issue or on Discussions first.
 
 ## 📜 License
 

@@ -1,6 +1,6 @@
 ## Getting Started with Athanor 🚀
 
-Athanor is a desktop application designed to help developers integrate AI coding assistants into their local workflow. It streamlines creating AI prompts with relevant code context and applying the AI-generated changes back to your codebase.
+Athanor is a desktop application designed to help users and developers integrate AI assistants into their workflow. It streamlines creating AI prompts with relevant file context and applying the AI-generated changes back to your project or codebase.
 
 Here's a step-by-step guide on how to use its main features:
 
@@ -14,6 +14,7 @@ When you first launch Athanor, you'll be prompted to **select a project folder**
   - You can choose to create a **default `.athignore` file**, which includes common rules for files and directories (like `node_modules`, `.git`, etc.).
   - If a `.gitignore` file exists in your project, you'll have the option to **import its rules** into the new `.athignore` file.
 - Once the folder is selected and, if necessary, the `.athignore` file is created, Athanor will scan your project files and display them in the **File Explorer** on the left panel.
+  - Files and folders listed in `.athignore` will **not** appear in the File Explorer.
 - A hidden `.ath_materials` folder is automatically created in your project to store supplementary materials like documentation fragments or project-specific settings.
 
 ---
@@ -23,7 +24,7 @@ When you first launch Athanor, you'll be prompted to **select a project folder**
 Athanor's interface is primarily divided into:
 
 - **Left Panel**:
-  - **File Explorer**: Shows your project's file tree. You can expand/collapse folders, select multiple files/folders, and see line counts for text files. Right-click an item to add it to `.athignore`. The explorer automatically updates if files change on disk.
+  - **File Explorer**: Shows your project's file tree. You can expand/collapse folders, select multiple files/folders, and see line counts for text files. Right-click an item to add it to `.athignore`. The explorer can be refreshed to update if files change on disk.
 - **Right Panel**: This area contains several tabs for different functions:
   - **Prompt Studio (Workbench Tab)**: This is where you'll spend most of your time creating and refining prompts.
   - **File Viewer Tab**: Allows you to view the content of selected files.
@@ -31,13 +32,19 @@ Athanor's interface is primarily divided into:
   - **Settings Tab**: Manage project-specific and global application settings.
 - **Bottom Log Panel**: Displays messages, errors, and clickable events for debugging or re-inspecting actions.
 
+<p align="center">
+  <img src="./resources/images/athanor_snapshot.png" alt="Athanor AI Workbench Snapshot" width="750">
+  <br>
+  <em>Athanor's interface. Left: File explorer. Right: Tabs. Bottom right: Log panel. The current panel is the prompt studio, showing the task management, preset prompts and tasks, and generated prompts areas.</em>
+</p>
+
 ---
 
 ### 3. Prompt Creation & Refinement ✍️
 
 This is one of Athanor's core workflows.
 
-- **Select Files/Folders**: In the File Explorer, check the boxes next to the files and/or folders relevant to your current coding task. Selecting a folder automatically selects its non-hidden descendants.
+- **Select Files/Folders**: In the File Explorer, check the boxes next to the files and/or folders relevant to your current task. Selecting a folder automatically selects its non-hidden descendants.
 - **Write Your Task Description**:
   - Go to the **Prompt Studio** (Workbench tab) in the right panel.
   - In the "Task Description" text area, describe what you want the AI to do (e.g., "implement a new function to sort users by registration date," "refactor the `ApiService.ts` to use async/await," "explain how the authentication middleware works").
@@ -51,7 +58,7 @@ This is one of Athanor's core workflows.
     - **Minimal**: Provides only repository information and your task description.
     - **Writer**: For writing or editing text, like documentation.
     - **Meta-prompt**: For creating a detailed prompt from a simpler task description.
-  - Clicking one ofthese buttons (e.g., "Coder") will use the selected files, your task description, and the chosen prompt template to generate a detailed prompt in the "Generated Prompt" text area on the right side of the Action Panel.
+  - Clicking one of these buttons (e.g., "Coder") will use the selected files, your task description, and the chosen prompt template to generate a detailed prompt in the "Generated Prompt" text area on the right side of the Action Panel.
   - **Prompt Variants**: Many prompt templates have variants (e.g., "Default", "Full file updates"). You can right-click a prompt button to select a different variant via a context menu. The active variant is used when you left-click the button.
   - **Configuration Toggles**: You can also toggle:
     - **Smart Preview**: If enabled, non-selected files included in the prompt will have their content truncated to essential parts.
@@ -59,15 +66,15 @@ This is one of Athanor's core workflows.
     - **Include Project Info**: Toggles inclusion of general project information (from `PROJECT.md` or similar).
     - **Documentation Format**: Switches between XML tags and Markdown for formatting file contents in the prompt.
 - **Copy the Prompt**:
-  - Once the prompt is generated in the "Generated Prompt" area, click the "Copy" button next to its title.
-  - Paste this prompt into your preferred AI assistant (e.g., ChatGPT, Claude, Bard).
+  - Once the prompt is generated in the "Generated Prompt" area, it is automatically copied to the clipboard (you can also click the "Copy" button next to its title).
+  - Paste this prompt into your preferred AI assistant (e.g., ChatGPT, Claude, Gemini).
 
 **Example: Asking for a new feature**
 
 1.  Select `userController.ts` and `userService.ts` in the File Explorer.
 2.  In the Task Description: "Add a new API endpoint `/users/active` that returns only users active in the last 30 days."
-3.  Click the "Coder" prompt button.
-4.  Copy the generated prompt and paste it into your AI chat interface.
+3.  Click the "Coder" prompt button, which will generate a prompt and copy it to the clipboard.
+4.  Paste the prompt into your AI chat interface.
 
 ---
 
@@ -75,16 +82,22 @@ This is one of Athanor's core workflows.
 
 This is the second core workflow.
 
-- **Copy AI Response**: After the AI provides a response (usually including code changes in a specific XML-like format), copy the entire response from the AI assistant to your clipboard.
+- **Copy AI Response**: After the AI provides a response (usually including file changes in a specific XML-like format), copy the entire response from the AI assistant to your clipboard.
 - **Apply AI Output**:
-  - In Athanor, look for the **"Apply AI Output" button** (often found in the header of the right panel, next to the tab names). This button becomes active when Athanor detects valid commands in your clipboard.
+  - In Athanor, look for the **"Apply AI Output" button** (found in the header of the right panel, next to the tab names). This button becomes active when Athanor detects valid commands in your clipboard.
   - Click it. Athanor will parse the clipboard content for custom XML-like commands (e.g., `<ath command="apply changes">...</ath>`).
 - **Review Changes**:
   - The application will switch to the **"Apply Changes" tab**.
   - Here, you'll see a list of proposed file operations (CREATE, UPDATE_FULL, UPDATE_DIFF, DELETE).
   - For each file, you can see a **diff view** showing the proposed changes (similar to GitHub diffs).
-  - **Accept or Reject**: For each proposed change, click "Accept" or "Reject".
+  - **Accept or Reject**: For each proposed file change, click "Accept" or "Reject".
 - **Finalize**: Accepted changes are applied to your local files on disk. Rejected changes are discarded.
+
+<p align="center">
+  <img src="./resources/images/athanor_snapshot_apply_changes.png" alt="Athanor AI Workbench Apply Changes Snapshot" width="750">
+  <br>
+  <em>'Apply Changes' panel. Review and accept/reject proposed file changes displayed in the diff view.</em>
+</p>
 
 **Example AI Response Snippet for Athanor:**
 
@@ -131,3 +144,30 @@ The Action Panel also features **Preset Tasks** like "AI Summary" or "Refactor C
 - **Tooltips**: Hover over buttons, controls, and UI elements throughout Athanor to get contextual help.
 - **Drag and Drop**: You can drag file paths from the File Explorer and drop them into the Task Description or Context text areas.
 - **Send via API (Experimental)**: In the "Generated Prompt" area, there's an option to send the prompt directly to an LLM via its API, bypassing the manual copy-paste to a chat interface. This requires setting up API keys in the Settings tab. It's primarily intended for simpler calls, like "Autoselect".
+
+---
+
+### 7. Example Workflows
+
+- **Simple Feature**: Add a dark mode toggle to the application.
+
+  1.  Task Description: `"Implement a dark mode toggle switch in the settings panel that saves the user's preference."`
+  2.  Select files manually (e.g., `SettingsPanel.tsx`, `themeStore.ts`) or use the **Autoselect** prompt, then **Apply AI Output**.
+  3.  Use the **Coder** prompt, then **Apply AI Output**.
+  4.  Review and apply changes in the diff viewer.
+
+- **Complex Feature**: Integrate a new payment gateway (e.g., Stripe) for subscriptions.
+
+  1.  Task Description: `"Integrate Stripe for handling monthly user subscriptions. This should include creating subscription plans, handling webhooks for payment success/failure, and updating user subscription status."`
+  2.  Use the **Autoselect** prompt to identify relevant files, then **Apply AI Output**.
+  3.  Use the **Architect** prompt to break down the integration into manageable steps, denoted as Commits (e.g., Commit 1: Setup Stripe SDK and API keys; Commit 2: Implement plan selection UI; Commit 3: Handle checkout session creation; Commit 4: Implement webhook endpoint). Then **Apply AI Output**.
+  4.  Select Commit 1 from the "Context" area just below the Task description and use the **Coder** prompt.
+  5.  After each **Coder** response, **Apply AI Output**, review the changes for that step in the diff viewer, and accept/reject.
+  6.  If needed, discuss with your AI assistant to fix issues and apply further changes.
+  7.  Once the commit is completed, proceed to the next step from the Architect's plan either in the same chat (e.g., "Proceed with Commit 2"), or generating a new **Coder** prompt with "Commit 2" as context.
+
+- **Query Project**: Understand how user authentication is currently handled.
+  1.  Task Description: `"Explain the current user authentication flow, including token generation, storage, and validation. Which files are primarily involved?"`
+  2.  Use the **Autoselect** prompt to identify potentially relevant auth-related files, then **Apply AI Output**.
+  3.  Use the **Query** prompt to ask your question, then review the AI's explanation.
+  4.  Continue the discussion in the AI chat if you have follow-up questions based on the AI's response.

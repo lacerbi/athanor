@@ -103,25 +103,25 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
 
   return (
     <div
-      className="context-menu fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[200px]"
+      className="context-menu fixed z-50 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 min-w-[200px]"
       style={{
         left: position.x,
         top: position.y,
         maxWidth: '300px',
       }}
     >
-      <div className="px-3 py-2 border-b border-gray-100 font-medium text-sm text-gray-600">
+      <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 font-medium text-sm text-gray-600 dark:text-gray-300">
         {name}
       </div>
       <div className="py-1">
         <button
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
           onClick={handleIgnoreThis}
         >
           Ignore this {type}
         </button>
         <button
-          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+          className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
           onClick={handleIgnoreAll}
         >
           Ignore all {type}s with this name

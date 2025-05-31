@@ -10,7 +10,7 @@ const PROMPT_GENERATION_TIMEOUT = 30000; // 30 seconds timeout
 
 // Default welcome message for new tabs
 const DEFAULT_WELCOME_MESSAGE =
-  "Welcome to Athanor! 🚀\n\nI'm here to increase your productivity with AI assistants.\nTo get started:\n\n1. Write your task or question in the text area to the left\n2. Select relevant files from the file explorer\n3. Click one of the prompt generation buttons\n4. Paste the prompt into a AI assistant\n5. Copy the AI response to the clipboard\n6. Apply the AI Output above!\n\nLet's build something great together!";
+  "Welcome to Athanor! ⚗️\n\nI'm here to increase your productivity with AI assistants.\nTo get started:\n\n1. Write your task or question in the text area to the left\n2. Select relevant files from the file explorer\n3. Click one of the prompt generation buttons\n4. Paste the prompt into a AI assistant\n5. Copy the AI response to the clipboard\n6. Apply the AI Output above!\n\nLet's build something great together!";
 
 // Create a new task tab with smart numbering
 function createTaskTab(existingTabs: TaskTab[]): TaskTab {
