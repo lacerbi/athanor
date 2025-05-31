@@ -1,3 +1,12 @@
+> 🚧 **PRE-ALPHA SOFTWARE & TUTORIAL**: 🚧
+> Welcome to the Athanor tutorial! Please be aware that Athanor is currently in a **pre-alpha stage**. This means the application is under active development. Features described here may evolve, and you might encounter some rough edges or bugs.
+>
+> Your feedback is incredibly valuable as we refine both the application and this tutorial. Please report any issues or share your thoughts via [GitHub Issues](https://github.com/lacerbi/athanor/issues) and [GitHub Discussions](https://github.com/lacerbi/athanor/discussions).
+>
+> Thank you for exploring Athanor!
+
+---
+
 ## Getting Started with Athanor 🚀
 
 Athanor is a desktop application designed to help users and developers integrate AI assistants into their workflow. It streamlines creating AI prompts with relevant file context and applying the AI-generated changes back to your project or codebase.
@@ -147,7 +156,86 @@ The Action Panel also features **Preset Tasks** like "AI Summary" or "Refactor C
 
 ---
 
-### 7. Example Workflows
+### 7. Customizing Prompts and Tasks 🎨
+
+Athanor allows you to create your own custom prompt and task templates to tailor the application to your specific workflow needs. These custom templates can supplement or override the default ones provided with the application.
+
+#### Template Storage Locations
+
+Custom templates are stored in XML files in two possible locations:
+
+1. **Global User Templates**: Available across all projects
+
+   - **Windows**: `%APPDATA%\Athanor\prompts\`
+   - **macOS**: `~/Library/Application Support/Athanor/prompts/`
+   - **Linux**: `~/.config/Athanor/prompts/`
+
+2. **Project-Specific Templates**: Only available in the current project
+   - `.ath_materials/prompts/` within your project directory
+
+Both directories are automatically created when Athanor starts up if they don't already exist.
+
+#### Template Override Priority
+
+When templates with the same `order` exist in multiple locations, they follow this override priority:
+
+**Project-Specific > Global User > Default Application**
+
+This means:
+
+- A project-specific template will override a global user template with the same `order`
+- A global user template will override a default application template with the same `order`
+- Templates with unique `order`s from all sources will appear together in the UI
+
+#### Creating Custom Templates
+
+##### XML File Structure
+
+Custom templates follow the same XML structure as the [default templates](https://github.com/lacerbi/athanor/tree/dev/resources/prompts).
+
+You can find example templates with additional instructions here:
+
+- [Example prompt](https://github.com/lacerbi/athanor/blob/main/resources/prompts/example_prompt.xml)
+- [Example task](https://github.com/lacerbi/athanor/blob/main/resources/prompts/example_task.xml)
+
+##### Key XML Elements
+
+- **Root element**: `<ath_prompt>` for prompts, `<ath_task>` for tasks
+- **Required attributes**:
+  - `id`: Unique identifier
+  - `label`: Display name in the UI
+  - `order`: Numeric value for sorting (lower numbers appear first; used for overriding)
+  - `icon`: Lucide React icon name (e.g., "Search", "Code", "Zap")
+  - `tooltip`: Hover text description
+- **Optional attributes**:
+  - `requires`: For tasks only, set to "selected" if files must be selected
+- **Variants**: Each template must have at least one `<ath_prompt_variant>` or `<ath_task_variant>`
+
+##### Template Variables
+
+You can use these placeholders in your template content:
+
+- `{{selected_files}}`: List of selected files
+- `{{task_description}}`: User's task description
+- `{{file_tree}}`: Project file structure
+- `{{project_info}}`: Project information (if available)
+
+#### Tips for Creating Effective Templates
+
+1. **Use descriptive IDs**: Choose clear, unique identifiers for your templates
+2. **Set appropriate order values**: Use order numbers to control where your templates appear
+3. **Provide multiple variants**: Create different approaches for the same general task
+4. **Include helpful tooltips**: Brief descriptions help users understand when to use each template
+5. **Test thoroughly**: Try your templates with different file selections and task descriptions
+
+#### Example Use Cases
+
+- **Team-specific workflows**: Create templates that match your team's coding standards
+- **Language-specific prompts**: Specialized templates for different programming languages
+- **Documentation templates**: Custom prompts for generating specific types of documentation
+- **Testing workflows**: Templates focused on test generation and validation
+
+### 8. Example Workflows
 
 - **Simple Feature**: Add a dark mode toggle to the application.
 

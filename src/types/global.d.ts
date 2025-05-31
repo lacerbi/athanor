@@ -89,6 +89,7 @@ declare global {
   interface Window {
     app: {
       getVersion: () => Promise<string>;
+      getUserDataPath: () => Promise<string>;
     };
 
     // Native theme bridge for system theme detection

@@ -1,0 +1,95 @@
+> <-- REMOVE THIS SECTION
+> Each Athanor task template is enclosed in `ath_task` XML tags, which includes one or more `ath_task_variant`.
+> Athanor task templates are used to pre-fill the "Task Description" field in the UI.
+> This pre-filled description is then typically used by an `ath_prompt` (like "Coder" or "Writer")
+> when it incorporates the `{{task_description}}` placeholder.
+>
+> The `ath_task` and `ath_task_variant` tags have attributes:
+> - `id`: Unique identifier for the task or variant.
+> - `label`: Display name in the UI.
+> - `tooltip`: Hover text description.
+> - `order` (only `ath_task`): Numeric value for sorting (lower numbers appear first; used for overriding).
+> - `icon` (only `ath_task`): Lucide React icon name (e.g., "FileText", "Scissors", "TestTube2").
+> - `requires` (only `ath_task`, optional): Condition for the task to be active. Common value is "selected" if the task requires files to be selected in the File Explorer.
+> REMOVE THIS SECTION -->
+
+<ath_task
+    id="example_task_explanation"
+    order="99"
+    label="Task Example"
+    icon="HelpCircle"
+    tooltip="This task template explains the structure of Athanor task files (.xml)."
+    requires="selected">
+
+<ath_task_variant
+    id="default"
+    label="Default Explanation"
+    tooltip="Explains the standard components of an Athanor task template.">
+> <-- WRITE YOUR TASK HERE
+> # Purpose of an Athanor Task Template
+> 
+> This content, when this "Task Example" is selected in Athanor's UI, will pre-fill the "Task Description" text area.
+> Athanor task templates (`.xml` files like this one) serve to provide pre-defined, structured instructions for common operations you might want an AI to perform.
+> 
+> Unlike an `ath_prompt` file, which defines the *entire interaction structure with the AI* (including system prompts, context injection, and AI response formatting), an `ath_task` file primarily focuses on generating the *specific instructions for a particular task*.
+> This generated text then usually populates the `{{task_description}}` variable within an active `ath_prompt`.
+> 
+> For example, if you select files and click the "AI Summary" task, the content of `task_ai_summary.xml` (or its selected variant) is loaded into the "Task Description" field. Then, if you click the "Coder" prompt button, that description is packaged into the "Coder" prompt sent to the AI.
+> WRITE YOUR TASK HERE -->
+
+> <-- ADDITIONAL EXPLANATION (REMOVE THIS SECTION)
+> ## Key Components Explained:
+> 
+> ### 1. `<ath_task>` Element:
+> The root element for a task definition.
+> -   `id="example_task_explanation"`: A unique machine-readable identifier for this task.
+> -   `order="99"`: A number determining its position in the UI list of tasks. Lower numbers appear first. This can also be used for overriding default tasks if a custom task in user or project settings has the same order as a default one.
+> -   `label="Task Example"`: The human-readable name displayed in the Athanor UI.
+> -   `icon="HelpCircle"`: Specifies a Lucide React icon to be displayed next to the label.
+> -   `tooltip="This task template explains the structure of Athanor task files (.xml)."`: Text that appears when a user hovers over this task in the UI.
+> -   `requires="selected"`: An optional attribute. If set to "selected", this task button will only be enabled if one or more files/folders are selected in the File Explorer. Other values might be used for different conditions.
+> 
+> ### 2. `<ath_task_variant>` Element:
+> A task can have one or more variants, allowing for different flavors or scopes of the same basic task.
+> -   `id="default"`: A unique ID for this specific variant of the parent task.
+> -   `label="Default Explanation"`: The human-readable name for this variant (e.g., accessible via a right-click context menu on the task button).
+> -   `tooltip="Explains the standard components of an Athanor task template."`: Hover text for this specific variant.
+> 
+> ### 3. Content of `<ath_task_variant>`:
+> The text within this tag is the actual template for the task description. It can be plain text or use Markdown for formatting.
+> This content often includes placeholders that Athanor will replace at runtime.
+> 
+> Common placeholders you might use in a task template:
+> -   `{{selected_files}}`: A list of the currently selected file paths.
+> -   `{{selected_files_with_info}}`: A list of selected files with additional information (like line counts).
+> -   Other placeholders might be available depending on the Athanor version and specific context.
+> 
+> This current text block you are reading is an example of such content. It describes what the task should achieve and provides detailed instructions or guidelines.
+> 
+> ## How to Use This Task Template Example:
+> 1.  Select one or more files in the Athanor File Explorer (because `requires="selected"` is set).
+> 2.  Click the "Task Example" button in the "Preset Tasks" section of Athanor's UI.
+> 3.  The text you are currently reading (starting from "# Purpose of an Athanor Task Template") will appear in the "Task Description" input field.
+> 4.  You can then choose an `ath_prompt` (e.g., "Coder", "Writer", "Query") to take this description, combine it with project context and system instructions, and generate a full prompt for an AI assistant.
+> 
+> ## Best Practices for Creating Task Templates:
+> -   **Clarity**: Make the instructions clear and unambiguous for the AI.
+> -   **Structure**: Use Markdown (headings, lists, code blocks) to organize the information logically, as seen in the default task templates like `task_ai_summary.xml` or `task_unit_tests.xml`.
+> -   **Placeholders**: Utilize relevant placeholders like `{{selected_files}}` to make your task templates dynamic and context-aware.
+> -   **Examples**: Provide examples within the task description if it helps clarify complex instructions (see `task_ai_summary.xml` for good examples of this).
+> -   **Focused Scope**: Each task should ideally address a well-defined operation.
+> 
+> Look at other task examples in [Athanor's prompts folder](https://github.com/lacerbi/athanor/tree/main/resources/prompts) to see how they are structured for different purposes like generating AI summaries, refactoring code, or creating unit tests.
+> Remember that the output of a task template is *input for a prompt template*.
+> 
+> ADDITIONAL EXPLANATION (REMOVE THIS SECTION) -->
+
+</ath_task_variant>
+
+> <-- REMOVE THIS SECTION
+> You can add other `ath_task_variant` sections here if you want to provide multiple ways
+> to explain task structures or different example task contents.
+> These can be selected by right-clicking on the task button in the UI.
+> REMOVE THIS SECTION -->
+
+</ath_task>

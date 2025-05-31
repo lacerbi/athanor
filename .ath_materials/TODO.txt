@@ -1,5 +1,7 @@
 # TODO
 
+- Make tutorial/demo video (animated gif + possibly proper video)
+- Create GitHub sponsor thing or similar for Athanor
 - Add branch/commits awareness (see https://chatgpt.com/share/67908472-3674-8006-88f4-824147f7ae48)
 
 # RESOURCES

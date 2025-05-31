@@ -9,6 +9,23 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.5.6] - 2025-05-31
+
+### Added
+
+- Support for user-defined custom prompt and task templates, loadable from global user directories (`%APPDATA%/Athanor/prompts/` or `~/Library/Application Support/Athanor/prompts/` or `~/.config/Athanor/prompts/`) and project-specific directories (`.ath_materials/prompts/`) (`5d8db5e`).
+- Example `example_prompt.xml` and `example_task.xml` templates in `resources/prompts/` to guide custom template creation (`05d73a8`).
+
+### Fixed
+
+- Corrected UI rendering for custom prompt indicators (small dot) (`d103f27`).
+- Resolved issues in `coreHandlers.test.ts` to ensure tests for `app:get-user-data-path` pass reliably (`cf4d1b5`).
+
+### Documentation
+
+- Added a pre-alpha software warning to the `TUTORIAL.md` to set user expectations (`b63ec47`).
+- Included `bugs` field in `package.json` to provide a standard way to link to the issue tracker (`1afb73e`).
+
 ## [0.5.5] - 2025-05-31
 
 ### Added
