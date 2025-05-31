@@ -1,3 +1,12 @@
+> 🚧 **PRE-ALPHA SOFTWARE & TUTORIAL**: 🚧
+> Welcome to the Athanor tutorial! Please be aware that Athanor is currently in a **pre-alpha stage**. This means the application is under active development. Features described here may evolve, and you might encounter some rough edges or bugs.
+>
+> Your feedback is incredibly valuable as we refine both the application and this tutorial. Please report any issues or share your thoughts via [GitHub Issues](https://github.com/lacerbi/athanor/issues) and [GitHub Discussions](https://github.com/lacerbi/athanor/discussions).
+>
+> Thank you for exploring Athanor!
+
+---
+
 ## Getting Started with Athanor 🚀
 
 Athanor is a desktop application designed to help users and developers integrate AI assistants into their workflow. It streamlines creating AI prompts with relevant file context and applying the AI-generated changes back to your project or codebase.
