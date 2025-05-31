@@ -30,7 +30,7 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
 - [Key Features](#key-features)
 - [Installation Setup](#installation-setup)
 - [Basic Usage](#basic-usage)
-- [Development](#development)
+- [Development and Feedback](#development-and-feedback)
 - [License](#license)
 
 ## ✨ Key Features
