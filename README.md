@@ -61,13 +61,13 @@ Athanor is currently available in developer mode.
 
 1. **Clone the repository**: `git clone https://github.com/lacerbi/athanor.git`
 
-- Or simply [**download it**](https://github.com/lacerbi/athanor/archive/refs/heads/llm-api-calls.zip)
+   - Or simply [**download it**](https://github.com/lacerbi/athanor/archive/refs/heads/llm-api-calls.zip)
 
 2. **Navigate to the project directory**: `cd athanor`
 3. **Install dependencies**: `npm install`
 4. **Run the application in development mode**: `npm run dev`
 
-- You can also compile it into an executable with `npm run package`
+   - You can also compile it into an executable with `npm run package`
 
 ## 💡 Quick Start
 
