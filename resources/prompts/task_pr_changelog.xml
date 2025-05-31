@@ -30,13 +30,19 @@ Based on the commit messages provided in `task_context` and project details from
     * **Changelog Format:** If an existing `CHANGELOG.md` (or similar) is included in `file_contents`, analyze its structure, formatting, categories (e.g., Added, Changed, Fixed, Removed, Deprecated, Security), versioning conventions (e.g., Semantic Versioning), and general style.
 
 2.  **Generate Pull Request (PR) Text:**
-    * Compose a comprehensive PR description in Markdown format.
-    * **Default Structure (if no project-specific guidelines are found in `file_contents`):**
-        * **`## Summary` / `## Description`:** Briefly explain the overall purpose, context, and scope of the changes.
-        * **`## Changes Made`:** Detail the key changes introduced. This section should be primarily derived from the provided commit messages. Group related changes logically.
-        * **`## Testing Done`:** (If applicable and inferable from commits or context) Briefly describe how these changes were tested or provide guidance on how reviewers can test them.
-        * **`## Related Issues` / `## Linked Issues`:** (If applicable and inferable, e.g., "Closes #123", "Fixes #456") List any related issue numbers.
-    * **Adaptation:** If `CONTRIBUTING.md` (or similar) provides a specific PR template or sections, strictly adhere to it.
+    * **Pull Request Title:**
+        * Create a concise and descriptive title for the Pull Request that summarizes its main purpose.
+        * Format this title as a Markdown H1 heading (e.g., `# Your Concise PR Title`) and place it as the first line of the "Pull Request Description" Markdown block.
+        * For the title's content: If `CONTRIBUTING.md` (or similar in `file_contents`) specifies conventions (like prefixes, e.g., `feat: New Feature` or `fix(scope): Issue Fixed`), follow those.
+        * Otherwise, use general best practices: aim for clarity, often using an imperative mood (e.g., `Add user profile page`, `Correct data validation logic`), and keep it reasonably concise (e.g., 50-72 characters).
+    * **Pull Request Description Body:**
+        * Following the H1 title, compose a comprehensive PR description body in Markdown format.
+        * **Default Structure (for the description body, if no project-specific guidelines are found in `file_contents`):**
+            * **`## Summary` / `## Description`:** Briefly explain the overall purpose, context, and scope of the changes.
+            * **`## Changes Made`:** Detail the key changes introduced. This section should be primarily derived from the provided commit messages. Group related changes logically.
+            * **`## Testing Done`:** (If applicable and inferable from commits or context) Briefly describe how these changes were tested or provide guidance on how reviewers can test them.
+            * **`## Related Issues` / `## Linked Issues`:** (If applicable and inferable, e.g., "Closes #123", "Fixes #456") List any related issue numbers.
+    * **Adaptation (for the description body):** If `CONTRIBUTING.md` (or similar) provides a specific PR template or sections for the description body, strictly adhere to it.
 
 3.  **Generate Changelog Entry Text:**
     * Create a concise and informative changelog entry in Markdown format.
@@ -48,12 +54,12 @@ Based on the commit messages provided in `task_context` and project details from
 
 **Output Format:**
 
-Provide your response as two distinct and clearly labeled Markdown code blocks. Do not include any other text outside these blocks unless it's a general comment about the process.
+Provide your response as two clearly labeled sections, the PR description and Changelog entry formatted in Markdown code blocks.
 
 ### Pull Request Description
 
 ```markdown
-[Generated PR Markdown content goes here. Ensure it is well-formatted.]
+[Generated PR Markdown content goes here, with title and description. Ensure it is well-formatted.]
 ```
 
 ### Changelog Entry
