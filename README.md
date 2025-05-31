@@ -23,7 +23,7 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
   <em>'Apply Changes' panel: Review and accept/reject diffs generated using any AI chat assistant.</em>
 </p>
 
-> 🚧 **WORK IN PROGRESS**: 🚧 This project is in pre-alpha stage, so expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes.
+> 🚧 **WORK IN PROGRESS & PRE-ALPHA STAGE**: 🚧 Expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes. Features may evolve, and your feedback during this critical phase is invaluable for shaping Athanor's development. Please see our "Development and Feedback" section below for how to contribute.
 
 ## 📋 Table of Contents
 
@@ -81,11 +81,15 @@ Athanor is currently available in developer mode.
 
 Read the [**full tutorial**](TUTORIAL.md).
 
-## 👥 Development
+## 👥 Development and Feedback
 
-Athanor is being developed by [Luigi Acerbi](https://lacerbi.github.io/) for use in the [Machine and Human Intelligence Group](https://www.helsinki.fi/en/researchgroups/machine-and-human-intelligence).
+Athanor is being developed by [Luigi Acerbi](https://lacerbi.github.io/) for use in the [Machine and Human Intelligence Group](https://www.helsinki.fi/en/researchgroups/machine-and-human-intelligence) and collaborators.
 
-Contributions are welcome! Please follow standard GitHub fork & pull request workflows.
+This project is in its pre-alpha stage, and we actively encourage your feedback to help us improve.
+
+- **Bug Reports & Specific Feature Requests:** Please submit them via [GitHub Issues](https://github.com/lacerbi/athanor/issues). _(Consider using our issue templates for bugs and features.)_
+- **General Questions, Ideas & Discussions:** Join the conversation on [GitHub Discussions](https://github.com/lacerbi/athanor/discussions).
+- **Code Contributions:** We welcome contributions! Please see our [CONTRIBUTING.md](CONTRIBUTING.md) file for detailed guidelines on how to contribute, including our coding standards, commit message conventions, and testing procedures. By contributing, you agree that your contributions will be licensed under the Apache License 2.0 and you agree to the Developer Certificate of Origin (DCO) by signing off on your commits. If you're planning a larger contribution, please discuss it in an issue or on Discussions first.
 
 ## 📜 License
 
