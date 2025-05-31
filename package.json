@@ -1,6 +1,9 @@
 {
   "name": "athanor",
   "version": "0.5.5",
+  "bugs": {
+    "url": "https://github.com/lacerbi/athanor/issues"
+  },
   "main": ".webpack/main",
   "scripts": {
     "start": "electron-forge start",
