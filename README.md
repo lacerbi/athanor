@@ -23,15 +23,15 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
   <em>'Apply Changes' panel: Review and accept/reject diffs generated using any AI chat assistant.</em>
 </p>
 
-> 🚧 **WORK IN PROGRESS & PRE-ALPHA STAGE**: 🚧 Expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes. Features may evolve, and your feedback during this critical phase is invaluable for shaping Athanor's development. Please see our "Development and Feedback" section below for how to contribute.
+> 🚧 **WORK IN PROGRESS & PRE-ALPHA STAGE**: 🚧 Expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes. Features may evolve, and your feedback during this critical phase is invaluable for shaping Athanor's development. Please see our [Development and Feedback](#-development-and-feedback) section below for how to contribute.
 
 ## 📋 Table of Contents
 
-- [Key Features](#key-features)
-- [Installation Setup](#installation-setup)
-- [Basic Usage](#basic-usage)
-- [Development and Feedback](#development-and-feedback)
-- [License](#license)
+- [Key Features](#-key-features)
+- [Installation Setup](#-installation-setup)
+- [Basic Usage](#-basic-usage)
+- [Development and Feedback](#-development-and-feedback)
+- [License](#-license)
 
 ## ✨ Key Features
 
