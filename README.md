@@ -69,17 +69,58 @@ Athanor is currently available in developer mode.
 
 - You can also compile it into an executable with `npm run package`
 
-## 💡 Basic Usage
+## 💡 Quick Start
 
 1. When Athanor launches, you'll be prompted to select a project folder
 2. The application will scan your project files and display them in the file explorer
-3. Select relevant files or folders for your task
-4. Use the prompt templates to generate context-aware prompts for your AI assistant
-5. Copy the generated prompt to your AI assistant (we recommend Claude, but others such as ChatGPT, Gemini, etc. might work)
-6. When you receive AI-generated code changes, copy them back to Athanor
-7. Preview the changes in the diff viewer and apply them to your project
+3. Describe the desired task in the Task Description area (e.g., "implement a new function to sort users by registration date")
+4. Select relevant files or folders for your task from the file manager
+5. Use the prompt templates to generate prompts for your AI assistant, including:
 
-Read the [**full tutorial**](TUTORIAL.md).
+   - **Autoselect**: Ask an LLM to select the best files for your task
+   - **Query**: Ask questions about your existing codebase
+   - **Coder**: Directly implement the desired feature
+   - **Architect**: Plan a complex feature over possibly multiple steps
+
+6. Copy the generated prompt into your AI assistant interface (e.g., Claude, Gemini, ChatGPT)
+
+   - We recommend strong models, such as Claude 4 Sonnet or Gemini 2.5 Pro, but others might work
+
+7. Copy the AI generated response and click on **Apply AI Output** in Athanor
+
+   - Preview proposed changes in the diff viewer and apply them to your project
+
+<details>
+  <summary><strong>View Example Workflows (Click to expand)</strong></summary>
+
+### Example Workflows
+
+- **Simple Feature**: Add a dark mode toggle to the application.
+
+  1.  Task Description: `"Implement a dark mode toggle switch in the settings panel that saves the user's preference."`
+  2.  Select files manually (e.g., `SettingsPanel.tsx`, `themeStore.ts`) or use the **Autoselect** prompt, then **Apply AI Output**.
+  3.  Use the **Coder** prompt, then **Apply AI Output**.
+  4.  Review and apply changes in the diff viewer.
+
+- **Complex Feature**: Integrate a new payment gateway (e.g., Stripe) for subscriptions.
+
+  1.  Task Description: `"Integrate Stripe for handling monthly user subscriptions. This should include creating subscription plans, handling webhooks for payment success/failure, and updating user subscription status."`
+  2.  Use the **Autoselect** prompt to identify relevant files, then **Apply AI Output**.
+  3.  Use the **Architect** prompt to break down the integration into manageable steps, denoted as Commits (e.g., Commit 1: Setup Stripe SDK and API keys; Commit 2: Implement plan selection UI; Commit 3: Handle checkout session creation; Commit 4: Implement webhook endpoint). Then **Apply AI Output**.
+  4.  Select Commit 1 from the "Context" area just below the Task description and use the **Coder** prompt.
+  5.  After each **Coder** response, **Apply AI Output**, review the changes for that step in the diff viewer, and accept/reject.
+  6.  If needed, discuss with your AI assistant to fix issues and apply further changes.
+  7.  Once the commit is completed, proceed to the next step from the Architect's plan either in the same chat (e.g., "Proceed with Commit 2"), or generating a new **Coder** prompt with "Commit 2" as context.
+
+- **Query Project**: Understand how user authentication is currently handled.
+  1.  Task Description: `"Explain the current user authentication flow, including token generation, storage, and validation. Which files are primarily involved?"`
+  2.  Use the **Autoselect** prompt to identify potentially relevant auth-related files, then **Apply AI Output**.
+  3.  Use the **Query** prompt to ask your question, then review the AI's explanation.
+  4.  Continue the discussion in the AI chat if you have follow-up questions based on the AI's response.
+
+</details>
+
+Read the [**full tutorial**](TUTORIAL.md) for more detailed information.
 
 ## 👥 Development and Feedback
 

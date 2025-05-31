@@ -144,3 +144,30 @@ The Action Panel also features **Preset Tasks** like "AI Summary" or "Refactor C
 - **Tooltips**: Hover over buttons, controls, and UI elements throughout Athanor to get contextual help.
 - **Drag and Drop**: You can drag file paths from the File Explorer and drop them into the Task Description or Context text areas.
 - **Send via API (Experimental)**: In the "Generated Prompt" area, there's an option to send the prompt directly to an LLM via its API, bypassing the manual copy-paste to a chat interface. This requires setting up API keys in the Settings tab. It's primarily intended for simpler calls, like "Autoselect".
+
+---
+
+### 7. Example Workflows
+
+- **Simple Feature**: Add a dark mode toggle to the application.
+
+  1.  Task Description: `"Implement a dark mode toggle switch in the settings panel that saves the user's preference."`
+  2.  Select files manually (e.g., `SettingsPanel.tsx`, `themeStore.ts`) or use the **Autoselect** prompt, then **Apply AI Output**.
+  3.  Use the **Coder** prompt, then **Apply AI Output**.
+  4.  Review and apply changes in the diff viewer.
+
+- **Complex Feature**: Integrate a new payment gateway (e.g., Stripe) for subscriptions.
+
+  1.  Task Description: `"Integrate Stripe for handling monthly user subscriptions. This should include creating subscription plans, handling webhooks for payment success/failure, and updating user subscription status."`
+  2.  Use the **Autoselect** prompt to identify relevant files, then **Apply AI Output**.
+  3.  Use the **Architect** prompt to break down the integration into manageable steps, denoted as Commits (e.g., Commit 1: Setup Stripe SDK and API keys; Commit 2: Implement plan selection UI; Commit 3: Handle checkout session creation; Commit 4: Implement webhook endpoint). Then **Apply AI Output**.
+  4.  Select Commit 1 from the "Context" area just below the Task description and use the **Coder** prompt.
+  5.  After each **Coder** response, **Apply AI Output**, review the changes for that step in the diff viewer, and accept/reject.
+  6.  If needed, discuss with your AI assistant to fix issues and apply further changes.
+  7.  Once the commit is completed, proceed to the next step from the Architect's plan either in the same chat (e.g., "Proceed with Commit 2"), or generating a new **Coder** prompt with "Commit 2" as context.
+
+- **Query Project**: Understand how user authentication is currently handled.
+  1.  Task Description: `"Explain the current user authentication flow, including token generation, storage, and validation. Which files are primarily involved?"`
+  2.  Use the **Autoselect** prompt to identify potentially relevant auth-related files, then **Apply AI Output**.
+  3.  Use the **Query** prompt to ask your question, then review the AI's explanation.
+  4.  Continue the discussion in the AI chat if you have follow-up questions based on the AI's response.
