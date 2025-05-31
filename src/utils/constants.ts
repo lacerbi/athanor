@@ -45,6 +45,12 @@ export const SETTINGS = {
   },
 };
 
+// Custom templates configuration
+export const CUSTOM_TEMPLATES = {
+  // Directory name for user-defined prompts and tasks
+  USER_PROMPTS_DIR_NAME: 'prompts',
+};
+
 // Project information file configuration
 export const PROJECT_INFO = {
   // Basenames in order of precedence (case-insensitive)

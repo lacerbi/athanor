@@ -171,6 +171,28 @@ html.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   @apply bg-blue-50 dark:bg-blue-900 text-blue-700 dark:text-blue-200;
 }
 
+/* User-defined template styling */
+:root {
+  --user-defined-color-light: #7c3aed; /* purple-600 - distinct from default blue */
+  --user-defined-color-dark: #a78bfa;  /* purple-400 - lighter for dark mode */
+}
+
+.user-defined-template {
+  background-color: var(--user-defined-color-light) !important;
+}
+
+.user-defined-template:hover {
+  background-color: #6d28d9 !important; /* purple-700 for hover */
+}
+
+html.dark .user-defined-template {
+  background-color: var(--user-defined-color-dark) !important;
+}
+
+html.dark .user-defined-template:hover {
+  background-color: #8b5cf6 !important; /* purple-500 for dark mode hover */
+}
+
 /* Configure tooltips with proper pointer event handling */
 *[title] {
   position: relative;

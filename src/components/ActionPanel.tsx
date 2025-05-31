@@ -448,10 +448,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       ? (Icons as any)[prompt.icon]
                       : null;
 
+                    // Check if this is a user-defined template
+                    const isUserDefined = prompt.source && prompt.source !== 'default';
+
                     return (
                       <button
                         key={prompt.id}
-                        className="icon-btn bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
+                        className={`icon-btn bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500 ${isUserDefined ? 'user-defined-template' : ''}`}
                         title={prompt.tooltip || prompt.label}
                         onClick={async () => {
                           if (isLoading || isTaskEmpty) return;
@@ -506,10 +509,13 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         ? 'noSelection'
                         : null;
 
+                    // Check if this is a user-defined template
+                    const isUserDefined = task.source && task.source !== 'default';
+
                     return (
                       <button
                         key={task.id}
-                        className="icon-btn bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
+                        className={`icon-btn bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500 ${isUserDefined ? 'user-defined-template' : ''}`}
                         title={getTaskTooltip(task, isDisabled, reason)}
                         onClick={() =>
                           buildTaskAction({

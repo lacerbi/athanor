@@ -68,6 +68,15 @@ export function setupCoreHandlers(fileService: FileService) {
     }
   });
 
+  // Add handler for getting user data path
+  ipcMain.handle('app:get-user-data-path', () => {
+    try {
+      return app.getPath('userData');
+    } catch (error) {
+      handleError(error, 'getting user data path');
+    }
+  });
+
   // Add handler for getting initial dark mode preference
   ipcMain.handle('get-initial-dark-mode', () => {
     try {

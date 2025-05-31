@@ -16,6 +16,7 @@ export interface TaskData {
   order: number;
   requires?: 'selected'; // Optional requirement for task activation
   variants: TaskVariant[];
+  source?: 'default' | 'global' | 'project';
 }
 
 // Record to track active variants for each task

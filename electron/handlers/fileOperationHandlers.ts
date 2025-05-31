@@ -119,6 +119,25 @@ export function setupFileOperationHandlers(fileService: FileService) {
       handleError(error, `deleting file ${filePath}`);
     }
   });
+
+  // Handle ensuring directory exists
+  ipcMain.handle('fs:ensureDirectory', async (_, dirPath: string) => {
+    try {
+      // Normalize to Unix format
+      const unix = _fileService.toUnix(dirPath);
+      
+      // Only relativize if absolute AND inside base directory
+      const pathForFs = 
+        PathUtils.isAbsolute(unix) && PathUtils.isPathInside(_fileService.getBaseDir(), unix)
+          ? _fileService.relativize(unix)
+          : unix;  // absolute path outside project or already relative, use as-is
+
+      await _fileService.ensureDir(pathForFs);
+      // No explicit return value for void promise on success
+    } catch (error) {
+      handleError(error, `ensuring directory ${dirPath}`);
+    }
+  });
 }
 
 // Enhanced error handling

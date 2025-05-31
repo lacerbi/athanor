@@ -14,6 +14,7 @@ export interface PromptData {
   tooltip?: string;
   order: number;
   variants: PromptVariant[];
+  source?: 'default' | 'global' | 'project';
 }
 
 // Record to track active variants for each prompt
