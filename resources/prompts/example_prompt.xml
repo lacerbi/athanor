@@ -1,0 +1,107 @@
+> <-- REMOVE THIS SECTION
+> Each Athanor prompt is enclosed in `ath_prompt` XML tags, which includes one or more `ath_prompt_variant`.
+> The `ath_prompt` and `ath_prompt_variant` tags have attributes:
+> - `id`: Unique identifier
+> - `label`: Display name in the UI
+> - `tooltip`: Hover text description
+> - `order` (only `ath_prompt`): Numeric value for sorting (lower numbers appear first; used for overriding)
+> - `icon`(only `ath_prompt`): Lucide React icon name (e.g., "Search", "Code", "Zap")
+> REMOVE THIS SECTION -->
+
+<ath_prompt
+    id="example_explanation"
+    order="99"
+    label="Prompt Example"
+    icon="HelpCircle"
+    tooltip="This prompt explains the structure of Athanor prompt files.">
+
+    <ath_prompt_variant
+        id="default"
+        label="Default Explanation"
+        tooltip="Explains the standard components of an Athanor prompt.">
+<project>
+# Documentation `{{project_name}}`
+
+{{project_info}}
+<file_contents>
+{{file_contents}}
+</file_contents>
+
+{{file_tree}}{{codebase_legend}}
+</project>
+
+<system_prompt>
+> <-- WRITE YOUR SYSTEM PROMPT HERE
+> This `system_prompt` block sets the stage for the AI assistant.
+> It usually contains:
+> 1. Role Definition: Assigns a role to the AI (e.g., "You are an expert AI assistant and software engineer.").
+> 2. Core Goal: Describes the primary purpose of this type of prompt (e.g., "Perform detailed planning for new features.").
+> 3. High-Level Instructions: General guidelines or procedures the AI should follow.
+> 4. Constraints or Important Notes: Any overarching rules or critical points.
+> WRITE YOUR SYSTEM PROMPT HERE -->
+</system_prompt>
+
+<current_task>
+<task_description>
+{{task_description}}{{task_context}}
+</task_description>
+
+> <-- WRITE TASK-SPECIFIC INSTRUCTIONS HERE
+> This section following `task_description` provides detailed instructions for the AI on how to process the task and format its response. It's the core logic of the prompt template.
+> - Thinking Process: Often encourages the AI to "think step-by-step" or "first write down thoughts."
+> - Output Structure: Specifies the exact format of the AI's response. For Athanor, this is typically one or more XML blocks.
+> - Key XML Tags: Details the required Athanor-specific XML tags and their attributes (e.g., `<ath command="task">`, `<ath command="select">`, `<ath command="apply changes">`).
+> - Content Guidelines: Instructions on what information to include within those XML tags (e.g., rewritten task description, analysis, implementation plan, file lists, code changes).
+> - Formatting Rules: Specifics about whitespace, character encoding, or CDATA usage if applicable.
+>
+> Look at other prompt examples in [Athanor's prompts folder](https://github.com/lacerbi/athanor/tree/main/resources/prompts).
+> WRITE TASK-SPECIFIC INSTRUCTIONS HERE -->
+</current_task>
+
+> <-- ADDITIONAL EXPLANATION (REMOVE THIS SECTION)
+>
+> ## Key Components Explained:
+> 
+> An Athanor Prompt file defines the entire interaction structure with the AI, including system prompts, context injection, and AI response formatting.
+> 
+> ### 1. `<ath_prompt>` Element:
+> The root element for a prompt definition.
+> -   `id="example_explanation"`: A unique machine-readable identifier for this prompt.
+> -   `order="99"`: A number determining its position in the UI list of preset prompts. Lower numbers appear first. This can also be used for overriding default prompts if a custom prompt has the same order as a default one.
+> -   `label="Prompt Example"`: The human-readable name displayed in the Athanor UI.
+> -   `icon="HelpCircle"`: Specifies a Lucide React icon to be displayed next to the label.
+> -   `tooltip="This prompt explains the structure of Athanor prompt files."`: Text that appears when a user hovers over this prompt button in the UI.
+> 
+> ### 2. `<ath_prompt_variant>` Element:
+> A prompt can have one or more variants, allowing for different instructions or system prompts for the same basic purpose.
+> -   `id="default"`: A unique ID for this specific variant of the parent prompt.
+> -   `label="Default Explanation"`: The human-readable name for this variant (e.g., accessible via a right-click context menu on the prompt button).
+> -   `tooltip="Explains the standard components of an Athanor prompt."`: Hover text for this specific variant.
+> 
+> ### 3. `<project>` Block:
+> This block is where Athanor injects project-specific context. It typically includes:
+> -   `{{project_name}}`: The name of the current project.
+> -   `{{project_info}}`: General information about the project.
+> -   `{{file_contents}}`: The content of selected files.
+> -   `{{file_tree}}`: A textual representation of the project's directory structure.
+> -   `{{codebase_legend}}`: Legend for symbols in file tree/contents.
+> For most projects, the default `<project>` block provided above should be fine as is.
+> 
+> ### 4. `<system_prompt>` Block:
+> This block defines the AI's role, core goals, high-level instructions, and constraints. It sets the overall behavior for the AI when this prompt is used.
+> 
+> ### 5. `<current_task>` Block:
+> This block contains the user's specific request and detailed instructions for the AI.
+> -   `<task_description>`: Athanor injects the user's task here using `{{task_description}}` and optional `{{task_context}}`.
+> -   The subsequent content within `<current_task>` provides detailed instructions on how the AI should process the task, structure its thinking, and format its response, often specifying Athanor-specific XML output.
+>
+> ADDITIONAL EXPLANATION (REMOVE THIS SECTION) -->
+
+</ath_prompt_variant>
+
+> <-- REMOVE THIS SECTION
+> You can add other `ath_prompt_variant` sections here and below.
+> These can be selected by right-clicking on the prompt button.
+> REMOVE THIS SECTION -->
+
+</ath_prompt>

@@ -193,7 +193,10 @@ This means:
 
 Custom templates follow the same XML structure as the [default templates](https://github.com/lacerbi/athanor/tree/dev/resources/prompts).
 
-Additional examples will be provided soon.
+You can find example templates with additional instructions here:
+
+- [Example prompt](https://github.com/lacerbi/athanor/blob/main/resources/prompts/example_prompt.xml)
+- [Example task](https://github.com/lacerbi/athanor/blob/main/resources/prompts/example_task.xml)
 
 ##### Key XML Elements
 
