@@ -1,10 +1,9 @@
 # Changelog
 
 All notable changes to Athanor - AI Workbench will be documented in this file.
-This changelog is based on available commit history and pull request information and may not include all minor changes or exact release dates for older versions.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project aims to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html) (though early versions may not strictly follow it).
+and this project aims to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
