@@ -25,12 +25,12 @@ COMMIT_RANGE="origin/$GITHUB_BASE_REF..$GITHUB_SHA"
 echo "Checking commits in range: $COMMIT_RANGE"
 
 # Exclude merge commits from the PR itself, only check original authored commits.
-# Using %B for the full message body. %x00 is a null character for safer parsing.
+# First, get all commit hashes in the range.
+# Then, for each hash, retrieve its full commit message separately to correctly handle multi-line messages.
 # The trailing '--' ensures that $COMMIT_RANGE is not misinterpreted as a file name if it resembles one.
-# Using mapfile (bash v4+) to read lines into an array, handling multiline messages correctly per commit.
-mapfile -t COMMITS_INFO < <(git log "$COMMIT_RANGE" --no-merges --format="%H%x00%B" --)
+mapfile -t COMMIT_HASHES < <(git log "$COMMIT_RANGE" --no-merges --format="%H" --)
 
-if [ ${#COMMITS_INFO[@]} -eq 0 ]; then
+if [ ${#COMMIT_HASHES[@]} -eq 0 ]; then
   echo "No new non-merge commits found in range $COMMIT_RANGE. Skipping DCO check."
   # If GITHUB_HEAD_REF == GITHUB_BASE_REF (e.g. push to main itself, not a PR to main), this can be empty.
   # For a PR, there should usually be commits.
@@ -43,10 +43,15 @@ echo "--------------------------------------------------------------------------
 
 ALL_SIGNED=true
 
-for ((i=0; i<${#COMMITS_INFO[@]}; i++)); do
-  # Split by the null character
-  HASH="${COMMITS_INFO[$i]%%$'\x00'*}"
-  MESSAGE="${COMMITS_INFO[$i]#*$'\x00'}"
+for HASH in "${COMMIT_HASHES[@]}"; do
+  # Fetch the full commit message for the current hash
+  MESSAGE=$(git log -1 --format=%B "$HASH")
+  
+  if [ -z "$HASH" ]; then # Should ideally not happen with the new logic, but as a safeguard
+    echo "Error: Encountered an empty HASH in COMMIT_HASHES array. Skipping."
+    ALL_SIGNED=false
+    continue
+  fi
   
   COMMIT_SUMMARY=$(git show --no-patch --format="%h %s" "$HASH") # Short hash and subject for display
 
