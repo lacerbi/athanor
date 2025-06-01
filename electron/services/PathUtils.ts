@@ -168,23 +168,37 @@ export class PathUtils {
 
     try {
       // Convert to Unix format
-      const normalizedPath = PathUtils.normalizeToUnix(filePath);
+      let normalizedPath = PathUtils.normalizeToUnix(filePath);
       
-      // If baseDir provided, make the path relative
-      let relativePath = normalizedPath;
+      // If baseDir provided, handle path resolution
       if (baseDir) {
-        relativePath = PathUtils.relative(baseDir, normalizedPath);
+        const normalizedBaseDir = PathUtils.normalizeToUnix(baseDir);
+        
+        // If the path is relative, resolve it relative to baseDir, not cwd
+        if (!PathUtils.isAbsolute(normalizedPath)) {
+          normalizedPath = PathUtils.joinUnix(normalizedBaseDir, normalizedPath);
+        }
+        
+        // Make the path relative to baseDir
+        const relativePath = PathUtils.relative(normalizedBaseDir, normalizedPath);
         if (!relativePath || relativePath.startsWith('..')) {
           return null; // Path is outside the base directory
         }
+        
+        // Add trailing slash for directories if not present
+        if (isDirectory && !relativePath.endsWith('/')) {
+          return `${relativePath}/`;
+        }
+        
+        return relativePath;
       }
 
-      // Add trailing slash for directories if not present
-      if (isDirectory && !relativePath.endsWith('/')) {
-        return `${relativePath}/`;
+      // No baseDir provided, just normalize and add trailing slash if needed
+      if (isDirectory && !normalizedPath.endsWith('/')) {
+        return `${normalizedPath}/`;
       }
       
-      return relativePath;
+      return normalizedPath;
     } catch (error) {
       console.error('Error normalizing path for ignore:', error);
       return null;
