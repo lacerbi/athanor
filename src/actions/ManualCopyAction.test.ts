@@ -1,3 +1,6 @@
+/**
+ * @jest-environment jsdom
+ */
 // AI Summary: Comprehensive unit tests for ManualCopyAction covering all exported functions.
 // Tests include happy paths, edge cases, error handling, and proper mocking of dependencies.
 import {
