@@ -141,14 +141,19 @@ export class PathUtils {
    * @returns Relative path with forward slashes
    */
   static relative(from: string, to: string): string {
-    if (!from || !to) return to || '';
-    
-    // Normalize both paths to Unix format for consistent handling
+    // Handle empty inputs as per existing test expectations
+    if (!from && to) return PathUtils.normalizeToUnix(to);
+    if (!to) return '';
+    if (!from) return '';
+
     const normalizedFrom = PathUtils.normalizeToUnix(from);
     const normalizedTo = PathUtils.normalizeToUnix(to);
     
-    // Calculate relative path and normalize to Unix format
-    return PathUtils.normalizeToUnix(path.relative(normalizedFrom, normalizedTo));
+    // Use path.posix.relative for consistent Unix-style relative paths
+    const relativePath = path.posix.relative(normalizedFrom, normalizedTo);
+    
+    // Normalize the result to ensure consistency
+    return PathUtils.normalizeToUnix(relativePath);
   }
 
   /**
