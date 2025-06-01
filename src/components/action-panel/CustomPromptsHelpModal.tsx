@@ -1,7 +1,9 @@
 // AI Summary: Modal component providing help and guidance for creating custom prompt and task templates.
 // Includes tutorial links, folder access buttons, and explanatory content for template customization.
 import React, { useState } from 'react';
-import { X, ExternalLink, Folder, Globe, FileText } from 'lucide-react';
+import { X, ExternalLink, Folder, Globe, FileText, Copy } from 'lucide-react';
+import { copyToClipboard } from '../../actions/ManualCopyAction';
+import { useLogStore } from '../../stores/logStore';
 
 interface CustomPromptsHelpModalProps {
   isOpen: boolean;
@@ -16,11 +18,17 @@ const CustomPromptsHelpModal: React.FC<CustomPromptsHelpModalProps> = ({
     tutorial: boolean;
     projectFolder: boolean;
     globalFolder: boolean;
+    copyPromptDesigner: boolean;
+    copyTaskDesigner: boolean;
   }>({
     tutorial: false,
     projectFolder: false,
     globalFolder: false,
+    copyPromptDesigner: false,
+    copyTaskDesigner: false,
   });
+
+  const { addLog } = useLogStore.getState();
 
   if (!isOpen) return null;
 
@@ -60,6 +68,49 @@ const CustomPromptsHelpModal: React.FC<CustomPromptsHelpModalProps> = ({
       console.error('Failed to open global prompts folder:', error);
     } finally {
       setIsLoading((prev) => ({ ...prev, globalFolder: false }));
+    }
+  };
+
+  const handleCopyPromptDesignerClick = async () => {
+    setIsLoading((prev) => ({ ...prev, copyPromptDesigner: true }));
+    try {
+      const resourcesPath = await window.fileService.getResourcesPath();
+      const promptsPath = await window.pathUtils.join(resourcesPath, 'prompts');
+      const filePath = await window.pathUtils.join(promptsPath, 'custom_prompt_designer.md');
+      const content = await window.fileService.read(filePath, { encoding: 'utf8' }) as string;
+      
+      await copyToClipboard({
+        content,
+        addLog,
+        isFormatted: false, // Raw content
+      });
+      // addLog is called by copyToClipboard
+    } catch (error) {
+      console.error('Failed to copy Prompt Designer instructions:', error);
+      addLog('Error: Failed to copy Prompt Designer instructions.');
+    } finally {
+      setIsLoading((prev) => ({ ...prev, copyPromptDesigner: false }));
+    }
+  };
+
+  const handleCopyTaskDesignerClick = async () => {
+    setIsLoading((prev) => ({ ...prev, copyTaskDesigner: true }));
+    try {
+      const resourcesPath = await window.fileService.getResourcesPath();
+      const promptsPath = await window.pathUtils.join(resourcesPath, 'prompts');
+      const filePath = await window.pathUtils.join(promptsPath, 'custom_task_designer.md');
+      const content = await window.fileService.read(filePath, { encoding: 'utf8' }) as string;
+
+      await copyToClipboard({
+        content,
+        addLog,
+        isFormatted: false, // Raw content
+      });
+    } catch (error) {
+      console.error('Failed to copy Task Designer instructions:', error);
+      addLog('Error: Failed to copy Task Designer instructions.');
+    } finally {
+      setIsLoading((prev) => ({ ...prev, copyTaskDesigner: false }));
     }
   };
 
@@ -189,6 +240,74 @@ const CustomPromptsHelpModal: React.FC<CustomPromptsHelpModalProps> = ({
                     </button>
                   </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* AI-Assisted Design */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+              AI-Assisted Design
+            </h3>
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+              To help you design complex custom prompt or task templates, Athanor provides 'designer' prompts. You can copy these instructions and paste them into a capable AI chat assistant (like ChatGPT, Claude, Gemini). The AI will then guide you through the process of creating your template. Once the AI generates the XML, you'll need to manually save it as a{' '}
+              <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded text-xs">
+                prompt_*.xml
+              </code>{' '}
+              or{' '}
+              <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded text-xs">
+                task_*.xml
+              </code>{' '}
+              file in the appropriate project-specific or global user prompts folder.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Prompt Designer */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+                <h4 className="text-md font-medium text-gray-900 dark:text-gray-100">
+                  Prompt Designer
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Instructions for an AI to help you create{' '}
+                  <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded text-xs">
+                    prompt_*.xml
+                  </code>{' '}
+                  files.
+                </p>
+                <button
+                  onClick={handleCopyPromptDesignerClick}
+                  disabled={isLoading.copyPromptDesigner}
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium rounded transition-colors"
+                >
+                  <Copy className="w-4 h-4" />
+                  {isLoading.copyPromptDesigner
+                    ? 'Copying...'
+                    : 'Copy Prompt Designer Instructions'}
+                </button>
+              </div>
+
+              {/* Task Designer */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+                <h4 className="text-md font-medium text-gray-900 dark:text-gray-100">
+                  Task Designer
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Instructions for an AI to help you create{' '}
+                  <code className="bg-gray-200 dark:bg-gray-600 px-1 rounded text-xs">
+                    task_*.xml
+                  </code>{' '}
+                  files.
+                </p>
+                <button
+                  onClick={handleCopyTaskDesignerClick}
+                  disabled={isLoading.copyTaskDesigner}
+                  className="inline-flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-indigo-400 text-white text-sm font-medium rounded transition-colors"
+                >
+                  <Copy className="w-4 h-4" />
+                  {isLoading.copyTaskDesigner
+                    ? 'Copying...'
+                    : 'Copy Task Designer Instructions'}
+                </button>
               </div>
             </div>
           </div>
