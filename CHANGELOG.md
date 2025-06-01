@@ -9,6 +9,12 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.5.9] - 2025-06-01
+
+### Added
+
+- Implemented Syntax Highlighting in Athanor's File Viewer to improve code readability for various languages ([`4864708`]).
+
 ## [0.5.8] - 2025-06-01
 
 ### Added
