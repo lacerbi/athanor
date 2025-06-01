@@ -19,8 +19,8 @@ export class PathUtils {
    */
   static normalizeToUnix(inputPath: string): string {
     if (!inputPath) return '';
-    // Convert Windows backslashes to forward slashes
-    const normalized = inputPath.split(path.sep).join(path.posix.sep);
+    // Convert Windows backslashes to forward slashes reliably
+    const normalized = inputPath.replace(/\\/g, '/');
     // Remove trailing slashes unless it's the root path
     return normalized === '/' ? normalized : normalized.replace(/\/+$/, '');
   }
@@ -34,7 +34,7 @@ export class PathUtils {
     if (!unixPath) return '';
     // Only convert slashes on Windows, leave untouched on other platforms
     return process.platform === 'win32' 
-      ? unixPath.split(path.posix.sep).join(path.sep)
+      ? unixPath.split(path.posix.sep).join(path.win32.sep)
       : unixPath;
   }
 
