@@ -8,6 +8,7 @@ on:
 
 jobs:
   dco-check:
+    if: github.event_name == 'pull_request'
     name: DCO Check
     runs-on: ubuntu-latest
     steps:
