@@ -9,6 +9,14 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.5.8] - 2025-06-01
+
+### Added
+
+- Implemented a GitHub Actions workflow (`.github/workflows/pr-checks.yml`) to enhance contribution quality. This workflow automatically:
+  - Validates Developer Certificate of Origin (DCO) for all non-merge commits in Pull Requests using the `scripts/check-dco.sh` script.
+  - Runs the full suite of unit tests (`npm test`) on Node.js 18.x for changes pushed to `main` or submitted via Pull Requests to `main`.
+
 ## [0.5.7] - 2025-06-01
 
 ### Added
