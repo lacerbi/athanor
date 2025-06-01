@@ -1,16 +1,66 @@
-// AI Summary: Displays file content with text file detection. Handles both text and binary files
+// AI Summary: Displays file content with syntax highlighting. Handles both text and binary files
 // with appropriate feedback. Maintains line count and path display for valid text files.
 // Now includes a "Replace with Clipboard" button that stages changes and navigates to Apply Changes tab.
 import React, { useEffect, useState } from 'react';
 import { Copy, FileCode, ClipboardPaste } from 'lucide-react';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { coy, atomDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
+// Import specific languages to keep bundle size manageable
+import javascript from 'react-syntax-highlighter/dist/esm/languages/prism/javascript';
+import jsx from 'react-syntax-highlighter/dist/esm/languages/prism/jsx';
+import typescript from 'react-syntax-highlighter/dist/esm/languages/prism/typescript';
+import tsx from 'react-syntax-highlighter/dist/esm/languages/prism/tsx';
+import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
+import css from 'react-syntax-highlighter/dist/esm/languages/prism/css';
+import html from 'react-syntax-highlighter/dist/esm/languages/prism/markup';
+import json from 'react-syntax-highlighter/dist/esm/languages/prism/json';
+import yaml from 'react-syntax-highlighter/dist/esm/languages/prism/yaml';
+import markdown from 'react-syntax-highlighter/dist/esm/languages/prism/markdown';
+import bash from 'react-syntax-highlighter/dist/esm/languages/prism/bash';
+import java from 'react-syntax-highlighter/dist/esm/languages/prism/java';
+import c from 'react-syntax-highlighter/dist/esm/languages/prism/c';
+import cpp from 'react-syntax-highlighter/dist/esm/languages/prism/cpp';
+import ruby from 'react-syntax-highlighter/dist/esm/languages/prism/ruby';
+import php from 'react-syntax-highlighter/dist/esm/languages/prism/php';
+import go from 'react-syntax-highlighter/dist/esm/languages/prism/go';
+import rust from 'react-syntax-highlighter/dist/esm/languages/prism/rust';
+import swift from 'react-syntax-highlighter/dist/esm/languages/prism/swift';
+import ini from 'react-syntax-highlighter/dist/esm/languages/prism/ini';
+import diff from 'react-syntax-highlighter/dist/esm/languages/prism/diff';
+
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { useCommandStore } from '../stores/commandStore';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { copyToClipboard } from '../actions/ManualCopyAction';
 import { isTextFile } from '../utils/fileTextDetection';
+import { getLanguageFromPath } from '../utils/languageMapping';
 import { TabType } from './AthanorTabs';
 import { FileOperation } from '../types/global';
+
+// Register languages with SyntaxHighlighter
+SyntaxHighlighter.registerLanguage('javascript', javascript);
+SyntaxHighlighter.registerLanguage('jsx', jsx);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('tsx', tsx);
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('css', css);
+SyntaxHighlighter.registerLanguage('html', html);
+SyntaxHighlighter.registerLanguage('json', json);
+SyntaxHighlighter.registerLanguage('yaml', yaml);
+SyntaxHighlighter.registerLanguage('markdown', markdown);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('java', java);
+SyntaxHighlighter.registerLanguage('c', c);
+SyntaxHighlighter.registerLanguage('cpp', cpp);
+SyntaxHighlighter.registerLanguage('ruby', ruby);
+SyntaxHighlighter.registerLanguage('php', php);
+SyntaxHighlighter.registerLanguage('go', go);
+SyntaxHighlighter.registerLanguage('rust', rust);
+SyntaxHighlighter.registerLanguage('swift', swift);
+SyntaxHighlighter.registerLanguage('ini', ini);
+SyntaxHighlighter.registerLanguage('diff', diff);
+SyntaxHighlighter.registerLanguage('text', javascript); // Fallback to basic highlighting
 
 interface FileViewerPanelProps {
   onTabChange: (tab: TabType) => void;
@@ -25,6 +75,21 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
   const [osPath, setOsPath] = useState<string>('');
   const [currentDir, setCurrentDir] = useState<string>('');
   const [isText, setIsText] = useState<boolean>(true);
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(
+    document.documentElement.classList.contains('dark')
+  );
+
+  // Listen for theme changes
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDarkMode(document.documentElement.classList.contains('dark'));
+    });
+    observer.observe(document.documentElement, { 
+      attributes: true, 
+      attributeFilter: ['class'] 
+    });
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const loadFile = async () => {
@@ -203,13 +268,54 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
           No file selected for preview
         </div>
       )}
-      {isText && !error && (
-        <textarea
-          className="w-full h-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded font-mono text-sm resize-none overflow-auto"
-          value={fileContent}
-          readOnly
-          placeholder="File content will appear here..."
-        />
+      {isText && !error && fileContent && (
+        <div className="w-full h-full rounded font-mono text-sm overflow-auto bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 scrollbar-thin file-viewer-syntax-highlighter-wrapper">
+          <SyntaxHighlighter
+            language={getLanguageFromPath(previewedFilePath || '')}
+            style={isDarkMode ? atomDark : coy}
+            showLineNumbers={true}
+            wrapLines={true}
+            lineNumberStyle={{ 
+              opacity: 0.5,
+              color: isDarkMode ? '#6b7280' : '#9ca3af',
+              backgroundColor: 'transparent',
+              borderRight: `1px solid ${isDarkMode ? '#374151' : '#e5e7eb'}`,
+              paddingRight: '0.5rem',
+              marginRight: '0.5rem',
+              minWidth: '2.5rem',
+              textAlign: 'right'
+            }}
+            customStyle={{
+              margin: 0,
+              padding: '0.5rem',
+              backgroundColor: 'transparent',
+              minHeight: '100%',
+              flexGrow: 1,
+              fontSize: '0.875rem',
+              lineHeight: '1.25rem',
+            }}
+            codeTagProps={{
+              style: { 
+                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                fontSize: 'inherit',
+                lineHeight: 'inherit'
+              }
+            }}
+            lineProps={(lineNumber) => ({
+              style: {
+                display: 'block',
+                width: '100%'
+              }
+            })}
+          >
+            {fileContent}
+          </SyntaxHighlighter>
+        </div>
+      )}
+      {isText && !error && !fileContent && (
+        <div className="w-full h-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded font-mono text-sm flex items-center justify-center">
+          File is empty.
+        </div>
       )}
     </div>
   );

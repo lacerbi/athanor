@@ -128,6 +128,59 @@ html.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
   display: none; /* Chrome, Safari and Opera */
 }
 
+/* Syntax highlighter integration styles */
+.file-viewer-syntax-highlighter-wrapper {
+  /* Ensure consistent scrollbar styling */
+  scrollbar-gutter: stable;
+}
+
+.file-viewer-syntax-highlighter-wrapper pre[class*="language-"] {
+  /* Override default syntax highlighter background */
+  background: transparent !important;
+  /* Ensure proper text color inheritance */
+  color: inherit;
+  /* Remove default margins */
+  margin: 0 !important;
+  /* Ensure proper overflow handling */
+  overflow: visible !important;
+}
+
+.file-viewer-syntax-highlighter-wrapper code[class*="language-"] {
+  /* Ensure code inherits proper styling */
+  background: transparent !important;
+  color: inherit;
+  text-shadow: none !important;
+}
+
+/* Dark mode specific adjustments for syntax highlighter */
+html.dark .file-viewer-syntax-highlighter-wrapper .token.comment,
+html.dark .file-viewer-syntax-highlighter-wrapper .token.prolog,
+html.dark .file-viewer-syntax-highlighter-wrapper .token.doctype,
+html.dark .file-viewer-syntax-highlighter-wrapper .token.cdata {
+  color: #6b7280 !important; /* gray-500 for better contrast */
+}
+
+/* Light mode specific adjustments */
+html:not(.dark) .file-viewer-syntax-highlighter-wrapper .token.comment,
+html:not(.dark) .file-viewer-syntax-highlighter-wrapper .token.prolog,
+html:not(.dark) .file-viewer-syntax-highlighter-wrapper .token.doctype,
+html:not(.dark) .file-viewer-syntax-highlighter-wrapper .token.cdata {
+  color: #6b7280 !important; /* Consistent comment color */
+}
+
+/* Ensure line numbers are properly styled */
+.file-viewer-syntax-highlighter-wrapper .line-numbers-rows {
+  border-right: 1px solid;
+}
+
+html.dark .file-viewer-syntax-highlighter-wrapper .line-numbers-rows {
+  border-color: #374151; /* dark:border-gray-700 */
+}
+
+html:not(.dark) .file-viewer-syntax-highlighter-wrapper .line-numbers-rows {
+  border-color: #e5e7eb; /* border-gray-200 */
+}
+
 /* Context field styles */
 .context-field {
   @apply flex items-center gap-2 px-3 py-1.5 mb-2;

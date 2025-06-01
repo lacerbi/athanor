@@ -18,7 +18,7 @@ const FILE_DETECTION = {
 } as const;
 
 // Common text file extensions that don't require MIME verification
-const KNOWN_TEXT_EXTENSIONS = new Set([
+export const KNOWN_TEXT_EXTENSIONS = new Set([
   'txt',
   'md',
   'markdown',
