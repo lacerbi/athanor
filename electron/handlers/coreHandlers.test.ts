@@ -30,6 +30,10 @@ jest.mock('electron', () => ({
       return false; // Default mock value, will be overridden in tests
     },
   },
+  shell: {
+    openExternal: jest.fn(),
+    openPath: jest.fn(),
+  },
 }));
 
 // Mock windowManager - mockMainWindowObject is now defined and initialized.
@@ -57,9 +61,10 @@ jest.mock('fs', () => ({
 // Actual imports AFTER mocks and variable definitions for mock factories
 import { setupCoreHandlers } from './coreHandlers';
 import { FileService } from '../services/FileService'; // Type import or relies on prior mock
+import { CUSTOM_TEMPLATES } from '../../src/utils/constants';
 
 // Import mocked modules (these will be the mocked versions)
-import { ipcMain, dialog, app, nativeTheme } from 'electron';
+import { ipcMain, dialog, app, nativeTheme, shell } from 'electron';
 import { mainWindow } from '../windowManager';
 import * as fs from 'fs';
 
@@ -68,6 +73,7 @@ const mockIpcMain = ipcMain as jest.Mocked<typeof ipcMain>;
 const mockDialog = dialog as jest.Mocked<typeof dialog>;
 const mockApp = app as jest.Mocked<typeof app>;
 const mockNativeTheme = nativeTheme as jest.Mocked<typeof nativeTheme>;
+const mockShell = shell as jest.Mocked<typeof shell>;
 // Ensure mockFsAccess uses the persistent instance
 const mockFsAccess = persistentMockFsAccess as jest.MockedFunction<typeof fs.promises.access>;
 
@@ -136,6 +142,10 @@ describe('setupCoreHandlers', () => {
         'fs:getMaterialsDir',
         'fs:relativeToProject',
         'fs:selectProjectInfoFile',
+        'shell:openExternal',
+        'shell:openPath',
+        'app:getGlobalPromptsPath',
+        'app:getProjectPromptsPath',
       ];
 
       expectedChannels.forEach(channel => {
@@ -864,6 +874,146 @@ describe('setupCoreHandlers', () => {
       
       // The handler in coreHandlers.ts catches the error and re-throws it via handleError.
       expect(() => handler(mockEvent)).toThrow('NativeTheme error');
+    });
+  });
+
+  describe('shell:openExternal handler', () => {
+    let handler: Function;
+
+    beforeEach(() => {
+      handler = ipcHandlers.get('shell:openExternal')!;
+    });
+
+    it('should call shell.openExternal with the provided URL', async () => {
+      mockShell.openExternal.mockResolvedValue(undefined);
+      const testUrl = 'https://example.com';
+
+      await handler(mockEvent, testUrl);
+
+      expect(mockShell.openExternal).toHaveBeenCalledWith(testUrl);
+    });
+
+    it('should handle errors if shell.openExternal rejects', async () => {
+      mockShell.openExternal.mockRejectedValue(new Error('Open external error'));
+      const testUrl = 'https://example.com';
+
+      // The handler catches the error and re-throws it via handleError
+      await expect(handler(mockEvent, testUrl)).rejects.toThrow('Open external error');
+    });
+  });
+
+  describe('shell:openPath handler', () => {
+    let handler: Function;
+
+    beforeEach(() => {
+      handler = ipcHandlers.get('shell:openPath')!;
+    });
+
+    it('should call shell.openPath with the provided path', async () => {
+      mockShell.openPath.mockResolvedValue(''); // openPath resolves with an empty string on success or an error message on failure
+      const testPath = '/fake/path/to/file';
+
+      await handler(mockEvent, testPath);
+
+      expect(mockShell.openPath).toHaveBeenCalledWith(testPath);
+    });
+
+    it('should handle errors if shell.openPath rejects', async () => {
+      mockShell.openPath.mockRejectedValue(new Error('Open path error'));
+      const testPath = '/fake/path/to/file';
+
+      await expect(handler(mockEvent, testPath)).rejects.toThrow('Open path error');
+    });
+  });
+
+  describe('app:getGlobalPromptsPath handler', () => {
+    let handler: Function;
+
+    beforeEach(() => {
+      handler = ipcHandlers.get('app:getGlobalPromptsPath')!;
+    });
+
+    it('should return the correct global prompts path', () => {
+      const mockUserDataPath = '/fake/user/data/path';
+      const mockUnixUserDataPath = '/fake/user/data/path'; // Assuming toUnix behavior
+      const expectedPath = `/fake/user/data/path/${CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME}`;
+
+      mockApp.getPath.mockReturnValue(mockUserDataPath);
+      mockFileService.toUnix.mockReturnValue(mockUnixUserDataPath);
+      mockFileService.join.mockReturnValue(expectedPath);
+
+      const result = handler(mockEvent);
+
+      expect(mockApp.getPath).toHaveBeenCalledWith('userData');
+      expect(mockFileService.toUnix).toHaveBeenCalledWith(mockUserDataPath);
+      expect(mockFileService.join).toHaveBeenCalledWith(mockUnixUserDataPath, CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME);
+      expect(result).toBe(expectedPath);
+    });
+
+    it('should handle errors from app.getPath', () => {
+      mockApp.getPath.mockImplementation(() => {
+        throw new Error('GetPath error');
+      });
+
+      expect(() => handler(mockEvent)).toThrow('GetPath error');
+    });
+
+    it('should handle errors from fileService.toUnix', () => {
+      mockApp.getPath.mockReturnValue('/fake/user/data/path');
+      mockFileService.toUnix.mockImplementation(() => {
+        throw new Error('toUnix error');
+      });
+
+      expect(() => handler(mockEvent)).toThrow('toUnix error');
+    });
+    
+    it('should handle errors from fileService.join', () => {
+      mockApp.getPath.mockReturnValue('/fake/user/data/path');
+      mockFileService.toUnix.mockReturnValue('/fake/user/data/path');
+      mockFileService.join.mockImplementation(() => {
+        throw new Error('join error');
+      });
+
+      expect(() => handler(mockEvent)).toThrow('join error');
+    });
+  });
+
+  describe('app:getProjectPromptsPath handler', () => {
+    let handler: Function;
+
+    beforeEach(() => {
+      handler = ipcHandlers.get('app:getProjectPromptsPath')!;
+    });
+
+    it('should return the correct project prompts path', () => {
+      const mockMaterialsDir = '/current/project/.ath_materials';
+      const expectedPath = `/current/project/.ath_materials/${CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME}`;
+      
+      mockFileService.getMaterialsDir.mockReturnValue(mockMaterialsDir);
+      mockFileService.join.mockReturnValue(expectedPath);
+
+      const result = handler(mockEvent);
+
+      expect(mockFileService.getMaterialsDir).toHaveBeenCalled();
+      expect(mockFileService.join).toHaveBeenCalledWith(mockMaterialsDir, CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME);
+      expect(result).toBe(expectedPath);
+    });
+
+    it('should handle errors from fileService.getMaterialsDir', () => {
+      mockFileService.getMaterialsDir.mockImplementation(() => {
+        throw new Error('GetMaterialsDir error');
+      });
+
+      expect(() => handler(mockEvent)).toThrow('GetMaterialsDir error');
+    });
+
+    it('should handle errors from fileService.join', () => {
+      mockFileService.getMaterialsDir.mockReturnValue('/current/project/.ath_materials');
+      mockFileService.join.mockImplementation(() => {
+        throw new Error('join error');
+      });
+
+      expect(() => handler(mockEvent)).toThrow('join error');
     });
   });
 });

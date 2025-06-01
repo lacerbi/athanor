@@ -9,6 +9,27 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.5.7] - 2025-06-01
+
+### Added
+
+- **AI-Assisted Template Design**: Introduced an "AI Assisted Design" section in the "Custom Prompts & Tasks Help" modal, allowing users to copy specialized instructions for an AI to help create `prompt_*.xml` and `task_*.xml` templates (`2e8082b`).
+- **Custom Prompts & Tasks Help Modal**: Added a comprehensive help modal accessible within the application that provides guidance, links to tutorials, and access to template storage folders (`91c6a86`).
+
+### Documentation
+
+- Added `custom_prompt_designer.md` and `custom_task_designer.md` files, providing detailed instructions for AI-guided creation of custom prompt and task templates (`9b69dd6`).
+- Improved general information and instructions related to custom prompts and tasks (`91c6a86`).
+- Standardized path references to use lowercase 'athanor' for consistency in documentation (`e5889ca`).
+
+### Style
+
+- Adjusted the layout of the "Custom Prompts & Tasks Help" modal for improved clarity and user experience (`9b69dd6`).
+
+### Tests
+
+- Fixed and expanded unit tests for `coreHandlers` to ensure robustness and cover recent changes (`e15a078`).
+
 ## [0.5.6] - 2025-05-31
 
 ### Added

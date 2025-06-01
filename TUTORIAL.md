@@ -166,9 +166,9 @@ Custom templates are stored in XML files in two possible locations:
 
 1. **Global User Templates**: Available across all projects
 
-   - **Windows**: `%APPDATA%\Athanor\prompts\`
-   - **macOS**: `~/Library/Application Support/Athanor/prompts/`
-   - **Linux**: `~/.config/Athanor/prompts/`
+   - **Windows**: `%APPDATA%\athanor\prompts\`
+   - **macOS**: `~/Library/Application Support/athanor/prompts/`
+   - **Linux**: `~/.config/athanor/prompts/`
 
 2. **Project-Specific Templates**: Only available in the current project
    - `.ath_materials/prompts/` within your project directory
@@ -188,6 +188,11 @@ This means:
 - Templates with unique `order`s from all sources will appear together in the UI
 
 #### Creating Custom Templates
+
+Create a new file in either the global or project-specific `prompts` folder following this naming convention:
+
+- Prompt templates are named `prompt_[name].xml`.
+- Task templates are named `task_[name].xml`.
 
 ##### XML File Structure
 

@@ -1,9 +1,10 @@
 // AI Summary: Handles core IPC operations for file system functionality including folder selection,
 // path conversion, directory access, and ignore rule management. Now uses FileService for all operations.
 
-import { ipcMain, dialog, app, nativeTheme } from 'electron';
+import { ipcMain, dialog, app, nativeTheme, shell } from 'electron';
 import { mainWindow } from '../windowManager';
 import { FileService } from '../services/FileService';
+import { CUSTOM_TEMPLATES } from '../../src/utils/constants';
 
 // Store fileService instance
 let _fileService: FileService;
@@ -263,6 +264,45 @@ export function setupCoreHandlers(fileService: FileService) {
       return relativePath;
     } catch (error) {
       handleError(error, 'selecting project info file');
+    }
+  });
+
+  // Add handler for opening external URLs
+  ipcMain.handle('shell:openExternal', async (_, url: string) => {
+    try {
+      await shell.openExternal(url);
+    } catch (error) {
+      handleError(error, `opening external URL: ${url}`);
+    }
+  });
+
+  // Add handler for opening local paths
+  ipcMain.handle('shell:openPath', async (_, path: string) => {
+    try {
+      await shell.openPath(path);
+    } catch (error) {
+      handleError(error, `opening path: ${path}`);
+    }
+  });
+
+  // Add handler for getting global custom prompts directory path
+  ipcMain.handle('app:getGlobalPromptsPath', () => {
+    try {
+      const userDataPath = app.getPath('userData');
+      const unixUserDataPath = _fileService.toUnix(userDataPath);
+      return _fileService.join(unixUserDataPath, CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME);
+    } catch (error) {
+      handleError(error, 'getting global prompts path');
+    }
+  });
+
+  // Add handler for getting project-specific custom prompts directory path
+  ipcMain.handle('app:getProjectPromptsPath', () => {
+    try {
+      const materialsDir = _fileService.getMaterialsDir();
+      return _fileService.join(materialsDir, CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME);
+    } catch (error) {
+      handleError(error, 'getting project prompts path');
     }
   });
 }

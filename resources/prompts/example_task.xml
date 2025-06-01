@@ -11,6 +11,9 @@
 > - `order` (only `ath_task`): Numeric value for sorting (lower numbers appear first; used for overriding).
 > - `icon` (only `ath_task`): Lucide React icon name (e.g., "FileText", "Scissors", "TestTube2").
 > - `requires` (only `ath_task`, optional): Condition for the task to be active. Common value is "selected" if the task requires files to be selected in the File Explorer.
+>
+> The file needs to be named `task_[name].xml` and placed in either the project
+> or global `prompts` folder.
 > REMOVE THIS SECTION -->
 
 <ath_task
