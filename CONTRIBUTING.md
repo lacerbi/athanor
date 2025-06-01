@@ -116,7 +116,8 @@ We acknowledge and embrace the use of AI tools in development. If you use AI to 
 4.  **Pre-Submission Checklist:**
     - All tests pass (`npm test`).
     - Code is linted (`npm run lint`) and formatted (`npm run format`).
-    - Commit messages adhere to Conventional Commits and are signed off (see DCO section below).
+    - Commit messages adhere to Conventional Commits and are signed off (see DCO section below). Automated checks will verify DCO on all commits.
+    - All tests pass (`npm test`). Automated checks will verify this on your PR.
     - Relevant documentation (code comments, `README.md`s, `TUTORIAL.md`) has been updated if your changes affect it.
     - The application builds and runs correctly with your changes.
 5.  **Open the Pull Request:**
