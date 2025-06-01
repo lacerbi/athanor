@@ -44,9 +44,19 @@ export class PathUtils {
    * @returns Joined path with forward slashes
    */
   static joinUnix(...paths: string[]): string {
-    const joined = PathUtils.normalizeToUnix(path.join(...paths));
-    // If all segments were empty, return empty string rather than "."
-    return joined === '.' && paths.every(p => !p) ? '' : joined;
+    // Normalize each segment to Unix-style, handling null/undefined
+    const processedSegments = paths.map(p => p ? PathUtils.normalizeToUnix(p) : '');
+    
+    // Join using POSIX rules
+    let joined = path.posix.join(...processedSegments);
+
+    // Preserve original behavior: if all original inputs were empty, return empty string
+    if (joined === '.' && paths.every(p => !p)) {
+      return '';
+    }
+    
+    // Final normalization for consistency
+    return PathUtils.normalizeToUnix(joined);
   }
 
   /**
@@ -92,9 +102,15 @@ export class PathUtils {
    */
   static dirname(pathStr: string): string {
     if (!pathStr) return '';
-    const result = PathUtils.normalizeToUnix(path.dirname(pathStr));
-    // Return empty string for top-level relative paths instead of "."
-    return result === '.' ? '' : result;
+    const unixPath = PathUtils.normalizeToUnix(pathStr);
+    const dir = path.posix.dirname(unixPath);
+
+    // Match test behavior: dirname of simple "file.txt" is "", dirname of "./file.txt" is "."
+    if (dir === '.') {
+      // If unixPath didn't contain '/', it was a simple filename
+      return unixPath.includes('/') ? '.' : '';
+    }
+    return dir;
   }
 
   /**
@@ -104,7 +120,8 @@ export class PathUtils {
    */
   static basename(pathStr: string): string {
     if (!pathStr) return '';
-    return path.basename(pathStr);
+    const unixPath = PathUtils.normalizeToUnix(pathStr);
+    return path.posix.basename(unixPath);
   }
 
   /**
