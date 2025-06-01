@@ -74,7 +74,7 @@ const CustomPromptsHelpModal: React.FC<CustomPromptsHelpModalProps> = ({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
@@ -136,56 +136,58 @@ const CustomPromptsHelpModal: React.FC<CustomPromptsHelpModalProps> = ({
               Template Storage Locations
             </h4>
 
-            {/* Project-Specific Folder */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <Folder className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <h5 className="font-medium text-gray-900 dark:text-gray-100">
-                    Project-Specific Templates
-                  </h5>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Templates stored here are only available in the current
-                    project. Perfect for project-specific workflows or team
-                    standards.
-                  </p>
-                  <button
-                    onClick={handleProjectFolderClick}
-                    disabled={isLoading.projectFolder}
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded transition-colors"
-                  >
-                    <Folder className="w-4 h-4" />
-                    {isLoading.projectFolder
-                      ? 'Opening...'
-                      : 'Open Project Prompts Folder'}
-                  </button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Project-Specific Folder */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Folder className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <h5 className="font-medium text-gray-900 dark:text-gray-100">
+                      Project-Specific Templates
+                    </h5>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Templates stored here are only available in the current
+                      project. Perfect for project-specific workflows or team
+                      standards.
+                    </p>
+                    <button
+                      onClick={handleProjectFolderClick}
+                      disabled={isLoading.projectFolder}
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white text-sm font-medium rounded transition-colors"
+                    >
+                      <Folder className="w-4 h-4" />
+                      {isLoading.projectFolder
+                        ? 'Opening...'
+                        : 'Open Project Prompts Folder'}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Global User Folder */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
-              <div className="flex items-start gap-3">
-                <Globe className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1 space-y-2">
-                  <h5 className="font-medium text-gray-900 dark:text-gray-100">
-                    Global User Templates
-                  </h5>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Templates stored here are available across all your Athanor
-                    projects. Ideal for personal workflows and commonly used
-                    patterns.
-                  </p>
-                  <button
-                    onClick={handleGlobalFolderClick}
-                    disabled={isLoading.globalFolder}
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white text-sm font-medium rounded transition-colors"
-                  >
-                    <Globe className="w-4 h-4" />
-                    {isLoading.globalFolder
-                      ? 'Opening...'
-                      : 'Open Global Prompts Folder'}
-                  </button>
+              {/* Global User Folder */}
+              <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <Globe className="w-5 h-5 text-purple-600 dark:text-purple-400 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <h5 className="font-medium text-gray-900 dark:text-gray-100">
+                      Global User Templates
+                    </h5>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Templates stored here are available across all your
+                      Athanor projects. Ideal for personal workflows and
+                      commonly used patterns.
+                    </p>
+                    <button
+                      onClick={handleGlobalFolderClick}
+                      disabled={isLoading.globalFolder}
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-purple-400 text-white text-sm font-medium rounded transition-colors"
+                    >
+                      <Globe className="w-4 h-4" />
+                      {isLoading.globalFolder
+                        ? 'Opening...'
+                        : 'Open Global Prompts Folder'}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
