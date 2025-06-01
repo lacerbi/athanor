@@ -9,6 +9,22 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.5.8] - 2025-06-01
+
+### Added
+
+- GitHub Actions workflow (`pr-checks.yml`) to perform DCO checks and run unit tests on pull requests ([`6194e33`](https://github.com/lacerbi/athanor/commit/6194e33)). This workflow automatically:
+  - Validates Developer Certificate of Origin (DCO) for all non-merge commits in Pull Requests using the `scripts/check-dco.sh` script.
+  - Runs the full suite of unit tests (`npm test`) on Node.js 18.x for changes pushed to `main` or submitted via Pull Requests to `main`.
+- `jest-environment-jsdom` to dev dependencies for enhanced testing capabilities ([`fce1faf`](https://github.com/lacerbi/athanor/commit/fce1faf)).
+
+### Fixed
+
+- Core path normalization and platform conversion utilities in `PathUtils.ts` for improved consistency and reliability ([`484d6a8`](https://github.com/lacerbi/athanor/commit/484d6a8)).
+- Standardized Unix-style path operations (`joinUnix`, `dirname`, `basename`) in `PathUtils.ts` ([`554215e`](https://github.com/lacerbi/athanor/commit/554215e)).
+- Relative path calculation and the `normalizeForIgnore` function in `PathUtils.ts` (and its usage by `ignoreRulesManager.ts`) for more accurate ignore rule application ([`f8ececd`](https://github.com/lacerbi/athanor/commit/f8ececd), [`9f90baf`](https://github.com/lacerbi/athanor/commit/9f90baf)).
+- DCO checking script (`scripts/check-dco.sh`) to correctly handle multi-line commit messages, ensuring accurate DCO validation ([`33dd03e`](https://github.com/lacerbi/athanor/commit/33dd03e)).
+
 ## [0.5.7] - 2025-06-01
 
 ### Added

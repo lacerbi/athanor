@@ -15,7 +15,6 @@
 .gitignore
 .gitattributes
 .gitmodules
-.github
 git-log.txt
 git-reflog.txt
 git-status.txt
@@ -335,7 +334,6 @@ docs/_site/
 # ATHANOR PROJECT FILES
 ###############################################################################
 .athignore
-/athanor.yml
 ###############################################################################
 # PROJECT FILES
 # Add below specific files and folders you want to ignore.

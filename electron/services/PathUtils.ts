@@ -19,8 +19,8 @@ export class PathUtils {
    */
   static normalizeToUnix(inputPath: string): string {
     if (!inputPath) return '';
-    // Convert Windows backslashes to forward slashes
-    const normalized = inputPath.split(path.sep).join(path.posix.sep);
+    // Convert Windows backslashes to forward slashes reliably
+    const normalized = inputPath.replace(/\\/g, '/');
     // Remove trailing slashes unless it's the root path
     return normalized === '/' ? normalized : normalized.replace(/\/+$/, '');
   }
@@ -34,7 +34,7 @@ export class PathUtils {
     if (!unixPath) return '';
     // Only convert slashes on Windows, leave untouched on other platforms
     return process.platform === 'win32' 
-      ? unixPath.split(path.posix.sep).join(path.sep)
+      ? unixPath.split(path.posix.sep).join(path.win32.sep)
       : unixPath;
   }
 
@@ -44,9 +44,19 @@ export class PathUtils {
    * @returns Joined path with forward slashes
    */
   static joinUnix(...paths: string[]): string {
-    const joined = PathUtils.normalizeToUnix(path.join(...paths));
-    // If all segments were empty, return empty string rather than "."
-    return joined === '.' && paths.every(p => !p) ? '' : joined;
+    // Normalize each segment to Unix-style, handling null/undefined
+    const processedSegments = paths.map(p => p ? PathUtils.normalizeToUnix(p) : '');
+    
+    // Join using POSIX rules
+    let joined = path.posix.join(...processedSegments);
+
+    // Preserve original behavior: if all original inputs were empty, return empty string
+    if (joined === '.' && paths.every(p => !p)) {
+      return '';
+    }
+    
+    // Final normalization for consistency
+    return PathUtils.normalizeToUnix(joined);
   }
 
   /**
@@ -92,9 +102,15 @@ export class PathUtils {
    */
   static dirname(pathStr: string): string {
     if (!pathStr) return '';
-    const result = PathUtils.normalizeToUnix(path.dirname(pathStr));
-    // Return empty string for top-level relative paths instead of "."
-    return result === '.' ? '' : result;
+    const unixPath = PathUtils.normalizeToUnix(pathStr);
+    const dir = path.posix.dirname(unixPath);
+
+    // Match test behavior: dirname of simple "file.txt" is "", dirname of "./file.txt" is "."
+    if (dir === '.') {
+      // If unixPath didn't contain '/', it was a simple filename
+      return unixPath.includes('/') ? '.' : '';
+    }
+    return dir;
   }
 
   /**
@@ -104,7 +120,8 @@ export class PathUtils {
    */
   static basename(pathStr: string): string {
     if (!pathStr) return '';
-    return path.basename(pathStr);
+    const unixPath = PathUtils.normalizeToUnix(pathStr);
+    return path.posix.basename(unixPath);
   }
 
   /**
@@ -124,14 +141,19 @@ export class PathUtils {
    * @returns Relative path with forward slashes
    */
   static relative(from: string, to: string): string {
-    if (!from || !to) return to || '';
-    
-    // Normalize both paths to Unix format for consistent handling
+    // Handle empty inputs as per existing test expectations
+    if (!from && to) return PathUtils.normalizeToUnix(to);
+    if (!to) return '';
+    if (!from) return '';
+
     const normalizedFrom = PathUtils.normalizeToUnix(from);
     const normalizedTo = PathUtils.normalizeToUnix(to);
     
-    // Calculate relative path and normalize to Unix format
-    return PathUtils.normalizeToUnix(path.relative(normalizedFrom, normalizedTo));
+    // Use path.posix.relative for consistent Unix-style relative paths
+    const relativePath = path.posix.relative(normalizedFrom, normalizedTo);
+    
+    // Normalize the result to ensure consistency
+    return PathUtils.normalizeToUnix(relativePath);
   }
 
   /**
@@ -146,23 +168,37 @@ export class PathUtils {
 
     try {
       // Convert to Unix format
-      const normalizedPath = PathUtils.normalizeToUnix(filePath);
+      let normalizedPath = PathUtils.normalizeToUnix(filePath);
       
-      // If baseDir provided, make the path relative
-      let relativePath = normalizedPath;
+      // If baseDir provided, handle path resolution
       if (baseDir) {
-        relativePath = PathUtils.relative(baseDir, normalizedPath);
+        const normalizedBaseDir = PathUtils.normalizeToUnix(baseDir);
+        
+        // If the path is relative, resolve it relative to baseDir, not cwd
+        if (!PathUtils.isAbsolute(normalizedPath)) {
+          normalizedPath = PathUtils.joinUnix(normalizedBaseDir, normalizedPath);
+        }
+        
+        // Make the path relative to baseDir
+        const relativePath = PathUtils.relative(normalizedBaseDir, normalizedPath);
         if (!relativePath || relativePath.startsWith('..')) {
           return null; // Path is outside the base directory
         }
+        
+        // Add trailing slash for directories if not present
+        if (isDirectory && !relativePath.endsWith('/')) {
+          return `${relativePath}/`;
+        }
+        
+        return relativePath;
       }
 
-      // Add trailing slash for directories if not present
-      if (isDirectory && !relativePath.endsWith('/')) {
-        return `${relativePath}/`;
+      // No baseDir provided, just normalize and add trailing slash if needed
+      if (isDirectory && !normalizedPath.endsWith('/')) {
+        return `${normalizedPath}/`;
       }
       
-      return relativePath;
+      return normalizedPath;
     } catch (error) {
       console.error('Error normalizing path for ignore:', error);
       return null;
