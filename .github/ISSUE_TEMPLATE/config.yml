@@ -1,0 +1,24 @@
+# .github/ISSUE_TEMPLATE/config.yml
+
+# This file configures the "New Issue" page on GitHub, guiding users to the correct template or to discussions.
+
+blank_issues_enabled:
+  false # Set to true if you want to allow users to open blank issues without a template.
+  # It's generally recommended to set this to false to encourage template usage.
+
+contact_links:
+  - name: ❓ General Questions & Discussions
+    url: https://github.com/lacerbi/athanor/discussions
+    about: Please ask and answer questions, share ideas, or discuss Athanor features here. This is the best place for general user feedback.
+
+  - name: 💡 Suggest an Enhancement (Discussion First)
+    url: https://github.com/lacerbi/athanor/discussions/new?category=ideas
+    about: For new features or significant changes, please start by opening a discussion in the "Ideas" category.
+
+  - name: 📖 Project Documentation
+    url: https://github.com/lacerbi/athanor/blob/main/PROJECT.md
+    about: Learn more about Athanor's architecture and technical details.
+
+  - name: 📚 Tutorials and Guides
+    url: https://github.com/lacerbi/athanor/blob/main/TUTORIAL.md
+    about: Check out the tutorial for guidance on using Athanor.
