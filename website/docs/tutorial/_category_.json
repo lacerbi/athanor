@@ -1,0 +1,10 @@
+{
+  "label": "Athanor Tutorial",
+  "position": 1,
+  "link": {
+    "type": "generated-index",
+    "title": "Athanor Tutorial",
+    "description": "Learn how to use Athanor - AI Workbench to streamline your AI-assisted development workflow. This comprehensive tutorial covers everything from basic setup to advanced customization.",
+    "keywords": ["athanor", "ai", "tutorial", "development", "workflow"]
+  }
+}

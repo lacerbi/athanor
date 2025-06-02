@@ -1,0 +1,24 @@
+athanor:
+  label: Athanor
+  permalink: /athanor
+  description: Posts about Athanor - AI Workbench development and features
+
+ai-workflow:
+  label: AI Workflow
+  permalink: /ai-workflow
+  description: AI-assisted development workflows and best practices
+
+development:
+  label: Development
+  permalink: /development
+  description: Software development tips and techniques
+
+announcement:
+  label: Announcement
+  permalink: /announcement
+  description: Project announcements and updates
+
+tutorial:
+  label: Tutorial
+  permalink: /tutorial
+  description: Tutorials and how-to guides

@@ -1,0 +1,21 @@
+athanorProject:
+  name: The Athanor Team
+  title: Maintainers of Athanor - AI Workbench
+  url: https://github.com/lacerbi/athanor
+  image_url: /img/athanor_logo.png
+  page: true
+  socials:
+    github: lacerbi
+
+lacerbi:
+  name: Luigi Acerbi
+  title: Lead Developer, Athanor - AI Workbench
+  url: https://lacerbi.github.io/
+  image_url: https://github.com/lacerbi.png
+  page: true
+  socials:
+    web: https://lacerbi.github.io/
+    github: lacerbi
+    linkedin: luigi-acerbi-719b492
+    x: AcerbiLuigi
+    bluesky: lacerbi.bsky.social
