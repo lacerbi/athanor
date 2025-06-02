@@ -128,3 +128,13 @@
   margin-top: 1.5rem;
   margin-bottom: 1.5rem;
 }
+
+.clickableImage {
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.clickableImage:hover {
+  transform: scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}

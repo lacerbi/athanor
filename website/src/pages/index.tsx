@@ -1,4 +1,9 @@
+// AI Summary: Defines the Athanor website homepage, including header, feature sections,
+// installation instructions, and community links. Uses 'yet-another-react-lightbox' with
+// the Captions plugin to display images with titles. Lightbox carousel padding is increased
+// to make images appear slightly smaller.
 import type { ReactNode } from 'react';
+import React from 'react';
 import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -7,6 +12,10 @@ import HomepageFeatures from '@site/src/components/HomepageFeatures';
 import Heading from '@theme/Heading';
 import athanorSnapshotImageUrl from '@site/static/img/athanor_snapshot.png';
 import athanorSnapshotApplyChangesImageUrl from '@site/static/img/athanor_snapshot_apply_changes.png';
+import Lightbox from "yet-another-react-lightbox";
+import "yet-another-react-lightbox/styles.css";
+import Captions from "yet-another-react-lightbox/plugins/captions";
+import "yet-another-react-lightbox/plugins/captions.css";
 
 import styles from './index.module.css';
 
@@ -41,6 +50,22 @@ function HomepageHeader() {
 
 export default function Home(): ReactNode {
   const { siteConfig } = useDocusaurusContext();
+  const [open, setOpen] = React.useState(false);
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+
+  const slides = [
+    { 
+      src: athanorSnapshotImageUrl, 
+      alt: "Athanor Interface: File explorer and prompt generation",
+      title: "Athanor's interface: File explorer (left), task management and prompt generation (right)"
+    },
+    { 
+      src: athanorSnapshotApplyChangesImageUrl, 
+      alt: "Athanor Apply Changes: Review and accept/reject diffs generated using any AI chat assistant",
+      title: "'Apply Changes' panel: Review and accept/reject diffs generated using any AI chat assistant"
+    }
+  ];
+
   return (
     <Layout
       title={`${siteConfig.title}`}
@@ -102,7 +127,11 @@ export default function Home(): ReactNode {
               <img
                 src={athanorSnapshotImageUrl}
                 alt="Athanor Interface: File explorer and prompt generation"
-                className={styles.sectionImage}
+                className={`${styles.sectionImage} ${styles.clickableImage}`}
+                onClick={() => {
+                  setCurrentIndex(0);
+                  setOpen(true);
+                }}
               />
               <p className={styles.imageCaption}>
                 Athanor's interface: File explorer (left), task management and
@@ -112,8 +141,12 @@ export default function Home(): ReactNode {
             <div className={styles.imageContainer}>
               <img
                 src={athanorSnapshotApplyChangesImageUrl}
-                alt="Athanor Apply Changes: Review and accept/reject diffs"
-                className={styles.sectionImage}
+                alt="Athanor Apply Changes: Review and accept/reject diffs generated using any AI chat assistant"
+                className={`${styles.sectionImage} ${styles.clickableImage}`}
+                onClick={() => {
+                  setCurrentIndex(1);
+                  setOpen(true);
+                }}
               />
               <p className={styles.imageCaption}>
                 'Apply Changes' panel: Review and accept/reject diffs generated
@@ -184,6 +217,14 @@ export default function Home(): ReactNode {
           </div>
         </section>
       </main>
+      <Lightbox
+        open={open}
+        close={() => setOpen(false)}
+        slides={slides}
+        index={currentIndex}
+        plugins={[Captions]}
+        carousel={{ padding: 60 }}
+      />
     </Layout>
   );
 }
