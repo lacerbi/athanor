@@ -15,10 +15,6 @@ contact_links:
     url: https://github.com/lacerbi/athanor/discussions/new?category=ideas
     about: For new features or significant changes, please start by opening a discussion in the "Ideas" category.
 
-  - name: 📖 Project Documentation
-    url: https://github.com/lacerbi/athanor/blob/main/PROJECT.md
-    about: Learn more about Athanor's architecture and technical details.
-
   - name: 📚 Tutorials and Guides
     url: https://github.com/lacerbi/athanor/blob/main/TUTORIAL.md
     about: Check out the tutorial for guidance on using Athanor.
