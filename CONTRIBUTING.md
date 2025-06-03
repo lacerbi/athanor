@@ -1,6 +1,6 @@
 # Contributing to Athanor
 
-Welcome, and thank you for your interest in contributing to Athanor! We're excited to have you join our community. Whether it's reporting a bug, proposing a new feature, improving documentation, or writing code, your contributions are valuable.
+Welcome, and thank you for your interest in contributing to Athanor! We're excited to have you join our community. During this pre-alpha stage, we especially value feedback and input from users to help shape Athanor's development.
 
 ## Table of Contents
 
@@ -16,18 +16,35 @@ Welcome, and thank you for your interest in contributing to Athanor! We're excit
 
 ## Ways to Contribute
 
-We welcome various forms of contributions:
+> **Note:** As Athanor is in its pre-alpha stage, we are primarily focused on gathering user feedback to guide development. While code contributions that align with discussed issues are accepted, our current priority is understanding how Athanor fits into developers' workflows.
+
+The most valuable contributions at this stage include:
+
+- **Sharing User Experience Feedback:**
+
+  - Tell us about your workflow, what works well, what doesn't, and how Athanor fits (or doesn't fit) into your development process. This feedback is invaluable during our pre-alpha stage.
+  - Share your experiences in the [Discussions forum](https://github.com/lacerbi/athanor/discussions).
 
 - **Reporting Bugs:**
+
   - Before submitting a new bug, please [search existing issues](https://github.com/lacerbi/athanor/issues) to avoid duplicates.
   - If the bug hasn't been reported, [create a new issue](https://github.com/lacerbi/athanor/issues/new/choose). We aim to have templates to guide you.
   - **Security Vulnerabilities:** If you discover a security vulnerability, please report it privately.
+
 - **Suggesting Enhancements:**
-  - For new features or significant changes, please start by [opening a discussion in the "Ideas" category](https://github.com/lacerbi/athanor/discussions/new?category=ideas) or a feature request issue. This helps us discuss the proposal and ensure it aligns with the project's vision before significant work is done.
+
+  - For new features or significant changes, please start by [opening a discussion in the "Ideas" category](https://github.com/lacerbi/athanor/discussions/new?category=ideas) or a feature request issue. This helps us discuss the proposal and ensure it aligns with the project's vision.
+
 - **Improving Documentation:**
+
   - Our documentation, including the `README.md`, `TUTORIAL.md`, `PROJECT.md`, and module-specific `README.md` files (like those for LLM and Secure API Storage), can always be clearer or more comprehensive. Contributions like fixing typos, improving explanations, adding examples, or creating new guides are highly appreciated.
 
+- **Contributing Code:**
+  - While we're primarily focused on gathering feedback during this pre-alpha stage, code contributions that align with discussed issues or features are also accepted. Please discuss significant code changes in an issue or discussion first to ensure they align with our current development priorities.
+
 ## Setting Up Your Development Environment
+
+For those interested in exploring the codebase or contributing code:
 
 1.  **Prerequisites:**
 
@@ -96,14 +113,16 @@ We welcome various forms of contributions:
 
 Athanor itself is a testament to the power of AI-assisted development: its codebase has been almost entirely (around 99%) generated using Large Language Models (LLMs) and, since v0.1.0, fully developed and integrated using Athanor's own workflows. This process, while highly efficient, is actively guided by human developers. Accurate prompting, careful review, and occasional direct steering are crucial, as LLMs, at their current stage, can sometimes propose incorrect changes or lead to suboptimal code if left unmonitored.
 
-We acknowledge and embrace the use of AI tools in development. If you use AI to help generate contributions, please ensure that:
+If you choose to contribute code, whether written by a human or an AI coding assistant, please ensure that:
 
 - The code meets the same high standards outlined in our [Coding Standards](#coding-standards).
 - You have thoroughly reviewed, tested, and understood any AI-generated code before submitting it. You are ultimately responsible for the changes you propose.
 - Contributions, whether AI-assisted or not, should consist of targeted, point-wise additions or modifications.
-- For major contributions, especially those spanning multiple files or introducing significant new features, we strongly encourage discussing your plans with the active developers (e.g., by opening an issue or discussion) _before_ extensive work is undertaken. This helps ensure alignment with the project's direction and avoids duplicated effort.
+- For any contributions, especially those spanning multiple files or introducing significant new features, we ask for plans to be discussed with the active developers (e.g., by opening an issue or discussion) _before_ extensive work is undertaken. This helps ensure alignment with the project's direction and avoids duplicated effort.
 
 ## Submitting Pull Requests (PRs)
+
+If you are submitting a code contribution, please follow these steps to ensure a smooth process:
 
 1.  **Create a Branch:** Create a new branch from the `main` branch for your changes: `git checkout -b type/descriptive-branch-name` (e.g., `feat/new-task-template-system` or `fix/resolve-diff-view-glitch`).
 2.  **Keep PRs Focused:** Submit one PR per feature or bug fix. Smaller, focused PRs are easier and quicker to review and merge.
@@ -114,10 +133,9 @@ We acknowledge and embrace the use of AI tools in development. If you use AI to 
     # Resolve any conflicts, then continue the rebase if necessary
     ```
 4.  **Pre-Submission Checklist:**
-    - All tests pass (`npm test`).
+    - All tests pass (`npm test`). Automated checks will verify this on your PR.
     - Code is linted (`npm run lint`) and formatted (`npm run format`).
     - Commit messages adhere to Conventional Commits and are signed off (see DCO section below). Automated checks will verify DCO on all commits.
-    - All tests pass (`npm test`). Automated checks will verify this on your PR.
     - Relevant documentation (code comments, `README.md`s, `TUTORIAL.md`) has been updated if your changes affect it.
     - The application builds and runs correctly with your changes.
 5.  **Open the Pull Request:**
@@ -161,4 +179,4 @@ Familiarizing yourself with these aspects will help you make effective contribut
 
 ---
 
-Thank you for taking the time to contribute to Athanor! We appreciate your support in building this AI workbench.
+Thank you for taking the time to read this document and for your interest in Athanor's development! Your feedback and engagement during this pre-alpha stage are crucial to shaping the future of this tool.

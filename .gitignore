@@ -19,6 +19,13 @@ Thumbs.db
 # Environment variables
 .env
 
+# Website node modules and build
+/website/node_modules
+/website/dist
+/website/forge
+/website/.webpack
+/website/out
+
 # AI files
 codebase.md
 
