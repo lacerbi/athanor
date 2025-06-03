@@ -110,5 +110,8 @@
     "timers-browserify": "^2.0.12",
     "xml2js": "^0.6.2",
     "zustand": "^5.0.2"
+  },
+  "overrides": {
+    "prismjs": "1.30.0"
   }
 }
