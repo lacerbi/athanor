@@ -25,6 +25,9 @@ The most valuable contributions at this stage include:
   - Tell us about your workflow, what works well, what doesn't, and how Athanor fits (or doesn't fit) into your development process. This feedback is invaluable during our pre-alpha stage.
   - Share your experiences in the [Discussions forum](https://github.com/lacerbi/athanor/discussions).
 
+- **Supporting Athanor:**
+  - Consider [sponsoring the project on GitHub](https://github.com/sponsors/lacerbi) to support its development.
+
 - **Reporting Bugs:**
 
   - Before submitting a new bug, please [search existing issues](https://github.com/lacerbi/athanor/issues) to avoid duplicates.

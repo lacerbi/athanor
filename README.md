@@ -4,6 +4,7 @@
 
 [![Status: WIP](https://img.shields.io/badge/Status-Work%20In%20Progress-yellow)](https://github.com/lacerbi/athanor)
 [![Stage: Pre-Alpha](https://img.shields.io/badge/Stage-Pre--Alpha-orange)](https://github.com/lacerbi/athanor)
+[![Sponsor me on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2.svg?logo=GitHub)](https://github.com/sponsors/lacerbi)
 [![Node.js >=18.x](https://img.shields.io/badge/Node.js-%3E%3D18.x-brightgreen)](https://nodejs.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
@@ -41,7 +42,6 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
 - **Controlled Changes**: Paste AI responses into Athanor. Preview all proposed file changes (creations, updates, deletions) in a clear visual diff viewer, then accept or reject each one individually before any edit is written to disk.
 - **Custom Templates**: Create your own prompt and task templates via global and project-specific configuration to tailor Athanor to your workflow.
 - **Optional Direct API Automation**: For advanced users or specific automated tasks (like "Autoselect"), Athanor allows direct connection to LLMs via API keys.
-- **Organized Multi-Task Workspace**: Manage several coding challenges at once using dedicated "task tabs," each with its own description, context, and AI output area, keeping your work focused and efficient.
 
 ## 🚀 Installation Setup
 
@@ -125,7 +125,7 @@ Read the [**full tutorial**](TUTORIAL.md) for more detailed information.
 
 ## 👥 Development and Feedback
 
-Athanor is being developed by [Luigi Acerbi](https://lacerbi.github.io/) for use in the [Machine and Human Intelligence Group](https://www.helsinki.fi/en/researchgroups/machine-and-human-intelligence) and collaborators.
+Athanor is being developed by [Luigi Acerbi](https://lacerbi.github.io/).
 
 This project is in its pre-alpha stage, and your feedback is crucial to help us improve and shape Athanor's development. We are primarily focused on understanding how Athanor fits into real-world development workflows.
 
