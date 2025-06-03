@@ -9,6 +9,20 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.5.10] - 2025-06-03
+
+### Added
+
+- Added new issue templates (`bug_report.md`, `feature_request.md`) in `.github/ISSUE_TEMPLATE/` to guide users in reporting bugs and suggesting features.
+
+### Fixed
+
+- Introduced dark theme support for the open project dialog box.
+
+### Documentation
+
+- Updated `README.md` and `CONTRIBUTING.md` to provide more precise information for contributors.
+
 ## [0.5.9] - 2025-06-01
 
 ### Added
