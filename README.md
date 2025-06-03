@@ -43,6 +43,12 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
 - **Custom Templates**: Create your own prompt and task templates via global and project-specific configuration to tailor Athanor to your workflow.
 - **Optional Direct API Automation**: For advanced users or specific automated tasks (like "Autoselect"), Athanor allows direct connection to LLMs via API keys.
 
+## 🔗 Official Resources
+
+- **Main Website:** [athanor.works](https://athanor.works/)
+- **Full Tutorial:** [docs.athanor.works/tutorial/introduction](https://athanor.works/docs/tutorial/introduction)
+- **Development Blog:** [athanor.works/blog](https://athanor.works/blog)
+
 ## 🚀 Installation Setup
 
 Athanor is currently available in developer mode.
@@ -121,7 +127,7 @@ Athanor is currently available in developer mode.
 
 </details>
 
-Read the [**full tutorial**](TUTORIAL.md) for more detailed information.
+Read the [**full online tutorial**](https://athanor.works/docs/tutorial/introduction) or the [local version](https://www.google.com/search?q=TUTORIAL.MD) for more detailed information.
 
 ## 👥 Development and Feedback
 
