@@ -2,6 +2,7 @@
 
 > _where modern alchemists cook_
 
+[![Version](https://img.shields.io/github/package-json/v/lacerbi/athanor?label=Version)](https://github.com/lacerbi/athanor)
 [![Status: WIP](https://img.shields.io/badge/Status-Work%20In%20Progress-yellow)](https://github.com/lacerbi/athanor)
 [![Stage: Pre-Alpha](https://img.shields.io/badge/Stage-Pre--Alpha-orange)](https://github.com/lacerbi/athanor)
 [![Sponsor me on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2.svg?logo=GitHub)](https://github.com/sponsors/lacerbi)
