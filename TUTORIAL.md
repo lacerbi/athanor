@@ -7,6 +7,10 @@
 
 ---
 
+**For the most up-to-date tutorial information, videos and materials, check out the [online tutorial](https://athanor.works/docs/tutorial/introduction).**
+
+---
+
 ## Getting Started with Athanor 🚀
 
 Athanor is a desktop application designed to help users and developers integrate AI assistants into their workflow. It streamlines creating AI prompts with relevant file context and applying the AI-generated changes back to your project or codebase.
