@@ -2,8 +2,9 @@
 
 > _where modern alchemists cook_
 
+[![Version](https://img.shields.io/github/package-json/v/lacerbi/athanor?label=Version)](https://github.com/lacerbi/athanor)
 [![Status: WIP](https://img.shields.io/badge/Status-Work%20In%20Progress-yellow)](https://github.com/lacerbi/athanor)
-[![Stage: Pre-Alpha](https://img.shields.io/badge/Stage-Pre--Alpha-orange)](https://github.com/lacerbi/athanor)
+[![Stage: Alpha](https://img.shields.io/badge/Stage-Alpha-yellow)](https://github.com/lacerbi/athanor)
 [![Sponsor me on GitHub](https://img.shields.io/badge/Sponsor-%E2%9D%A4-%23db61a2.svg?logo=GitHub)](https://github.com/sponsors/lacerbi)
 [![Node.js >=18.x](https://img.shields.io/badge/Node.js-%3E%3D18.x-brightgreen)](https://nodejs.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
@@ -24,7 +25,7 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
   <em>'Apply Changes' panel: Review and accept/reject diffs generated using any AI chat assistant.</em>
 </p>
 
-> 🚧 **WORK IN PROGRESS & PRE-ALPHA STAGE**: 🚧 Expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes. Features may evolve, and your feedback during this critical phase is invaluable for shaping Athanor's development. Please see our [Development and Feedback](#-development-and-feedback) section below for how to contribute.
+> 🚧 **WORK IN PROGRESS & ALPHA STAGE**: 🚧 Expect the glassware to be unpolished, reagents to be unstable, and formulas to occasionally yield unexpected outcomes. Features may evolve, and your feedback during this critical phase is invaluable for shaping Athanor's development. Please see our [Development and Feedback](#-development-and-feedback) section below for how to contribute.
 
 ## 📋 Table of Contents
 
@@ -133,7 +134,7 @@ Read the [**full online tutorial**](https://athanor.works/docs/tutorial/introduc
 
 Athanor is being developed by [Luigi Acerbi](https://lacerbi.github.io/).
 
-This project is in its pre-alpha stage, and your feedback is crucial to help us improve and shape Athanor's development. We are primarily focused on understanding how Athanor fits into real-world development workflows.
+This project is in its alpha stage, and your feedback is crucial to help us improve and shape Athanor's development. We are primarily focused on understanding how Athanor fits into real-world development workflows.
 
 - **User Experience Feedback:** Share your workflow experiences, what works well, what doesn't, and how Athanor fits into your development process. This is the most valuable contribution at this stage.
 - **General Questions, Ideas & Discussions:** Join the conversation on [GitHub Discussions](https://github.com/lacerbi/athanor/discussions).
