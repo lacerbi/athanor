@@ -1,5 +1,5 @@
-> 🚧 **PRE-ALPHA SOFTWARE & TUTORIAL**: 🚧
-> Welcome to the Athanor tutorial! Please be aware that Athanor is currently in a **pre-alpha stage**. This means the application is under active development. Features described here may evolve, and you might encounter some rough edges or bugs.
+> 🚧 **ALPHA SOFTWARE & TUTORIAL**: 🚧
+> Welcome to the Athanor tutorial! Please be aware that Athanor is currently in a **alpha stage**. This means the application is under active development. Features described here may evolve, and you might encounter some rough edges or bugs.
 >
 > Your feedback is incredibly valuable as we refine both the application and this tutorial. Please report any issues, share your user experience, suggest improvements, or discuss ideas via [GitHub Issues](https://github.com/lacerbi/athanor/issues) and [GitHub Discussions](https://github.com/lacerbi/athanor/discussions).
 >
