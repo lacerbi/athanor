@@ -1,6 +1,6 @@
 # Contributing to Athanor
 
-Welcome, and thank you for your interest in contributing to Athanor! We're excited to have you join our community. During this pre-alpha stage, we especially value feedback and input from users to help shape Athanor's development.
+Welcome, and thank you for your interest in contributing to Athanor! We're excited to have you join our community. During this alpha stage, we especially value feedback and input from users to help shape Athanor's development.
 
 ## Table of Contents
 
@@ -16,13 +16,13 @@ Welcome, and thank you for your interest in contributing to Athanor! We're excit
 
 ## Ways to Contribute
 
-> **Note:** As Athanor is in its pre-alpha stage, we are primarily focused on gathering user feedback to guide development. While code contributions that align with discussed issues are accepted, our current priority is understanding how Athanor fits into developers' workflows.
+> **Note:** As Athanor is in its alpha stage, we are primarily focused on gathering user feedback to guide development. While code contributions that align with discussed issues are accepted, our current priority is understanding how Athanor fits into developers' workflows.
 
 The most valuable contributions at this stage include:
 
 - **Sharing User Experience Feedback:**
 
-  - Tell us about your workflow, what works well, what doesn't, and how Athanor fits (or doesn't fit) into your development process. This feedback is invaluable during our pre-alpha stage.
+  - Tell us about your workflow, what works well, what doesn't, and how Athanor fits (or doesn't fit) into your development process. This feedback is invaluable during our alpha stage.
   - Share your experiences in the [Discussions forum](https://github.com/lacerbi/athanor/discussions).
 
 - **Supporting Athanor:**
@@ -43,7 +43,7 @@ The most valuable contributions at this stage include:
   - Our documentation, including the `README.md`, `TUTORIAL.md`, `PROJECT.md`, and module-specific `README.md` files (like those for LLM and Secure API Storage), can always be clearer or more comprehensive. Contributions like fixing typos, improving explanations, adding examples, or creating new guides are highly appreciated.
 
 - **Contributing Code:**
-  - While we're primarily focused on gathering feedback during this pre-alpha stage, code contributions that align with discussed issues or features are also accepted. Please discuss significant code changes in an issue or discussion first to ensure they align with our current development priorities.
+  - While we're primarily focused on gathering feedback during this alpha stage, code contributions that align with discussed issues or features are also accepted. Please discuss significant code changes in an issue or discussion first to ensure they align with our current development priorities.
 
 ## Setting Up Your Development Environment
 

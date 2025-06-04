@@ -9,6 +9,22 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.6.0] - 2025-06-04
+
+### Added
+
+- Version badge to `README.md` for clear release status visibility ([`33166c1`](https://github.com/lacerbi/athanor/commit/33166c1)).
+
+### Changed
+
+- **MILESTONE**: First official release of Athanor - AI Workbench, transitioning from pre-alpha development status.
+- **Project status officially updated from Pre-Alpha to Alpha**: Documentation and related materials reflect this transition to a more mature development stage.
+- Application version updated to 0.6.0 ([`270c744`](https://github.com/lacerbi/athanor/commit/270c744)).
+
+### Notes
+
+This release represents the first stable version of Athanor, consolidating all features and improvements from the 0.5.x development series. No major functional changes from v0.5.10, focusing on release preparation and documentation updates.
+
 ## [0.5.10] - 2025-06-03
 
 ### Added
