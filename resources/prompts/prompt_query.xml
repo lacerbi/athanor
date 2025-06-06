@@ -17,7 +17,8 @@
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -68,7 +69,8 @@ This summary should equip an experienced third party to understand the discussio
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Think thoroughly about the query above

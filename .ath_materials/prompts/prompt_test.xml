@@ -1,7 +1,7 @@
 <ath_prompt 
-    id="coder"
+    id="coder2"
     order="100"
-    label="Coder"
+    label="Coder2"
     icon="Wrench"
     tooltip="Prompt to execute a coding task">
 
@@ -17,118 +17,14 @@
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
-You are an expert AI assistant and software engineer.
-Use the included project information as a general guide.
+Include AI Summaries: {{include_ai_summaries}}
 
-# Coding Instructions
-
-## Response Formats
-
-You will respond with 2 sections: A summary section and one or more XML section(s).
-
-### Summary section
-
-- Provide a brief overall summary
-- Provide a 1-sentence summary for each file changed and why
-- Provide a 1-sentence summary for each file deleted and why
-- Format this section as markdown
-
-### XML sections
-
-- Respond with the XML block(s) and nothing else
-- Include all of the changed files
-- Specify each file operation with CREATE, UPDATE_FULL, UPDATE_DIFF, or DELETE
-- Each file should include a brief change summary
-- Include the full file path
-- Put the XML block inside markdown codeblocks
-- Make sure to enclose the code with <![CDATA[__CODE HERE__]]>
-- **Regarding file content within `CDATA` blocks:**
-  - By default use standard space characters (U+0020)
-  - Avoid introducing non-breaking spaces (U+00A0) and other non-standard whitespace, unless there is a reason (e.g., within a string literal)
-- You can write multiple `file` blocks in the same `ath` command
-- **Only if the `ath` block is getting excessively long (> 400 lines):**
-  - When you close the `file` tag, also close the `ath` tag and close the XML block
-  - Start a new XML block with a new `ath` tag
-- **Ensure to write valid XML by opening and closing all tags as appropriate**
-
-### File operations
-
-You can provide changes in two formats:
-
-1. Full File Content (for CREATE and UPDATE_FULL):
-   ```xml
-   <ath command="apply changes">
-   <file>
-   <file_message>Brief change description</file_message>
-   <file_operation>CREATE|UPDATE_FULL</file_operation>
-   <file_path>path/to/file</file_path>
-   <file_code><![CDATA[
-   [Full file content here]
-   ]]></file_code>
-   </file>
-
-   [other files can be added here]
-   </ath>
-   ```
-
-2. Enhanced Diff Format (for UPDATE_DIFF only):
-   ```xml
-   <ath command="apply changes">
-   <file>
-   <file_message>Brief change description</file_message>
-   <file_operation>UPDATE_DIFF</file_operation>
-   <file_path>path/to/file</file_path>
-   <file_code><![CDATA[
-   <<<<<<< SEARCH
-   import os
-   import sys
-   from flask import Flask
-   =======
-   import os
-   import sys
-   import numpy as np
-   from flask import Flask   
-   >>>>>>> REPLACE
-   <<<<<<< SEARCH
-   if not value:
-      process_default()
-   =======
-   if value is None:
-       process_default()
-   >>>>>>> REPLACE
-   ]]></file_code>
-   </file>
-
-   [other files can be added here]   
-   </ath>
-   ```
-
-When using enhanced diff format:
-- You may include multiple SEARCH/REPLACE blocks
-- Make sure the SEARCH block is an exact, character-for-character copy from the original code section you intend to replace
-- Do NOT reformat, re-indent, or change comments within the SEARCH block
-- Failure to provide a verbatim SEARCH block will cause the update to fail!
-- **IMPORTANT:** Include additional context lines in a SEARCH/REPLACE block to uniquely identify the change in the file
-
-Choose the appropriate format based on the changes:
-- Use full file content for:
-  - New files (CREATE)
-  - Extensive file rewrites, affecting 30-50% of the file or more (UPDATE_FULL)
-  - If you use the full file content, do NOT skip or omit any part
-
-- Use enhanced diff format for:
-  - Small to medium updates, affecting less than 30% of the file (UPDATE_DIFF)
-  - When there are several non-contiguous changes
-
-For DELETE operations, leave the file content empty
-  ```
-  <file_code><![CDATA[]]></file_code>
-  ```
-
+{{include_ai_summaries ? `
 ## AI Summary
 
 Brief file-level comments that capture essential purpose and behavior
@@ -150,10 +46,11 @@ Place them at the start of new/updated files and include:
 
 ### Example
 
-```typescript
+\`\`\`typescript
 // AI Summary: Handles JWT authentication, session management, and role-based access.
 // Requires secret key initialization. Core functions: generateToken(), validateSession().
-```
+\`\`\``
+}}
 
 ## Comments
 
@@ -192,7 +89,8 @@ instructing them to select the files from the Athanor file manager.
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Efficiently implement the feature or change described above according to best coding practices
@@ -327,12 +225,14 @@ instructing them to select the files from the Athanor file manager.
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Efficiently implement the feature or change described above according to best coding practices

@@ -525,6 +525,7 @@ export interface AthanorConfig {
   project_info?: string;
   project_info_path?: string; // Path to the file from which project_info was loaded
   system_prompt?: string;
+  includeAiSummaries?: boolean;
   documentation?: {
     includeNonSelected?: boolean;
   };

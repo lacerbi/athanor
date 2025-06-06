@@ -100,7 +100,9 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     setProjectInfoFilePath(value);
   };
 
-  const handleIncludeAiSummariesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleIncludeAiSummariesChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
     setIncludeAiSummaries(e.target.checked);
   };
 
@@ -149,7 +151,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
           Project Settings
         </h2>
         {hasProject && (
-          <span 
+          <span
             className="text-sm text-gray-500 dark:text-gray-400 truncate min-w-0"
             style={{ direction: 'rtl', textAlign: 'left' }}
             title={currentProjectPath || undefined}
@@ -248,9 +250,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                     type="button"
                     onClick={handleBrowseProjectInfoFile}
                     disabled={
-                      !hasProject ||
-                      isLoadingProjectSettings ||
-                      isSavingProject
+                      !hasProject || isLoadingProjectSettings || isSavingProject
                     }
                     className="px-3 py-2 text-sm bg-gray-200 dark:bg-gray-600 hover:bg-gray-300 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-md disabled:opacity-50 disabled:cursor-not-allowed"
                     title="Browse for project info file"
@@ -290,7 +290,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                   </label>
                   <div
                     className="relative group"
-                    title="When enabled, AI summaries will be added at the beginning of each file. Some prompts and features may expect these summaries to be present."
+                    title="When enabled, Athanor's prompts will include information about adding AI Summaries at the beginning of each file. Some prompts and features will work better if these summaries are present."
                   >
                     <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
                   </div>
