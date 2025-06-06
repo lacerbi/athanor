@@ -9,6 +9,21 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.6.2] - 2025-06-07
+
+### Added
+
+- **AI Summaries Toggle**: Added a new option in **Project Settings** to enable or disable the inclusion of AI summary instructions in prompts, giving users more control over prompt content ([`c68dc3d`](https://github.com/lacerbi/athanor/commit/c68dc3d)).
+- **Conditional Prompt Variables**: Enhanced the prompt template engine to support conditional inclusion of text based on project settings ([`cb6be41`](https://github.com/lacerbi/athanor/commit/cb6be41)).
+
+### Changed
+
+- Updated prompt templates to conditionally display information about AI summaries based on the new project setting ([`cb6be41`](https://github.com/lacerbi/athanor/commit/cb6be41)).
+
+### Fixed
+
+- Improved initial startup behavior when no project is selected ([`056aa2f`](https://github.com/lacerbi/athanor/commit/056aa2f)).
+
 ## [0.6.1] - 2025-06-06
 
 ### Added
