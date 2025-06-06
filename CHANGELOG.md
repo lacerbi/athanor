@@ -25,7 +25,7 @@ _(Future changes will go here)_
 
 ### Tests
 
-- Expanded the `run-tests` workflow (`pr-checks.yml`) to execute on multiple operating systems (`ubuntu-latest`, `windows-latest`, `macos-latest`) ([`18e6d9f`](https://github.com/lacerbi/athanor/commit/18e6d9f)).
+- Expanded the `run-tests` workflow (`pr-checks.yml`) to execute on multiple operating systems (`ubuntu-latest`, `windows-latest`, `macos-latest`) and Node.js versions (18.x, 20.x, 22.x) ([`18e6d9f`](https://github.com/lacerbi/athanor/commit/18e6d9f)).
 
 ## [0.6.0] - 2025-06-04
 
