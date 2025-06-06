@@ -17,6 +17,7 @@ export {};
 export interface ProjectSettings {
   projectNameOverride?: string;
   projectInfoFilePath?: string;
+  includeAiSummaries?: boolean;
   // Future expansion: other project-specific settings
 }
 

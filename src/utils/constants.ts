@@ -33,6 +33,7 @@ export const SETTINGS = {
     project: {
       projectNameOverride: '',
       projectInfoFilePath: '',
+      includeAiSummaries: true,
     },
     application: {
       enableExperimentalFeatures: false,

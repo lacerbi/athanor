@@ -28,6 +28,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
   // Local state for project settings form inputs
   const [projectNameOverride, setProjectNameOverride] = useState('');
   const [projectInfoFilePath, setProjectInfoFilePath] = useState('');
+  const [includeAiSummaries, setIncludeAiSummaries] = useState(true);
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [projectSaveError, setProjectSaveError] = useState<string | null>(null);
   const [browseError, setBrowseError] = useState<string | null>(null);
@@ -37,10 +38,12 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     if (projectSettings) {
       setProjectNameOverride(projectSettings.projectNameOverride || '');
       setProjectInfoFilePath(projectSettings.projectInfoFilePath || '');
+      setIncludeAiSummaries(projectSettings.includeAiSummaries ?? true);
     } else {
       // Clear form when no project settings
       setProjectNameOverride('');
       setProjectInfoFilePath('');
+      setIncludeAiSummaries(true);
     }
     // Clear any previous save errors when settings load
     setProjectSaveError(null);
@@ -51,6 +54,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     async (newSettings: {
       projectNameOverride?: string;
       projectInfoFilePath?: string;
+      includeAiSummaries?: boolean;
     }) => {
       if (!currentProjectPath) return;
 
@@ -96,6 +100,10 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     setProjectInfoFilePath(value);
   };
 
+  const handleIncludeAiSummariesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIncludeAiSummaries(e.target.checked);
+  };
+
   // Handle browse for project info file
   const handleBrowseProjectInfoFile = async () => {
     if (!hasProject) return;
@@ -124,13 +132,15 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     saveProjectSettingsCallback({
       projectNameOverride: projectNameOverride.trim(),
       projectInfoFilePath: projectInfoFilePath.trim(),
+      includeAiSummaries: includeAiSummaries,
     });
   };
 
   // Check if project settings have unsaved changes
   const hasUnsavedProjectChanges =
     projectNameOverride !== (projectSettings?.projectNameOverride || '') ||
-    projectInfoFilePath !== (projectSettings?.projectInfoFilePath || '');
+    projectInfoFilePath !== (projectSettings?.projectInfoFilePath || '') ||
+    includeAiSummaries !== (projectSettings?.includeAiSummaries ?? true);
 
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 h-fit">
@@ -267,6 +277,40 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                     {browseError}
                   </p>
                 )}
+              </div>
+
+              {/* Include AI Summaries */}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <label
+                    htmlFor="includeAiSummaries"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Include AI Summaries
+                  </label>
+                  <div
+                    className="relative group"
+                    title="When enabled, AI summaries will be added at the beginning of each file. Some prompts and features may expect these summaries to be present."
+                  >
+                    <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <input
+                    id="includeAiSummaries"
+                    type="checkbox"
+                    checked={includeAiSummaries}
+                    onChange={handleIncludeAiSummariesChange}
+                    disabled={isLoadingProjectSettings || isSavingProject}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                  />
+                  <label
+                    htmlFor="includeAiSummaries"
+                    className="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                  >
+                    Add AI summaries at the beginning of files
+                  </label>
+                </div>
               </div>
 
               {/* Save Project Settings Button */}
