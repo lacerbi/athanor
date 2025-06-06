@@ -210,6 +210,31 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const isTaskEmpty =
     !tabs?.[activeTabIndex] || tabs[activeTabIndex].content.trim().length === 0;
   const hasNoSelection = selectedItems.size === 0;
+  const hasNoProject = !rootItems || rootItems.length === 0 || !rootItems[0];
+
+  // Show empty state when no project is loaded
+  if (hasNoProject) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <div className="text-4xl mb-4">🚀</div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            Ready to Work with AI
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            Open a project folder to start generating prompts and working with AI assistants. 
+            Select files, describe your tasks, and let Athanor help you communicate effectively with AI.
+          </p>
+          <button
+            onClick={() => window.fileService.openFolder()}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          >
+            Open Project Folder
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">

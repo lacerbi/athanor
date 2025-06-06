@@ -17,7 +17,8 @@
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -157,7 +158,8 @@ instructing them to select the files from the Athanor file manager.
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Efficiently implement the content or change described above according to best writing practices
@@ -179,7 +181,8 @@ instructing them to select the files from the Athanor file manager.
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -335,7 +338,8 @@ instructing them to select the files from the Athanor file manager.
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Efficiently implement the content or change described above according to best writing practices
@@ -409,7 +413,9 @@ For DELETE operations, leave the file content empty
 <file_code><![CDATA[]]></file_code>
 ```
 
-## AI Summary
+{{
+  include_ai_summaries ? 
+`## AI Summary
 
 Brief file-level comments that capture essential purpose and behavior
 
@@ -430,10 +436,11 @@ Place them at the start of new/updated files and include:
 
 ### Example
 
-```typescript
+\`\`\`typescript
 // AI Summary: Handles JWT authentication, session management, and role-based access.
 // Requires secret key initialization. Core functions: generateToken(), validateSession().
-```
+\`\`\`` 
+}}
 
 ## Comments
 
@@ -469,12 +476,14 @@ instructing them to select the files from the Athanor file manager.
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Efficiently implement the feature or change described above according to best coding practices

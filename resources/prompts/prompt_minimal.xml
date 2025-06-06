@@ -20,7 +20,8 @@
 </project>
 
 <task>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task>
 </ath_prompt_variant>
 

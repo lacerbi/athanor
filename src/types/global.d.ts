@@ -17,6 +17,7 @@ export {};
 export interface ProjectSettings {
   projectNameOverride?: string;
   projectInfoFilePath?: string;
+  includeAiSummaries?: boolean;
   // Future expansion: other project-specific settings
 }
 
@@ -27,6 +28,7 @@ export interface ApplicationSettings {
   maxSmartPreviewLines?: number;
   thresholdLineLength?: number;
   lastSelectedApiPresetId?: string | null;
+  lastOpenedProjectPath?: string | null;
   uiTheme?: string;
 
   // Future expansion: more global settings
@@ -90,6 +92,7 @@ declare global {
     app: {
       getVersion: () => Promise<string>;
       getUserDataPath: () => Promise<string>;
+      getInitialPath: () => Promise<string | null>;
     };
 
     // Native theme bridge for system theme detection
@@ -522,6 +525,7 @@ export interface AthanorConfig {
   project_info?: string;
   project_info_path?: string; // Path to the file from which project_info was loaded
   system_prompt?: string;
+  includeAiSummaries?: boolean;
   documentation?: {
     includeNonSelected?: boolean;
   };

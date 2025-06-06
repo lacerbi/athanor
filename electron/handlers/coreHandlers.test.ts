@@ -61,6 +61,7 @@ jest.mock('fs', () => ({
 // Actual imports AFTER mocks and variable definitions for mock factories
 import { setupCoreHandlers } from './coreHandlers';
 import { FileService } from '../services/FileService'; // Type import or relies on prior mock
+import { SettingsService } from '../services/SettingsService';
 import { CUSTOM_TEMPLATES } from '../../src/utils/constants';
 
 // Import mocked modules (these will be the mocked versions)
@@ -79,8 +80,21 @@ const mockFsAccess = persistentMockFsAccess as jest.MockedFunction<typeof fs.pro
 
 describe('setupCoreHandlers', () => {
   let mockFileService: jest.Mocked<FileService>;
+  let mockSettingsService: jest.Mocked<SettingsService>;
   let ipcHandlers: Map<string, Function>;
   let mockEvent: any;
+  let originalConsoleError: typeof console.error;
+
+  beforeAll(() => {
+    // Mock console.error globally to avoid cluttering test output
+    originalConsoleError = console.error;
+    console.error = jest.fn();
+  });
+
+  afterAll(() => {
+    // Restore original console.error
+    console.error = originalConsoleError;
+  });
 
   beforeEach(() => {
     // Clear all mocks
@@ -111,6 +125,14 @@ describe('setupCoreHandlers', () => {
       setBaseDir: jest.fn(),
     } as any;
 
+    // Create mock SettingsService
+    mockSettingsService = {
+      getApplicationSettings: jest.fn(),
+      saveApplicationSettings: jest.fn(),
+      getProjectSettings: jest.fn(),
+      saveProjectSettings: jest.fn(),
+    } as any;
+
     // Set up default mainWindow mock
     mockWebContents.send.mockClear();
     mockWebContents.isDestroyed.mockReturnValue(false);
@@ -119,7 +141,7 @@ describe('setupCoreHandlers', () => {
     mockEvent = {};
 
     // Setup handlers
-    setupCoreHandlers(mockFileService);
+    setupCoreHandlers(mockFileService, mockSettingsService);
   });
 
   describe('handler registration', () => {
@@ -146,6 +168,7 @@ describe('setupCoreHandlers', () => {
         'shell:openPath',
         'app:getGlobalPromptsPath',
         'app:getProjectPromptsPath',
+        'app:get-initial-path',
       ];
 
       expectedChannels.forEach(channel => {
@@ -207,7 +230,12 @@ describe('setupCoreHandlers', () => {
       // Define local mocks for this specific test context
       const localMockDialog = { showMessageBox: jest.fn() };
       const localMockIpcMain = { handle: jest.fn() };
-      // mockFileService and mockEvent are from the outer scope and can be reused.
+      const localMockSettingsService = {
+        getApplicationSettings: jest.fn(),
+        saveApplicationSettings: jest.fn(),
+        getProjectSettings: jest.fn(),
+        saveProjectSettings: jest.fn(),
+      };
 
       jest.doMock('electron', () => ({
         ipcMain: localMockIpcMain,
@@ -217,8 +245,6 @@ describe('setupCoreHandlers', () => {
       jest.doMock('../windowManager', () => ({
         mainWindow: null, // Crucial: Ensure mainWindow is null in this context
       }));
-      // '../services/FileService' is globally mocked. setupCoreHandlers receives an instance.
-      // No need to jest.doMock FileService here again as we pass the existing mockFileService instance.
 
       // Re-require coreHandlers to get it with the new mocks, and re-setup its handlers
       const { setupCoreHandlers: localSetupCoreHandlers } = require('./coreHandlers');
@@ -227,7 +253,7 @@ describe('setupCoreHandlers', () => {
         localIpcHandlers.set(channel, handlerFn);
       });
 
-      localSetupCoreHandlers(mockFileService); // Use the mockFileService from the outer scope
+      localSetupCoreHandlers(mockFileService, localMockSettingsService);
       const handlerForNullWindowTest = localIpcHandlers.get('dialog:show-confirm-dialog')!;
       
       localMockDialog.showMessageBox.mockResolvedValue({ 
@@ -1014,6 +1040,108 @@ describe('setupCoreHandlers', () => {
       });
 
       expect(() => handler(mockEvent)).toThrow('join error');
+    });
+  });
+
+  describe('app:get-initial-path handler', () => {
+    let handler: Function;
+
+    beforeEach(() => {
+      handler = ipcHandlers.get('app:get-initial-path')!;
+    });
+
+    it('should return null when no application settings exist', async () => {
+      mockSettingsService.getApplicationSettings.mockResolvedValue(null);
+
+      const result = await handler(mockEvent);
+
+      expect(result).toBeNull();
+      expect(mockSettingsService.getApplicationSettings).toHaveBeenCalled();
+    });
+
+    it('should return null when no lastOpenedProjectPath in settings', async () => {
+      mockSettingsService.getApplicationSettings.mockResolvedValue({
+        enableExperimentalFeatures: false,
+      });
+
+      const result = await handler(mockEvent);
+
+      expect(result).toBeNull();
+    });
+
+    it('should return null when lastOpenedProjectPath directory does not exist', async () => {
+      mockSettingsService.getApplicationSettings.mockResolvedValue({
+        lastOpenedProjectPath: '/nonexistent/path',
+      });
+      mockFileService.exists.mockResolvedValue(false);
+
+      const result = await handler(mockEvent);
+
+      expect(result).toBeNull();
+      expect(mockFileService.exists).toHaveBeenCalledWith('/nonexistent/path');
+    });
+
+    it('should return null when lastOpenedProjectPath is not a directory', async () => {
+      mockSettingsService.getApplicationSettings.mockResolvedValue({
+        lastOpenedProjectPath: '/path/to/file.txt',
+      });
+      mockFileService.exists.mockResolvedValue(true);
+      mockFileService.isDirectory.mockResolvedValue(false);
+
+      const result = await handler(mockEvent);
+
+      expect(result).toBeNull();
+      expect(mockFileService.isDirectory).toHaveBeenCalledWith('/path/to/file.txt');
+    });
+
+    it('should return null when directory does not contain .athignore', async () => {
+      const projectPath = '/valid/project';
+      mockSettingsService.getApplicationSettings.mockResolvedValue({
+        lastOpenedProjectPath: projectPath,
+      });
+      mockFileService.exists.mockImplementation((path) => {
+        if (path === projectPath) return Promise.resolve(true);
+        if (path === '/valid/project/.athignore') return Promise.resolve(false);
+        return Promise.resolve(false);
+      });
+      mockFileService.isDirectory.mockResolvedValue(true);
+      mockFileService.join.mockReturnValue('/valid/project/.athignore');
+
+      const result = await handler(mockEvent);
+
+      expect(result).toBeNull();
+      expect(mockFileService.join).toHaveBeenCalledWith(projectPath, '.athignore');
+    });
+
+    it('should return valid project path when all checks pass', async () => {
+      const projectPath = '/valid/project';
+      mockSettingsService.getApplicationSettings.mockResolvedValue({
+        lastOpenedProjectPath: projectPath,
+      });
+      mockFileService.exists.mockImplementation((path) => {
+        if (path === projectPath) return Promise.resolve(true);
+        if (path === '/valid/project/.athignore') return Promise.resolve(true);
+        return Promise.resolve(false);
+      });
+      mockFileService.isDirectory.mockResolvedValue(true);
+      mockFileService.join.mockReturnValue('/valid/project/.athignore');
+
+      const result = await handler(mockEvent);
+
+      expect(result).toBe(projectPath);
+      expect(mockSettingsService.getApplicationSettings).toHaveBeenCalled();
+      expect(mockFileService.exists).toHaveBeenCalledWith(projectPath);
+      expect(mockFileService.isDirectory).toHaveBeenCalledWith(projectPath);
+      expect(mockFileService.join).toHaveBeenCalledWith(projectPath, '.athignore');
+      expect(mockFileService.exists).toHaveBeenCalledWith('/valid/project/.athignore');
+    });
+
+    it('should return null and handle errors gracefully', async () => {
+      mockSettingsService.getApplicationSettings.mockRejectedValue(new Error('Settings error'));
+
+      const result = await handler(mockEvent);
+
+      expect(result).toBeNull();
     });
   });
 });

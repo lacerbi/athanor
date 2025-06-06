@@ -41,7 +41,8 @@ You MUST ensure the generated XML strictly adheres to the structure exemplified 
 <file_contents>
 {{file_contents}}
 </file_contents>
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -49,7 +50,8 @@ You MUST ensure the generated XML strictly adheres to the structure exemplified 
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 </current_task>
 </ath_prompt_variant>
@@ -288,7 +290,8 @@ tooltip="This prompt explains the structure of Athanor prompt files.">
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -306,7 +309,8 @@ tooltip="This prompt explains the structure of Athanor prompt files.">
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 > <-- WRITE TASK-SPECIFIC INSTRUCTIONS HERE
@@ -405,7 +409,8 @@ tooltip="By default, plan a feature over multiple steps (commits)">
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -422,7 +427,8 @@ The purpose is to:
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Think thoroughly about the query or request above
@@ -537,7 +543,8 @@ tooltip="Use this to plan simple features or to give to strong coding models tha
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -555,7 +562,8 @@ The purpose is to:
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Think thoroughly about the query or request above
@@ -662,7 +670,8 @@ Use the included project information as a general guide.
 
 <current_task>
 <next_task>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </next_task>
 
 Consider the next_task described above
@@ -718,7 +727,8 @@ tooltip="Default prompt to be used with any LLM coding assistant">
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -900,7 +910,8 @@ instructing them to select the files from the Athanor file manager.
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Efficiently implement the feature or change described above according to best coding practices
@@ -1038,12 +1049,14 @@ instructing them to select the files from the Athanor file manager.
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Efficiently implement the feature or change described above according to best coding practices
@@ -1082,7 +1095,8 @@ tooltip="Default prompt to query the project">
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -1136,7 +1150,8 @@ This summary should equip an experienced third party to understand the discussio
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Think thoroughly about the query above

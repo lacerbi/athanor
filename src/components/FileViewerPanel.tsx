@@ -265,7 +265,7 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
         </>
       ) : (
         <div className="text-sm text-gray-400 dark:text-gray-500 mb-2">
-          No file selected for preview
+          {!previewedFilePath ? 'No file selected for preview' : 'Loading file...'}
         </div>
       )}
       {isText && !error && fileContent && (
@@ -312,9 +312,22 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
           </SyntaxHighlighter>
         </div>
       )}
-      {isText && !error && !fileContent && (
+      {isText && !error && !fileContent && previewedFilePath && (
         <div className="w-full h-full p-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded font-mono text-sm flex items-center justify-center">
           File is empty.
+        </div>
+      )}
+      {!previewedFilePath && (
+        <div className="w-full h-full flex items-center justify-center p-8">
+          <div className="text-center">
+            <div className="text-4xl mb-4">📄</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              File Viewer
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Select a file from the explorer to view its contents here.
+            </p>
+          </div>
         </div>
       )}
     </div>

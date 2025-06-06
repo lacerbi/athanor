@@ -24,6 +24,7 @@ export interface PromptVariables {
   selected_files_with_info?: string;
   task_context?: string;
   threshold_line_length?: number;
+  include_ai_summaries?: boolean;
 }
 
 // Get list of selected files with relative paths and line counts
@@ -120,10 +121,13 @@ export async function buildDynamicPrompt(
   }
 
   // Determine the actual format type to use for documentation
-  const actualFormatType = passedFormatTypeOverride || storeFormatType || DOC_FORMAT.DEFAULT;
+  const actualFormatType =
+    passedFormatTypeOverride || storeFormatType || DOC_FORMAT.DEFAULT;
 
   // Determine the active threshold line length to use
-  const activeThresholdLineLength = currentThresholdLineLength ?? SETTINGS.defaults.application.thresholdLineLength;
+  const activeThresholdLineLength =
+    currentThresholdLineLength ??
+    SETTINGS.defaults.application.thresholdLineLength;
 
   // Use effective config from store, with fallback for safety
   let config: AthanorConfig;
@@ -135,6 +139,9 @@ export async function buildDynamicPrompt(
     const { readAthanorConfig } = await import('./configUtils');
     config = await readAthanorConfig(rootPath);
   }
+
+  // Determine the includeAiSummaries setting, using true as default
+  const includeAiSummaries = config.includeAiSummaries ?? true;
 
   // Prepare project info with source file path if available
   let projectInfoForPrompt = '';
@@ -167,7 +174,7 @@ export async function buildDynamicPrompt(
 
   // Format task context if non-empty
   const formattedTaskContext = taskContext?.trim()
-    ? `\n\n<task_context>\n${taskContext.trim()}\n</task_context>`
+    ? `\n<task_context>\n${taskContext.trim()}\n</task_context>`
     : '';
 
   // Create a copy of codebaseDoc to avoid modifying the original
@@ -191,9 +198,10 @@ export async function buildDynamicPrompt(
       rootPath
     ),
     codebase_legend: hasSelectedFiles(items, selectedItems)
-      ? '\n## Legend\n\n* = likely relevant file or folder for the current task\n'
+      ? '## Legend\n\n* = likely relevant file or folder for the current task'
       : '',
     threshold_line_length: activeThresholdLineLength,
+    include_ai_summaries: includeAiSummaries,
     ...codebaseContent, // Contains file_contents and modified file_tree
   };
 

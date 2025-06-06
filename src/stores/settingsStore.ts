@@ -29,6 +29,7 @@ interface SettingsState {
   // Utility actions
   clearProjectSettings: () => void;
   resetErrors: () => void;
+  updateLastOpenedProjectPath: (projectPath: string) => Promise<void>;
 }
 
 export const useSettingsStore = create<SettingsState>((set, get) => ({
@@ -166,5 +167,21 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
       projectSettingsError: null,
       applicationSettingsError: null,
     });
+  },
+  
+  // Update last opened project path
+  updateLastOpenedProjectPath: async (projectPath: string) => {
+    const { applicationSettings, saveApplicationSettings } = get();
+    
+    if (!applicationSettings) {
+      throw new Error('Application settings not loaded');
+    }
+    
+    const updatedSettings = {
+      ...applicationSettings,
+      lastOpenedProjectPath: projectPath,
+    };
+    
+    await saveApplicationSettings(updatedSettings);
   },
 }));

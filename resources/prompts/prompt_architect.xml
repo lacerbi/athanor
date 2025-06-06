@@ -17,7 +17,8 @@
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -32,7 +33,8 @@ The purpose is to:
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Think thoroughly about the query or request above
@@ -139,7 +141,8 @@ Ensure to write valid XML by opening and closing all tags as appropriate
 {{file_contents}}
 </file_contents>
 
-{{file_tree}}{{codebase_legend}}
+{{file_tree}}
+{{codebase_legend}}
 </project>
 
 <system_prompt>
@@ -155,7 +158,8 @@ The purpose is to:
 
 <current_task>
 <task_description>
-{{task_description}}{{task_context}}
+{{task_description}}
+{{task_context}}
 </task_description>
 
 - Think thoroughly about the query or request above

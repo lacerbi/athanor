@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('electron', {
 contextBridge.exposeInMainWorld('app', {
   getVersion: () => ipcRenderer.invoke('app:version'),
   getUserDataPath: () => ipcRenderer.invoke('app:get-user-data-path'),
+  getInitialPath: () => ipcRenderer.invoke('app:get-initial-path'),
 });
 
 // Expose native theme bridge for system theme detection
