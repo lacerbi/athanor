@@ -2,13 +2,15 @@ name: Auto Tag
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   auto-tag:
     name: Auto Tag Version
     runs-on: ubuntu-latest
-    
+    permissions:
+      contents: write
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
