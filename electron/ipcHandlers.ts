@@ -13,7 +13,7 @@ import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 
 export function setupIpcHandlers(fileService: FileService, settingsService: SettingsService, apiKeyService: ApiKeyServiceMain, llmService: LLMServiceMain) {
-  setupCoreHandlers(fileService);
+  setupCoreHandlers(fileService, settingsService);
   setupFileOperationHandlers(fileService);
   setupFileWatchHandlers(fileService);
   setupSettingsHandlers(settingsService);

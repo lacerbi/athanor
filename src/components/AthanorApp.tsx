@@ -58,7 +58,7 @@ const AthanorApp: React.FC = () => {
   useEffect(() => {
     const applyTheme = async () => {
       const uiTheme = applicationSettings?.uiTheme || 'Auto';
-      
+
       if (uiTheme === 'Light') {
         document.documentElement.classList.remove('dark');
       } else if (uiTheme === 'Dark') {
@@ -66,7 +66,8 @@ const AthanorApp: React.FC = () => {
       } else if (uiTheme === 'Auto') {
         try {
           // Get initial system theme
-          const shouldUseDarkColors = await window.nativeThemeBridge.getInitialDarkMode();
+          const shouldUseDarkColors =
+            await window.nativeThemeBridge.getInitialDarkMode();
           if (shouldUseDarkColors) {
             document.documentElement.classList.add('dark');
           } else {
@@ -86,18 +87,20 @@ const AthanorApp: React.FC = () => {
   // Listen for system theme changes when in Auto mode
   useEffect(() => {
     const uiTheme = applicationSettings?.uiTheme || 'Auto';
-    
+
     if (uiTheme === 'Auto') {
       let cleanup: (() => void) | undefined;
-      
+
       try {
-        cleanup = window.nativeThemeBridge.onNativeThemeUpdated((shouldUseDarkColors: boolean) => {
-          if (shouldUseDarkColors) {
-            document.documentElement.classList.add('dark');
-          } else {
-            document.documentElement.classList.remove('dark');
+        cleanup = window.nativeThemeBridge.onNativeThemeUpdated(
+          (shouldUseDarkColors: boolean) => {
+            if (shouldUseDarkColors) {
+              document.documentElement.classList.add('dark');
+            } else {
+              document.documentElement.classList.remove('dark');
+            }
           }
-        });
+        );
       } catch (error) {
         console.error('Failed to listen for native theme updates:', error);
       }
@@ -112,9 +115,9 @@ const AthanorApp: React.FC = () => {
 
   // Register refresh callback
   useEffect(() => {
-    setChangeAppliedCallback((newlyCreatedPath?: string) => 
-      newlyCreatedPath 
-        ? refreshFileSystem(newlyCreatedPath) 
+    setChangeAppliedCallback((newlyCreatedPath?: string) =>
+      newlyCreatedPath
+        ? refreshFileSystem(newlyCreatedPath)
         : refreshFileSystem(true)
     );
     return () => setChangeAppliedCallback(null);
@@ -136,10 +139,38 @@ const AthanorApp: React.FC = () => {
     }
   }, [activeTab, lastTabChangeTime, refreshFileSystem]);
 
-  if (!filesData && !showProjectDialog) {
+  // Show welcome screen when no project is loaded
+  if (!currentDirectory && !showProjectDialog) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-xl">Loading project structure...</div>
+      <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-center p-8 max-w-md">
+          <div className="text-6xl mb-6">📁</div>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+            Welcome to Athanor ⚗️
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">
+            Get started by opening a project folder. Athanor will help you work
+            with AI assistants to understand and modify your project files or
+            codebase.
+          </p>
+          <button
+            onClick={handleOpenFolder}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          >
+            Open Project Folder
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading state only when we have a directory but no files data yet
+  if (currentDirectory && !filesData && !showProjectDialog) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-xl text-gray-900 dark:text-gray-100">
+          Loading project structure...
+        </div>
       </div>
     );
   }
@@ -153,7 +184,7 @@ const AthanorApp: React.FC = () => {
         gitignoreExists={gitignoreExists}
         folderName={pendingDirectory ? getBaseName(pendingDirectory) : ''}
       />
-      {filesData && (
+      {filesData && currentDirectory && (
         <MainLayout
           filesData={filesData}
           materialsData={materialsData}

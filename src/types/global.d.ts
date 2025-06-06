@@ -27,6 +27,7 @@ export interface ApplicationSettings {
   maxSmartPreviewLines?: number;
   thresholdLineLength?: number;
   lastSelectedApiPresetId?: string | null;
+  lastOpenedProjectPath?: string | null;
   uiTheme?: string;
 
   // Future expansion: more global settings
@@ -90,6 +91,7 @@ declare global {
     app: {
       getVersion: () => Promise<string>;
       getUserDataPath: () => Promise<string>;
+      getInitialPath: () => Promise<string | null>;
     };
 
     // Native theme bridge for system theme detection

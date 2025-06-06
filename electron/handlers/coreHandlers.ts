@@ -4,17 +4,23 @@
 import { ipcMain, dialog, app, nativeTheme, shell } from 'electron';
 import { mainWindow } from '../windowManager';
 import { FileService } from '../services/FileService';
+import { SettingsService } from '../services/SettingsService';
 import { CUSTOM_TEMPLATES } from '../../src/utils/constants';
 
-// Store fileService instance
+// Store service instances
 let _fileService: FileService;
+let _settingsService: SettingsService;
 
 // Define channel name for confirmation dialog
 const SHOW_CONFIRM_DIALOG_CHANNEL = 'dialog:show-confirm-dialog';
 
-export function setupCoreHandlers(fileService: FileService) {
-  // Store the fileService instance for later use
+export function setupCoreHandlers(
+  fileService: FileService,
+  settingsService: SettingsService
+) {
+  // Store the service instances for later use
   _fileService = fileService;
+  _settingsService = settingsService;
 
   // Add handler for confirmation dialog
   ipcMain.handle(
@@ -22,13 +28,15 @@ export function setupCoreHandlers(fileService: FileService) {
     async (_event, message: string, title?: string): Promise<boolean> => {
       try {
         if (!mainWindow) {
-          console.error('Main window not available for dialog. Showing dialog without parent.');
+          console.error(
+            'Main window not available for dialog. Showing dialog without parent.'
+          );
           // Fallback: Show dialog without a parent if mainWindow is somehow null
           const resultNoParent = await dialog.showMessageBox({
             type: 'question',
             buttons: ['OK', 'Cancel'],
             defaultId: 0, // OK
-            cancelId: 1,  // Cancel
+            cancelId: 1, // Cancel
             message: message,
             title: title || 'Confirmation',
           });
@@ -39,7 +47,7 @@ export function setupCoreHandlers(fileService: FileService) {
           type: 'question',
           buttons: ['OK', 'Cancel'],
           defaultId: 0, // OK is the default
-          cancelId: 1,  // Cancel is the second button
+          cancelId: 1, // Cancel is the second button
           message: message,
           title: title || 'Confirmation',
         });
@@ -66,6 +74,47 @@ export function setupCoreHandlers(fileService: FileService) {
       return app.getVersion();
     } catch (error) {
       handleError(error, 'getting app version');
+    }
+  });
+
+  // Add handler for getting initial project path
+  ipcMain.handle('app:get-initial-path', async () => {
+    try {
+      // Get application settings
+      const applicationSettings =
+        await _settingsService.getApplicationSettings();
+
+      // If no last opened project path, return null
+      if (!applicationSettings?.lastOpenedProjectPath) {
+        return null;
+      }
+
+      const lastPath = applicationSettings.lastOpenedProjectPath;
+
+      // Check if the directory exists
+      const exists = await _fileService.exists(lastPath);
+      if (!exists) {
+        return null;
+      }
+
+      // Check if it's a directory
+      const isDir = await _fileService.isDirectory(lastPath);
+      if (!isDir) {
+        return null;
+      }
+
+      // Check if it contains .athignore file (indicating it's a valid Athanor project)
+      const athignorePath = _fileService.join(lastPath, '.athignore');
+      const hasAthignore = await _fileService.exists(athignorePath);
+      if (!hasAthignore) {
+        return null;
+      }
+
+      // All checks passed, return the path
+      return lastPath;
+    } catch (error) {
+      console.error('Error getting initial project path:', error);
+      return null;
     }
   });
 
@@ -125,12 +174,12 @@ export function setupCoreHandlers(fileService: FileService) {
   ipcMain.handle('fs:toOSPath', async (_, inputPath: string) => {
     try {
       const normalizedPath = _fileService.toUnix(inputPath);
-      
+
       // If input is already absolute, resolve it directly
       if (normalizedPath.startsWith('/')) {
         return _fileService.toOS(normalizedPath);
       }
-      
+
       // Otherwise, resolve from base directory
       const resolvedPath = _fileService.resolve(normalizedPath);
       return _fileService.toOS(resolvedPath);
@@ -150,14 +199,17 @@ export function setupCoreHandlers(fileService: FileService) {
   });
 
   // Handle adding items to ignore file
-  ipcMain.handle('fs:addToIgnore', async (_, itemPath: string, ignoreAll?: boolean) => {
-    try {
-      const resolvedIgnoreAll = ignoreAll ?? false;
-      return await _fileService.addToIgnore(itemPath, resolvedIgnoreAll);
-    } catch (error) {
-      handleError(error, `adding to ignore file: ${itemPath}`);
+  ipcMain.handle(
+    'fs:addToIgnore',
+    async (_, itemPath: string, ignoreAll?: boolean) => {
+      try {
+        const resolvedIgnoreAll = ignoreAll ?? false;
+        return await _fileService.addToIgnore(itemPath, resolvedIgnoreAll);
+      } catch (error) {
+        handleError(error, `adding to ignore file: ${itemPath}`);
+      }
     }
-  });
+  );
 
   // Handle opening folder dialog with full refresh
   ipcMain.handle('fs:openFolder', async () => {
@@ -244,9 +296,23 @@ export function setupCoreHandlers(fileService: FileService) {
         defaultPath: _fileService.toOS(baseDir),
         properties: ['openFile'],
         filters: [
-          { name: 'Text Files', extensions: ['md', 'txt', 'log', 'json', 'xml', 'yaml', 'yml', 'ini', 'rst', 'adoc'] },
-          { name: 'All Files', extensions: ['*'] }
-        ]
+          {
+            name: 'Text Files',
+            extensions: [
+              'md',
+              'txt',
+              'log',
+              'json',
+              'xml',
+              'yaml',
+              'yml',
+              'ini',
+              'rst',
+              'adoc',
+            ],
+          },
+          { name: 'All Files', extensions: ['*'] },
+        ],
       });
 
       if (result.canceled || !result.filePaths.length) {
@@ -255,7 +321,7 @@ export function setupCoreHandlers(fileService: FileService) {
 
       const selectedPathAbs = _fileService.toUnix(result.filePaths[0]);
       const relativePath = _fileService.relativize(selectedPathAbs);
-      
+
       // Validate that the selected file is within the project directory
       if (relativePath.startsWith('../') || relativePath === selectedPathAbs) {
         throw new Error('Selected file must be within the project directory');
@@ -290,7 +356,10 @@ export function setupCoreHandlers(fileService: FileService) {
     try {
       const userDataPath = app.getPath('userData');
       const unixUserDataPath = _fileService.toUnix(userDataPath);
-      return _fileService.join(unixUserDataPath, CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME);
+      return _fileService.join(
+        unixUserDataPath,
+        CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME
+      );
     } catch (error) {
       handleError(error, 'getting global prompts path');
     }
@@ -300,7 +369,10 @@ export function setupCoreHandlers(fileService: FileService) {
   ipcMain.handle('app:getProjectPromptsPath', () => {
     try {
       const materialsDir = _fileService.getMaterialsDir();
-      return _fileService.join(materialsDir, CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME);
+      return _fileService.join(
+        materialsDir,
+        CUSTOM_TEMPLATES.USER_PROMPTS_DIR_NAME
+      );
     } catch (error) {
       handleError(error, 'getting project prompts path');
     }

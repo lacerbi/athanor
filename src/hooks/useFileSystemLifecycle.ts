@@ -159,6 +159,16 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     await setupWatcher(normalizedDir);
     addLog(`Loaded directory: ${normalizedDir}`);
 
+    // Save the successfully loaded project path to application settings
+    try {
+      const { updateLastOpenedProjectPath } = useSettingsStore.getState();
+      await updateLastOpenedProjectPath(normalizedDir);
+      addLog(`Saved project path to settings: ${normalizedDir}`);
+    } catch (error) {
+      console.error('Error saving project path to settings:', error);
+      addLog('Warning: Failed to save project path to settings');
+    }
+
     // Reset dialog state
     setShowProjectDialog(false);
     setPendingDirectory(null);
@@ -224,33 +234,36 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         // Load application settings first (independent of project)
         await loadApplicationSettings();
         
-        const currentDir = await window.fileService.getCurrentDirectory();
-        const normalizedDir = await window.pathUtils.toUnix(currentDir);
-        setCurrentDirectory(normalizedDir);
-
-        const { mainTree, materialsTree } =
-          await loadAndSetTrees(normalizedDir);
-        validateSelections(mainTree);
-        setFilesData(mainTree);
-        setResourcesData(materialsTree);
-
-        // Load application settings and project settings
-        await loadProjectSettings(normalizedDir);
+        // Get initial project path from main process
+        const initialPath = await window.app.getInitialPath();
         
-        // Load effective configuration with settings
-        await loadAndSetEffectiveConfig(normalizedDir);
-
-        // Load prompts and tasks
-        await Promise.all([
-          loadPrompts(),
-          loadTasks()
-        ]);
-        
-        await setupWatcher(normalizedDir);
-        addLog(`Loaded directory: ${normalizedDir}`);
+        if (initialPath) {
+          // If we have a valid initial path, initialize the project
+          await initializeProject(initialPath);
+        } else {
+          // No project state - set empty state
+          setCurrentDirectory('');
+          setFilesData(null);
+          setResourcesData(null);
+          useFileSystemStore.getState().resetState();
+          
+          // Still load prompts and tasks for when a project is opened
+          await Promise.all([
+            loadPrompts(),
+            loadTasks()
+          ]);
+          
+          addLog('No project loaded - ready to open a folder');
+        }
       } catch (error) {
         console.error('Error initializing file system:', error);
         addLog('Failed to initialize file system');
+        
+        // On error, set to no project state
+        setCurrentDirectory('');
+        setFilesData(null);
+        setResourcesData(null);
+        useFileSystemStore.getState().resetState();
       }
     };
 

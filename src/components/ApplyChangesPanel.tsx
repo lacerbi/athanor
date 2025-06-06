@@ -242,6 +242,32 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
 const ApplyChangesPanel: React.FC = () => {
   const { activeOperations, applyChange, rejectChange } =
     useApplyChangesStore();
+  const { fileTree } = useFileSystemStore();
+  
+  const hasProject = fileTree.length > 0;
+
+  if (!hasProject) {
+    return (
+      <div className="flex flex-col h-full items-center justify-center p-8">
+        <div className="text-center max-w-md">
+          <div className="text-4xl mb-4">⚡</div>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3">
+            Apply AI Changes
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            When you get code suggestions from AI assistants, paste them into the workbench. 
+            Athanor will parse the changes and show them here for review before applying to your files.
+          </p>
+          <button
+            onClick={() => window.fileService.openFolder()}
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-gray-900"
+          >
+            Open Project Folder
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!activeOperations.length) {
     return (

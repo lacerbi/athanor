@@ -88,28 +88,28 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               <button
                 onClick={() => onRefresh()}
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-                disabled={isRefreshing}
+                disabled={isRefreshing || !currentDirectory}
                 title="Refresh file system"
               >
                 <RefreshCw
                   size={20}
                   className={`${
-                    isRefreshing
-                      ? 'animate-spin text-gray-400 dark:text-gray-500'
+                    isRefreshing || !currentDirectory
+                      ? 'text-gray-400 dark:text-gray-500'
                       : 'text-gray-600 dark:text-gray-300'
-                  }`}
+                  } ${isRefreshing ? 'animate-spin' : ''}`}
                 />
               </button>
               <button
                 onClick={handleCopySelectedFiles}
-                disabled={selectedFileCount === 0}
+                disabled={selectedFileCount === 0 || !currentDirectory}
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 title="Copy selected files"
               >
                 <ClipboardCopy
                   size={20}
                   className={`${
-                    selectedFileCount === 0
+                    selectedFileCount === 0 || !currentDirectory
                       ? 'text-gray-400 dark:text-gray-500'
                       : 'text-gray-600 dark:text-gray-300'
                   }`}
