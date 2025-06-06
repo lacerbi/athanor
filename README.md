@@ -30,8 +30,9 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
 ## 📋 Table of Contents
 
 - [Key Features](#-key-features)
+- [Official Resources](#-official-resources)
 - [Installation Setup](#-installation-setup)
-- [Basic Usage](#-basic-usage)
+- [Quick Start](#-quick-start)
 - [Development and Feedback](#-development-and-feedback)
 - [License](#-license)
 
@@ -67,15 +68,11 @@ Athanor is currently available in developer mode.
 
 ### Installation & Running
 
-1. **Clone the repository**: `git clone https://github.com/lacerbi/athanor.git`
-
-   - Or simply [**download it**](https://github.com/lacerbi/athanor/archive/refs/heads/llm-api-calls.zip)
-
-2. **Navigate to the project directory**: `cd athanor`
-3. **Install dependencies**: `npm install`
-4. **Run the application in development mode**: `npm run dev`
-
-   - You can also compile it into an executable with `npm run package`
+1. **Run the command-line installer**: `npx setup-athanor`
+   - This will clone/download Athanor in the `athanor` subfolder from where you run it
+2. **Navigate to the Athanor directory**: `cd athanor`
+3. **Run the application**: `npm start`
+   - You can also compile Athanor into an executable with `npm run package`
 
 ## 💡 Quick Start
 
