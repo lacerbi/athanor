@@ -9,6 +9,20 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.6.1] - 2025-06-07
+
+### Fixed
+
+- `npm start` command now runs the application correctly in development mode ([`a84e784`](https://github.com/lacerbi/athanor/commit/a84e784)).
+
+### Documentation
+
+- Updated `README.md` with clearer installation instructions and a refined quick-start guide ([`c82f142`](https://github.com/lacerbi/athanor/commit/c82f142)).
+
+### Tests
+
+- Added a multi-OS testing strategy to the CI pipeline, ensuring tests are run on Ubuntu, Windows, and macOS for every pull request ([`18e6d9f`](https://github.com/lacerbi/athanor/commit/18e6d9f)).
+
 ## [0.6.0] - 2025-06-04
 
 ### Added
