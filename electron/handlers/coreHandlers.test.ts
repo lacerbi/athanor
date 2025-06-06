@@ -160,6 +160,7 @@ describe('setupCoreHandlers', () => {
         'fs:reloadIgnoreRules',
         'fs:addToIgnore',
         'fs:openFolder',
+        'fs:setBaseDirectory',
         'fs:isDirectory',
         'fs:getMaterialsDir',
         'fs:relativeToProject',
@@ -671,6 +672,29 @@ describe('setupCoreHandlers', () => {
 
       expect(result).toBe(unixPath);
       expect(mockWebContents.send).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('fs:setBaseDirectory handler', () => {
+    let handler: Function;
+
+    beforeEach(() => {
+      handler = ipcHandlers.get('fs:setBaseDirectory')!;
+    });
+
+    it('should call fileService.setBaseDir with the correct path', async () => {
+      mockFileService.setBaseDir.mockResolvedValue(undefined);
+
+      await handler(mockEvent, '/test/dir');
+
+      expect(mockFileService.setBaseDir).toHaveBeenCalledWith('/test/dir');
+    });
+
+    it('should handle service errors', async () => {
+      const errorMessage = 'Failed to set base directory';
+      mockFileService.setBaseDir.mockRejectedValue(new Error(errorMessage));
+
+      await expect(handler(mockEvent, '/test/dir')).rejects.toThrow(errorMessage);
     });
   });
 

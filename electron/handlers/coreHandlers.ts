@@ -256,6 +256,15 @@ export function setupCoreHandlers(
     }
   });
 
+  // Add handler for setting the base directory programmatically
+  ipcMain.handle('fs:setBaseDirectory', async (_, directoryPath: string) => {
+    try {
+      await _fileService.setBaseDir(directoryPath);
+    } catch (error) {
+      handleError(error, `setting base directory to: ${directoryPath}`);
+    }
+  });
+
   // Add handler for checking if path is directory
   ipcMain.handle('fs:isDirectory', async (_, filePath: string) => {
     try {

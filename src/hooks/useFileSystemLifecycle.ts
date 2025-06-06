@@ -135,8 +135,12 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   };
 
   const initializeProject = async (directory: string) => {
-    useFileSystemStore.getState().resetState();
     const normalizedDir = await window.pathUtils.toUnix(directory);
+    
+    // Set the base directory in the main process FIRST. This is the fix for startup hang.
+    await window.fileService.setBaseDirectory(normalizedDir);
+    
+    useFileSystemStore.getState().resetState();
     setCurrentDirectory(normalizedDir);
 
     const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);

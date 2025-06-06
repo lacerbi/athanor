@@ -9,7 +9,17 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
-## [0.6.2] - 2025-06-07
+## [0.6.3] - 2025-06-06
+
+### Fixed
+
+- Resolved a critical issue that caused the packaged application to hang and become unresponsive on startup ([`69cf600`](https://github.com/lacerbi/athanor/commit/69cf600)).
+
+### Tests
+
+- Corrected failing unit tests and added a new test case for the `fs:setBaseDirectory` handler to improve test coverage and stability ([`e1dbf33`](https://github.com/lacerbi/athanor/commit/e1dbf33)).
+
+## [0.6.2] - 2025-06-06
 
 ### Added
 
