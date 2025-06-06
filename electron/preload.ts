@@ -143,6 +143,9 @@ contextBridge.exposeInMainWorld('fileService', {
   getPromptTemplatePath: (templateName: string) =>
     ipcRenderer.invoke('fs:getPromptTemplatePath', templateName),
   
+  // Base directory management
+  setBaseDirectory: (path: string) => ipcRenderer.invoke('fs:setBaseDirectory', path),
+  
   // Project operations
   openFolder: () => ipcRenderer.invoke('fs:openFolder'),
   selectProjectInfoFile: () => ipcRenderer.invoke('fs:selectProjectInfoFile'),

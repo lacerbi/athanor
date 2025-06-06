@@ -390,6 +390,12 @@ declare global {
        */
       getPromptTemplatePath: (templateName: string) => Promise<string>;
 
+      // Base directory management
+      /**
+       * Sets the base directory for file operations in the main process
+       */
+      setBaseDirectory: (path: string) => Promise<void>;
+
       // Project operations
       /**
        * Open folder dialog and set as base directory
