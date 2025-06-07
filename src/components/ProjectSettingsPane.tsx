@@ -110,9 +110,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     setIncludeAiSummaries(e.target.checked);
   };
 
-  const handleUseGitignoreChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleUseGitignoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setUseGitignore(e.target.checked);
   };
 
@@ -292,11 +290,11 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
               </div>
 
               {/* Include AI Summaries */}
-              <div className="space-y-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <label
                     htmlFor="includeAiSummaries"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Include AI Summaries
                   </label>
@@ -307,56 +305,40 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                     <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <input
-                    id="includeAiSummaries"
-                    type="checkbox"
-                    checked={includeAiSummaries}
-                    onChange={handleIncludeAiSummariesChange}
-                    disabled={isLoadingProjectSettings || isSavingProject}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-                  />
-                  <label
-                    htmlFor="includeAiSummaries"
-                    className="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                  >
-                    Add AI summaries at the beginning of files
-                  </label>
-                </div>
+                <input
+                  id="includeAiSummaries"
+                  type="checkbox"
+                  checked={includeAiSummaries}
+                  onChange={handleIncludeAiSummariesChange}
+                  disabled={isLoadingProjectSettings || isSavingProject}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                />
               </div>
 
               {/* Use Gitignore */}
-              <div className="space-y-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <label
                     htmlFor="useGitignore"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Use .gitignore rules
                   </label>
                   <div
                     className="relative group"
-                    title="When enabled, Athanor automatically applies ignore patterns from .gitignore in the project root. You can use .athignore for Athanor-specific overrides."
+                    title="When enabled, Athanor automatically applies ignore patterns from .gitignore in the project root. You can use .athignore for additional Athanor-specific overrides."
                   >
                     <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <input
-                    id="useGitignore"
-                    type="checkbox"
-                    checked={useGitignore}
-                    onChange={handleUseGitignoreChange}
-                    disabled={isLoadingProjectSettings || isSavingProject}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-                  />
-                  <label
-                    htmlFor="useGitignore"
-                    className="ml-2 text-sm text-gray-600 dark:text-gray-400"
-                  >
-                    Automatically apply .gitignore patterns
-                  </label>
-                </div>
+                <input
+                  id="useGitignore"
+                  type="checkbox"
+                  checked={useGitignore}
+                  onChange={handleUseGitignoreChange}
+                  disabled={isLoadingProjectSettings || isSavingProject}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                />
               </div>
 
               {/* Save Project Settings Button */}
