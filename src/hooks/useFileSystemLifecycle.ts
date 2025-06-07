@@ -110,27 +110,26 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     [currentDirectory, isRefreshing, validateSelections, addLog]
   );
 
-  const handleCreateProject = async (useStandardIgnore: boolean) => {
-    if (!pendingDirectory) return;
+  const setupWatcher = useCallback(
+    async (dir: string) => {
+      try {
+        await window.fileService.watch(dir, async () => {
+          if (refreshTimeoutRef.current) {
+            clearTimeout(refreshTimeoutRef.current);
+          }
+          refreshTimeoutRef.current = setTimeout(() => {
+            refreshFileSystem(true);
+          }, 300);
+        });
+      } catch (error) {
+        console.error('Error setting up watcher:', error);
+        addLog('Failed to set up file system watcher');
+      }
+    },
+    [refreshFileSystem, addLog]
+  );
 
-    try {
-      // Create .athignore file with selected rules
-      await createAthignoreFile(pendingDirectory, {
-        useStandardIgnore,
-      });
-
-      // Initialize project with new .athignore
-      await initializeProject(pendingDirectory);
-
-      addLog('Created new Athanor project');
-    } catch (error) {
-      console.error('Error creating project:', error);
-      addLog('Failed to create project');
-      throw error;
-    }
-  };
-
-  const initializeProject = async (directory: string) => {
+  const initializeProject = useCallback(async (directory: string) => {
     const normalizedDir = await window.pathUtils.toUnix(directory);
     
     // Set the base directory in the main process FIRST. This is the fix for startup hang.
@@ -190,9 +189,29 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     // Reset dialog state
     setShowProjectDialog(false);
     setPendingDirectory(null);
-  };
+  }, [addLog, setupWatcher, validateSelections, loadProjectSettings]);
 
-  const handleOpenFolder = async () => {
+  const handleCreateProject = useCallback(async (useStandardIgnore: boolean) => {
+    if (!pendingDirectory) return;
+
+    try {
+      // Create .athignore file with selected rules
+      await createAthignoreFile(pendingDirectory, {
+        useStandardIgnore,
+      });
+
+      // Initialize project with new .athignore
+      await initializeProject(pendingDirectory);
+
+      addLog('Created new Athanor project');
+    } catch (error) {
+      console.error('Error creating project:', error);
+      addLog('Failed to create project');
+      throw error;
+    }
+  }, [pendingDirectory, initializeProject, addLog]);
+
+  const handleOpenFolder = useCallback(async () => {
     try {
       const selectedDir = await window.fileService.openFolder();
 
@@ -218,26 +237,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       console.error('Error opening folder:', error);
       addLog('Failed to open folder');
     }
-  };
-
-  const setupWatcher = useCallback(
-    async (dir: string) => {
-      try {
-        await window.fileService.watch(dir, async () => {
-          if (refreshTimeoutRef.current) {
-            clearTimeout(refreshTimeoutRef.current);
-          }
-          refreshTimeoutRef.current = setTimeout(() => {
-            refreshFileSystem(true);
-          }, 300);
-        });
-      } catch (error) {
-        console.error('Error setting up watcher:', error);
-        addLog('Failed to set up file system watcher');
-      }
-    },
-    [refreshFileSystem, addLog]
-  );
+  }, [initializeProject]);
 
   useEffect(() => {
     const initializeFileSystem = async () => {
@@ -288,7 +288,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [setupWatcher, validateSelections, addLog, loadApplicationSettings, loadProjectSettings]);
+  }, [setupWatcher, validateSelections, addLog, loadApplicationSettings, loadProjectSettings, initializeProject]);
 
   // Effect to update effective config when project settings change
   useEffect(() => {
