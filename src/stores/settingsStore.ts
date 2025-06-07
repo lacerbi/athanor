@@ -96,6 +96,16 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
     try {
       await window.settingsService.saveProjectSettings(currentProjectPath, settings);
       set({ projectSettings: settings });
+      
+      // Trigger ignore rules reload in main process to reflect useGitignore changes
+      try {
+        await window.fileService.reloadIgnoreRules();
+        console.log('Reloaded ignore rules after saving project settings');
+      } catch (reloadError) {
+        console.warn('Failed to reload ignore rules after saving project settings:', reloadError);
+        // Don't throw here as the settings were saved successfully
+      }
+      
       console.log('Saved project settings:', settings);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error saving project settings';

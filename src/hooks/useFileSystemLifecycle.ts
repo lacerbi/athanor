@@ -28,13 +28,13 @@ const loadAndSetEffectiveConfig = async (basePath: string) => {
   try {
     // Get current project settings from the settings store
     const { projectSettings } = useSettingsStore.getState();
-    
+
     // Load effective configuration with settings integration
     const effectiveConfig = await readAthanorConfig(basePath, projectSettings);
-    
+
     // Update the file system store with the effective config
     useFileSystemStore.getState().setEffectiveConfig(effectiveConfig);
-    
+
     return effectiveConfig;
   } catch (error) {
     console.error('Error loading effective configuration:', error);
@@ -57,15 +57,22 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   const { validateSelections, clearSelections } = useFileSystemStore();
   const { addLog } = useLogStore();
-  const { loadProjectSettings, loadApplicationSettings, projectSettings } = useSettingsStore();
+  const { loadProjectSettings, loadApplicationSettings, projectSettings } =
+    useSettingsStore();
+
+  // Track previous project settings to detect changes
+  const prevProjectSettingsRef = useRef<typeof projectSettings>(undefined);
 
   const refreshFileSystem = useCallback(
-    async (silentOrNewPath: boolean | string = false, newlyCreatedPath?: string) => {
+    async (
+      silentOrNewPath: boolean | string = false,
+      newlyCreatedPath?: string
+    ) => {
       // Handle both function signatures:
-      // refreshFileSystem(silent = false) and 
+      // refreshFileSystem(silent = false) and
       // refreshFileSystem(newlyCreatedPath?: string)
       let silent = false;
-      
+
       if (typeof silentOrNewPath === 'boolean') {
         silent = silentOrNewPath;
       } else if (typeof silentOrNewPath === 'string') {
@@ -87,10 +94,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         await loadAndSetEffectiveConfig(currentDirectory);
 
         // Load prompts and tasks
-        await Promise.all([
-          loadPrompts(),
-          loadTasks()
-        ]);
+        await Promise.all([loadPrompts(), loadTasks()]);
 
         // Auto-select newly created file if path was provided
         if (newlyCreatedPath) {
@@ -98,7 +102,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
           selectItems([newlyCreatedPath]);
           addLog(`Auto-selected newly created file: ${newlyCreatedPath}`);
         }
-        
+
         if (!silent) {
           addLog('File system refreshed');
         }
@@ -130,91 +134,97 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     [refreshFileSystem, addLog]
   );
 
-  const initializeProject = useCallback(async (directory: string) => {
-    const normalizedDir = await window.pathUtils.toUnix(directory);
-    
-    // Set the base directory in the main process FIRST. This is the fix for startup hang.
-    await window.fileService.setBaseDirectory(normalizedDir);
-    
-    useFileSystemStore.getState().resetState();
-    setCurrentDirectory(normalizedDir);
+  const initializeProject = useCallback(
+    async (directory: string) => {
+      const normalizedDir = await window.pathUtils.toUnix(directory);
 
-    const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
-    validateSelections(mainTree);
-    setFilesData(mainTree);
-    setResourcesData(materialsTree);
+      // Set the base directory in the main process FIRST. This is the fix for startup hang.
+      await window.fileService.setBaseDirectory(normalizedDir);
 
-    // Load project settings for the new directory
-    await loadProjectSettings(normalizedDir);
-    
-    // Load effective configuration with settings
-    await loadAndSetEffectiveConfig(normalizedDir);
+      useFileSystemStore.getState().resetState();
+      setCurrentDirectory(normalizedDir);
 
-    // Load prompts and tasks
-    await Promise.all([
-      loadPrompts(),
-      loadTasks()
-    ]);
-    
-    await setupWatcher(normalizedDir);
-    addLog(`Loaded directory: ${normalizedDir}`);
+      const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
+      validateSelections(mainTree);
+      setFilesData(mainTree);
+      setResourcesData(materialsTree);
 
-    // Save the successfully loaded project path and update recent projects list
-    try {
-      // Get the save action and current settings from the Zustand store
-      const { saveApplicationSettings, applicationSettings } = useSettingsStore.getState();
-      const currentSettings = applicationSettings || { ...SETTINGS.defaults.application };
-      const newPath = normalizedDir;
+      // Load project settings for the new directory
+      await loadProjectSettings(normalizedDir);
 
-      const existingPaths = currentSettings.recentProjectPaths || [];
-      const filteredPaths = existingPaths.filter(p => p !== newPath);
-      const newRecentPaths = [newPath, ...filteredPaths];
+      // Load effective configuration with settings
+      await loadAndSetEffectiveConfig(normalizedDir);
 
-      // Enforce limit on recent projects
-      if (newRecentPaths.length > SETTINGS.limits.MAX_RECENT_PROJECTS) {
-        newRecentPaths.length = SETTINGS.limits.MAX_RECENT_PROJECTS;
+      // Load prompts and tasks
+      await Promise.all([loadPrompts(), loadTasks()]);
+
+      await setupWatcher(normalizedDir);
+      addLog(`Loaded directory: ${normalizedDir}`);
+
+      // Save the successfully loaded project path and update recent projects list
+      try {
+        // Get the save action and current settings from the Zustand store
+        const { saveApplicationSettings, applicationSettings } =
+          useSettingsStore.getState();
+        const currentSettings = applicationSettings || {
+          ...SETTINGS.defaults.application,
+        };
+        const newPath = normalizedDir;
+
+        const existingPaths = currentSettings.recentProjectPaths || [];
+        const filteredPaths = existingPaths.filter((p) => p !== newPath);
+        const newRecentPaths = [newPath, ...filteredPaths];
+
+        // Enforce limit on recent projects
+        if (newRecentPaths.length > SETTINGS.limits.MAX_RECENT_PROJECTS) {
+          newRecentPaths.length = SETTINGS.limits.MAX_RECENT_PROJECTS;
+        }
+
+        const newSettings: ApplicationSettings = {
+          ...currentSettings,
+          lastOpenedProjectPath: newPath,
+          recentProjectPaths: newRecentPaths,
+        };
+
+        // Use the store action to save settings, which updates both state and disk
+        await saveApplicationSettings(newSettings);
+
+        window.electron.send('app:rebuild-menu', undefined); // Notify main process
+        addLog('Updated recent projects list.');
+      } catch (error) {
+        console.error('Error updating recent projects list:', error);
+        addLog('Warning: Failed to update recent projects list.');
       }
 
-      const newSettings: ApplicationSettings = {
-        ...currentSettings,
-        lastOpenedProjectPath: newPath,
-        recentProjectPaths: newRecentPaths,
-      };
-      
-      // Use the store action to save settings, which updates both state and disk
-      await saveApplicationSettings(newSettings);
-      
-      window.electron.send('app:rebuild-menu', undefined); // Notify main process
-      addLog('Updated recent projects list.');
-    } catch (error) {
-      console.error('Error updating recent projects list:', error);
-      addLog('Warning: Failed to update recent projects list.');
-    }
+      // Reset dialog state
+      setShowProjectDialog(false);
+      setPendingDirectory(null);
+    },
+    [addLog, setupWatcher, validateSelections, loadProjectSettings]
+  );
 
-    // Reset dialog state
-    setShowProjectDialog(false);
-    setPendingDirectory(null);
-  }, [addLog, setupWatcher, validateSelections, loadProjectSettings]);
+  const handleCreateProject = useCallback(
+    async (useStandardIgnore: boolean) => {
+      if (!pendingDirectory) return;
 
-  const handleCreateProject = useCallback(async (useStandardIgnore: boolean) => {
-    if (!pendingDirectory) return;
+      try {
+        // Create .athignore file with selected rules
+        await createAthignoreFile(pendingDirectory, {
+          useStandardIgnore,
+        });
 
-    try {
-      // Create .athignore file with selected rules
-      await createAthignoreFile(pendingDirectory, {
-        useStandardIgnore,
-      });
+        // Initialize project with new .athignore
+        await initializeProject(pendingDirectory);
 
-      // Initialize project with new .athignore
-      await initializeProject(pendingDirectory);
-
-      addLog('Created new Athanor project');
-    } catch (error) {
-      console.error('Error creating project:', error);
-      addLog('Failed to create project');
-      throw error;
-    }
-  }, [pendingDirectory, initializeProject, addLog]);
+        addLog('Created new Athanor project');
+      } catch (error) {
+        console.error('Error creating project:', error);
+        addLog('Failed to create project');
+        throw error;
+      }
+    },
+    [pendingDirectory, initializeProject, addLog]
+  );
 
   const handleOpenFolder = useCallback(async () => {
     try {
@@ -252,10 +262,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       try {
         // Load application settings first (independent of project)
         await loadApplicationSettings();
-        
+
         // Get initial project path from main process
         const initialPath = await window.app.getInitialPath();
-        
+
         if (initialPath) {
           // If we have a valid initial path, initialize the project
           await initializeProject(initialPath);
@@ -265,19 +275,16 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
           setFilesData(null);
           setResourcesData(null);
           useFileSystemStore.getState().resetState();
-          
+
           // Still load prompts and tasks for when a project is opened
-          await Promise.all([
-            loadPrompts(),
-            loadTasks()
-          ]);
-          
+          await Promise.all([loadPrompts(), loadTasks()]);
+
           addLog('No project loaded - ready to open a folder');
         }
       } catch (error) {
         console.error('Error initializing file system:', error);
         addLog('Failed to initialize file system');
-        
+
         // On error, set to no project state
         setCurrentDirectory('');
         setFilesData(null);
@@ -293,18 +300,54 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [setupWatcher, validateSelections, addLog, loadApplicationSettings, loadProjectSettings, initializeProject]);
+  }, [
+    setupWatcher,
+    validateSelections,
+    addLog,
+    loadApplicationSettings,
+    loadProjectSettings,
+    initializeProject,
+  ]);
 
   // Effect to update effective config when project settings change
   useEffect(() => {
+    const prevSettings = prevProjectSettingsRef.current;
+
     if (currentDirectory && projectSettings !== undefined) {
+      // Check if useGitignore setting has changed
+      const useGitignoreChanged =
+        prevSettings !== undefined &&
+        prevSettings?.useGitignore !== projectSettings?.useGitignore;
+
       // Reload effective configuration when project settings change
-      loadAndSetEffectiveConfig(currentDirectory).catch(error => {
-        console.error('Error updating effective configuration after settings change:', error);
+      loadAndSetEffectiveConfig(currentDirectory).catch((error) => {
+        console.error(
+          'Error updating effective configuration after settings change:',
+          error
+        );
         addLog('Failed to update configuration after settings change');
       });
+
+      // If useGitignore setting changed, trigger a silent file system refresh
+      if (useGitignoreChanged) {
+        addLog(
+          `Gitignore usage changed to: ${projectSettings?.useGitignore ? 'enabled' : 'disabled'}`
+        );
+        refreshFileSystem(true).catch((error) => {
+          console.error(
+            'Error refreshing file system after gitignore setting change:',
+            error
+          );
+          addLog(
+            'Failed to refresh file system after gitignore setting change'
+          );
+        });
+      }
     }
-  }, [projectSettings, currentDirectory, addLog]);
+
+    // Update the ref for next comparison
+    prevProjectSettingsRef.current = projectSettings;
+  }, [projectSettings, currentDirectory, addLog, refreshFileSystem]);
 
   useEffect(() => {
     const fetchVersion = async () => {
@@ -322,8 +365,13 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   // Set up listeners for menu commands from main process
   useEffect(() => {
-    const cleanupOpenFolder = window.electron.receive('menu:open-folder', () => handleOpenFolder());
-    const cleanupOpenPath = window.electron.receive('menu:open-path', (path: string) => initializeProject(path));
+    const cleanupOpenFolder = window.electron.receive('menu:open-folder', () =>
+      handleOpenFolder()
+    );
+    const cleanupOpenPath = window.electron.receive(
+      'menu:open-path',
+      (path: string) => initializeProject(path)
+    );
 
     // Return a cleanup function that will be called when the component unmounts
     return () => {
