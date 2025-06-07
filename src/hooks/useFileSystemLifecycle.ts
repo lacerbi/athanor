@@ -10,6 +10,7 @@ import { useSettingsStore } from '../stores/settingsStore';
 import { loadPrompts, loadTasks } from '../services/promptService';
 import { readAthanorConfig } from '../utils/configUtils';
 import { SETTINGS } from '../utils/constants';
+import type { ApplicationSettings } from '../types/global';
 
 import { FileSystemLifecycle } from '../types/global';
 
@@ -160,30 +161,34 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
     // Save the successfully loaded project path and update recent projects list
     try {
-      const currentSettings = (await window.settingsService.getApplicationSettings()) || SETTINGS.defaults.application;
+      // Get the save action and current settings from the Zustand store
+      const { saveApplicationSettings, applicationSettings } = useSettingsStore.getState();
+      const currentSettings = applicationSettings || { ...SETTINGS.defaults.application };
       const newPath = normalizedDir;
-      
+
       const existingPaths = currentSettings.recentProjectPaths || [];
       const filteredPaths = existingPaths.filter(p => p !== newPath);
-      
       const newRecentPaths = [newPath, ...filteredPaths];
 
+      // Enforce limit on recent projects
       if (newRecentPaths.length > SETTINGS.limits.MAX_RECENT_PROJECTS) {
-          newRecentPaths.length = SETTINGS.limits.MAX_RECENT_PROJECTS;
+        newRecentPaths.length = SETTINGS.limits.MAX_RECENT_PROJECTS;
       }
 
-      const newSettings = {
-          ...currentSettings,
-          lastOpenedProjectPath: newPath,
-          recentProjectPaths: newRecentPaths,
+      const newSettings: ApplicationSettings = {
+        ...currentSettings,
+        lastOpenedProjectPath: newPath,
+        recentProjectPaths: newRecentPaths,
       };
-
-      await window.settingsService.saveApplicationSettings(newSettings);
+      
+      // Use the store action to save settings, which updates both state and disk
+      await saveApplicationSettings(newSettings);
+      
       window.electron.send('app:rebuild-menu', undefined); // Notify main process
       addLog('Updated recent projects list.');
     } catch (error) {
       console.error('Error updating recent projects list:', error);
-      addLog('Warning: Failed to update recent projects list');
+      addLog('Warning: Failed to update recent projects list.');
     }
 
     // Reset dialog state

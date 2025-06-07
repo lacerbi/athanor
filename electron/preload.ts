@@ -50,6 +50,9 @@ contextBridge.exposeInMainWorld('nativeThemeBridge', {
   }
 });
 
+// WARNING: For renderer-side logic, always prefer using actions from the
+// useSettingsStore over calling these IPC functions directly. This ensures the
+// application's in-memory state remains synchronized with the file on disk.
 // Expose settings service API
 contextBridge.exposeInMainWorld('settingsService', {
   getProjectSettings: (projectPath: string) => 
@@ -67,6 +70,9 @@ import { llmServiceRenderer } from './modules/llm/renderer/LLMServiceRenderer';
 
 // Expose secure API key management and LLM service
 contextBridge.exposeInMainWorld('electronBridge', {
+  // WARNING: For renderer-side logic, always prefer using actions from the
+  // relevant Zustand store over calling these IPC functions directly. This ensures the
+  // application's in-memory state remains synchronized with the file on disk.
   secureApiKeyManager: {
     storeKey: (providerId: string, apiKey: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_STORE, { providerId, apiKey }),
