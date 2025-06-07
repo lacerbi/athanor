@@ -9,6 +9,26 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.6.6] - 2025-06-07
+
+### Added
+
+- **Intelligent Ignore File Scanner**: Implemented a new hierarchical ignore rule system that recursively scans for `.athignore` and `.gitignore` files. It uses a "Deepest Opinion Wins" algorithm to mimic Git's behavior and an "Athanor-First" precedence system to allow `.athignore` to override `.gitignore` ([`cbefa8d`](https://github.com/lacerbi/athanor/commit/cbefa8d), [`3dca2f6`](https://github.com/lacerbi/athanor/commit/3dca2f6)).
+- **CLI Support**: Added the ability to open a project by providing a directory path as a command-line argument ([`489060b`](https://github.com/lacerbi/athanor/commit/489060b)).
+- **Automatic Ignore Rule Refresh**: The file system and ignore rules now automatically refresh when the "Use .gitignore rules" setting is changed in Project Settings ([`61e9b6e`](https://github.com/lacerbi/athanor/commit/61e9b6e)).
+
+### Changed
+
+- Refactored the folder-opening logic to use a single, shared function for requests coming from either the GUI or the CLI, ensuring consistent behavior ([`a9d9fa2`](https://github.com/lacerbi/athanor/commit/a9d9fa2)).
+
+### Fixed
+
+- Adjusted the "Deepest Opinion Wins" algorithm to correctly handle complex nested ignore and un-ignore scenarios, ensuring the most specific rule is always applied ([`9540595`](https://github.com/lacerbi/athanor/commit/9540595)).
+
+### Tests
+
+- Added comprehensive unit tests for `ignoreRulesManager` to validate the new hierarchical scanning, rule precedence, and path relativity logic ([`db38958`](https://github.com/lacerbi/athanor/commit/db38958), [`316c28f`](https://github.com/lacerbi/athanor/commit/316c28f), [`0b5bc8d`](https://github.com/lacerbi/athanor/commit/0b5bc8d)).
+
 ## [0.6.5] - 2025-06-07
 
 ### Added
