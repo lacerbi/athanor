@@ -9,6 +9,8 @@ import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { loadPrompts, loadTasks } from '../services/promptService';
 import { readAthanorConfig } from '../utils/configUtils';
+import { SETTINGS } from '../utils/constants';
+import type { ApplicationSettings } from '../types/global';
 
 import { FileSystemLifecycle } from '../types/global';
 
@@ -109,27 +111,26 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     [currentDirectory, isRefreshing, validateSelections, addLog]
   );
 
-  const handleCreateProject = async (useStandardIgnore: boolean) => {
-    if (!pendingDirectory) return;
+  const setupWatcher = useCallback(
+    async (dir: string) => {
+      try {
+        await window.fileService.watch(dir, async () => {
+          if (refreshTimeoutRef.current) {
+            clearTimeout(refreshTimeoutRef.current);
+          }
+          refreshTimeoutRef.current = setTimeout(() => {
+            refreshFileSystem(true);
+          }, 300);
+        });
+      } catch (error) {
+        console.error('Error setting up watcher:', error);
+        addLog('Failed to set up file system watcher');
+      }
+    },
+    [refreshFileSystem, addLog]
+  );
 
-    try {
-      // Create .athignore file with selected rules
-      await createAthignoreFile(pendingDirectory, {
-        useStandardIgnore,
-      });
-
-      // Initialize project with new .athignore
-      await initializeProject(pendingDirectory);
-
-      addLog('Created new Athanor project');
-    } catch (error) {
-      console.error('Error creating project:', error);
-      addLog('Failed to create project');
-      throw error;
-    }
-  };
-
-  const initializeProject = async (directory: string) => {
+  const initializeProject = useCallback(async (directory: string) => {
     const normalizedDir = await window.pathUtils.toUnix(directory);
     
     // Set the base directory in the main process FIRST. This is the fix for startup hang.
@@ -158,22 +159,64 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     await setupWatcher(normalizedDir);
     addLog(`Loaded directory: ${normalizedDir}`);
 
-    // Save the successfully loaded project path to application settings
+    // Save the successfully loaded project path and update recent projects list
     try {
-      const { updateLastOpenedProjectPath } = useSettingsStore.getState();
-      await updateLastOpenedProjectPath(normalizedDir);
-      addLog(`Saved project path to settings: ${normalizedDir}`);
+      // Get the save action and current settings from the Zustand store
+      const { saveApplicationSettings, applicationSettings } = useSettingsStore.getState();
+      const currentSettings = applicationSettings || { ...SETTINGS.defaults.application };
+      const newPath = normalizedDir;
+
+      const existingPaths = currentSettings.recentProjectPaths || [];
+      const filteredPaths = existingPaths.filter(p => p !== newPath);
+      const newRecentPaths = [newPath, ...filteredPaths];
+
+      // Enforce limit on recent projects
+      if (newRecentPaths.length > SETTINGS.limits.MAX_RECENT_PROJECTS) {
+        newRecentPaths.length = SETTINGS.limits.MAX_RECENT_PROJECTS;
+      }
+
+      const newSettings: ApplicationSettings = {
+        ...currentSettings,
+        lastOpenedProjectPath: newPath,
+        recentProjectPaths: newRecentPaths,
+      };
+      
+      // Use the store action to save settings, which updates both state and disk
+      await saveApplicationSettings(newSettings);
+      
+      window.electron.send('app:rebuild-menu', undefined); // Notify main process
+      addLog('Updated recent projects list.');
     } catch (error) {
-      console.error('Error saving project path to settings:', error);
-      addLog('Warning: Failed to save project path to settings');
+      console.error('Error updating recent projects list:', error);
+      addLog('Warning: Failed to update recent projects list.');
     }
 
     // Reset dialog state
     setShowProjectDialog(false);
     setPendingDirectory(null);
-  };
+  }, [addLog, setupWatcher, validateSelections, loadProjectSettings]);
 
-  const handleOpenFolder = async () => {
+  const handleCreateProject = useCallback(async (useStandardIgnore: boolean) => {
+    if (!pendingDirectory) return;
+
+    try {
+      // Create .athignore file with selected rules
+      await createAthignoreFile(pendingDirectory, {
+        useStandardIgnore,
+      });
+
+      // Initialize project with new .athignore
+      await initializeProject(pendingDirectory);
+
+      addLog('Created new Athanor project');
+    } catch (error) {
+      console.error('Error creating project:', error);
+      addLog('Failed to create project');
+      throw error;
+    }
+  }, [pendingDirectory, initializeProject, addLog]);
+
+  const handleOpenFolder = useCallback(async () => {
     try {
       const selectedDir = await window.fileService.openFolder();
 
@@ -199,26 +242,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       console.error('Error opening folder:', error);
       addLog('Failed to open folder');
     }
-  };
-
-  const setupWatcher = useCallback(
-    async (dir: string) => {
-      try {
-        await window.fileService.watch(dir, async () => {
-          if (refreshTimeoutRef.current) {
-            clearTimeout(refreshTimeoutRef.current);
-          }
-          refreshTimeoutRef.current = setTimeout(() => {
-            refreshFileSystem(true);
-          }, 300);
-        });
-      } catch (error) {
-        console.error('Error setting up watcher:', error);
-        addLog('Failed to set up file system watcher');
-      }
-    },
-    [refreshFileSystem, addLog]
-  );
+  }, [initializeProject]);
 
   useEffect(() => {
     const initializeFileSystem = async () => {
@@ -269,7 +293,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         clearTimeout(refreshTimeoutRef.current);
       }
     };
-  }, [setupWatcher, validateSelections, addLog, loadApplicationSettings, loadProjectSettings]);
+  }, [setupWatcher, validateSelections, addLog, loadApplicationSettings, loadProjectSettings, initializeProject]);
 
   // Effect to update effective config when project settings change
   useEffect(() => {
@@ -295,6 +319,18 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     };
     fetchVersion();
   }, [addLog]);
+
+  // Set up listeners for menu commands from main process
+  useEffect(() => {
+    const cleanupOpenFolder = window.electron.receive('menu:open-folder', () => handleOpenFolder());
+    const cleanupOpenPath = window.electron.receive('menu:open-path', (path: string) => initializeProject(path));
+
+    // Return a cleanup function that will be called when the component unmounts
+    return () => {
+      cleanupOpenFolder();
+      cleanupOpenPath();
+    };
+  }, [handleOpenFolder, initializeProject]);
 
   const handleProjectDialogClose = () => {
     setShowProjectDialog(false);

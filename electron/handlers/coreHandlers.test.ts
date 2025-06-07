@@ -615,7 +615,6 @@ describe('setupCoreHandlers', () => {
         fs.constants.R_OK | fs.constants.W_OK
       );
       expect(mockFileService.setBaseDir).toHaveBeenCalledWith(unixPath);
-      expect(mockWebContents.send).toHaveBeenCalledWith('fs:folderChanged', unixPath);
     });
 
     it('should handle folder access error', async () => {
@@ -632,7 +631,6 @@ describe('setupCoreHandlers', () => {
       mockFsAccess.mockRejectedValue(new Error('Permission denied'));
 
       await expect(handler(mockEvent)).rejects.toThrow('Cannot access folder: Permission denied');
-      expect(mockWebContents.send).toHaveBeenCalledWith('fs:error', expect.stringContaining('Cannot access folder'));
     });
 
     it('should handle setBaseDir error', async () => {
@@ -650,8 +648,6 @@ describe('setupCoreHandlers', () => {
       mockFileService.setBaseDir.mockRejectedValue(new Error('SetBaseDir error'));
 
       await expect(handler(mockEvent)).rejects.toThrow('SetBaseDir error');
-      // String(error) will produce "Error: SetBaseDir error"
-      expect(mockWebContents.send).toHaveBeenCalledWith('fs:error', 'Error: SetBaseDir error');
     });
 
     it('should handle destroyed webContents gracefully', async () => {

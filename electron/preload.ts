@@ -10,16 +10,23 @@ const SHOW_CONFIRM_DIALOG_CHANNEL = 'dialog:show-confirm-dialog';
 // Expose protected methods for IPC communication
 contextBridge.exposeInMainWorld('electron', {
   send: (channel: string, data: any) => {
-    const validChannels = ['toMain'];
+    const validChannels = ['toMain', 'app:rebuild-menu'];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }
   },
   receive: (channel: string, func: (...args: any[]) => void) => {
-    const validChannels = ['fromMain'];
+    const validChannels = ['fromMain', 'menu:open-folder', 'menu:open-path'];
     if (validChannels.includes(channel)) {
-      ipcRenderer.on(channel, (event, ...args) => func(...args));
+      const listener = (event: any, ...args: any[]) => func(...args);
+      ipcRenderer.on(channel, listener);
+      // Return a cleanup function to remove this specific listener
+      return () => {
+        ipcRenderer.removeListener(channel, listener);
+      };
     }
+    // Return a no-op function if the channel is invalid for safety
+    return () => {};
   },
 });
 
@@ -43,6 +50,9 @@ contextBridge.exposeInMainWorld('nativeThemeBridge', {
   }
 });
 
+// WARNING: For renderer-side logic, always prefer using actions from the
+// useSettingsStore over calling these IPC functions directly. This ensures the
+// application's in-memory state remains synchronized with the file on disk.
 // Expose settings service API
 contextBridge.exposeInMainWorld('settingsService', {
   getProjectSettings: (projectPath: string) => 
@@ -60,6 +70,9 @@ import { llmServiceRenderer } from './modules/llm/renderer/LLMServiceRenderer';
 
 // Expose secure API key management and LLM service
 contextBridge.exposeInMainWorld('electronBridge', {
+  // WARNING: For renderer-side logic, always prefer using actions from the
+  // relevant Zustand store over calling these IPC functions directly. This ensures the
+  // application's in-memory state remains synchronized with the file on disk.
   secureApiKeyManager: {
     storeKey: (providerId: string, apiKey: string) => 
       ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_STORE, { providerId, apiKey }),
