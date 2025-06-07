@@ -5,6 +5,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { HelpCircle, Info } from 'lucide-react';
 import type { ProjectSettings } from '../types/global';
+import { SETTINGS } from '../utils/constants';
 
 interface ProjectSettingsPaneProps {
   projectSettings: ProjectSettings | null;
@@ -29,6 +30,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
   const [projectNameOverride, setProjectNameOverride] = useState('');
   const [projectInfoFilePath, setProjectInfoFilePath] = useState('');
   const [includeAiSummaries, setIncludeAiSummaries] = useState(true);
+  const [useGitignore, setUseGitignore] = useState(true);
   const [isSavingProject, setIsSavingProject] = useState(false);
   const [projectSaveError, setProjectSaveError] = useState<string | null>(null);
   const [browseError, setBrowseError] = useState<string | null>(null);
@@ -38,12 +40,14 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     if (projectSettings) {
       setProjectNameOverride(projectSettings.projectNameOverride || '');
       setProjectInfoFilePath(projectSettings.projectInfoFilePath || '');
-      setIncludeAiSummaries(projectSettings.includeAiSummaries ?? true);
+      setIncludeAiSummaries(projectSettings.includeAiSummaries ?? SETTINGS.defaults.project.includeAiSummaries);
+      setUseGitignore(projectSettings.useGitignore ?? SETTINGS.defaults.project.useGitignore);
     } else {
       // Clear form when no project settings
       setProjectNameOverride('');
       setProjectInfoFilePath('');
-      setIncludeAiSummaries(true);
+      setIncludeAiSummaries(SETTINGS.defaults.project.includeAiSummaries);
+      setUseGitignore(SETTINGS.defaults.project.useGitignore);
     }
     // Clear any previous save errors when settings load
     setProjectSaveError(null);
@@ -55,6 +59,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
       projectNameOverride?: string;
       projectInfoFilePath?: string;
       includeAiSummaries?: boolean;
+      useGitignore?: boolean;
     }) => {
       if (!currentProjectPath) return;
 
@@ -106,6 +111,10 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     setIncludeAiSummaries(e.target.checked);
   };
 
+  const handleUseGitignoreChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUseGitignore(e.target.checked);
+  };
+
   // Handle browse for project info file
   const handleBrowseProjectInfoFile = async () => {
     if (!hasProject) return;
@@ -135,6 +144,7 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
       projectNameOverride: projectNameOverride.trim(),
       projectInfoFilePath: projectInfoFilePath.trim(),
       includeAiSummaries: includeAiSummaries,
+      useGitignore: useGitignore,
     });
   };
 
@@ -142,7 +152,8 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
   const hasUnsavedProjectChanges =
     projectNameOverride !== (projectSettings?.projectNameOverride || '') ||
     projectInfoFilePath !== (projectSettings?.projectInfoFilePath || '') ||
-    includeAiSummaries !== (projectSettings?.includeAiSummaries ?? true);
+    includeAiSummaries !== (projectSettings?.includeAiSummaries ?? SETTINGS.defaults.project.includeAiSummaries) ||
+    useGitignore !== (projectSettings?.useGitignore ?? SETTINGS.defaults.project.useGitignore);
 
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 h-fit">
@@ -280,11 +291,11 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
               </div>
 
               {/* Include AI Summaries */}
-              <div className="space-y-2">
+              <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <label
                     htmlFor="includeAiSummaries"
-                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
                     Include AI Summaries
                   </label>
@@ -295,22 +306,40 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
                     <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
                   </div>
                 </div>
-                <div className="flex items-center">
-                  <input
-                    id="includeAiSummaries"
-                    type="checkbox"
-                    checked={includeAiSummaries}
-                    onChange={handleIncludeAiSummariesChange}
-                    disabled={isLoadingProjectSettings || isSavingProject}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
-                  />
+                <input
+                  id="includeAiSummaries"
+                  type="checkbox"
+                  checked={includeAiSummaries}
+                  onChange={handleIncludeAiSummariesChange}
+                  disabled={isLoadingProjectSettings || isSavingProject}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                />
+              </div>
+
+              {/* Use Gitignore */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
                   <label
-                    htmlFor="includeAiSummaries"
-                    className="ml-2 text-sm text-gray-600 dark:text-gray-400"
+                    htmlFor="useGitignore"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
                   >
-                    Add AI summaries at the beginning of files
+                    Use .gitignore rules
                   </label>
+                  <div
+                    className="relative group"
+                    title="When enabled, Athanor automatically applies ignore patterns from .gitignore in the project root. You can use .athignore for additional Athanor-specific overrides."
+                  >
+                    <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
+                  </div>
                 </div>
+                <input
+                  id="useGitignore"
+                  type="checkbox"
+                  checked={useGitignore}
+                  onChange={handleUseGitignoreChange}
+                  disabled={isLoadingProjectSettings || isSavingProject}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded disabled:opacity-50"
+                />
               </div>
 
               {/* Save Project Settings Button */}

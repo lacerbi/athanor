@@ -18,6 +18,7 @@ export interface ProjectSettings {
   projectNameOverride?: string;
   projectInfoFilePath?: string;
   includeAiSummaries?: boolean;
+  useGitignore?: boolean;
   // Future expansion: other project-specific settings
 }
 
@@ -493,12 +494,8 @@ export interface FileSystemLifecycle {
     newlyCreatedPath?: string
   ) => Promise<void>;
   showProjectDialog: boolean;
-  gitignoreExists: boolean;
   pendingDirectory: string | null;
-  handleCreateProject: (
-    useStandardIgnore: boolean,
-    importGitignore: boolean
-  ) => Promise<void>;
+  handleCreateProject: (useStandardIgnore: boolean) => Promise<void>;
   handleProjectDialogClose: () => void;
 }
 

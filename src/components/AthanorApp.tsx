@@ -36,7 +36,6 @@ const AthanorApp: React.FC = () => {
     handleOpenFolder,
     refreshFileSystem,
     showProjectDialog,
-    gitignoreExists,
     pendingDirectory,
     handleCreateProject,
     handleProjectDialogClose,
@@ -181,7 +180,6 @@ const AthanorApp: React.FC = () => {
         isOpen={showProjectDialog}
         onClose={handleProjectDialogClose}
         onCreateProject={handleCreateProject}
-        gitignoreExists={gitignoreExists}
         folderName={pendingDirectory ? getBaseName(pendingDirectory) : ''}
       />
       {filesData && currentDirectory && (

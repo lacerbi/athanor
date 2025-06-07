@@ -1,12 +1,19 @@
 ###############################################################################
-# ATHIGNORE - Files and folder in this file are IGNORED and will not appear in
-# the Athanor file explorer nor in the project documentation.
+# ATHIGNORE - Athanor Ignore Rules
 #
-# Uses the same syntax of .gitignore (see https://git-scm.com/docs/gitignore).
+# Files and folders listed in this file will be hidden from the Athanor file
+# explorer and excluded from AI contexts. This file uses the same syntax as 
+# .gitignore (see https://git-scm.com/docs/gitignore).
 #
-# If a file or folder from your project does not appear in the Athanor file 
-# explorer and you would like it to be included, ensure that it is not ignored 
-# by a .athignore rule below by commenting or removing that line.
+# HOW IT WORKS WITH .gitignore: By default, Athanor automatically processes rules 
+# from your project's .gitignore file. This .athignore file is for Athanor-specific 
+# rules or for overriding .gitignore rules.
+#
+# To re-include a file that is ignored by .gitignore, you can add an exception 
+# rule here (e.g., !path/to/file).
+#
+# If you wish to disable the automatic use of .gitignore for this project,
+# you can do so in the project settings.
 ###############################################################################
 
 ###############################################################################
@@ -362,6 +369,3 @@ docs/_site/
 ###############################################################################
 # ATHANOR PROJECT FILES
 ###############################################################################
-
-.athignore
-/athanor.yml

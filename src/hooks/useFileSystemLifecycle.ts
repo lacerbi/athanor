@@ -49,7 +49,6 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const [materialsData, setResourcesData] = useState<FileItem | null>(null);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [pendingDirectory, setPendingDirectory] = useState<string | null>(null);
-  const [gitignoreExists, setGitignoreExists] = useState(false);
 
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
@@ -110,17 +109,13 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     [currentDirectory, isRefreshing, validateSelections, addLog]
   );
 
-  const handleCreateProject = async (
-    useStandardIgnore: boolean,
-    importGitignore: boolean
-  ) => {
+  const handleCreateProject = async (useStandardIgnore: boolean) => {
     if (!pendingDirectory) return;
 
     try {
       // Create .athignore file with selected rules
       await createAthignoreFile(pendingDirectory, {
         useStandardIgnore,
-        importGitignore,
       });
 
       // Initialize project with new .athignore
@@ -192,10 +187,6 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       // Check if .athignore exists
       const athignoreExists = await window.fileService.exists('.athignore');
       if (!athignoreExists) {
-        // Check for .gitignore
-        const hasGitignore = await window.fileService.exists('.gitignore');
-        setGitignoreExists(hasGitignore);
-
         // Show project creation dialog
         setPendingDirectory(normalizedDir);
         setShowProjectDialog(true);
@@ -319,7 +310,6 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     handleOpenFolder,
     refreshFileSystem,
     showProjectDialog,
-    gitignoreExists,
     pendingDirectory,
     handleCreateProject,
     handleProjectDialogClose,

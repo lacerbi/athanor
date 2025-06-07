@@ -27,8 +27,8 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
 
 2.  **Ignore Rules Management**
 
-    - `.athignore` is the primary ignore file used within Athanor.
-    - Rules can be seeded from `.gitignore` during initial setup, ensuring minimal duplication.
+    - By default, Athanor automatically processes rules from the project's `.gitignore` file. This behavior can be toggled in the project settings.
+    - The `.athignore` file is used for Athanor-specific ignore rules or for overriding `.gitignore` rules (e.g., re-including a file with an exception rule like `!path/to/file`).
     - The main process (via `ignoreRulesManager.ts`) uses the `ignore` library to handle advanced wildcard matching, including an 'ignore all by name' option available via the file explorer's context menu.
 
 3.  **Task & Prompt Management**
@@ -49,7 +49,7 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
 
     - On folder selection, Athanor can create a `.athignore` file if it does not exist.
     - A hidden `.ath_materials` folder is automatically created to store extra references (like doc fragments).
-    - If `.gitignore` exists, its rules can be merged in as an optional step.
+    - If a `.gitignore` file exists, its rules are automatically applied by default.
 
 6.  **User Interface Layout**
 
