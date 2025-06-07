@@ -30,6 +30,7 @@ export interface ApplicationSettings {
   thresholdLineLength?: number;
   lastSelectedApiPresetId?: string | null;
   lastOpenedProjectPath?: string | null;
+  recentProjectPaths?: string[];
   uiTheme?: string;
 
   // Future expansion: more global settings
@@ -94,6 +95,12 @@ declare global {
       getVersion: () => Promise<string>;
       getUserDataPath: () => Promise<string>;
       getInitialPath: () => Promise<string | null>;
+    };
+
+    // Electron bridge for basic IPC communication
+    electron: {
+      send: (channel: string, data: any) => void;
+      receive: (channel: string, func: (...args: any[]) => void) => void;
     };
 
     // Native theme bridge for system theme detection

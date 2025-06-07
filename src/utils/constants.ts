@@ -28,6 +28,11 @@ export const SETTINGS = {
   PROJECT_SETTINGS_FILENAME: 'project_settings.json',
   APP_SETTINGS_FILENAME: 'application_settings.json',
   
+  // Configuration limits
+  limits: {
+    MAX_RECENT_PROJECTS: 10,
+  },
+  
   // Default settings
   defaults: {
     project: {
@@ -43,6 +48,7 @@ export const SETTINGS = {
       thresholdLineLength: 200,
       lastSelectedApiPresetId: null,
       lastOpenedProjectPath: undefined,
+      recentProjectPaths: [],
       uiTheme: 'Auto',
     },
   },

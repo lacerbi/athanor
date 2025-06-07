@@ -10,13 +10,13 @@ const SHOW_CONFIRM_DIALOG_CHANNEL = 'dialog:show-confirm-dialog';
 // Expose protected methods for IPC communication
 contextBridge.exposeInMainWorld('electron', {
   send: (channel: string, data: any) => {
-    const validChannels = ['toMain'];
+    const validChannels = ['toMain', 'app:rebuild-menu'];
     if (validChannels.includes(channel)) {
       ipcRenderer.send(channel, data);
     }
   },
   receive: (channel: string, func: (...args: any[]) => void) => {
-    const validChannels = ['fromMain'];
+    const validChannels = ['fromMain', 'menu:open-folder', 'menu:open-path'];
     if (validChannels.includes(channel)) {
       ipcRenderer.on(channel, (event, ...args) => func(...args));
     }

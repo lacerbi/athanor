@@ -9,6 +9,7 @@ import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { loadPrompts, loadTasks } from '../services/promptService';
 import { readAthanorConfig } from '../utils/configUtils';
+import { SETTINGS } from '../utils/constants';
 
 import { FileSystemLifecycle } from '../types/global';
 
@@ -158,14 +159,32 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     await setupWatcher(normalizedDir);
     addLog(`Loaded directory: ${normalizedDir}`);
 
-    // Save the successfully loaded project path to application settings
+    // Save the successfully loaded project path and update recent projects list
     try {
-      const { updateLastOpenedProjectPath } = useSettingsStore.getState();
-      await updateLastOpenedProjectPath(normalizedDir);
-      addLog(`Saved project path to settings: ${normalizedDir}`);
+      const currentSettings = (await window.settingsService.getApplicationSettings()) || SETTINGS.defaults.application;
+      const newPath = normalizedDir;
+      
+      const existingPaths = currentSettings.recentProjectPaths || [];
+      const filteredPaths = existingPaths.filter(p => p !== newPath);
+      
+      const newRecentPaths = [newPath, ...filteredPaths];
+
+      if (newRecentPaths.length > SETTINGS.limits.MAX_RECENT_PROJECTS) {
+          newRecentPaths.length = SETTINGS.limits.MAX_RECENT_PROJECTS;
+      }
+
+      const newSettings = {
+          ...currentSettings,
+          lastOpenedProjectPath: newPath,
+          recentProjectPaths: newRecentPaths,
+      };
+
+      await window.settingsService.saveApplicationSettings(newSettings);
+      window.electron.send('app:rebuild-menu', undefined); // Notify main process
+      addLog('Updated recent projects list.');
     } catch (error) {
-      console.error('Error saving project path to settings:', error);
-      addLog('Warning: Failed to save project path to settings');
+      console.error('Error updating recent projects list:', error);
+      addLog('Warning: Failed to update recent projects list');
     }
 
     // Reset dialog state
@@ -295,6 +314,18 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     };
     fetchVersion();
   }, [addLog]);
+
+  // Set up listeners for menu commands from main process
+  useEffect(() => {
+    const openFolderListener = () => handleOpenFolder();
+    window.electron.receive('menu:open-folder', openFolderListener);
+
+    const openPathListener = (path: string) => initializeProject(path);
+    window.electron.receive('menu:open-path', openPathListener);
+
+    // Note: Cleanup is handled by the preload bridge implementation
+    // The ipcRenderer listeners are managed internally
+  }, [handleOpenFolder, initializeProject]);
 
   const handleProjectDialogClose = () => {
     setShowProjectDialog(false);
