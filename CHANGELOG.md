@@ -9,6 +9,24 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.6.4] - 2025-06-07
+
+### Changed
+
+- **MAJOR CHANGE**: Simplified the project ignore rule handling. Athanor now uses rules from the project's `.gitignore` file by default. The `.athignore` file is now used for Athanor-specific rules or to override `.gitignore` rules, streamlining the initial project setup ([`7020050`](https://github.com/lacerbi/athanor/commit/7020050)).
+
+### Added
+
+- Added a **"Use .gitignore rules"** toggle in **Project Settings**, allowing users to disable the automatic application of `.gitignore` patterns ([`9c8a0d6`](https://github.com/lacerbi/athanor/commit/9c8a0d6)).
+
+### Fixed
+
+- The Project Settings pane now correctly falls back to global default settings instead of using its own hardcoded defaults ([`d831b79`](https://github.com/lacerbi/athanor/commit/d831b79)).
+
+### Documentation
+
+- Updated `PROJECT.md`, `TUTORIAL.md`, and the default `.athignore` header to reflect the new, simplified ignore rule behavior ([`adb73fd`](https://github.com/lacerbi/athanor/commit/adb73fd), [`228a882`](https://github.com/lacerbi/athanor/commit/228a882)).
+
 ## [0.6.3] - 2025-06-06
 
 ### Fixed
