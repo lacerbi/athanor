@@ -34,6 +34,7 @@ export const SETTINGS = {
       projectNameOverride: '',
       projectInfoFilePath: '',
       includeAiSummaries: true,
+      useGitignore: true,
     },
     application: {
       enableExperimentalFeatures: false,

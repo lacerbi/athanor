@@ -18,6 +18,7 @@ export interface ProjectSettings {
   projectNameOverride?: string;
   projectInfoFilePath?: string;
   includeAiSummaries?: boolean;
+  useGitignore?: boolean;
   // Future expansion: other project-specific settings
 }
 

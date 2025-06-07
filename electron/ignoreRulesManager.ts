@@ -40,7 +40,7 @@ class IgnoreRulesManager {
     return this.ig.ignores(path);
   }
 
-  // Load .athignore if it exists, fallback to .gitignore
+  // Load ignore rules: .gitignore (if enabled) then .athignore (for overrides)
   async loadIgnoreRules() {
     // Clear existing rules first
     this.clearRules();
@@ -48,37 +48,54 @@ class IgnoreRulesManager {
     const currentBaseDir = this.getBaseDir();
     const platformBaseDir = PathUtils.toPlatform(currentBaseDir);
 
-    // Try .athignore first
-    const athignorePath = path.join(platformBaseDir, '.athignore');
+    // Read project settings to determine if we should use .gitignore
+    let useGitignore = true; // Default to true
+    const projectSettingsPath = path.join(
+      platformBaseDir,
+      FILE_SYSTEM.materialsDirName,
+      'project_settings.json'
+    );
+
     try {
-      const data = await fs.readFile(athignorePath, 'utf-8');
-      this.ig.add(data);
-      console.log('.athignore rules loaded from:', athignorePath);
-      return;
+      const settingsData = await fs.readFile(projectSettingsPath, 'utf-8');
+      const settings = JSON.parse(settingsData);
+      useGitignore = settings.useGitignore ?? true;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        console.error('Error reading .athignore:', error);
-        this.handleError(error, 'reading .athignore');
-        return;
-      }
-      // .athignore not found, try .gitignore
+      // If we can't read the settings file, use the default (true)
+      // This handles cases where the file doesn't exist or is malformed
+    }
+
+    // Load .gitignore if enabled
+    if (useGitignore) {
       const gitignorePath = path.join(platformBaseDir, '.gitignore');
       try {
         const data = await fs.readFile(gitignorePath, 'utf-8');
         this.ig.add(data);
         // Always add .git directory when using .gitignore
         this.ig.add('.git/');
-        console.log(
-          '.gitignore rules loaded with .git directory excluded from:',
-          gitignorePath
-        );
+        console.log('.gitignore rules loaded from:', gitignorePath);
       } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-          console.log('No ignore files found. No ignore rules applied.');
+          console.log('No .gitignore file found.');
         } else {
           console.error('Error reading .gitignore:', error);
           this.handleError(error, 'reading .gitignore');
         }
+      }
+    }
+
+    // Always load .athignore last for overrides
+    const athignorePath = path.join(platformBaseDir, '.athignore');
+    try {
+      const data = await fs.readFile(athignorePath, 'utf-8');
+      this.ig.add(data);
+      console.log('.athignore rules loaded from:', athignorePath);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+        console.log('No .athignore file found.');
+      } else {
+        console.error('Error reading .athignore:', error);
+        this.handleError(error, 'reading .athignore');
       }
     }
   }
