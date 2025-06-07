@@ -16,6 +16,7 @@ import { FILE_SYSTEM } from '../../src/utils/constants';
  * file watching, and integration with ignore rules.
  */
 export class FileService implements IFileService {
+  public cliPath: string | null = null;
   private baseDir = PathUtils.normalizeToUnix(process.cwd());
   private watchers = new Map<string, chokidar.FSWatcher>();
   private materialsDir: string;
