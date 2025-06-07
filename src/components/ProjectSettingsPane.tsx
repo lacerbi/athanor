@@ -5,6 +5,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { HelpCircle, Info } from 'lucide-react';
 import type { ProjectSettings } from '../types/global';
+import { SETTINGS } from '../utils/constants';
 
 interface ProjectSettingsPaneProps {
   projectSettings: ProjectSettings | null;
@@ -39,14 +40,14 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
     if (projectSettings) {
       setProjectNameOverride(projectSettings.projectNameOverride || '');
       setProjectInfoFilePath(projectSettings.projectInfoFilePath || '');
-      setIncludeAiSummaries(projectSettings.includeAiSummaries ?? true);
-      setUseGitignore(projectSettings.useGitignore ?? true);
+      setIncludeAiSummaries(projectSettings.includeAiSummaries ?? SETTINGS.defaults.project.includeAiSummaries);
+      setUseGitignore(projectSettings.useGitignore ?? SETTINGS.defaults.project.useGitignore);
     } else {
       // Clear form when no project settings
       setProjectNameOverride('');
       setProjectInfoFilePath('');
-      setIncludeAiSummaries(true);
-      setUseGitignore(true);
+      setIncludeAiSummaries(SETTINGS.defaults.project.includeAiSummaries);
+      setUseGitignore(SETTINGS.defaults.project.useGitignore);
     }
     // Clear any previous save errors when settings load
     setProjectSaveError(null);
@@ -151,8 +152,8 @@ const ProjectSettingsPane: React.FC<ProjectSettingsPaneProps> = ({
   const hasUnsavedProjectChanges =
     projectNameOverride !== (projectSettings?.projectNameOverride || '') ||
     projectInfoFilePath !== (projectSettings?.projectInfoFilePath || '') ||
-    includeAiSummaries !== (projectSettings?.includeAiSummaries ?? true) ||
-    useGitignore !== (projectSettings?.useGitignore ?? true);
+    includeAiSummaries !== (projectSettings?.includeAiSummaries ?? SETTINGS.defaults.project.includeAiSummaries) ||
+    useGitignore !== (projectSettings?.useGitignore ?? SETTINGS.defaults.project.useGitignore);
 
   return (
     <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 h-fit">
