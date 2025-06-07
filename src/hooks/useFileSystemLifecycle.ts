@@ -138,9 +138,6 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     async (directory: string) => {
       const normalizedDir = await window.pathUtils.toUnix(directory);
 
-      // Set the base directory in the main process FIRST. This is the fix for startup hang.
-      await window.fileService.setBaseDirectory(normalizedDir);
-
       useFileSystemStore.getState().resetState();
       setCurrentDirectory(normalizedDir);
 
@@ -203,6 +200,33 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     [addLog, setupWatcher, validateSelections, loadProjectSettings]
   );
 
+  // Centralized function to process a directory - handles both UI and CLI flows
+  const processDirectory = useCallback(
+    async (directory: string | null) => {
+      if (!directory) {
+        return;
+      }
+
+      const normalizedDir = await window.pathUtils.toUnix(directory);
+
+      // Set the base directory in the main process FIRST for relative path checks to work
+      await window.fileService.setBaseDirectory(normalizedDir);
+
+      // Check if .athignore exists to determine if this is an existing project
+      const athignoreExists = await window.fileService.exists('.athignore');
+      
+      if (athignoreExists) {
+        // Existing project - proceed with loading
+        await initializeProject(normalizedDir);
+      } else {
+        // New project - show creation dialog
+        setPendingDirectory(normalizedDir);
+        setShowProjectDialog(true);
+      }
+    },
+    [initializeProject, addLog]
+  );
+
   const handleCreateProject = useCallback(
     async (useStandardIgnore: boolean) => {
       if (!pendingDirectory) return;
@@ -229,30 +253,12 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const handleOpenFolder = useCallback(async () => {
     try {
       const selectedDir = await window.fileService.openFolder();
-
-      // If user cancelled folder selection, do nothing
-      if (!selectedDir) {
-        return;
-      }
-
-      const normalizedDir = await window.pathUtils.toUnix(selectedDir);
-
-      // Check if .athignore exists
-      const athignoreExists = await window.fileService.exists('.athignore');
-      if (!athignoreExists) {
-        // Show project creation dialog
-        setPendingDirectory(normalizedDir);
-        setShowProjectDialog(true);
-        return;
-      }
-
-      // If .athignore exists, proceed with normal initialization
-      await initializeProject(normalizedDir);
+      await processDirectory(selectedDir);
     } catch (error) {
       console.error('Error opening folder:', error);
       addLog('Failed to open folder');
     }
-  }, [initializeProject]);
+  }, [processDirectory, addLog]);
 
   useEffect(() => {
     const initializeFileSystem = async () => {
@@ -267,8 +273,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         const initialPath = await window.app.getInitialPath();
 
         if (initialPath) {
-          // If we have a valid initial path, initialize the project
-          await initializeProject(initialPath);
+          // If we have a valid initial path, process it (checks for .athignore)
+          await processDirectory(initialPath);
         } else {
           // No project state - set empty state
           setCurrentDirectory('');
@@ -306,7 +312,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     addLog,
     loadApplicationSettings,
     loadProjectSettings,
-    initializeProject,
+    processDirectory,
   ]);
 
   // Effect to update effective config when project settings change
@@ -370,7 +376,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     );
     const cleanupOpenPath = window.electron.receive(
       'menu:open-path',
-      (path: string) => initializeProject(path)
+      (path: string) => processDirectory(path)
     );
 
     // Return a cleanup function that will be called when the component unmounts
@@ -378,7 +384,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       cleanupOpenFolder();
       cleanupOpenPath();
     };
-  }, [handleOpenFolder, initializeProject]);
+  }, [handleOpenFolder, processDirectory]);
 
   const handleProjectDialogClose = () => {
     setShowProjectDialog(false);
