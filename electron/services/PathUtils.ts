@@ -262,6 +262,43 @@ export class PathUtils {
   }
 
   /**
+   * Get ancestor directories of a given path
+   * @param filePath Path to get ancestors for
+   * @returns Array of ancestor directories (including the file's directory) from closest to root
+   */
+  static getAncestors(filePath: string): string[] {
+    if (!filePath) return ['.'];
+    
+    const normalized = PathUtils.normalizeToUnix(filePath);
+    const dirname = PathUtils.dirname(normalized);
+    
+    // Handle files in root directory
+    if (dirname === '' || dirname === '.') {
+      return ['.'];
+    }
+    
+    const ancestors: string[] = [];
+    let current = dirname;
+    
+    while (current && current !== '.' && current !== '/') {
+      ancestors.push(current);
+      const parent = PathUtils.dirname(current);
+      
+      // Prevent infinite loop on edge cases
+      if (parent === current || parent === '') {
+        break;
+      }
+      
+      current = parent;
+    }
+    
+    // Always include root directory
+    ancestors.push('.');
+    
+    return ancestors;
+  }
+
+  /**
    * Get the appropriate temporary directory path
    * @returns Platform-specific temporary directory
    */
