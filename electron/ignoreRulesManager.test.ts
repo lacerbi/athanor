@@ -520,7 +520,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     });
   });
 
-  describe('ignores() method - Athanor-First Precedence', () => {
+  describe('ignores() method - "Deepest Opinion Wins" Algorithm', () => {
     beforeEach(() => {
       // Restore the real loadIgnoreRules method for these tests
       loadIgnoreRulesSpy.mockRestore();
@@ -551,69 +551,221 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
       });
     };
 
-    it('should ignore file based on root .athignore', async () => {
-      const fileStructure = new Map([
-        ['/test/project', { isDirectory: true, files: ['.athignore', 'file.log'] }],
-      ]);
-      const ignoreFiles = new Map([['/test/project/.athignore', '*.log']]);
-      setupFS(fileStructure, ignoreFiles);
-      await ignoreRulesManager.loadIgnoreRules();
-      expect(ignoreRulesManager.ignores('file.log')).toBe(true);
-      expect(ignoreRulesManager.ignores('file.txt')).toBe(false);
+    describe('Hierarchical Logic - Parent/Child Overrides', () => {
+      it('should handle parent ignores, child un-ignores', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.gitignore', 'src', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+          ['/test/project/src', { isDirectory: true, files: ['.gitignore', 'important.log'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.log'],
+          ['/test/project/src/.gitignore', '!important.log'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // The deeper file's un-ignore rule should win
+        expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
+        
+        // Other log files in src should still be ignored by parent rule
+        expect(ignoreRulesManager.ignores('src/other.log')).toBe(true);
+        
+        // Log files outside src should still be ignored
+        expect(ignoreRulesManager.ignores('root.log')).toBe(true);
+      });
+
+      it('should handle parent un-ignores, child ignores', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.gitignore', 'src', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+          ['/test/project/src', { isDirectory: true, files: ['.gitignore', 'beta.log'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '!beta.log'],
+          ['/test/project/src/.gitignore', '*.log'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // The deeper file's ignore rule should win over parent's un-ignore
+        expect(ignoreRulesManager.ignores('src/beta.log')).toBe(true);
+        
+        // beta.log at root should not be ignored due to parent un-ignore
+        expect(ignoreRulesManager.ignores('beta.log')).toBe(false);
+      });
     });
 
-    it('should ignore file based on nested .gitignore', async () => {
-      const fileStructure = new Map([
-        ['/test/project', { isDirectory: true, files: ['src', '.ath_materials'] }],
-        ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
-        ['/test/project/src', { isDirectory: true, files: ['.gitignore', 'a.js', 'b.ts'] }],
-      ]);
-      const ignoreFiles = new Map([
-        ['/test/project/.ath_materials/project_settings.json', '{}'],
-        ['/test/project/src/.gitignore', '*.js'],
-      ]);
-      setupFS(fileStructure, ignoreFiles);
-      await ignoreRulesManager.loadIgnoreRules();
-      expect(ignoreRulesManager.ignores('src/a.js')).toBe(true);
-      expect(ignoreRulesManager.ignores('src/b.ts')).toBe(false);
+    describe('Path Relativity', () => {
+      it('should correctly handle path relativity in nested ignore files', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['src', 'build', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+          ['/test/project/src', { isDirectory: true, files: ['.gitignore', 'build', 'components'] }],
+          ['/test/project/src/build', { isDirectory: true, files: ['output.js'] }],
+          ['/test/project/build', { isDirectory: true, files: ['main.js'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/src/.gitignore', 'build'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // The rule "build" in /src/.gitignore should only apply relative to /src/
+        expect(ignoreRulesManager.ignores('src/build/')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/build/output.js')).toBe(true);
+        
+        // The root /build/ directory should NOT be ignored
+        expect(ignoreRulesManager.ignores('build/')).toBe(false);
+        expect(ignoreRulesManager.ignores('build/main.js')).toBe(false);
+        
+        // Other directories in src should not be ignored
+        expect(ignoreRulesManager.ignores('src/components/')).toBe(false);
+      });
     });
 
-    it('should prioritize deeper .athignore negation over shallower .athignore rule', async () => {
-      const fileStructure = new Map([
-        ['/test/project', { isDirectory: true, files: ['.athignore', 'src'] }],
-        ['/test/project/src', { isDirectory: true, files: ['.athignore', 'a.js'] }],
-      ]);
-      const ignoreFiles = new Map([
-        ['/test/project/.athignore', '*.js'],
-        ['/test/project/src/.athignore', '!a.js'],
-      ]);
-      setupFS(fileStructure, ignoreFiles);
-      await ignoreRulesManager.loadIgnoreRules();
-      expect(ignoreRulesManager.ignores('src/a.js')).toBe(false);
+    describe('Athanor-First Precedence (Two-Tier System)', () => {
+      it('should prioritize .athignore un-ignore over .gitignore ignore', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.athignore', '.gitignore', 'config.json', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', 'config.json'],
+          ['/test/project/.athignore', '!config.json'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // .athignore should win over .gitignore
+        expect(ignoreRulesManager.ignores('config.json')).toBe(false);
+      });
+
+      it('should prioritize .athignore ignore over .gitignore un-ignore', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.athignore', '.gitignore', 'config.json', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '!config.json'],
+          ['/test/project/.athignore', 'config.json'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // .athignore should win over .gitignore
+        expect(ignoreRulesManager.ignores('config.json')).toBe(true);
+      });
+
+      it('should fall back to .gitignore when .athignore has no opinion', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.athignore', '.gitignore', 'temp.bak', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.bak'],
+          ['/test/project/.athignore', '*.log'], // No opinion on .bak files
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // Since .athignore has no opinion on .bak files, .gitignore should apply
+        expect(ignoreRulesManager.ignores('temp.bak')).toBe(true);
+        
+        // .athignore should still handle .log files
+        expect(ignoreRulesManager.ignores('temp.log')).toBe(true);
+      });
     });
 
-    it('should prioritize .athignore over .gitignore at same level', async () => {
-      const fileStructure = new Map([
-        ['/test/project', { isDirectory: true, files: ['.athignore', '.gitignore', 'a.tmp'] }],
-      ]);
-      const ignoreFiles = new Map([
-        ['/test/project/.ath_materials/project_settings.json', '{}'],
-        ['/test/project/.gitignore', '*.tmp'],
-        ['/test/project/.athignore', '!a.tmp'],
-      ]);
-      setupFS(fileStructure, ignoreFiles);
-      await ignoreRulesManager.loadIgnoreRules();
-      expect(ignoreRulesManager.ignores('a.tmp')).toBe(false);
+    describe('useGitignore Setting', () => {
+      it('should not apply .gitignore rules when useGitignore is false', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.gitignore', 'file.bak', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', JSON.stringify({ useGitignore: false })],
+          ['/test/project/.gitignore', '*.bak'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // .gitignore rules should be completely ignored when useGitignore is false
+        expect(ignoreRulesManager.ignores('file.bak')).toBe(false);
+      });
+
+      it('should apply .gitignore rules when useGitignore is true (default)', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.gitignore', 'file.bak', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', JSON.stringify({ useGitignore: true })],
+          ['/test/project/.gitignore', '*.bak'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // .gitignore rules should apply when useGitignore is true
+        expect(ignoreRulesManager.ignores('file.bak')).toBe(true);
+      });
     });
 
-    it('should not ignore file if no rules match', async () => {
-      const fileStructure = new Map([
-        ['/test/project', { isDirectory: true, files: ['.athignore', 'file.txt'] }],
-      ]);
-      const ignoreFiles = new Map([['/test/project/.athignore', '*.log']]);
-      setupFS(fileStructure, ignoreFiles);
-      await ignoreRulesManager.loadIgnoreRules();
-      expect(ignoreRulesManager.ignores('file.txt')).toBe(false);
+    describe('Edge Cases', () => {
+      it('should not ignore file if no rules match', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.athignore', 'file.txt', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.athignore', '*.log'], // No rules for .txt files
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        expect(ignoreRulesManager.ignores('file.txt')).toBe(false);
+      });
+
+      it('should handle invalid paths gracefully', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // Invalid/empty paths should not be ignored
+        expect(ignoreRulesManager.ignores('')).toBe(false);
+        expect(ignoreRulesManager.ignores(null as any)).toBe(false);
+      });
+
+      it('should handle directories with trailing slashes', async () => {
+        const fileStructure = new Map([
+          ['/test/project', { isDirectory: true, files: ['.gitignore', 'build', '.ath_materials'] }],
+          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+          ['/test/project/build', { isDirectory: true, files: ['output.js'] }],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', 'build/'],
+        ]);
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // Directory should be ignored whether specified with or without trailing slash
+        expect(ignoreRulesManager.ignores('build/')).toBe(true);
+        expect(ignoreRulesManager.ignores('build/output.js')).toBe(true);
+      });
     });
   });
 

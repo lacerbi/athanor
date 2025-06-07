@@ -20,6 +20,95 @@ interface IgnoreFile {
   content: string;
 }
 
+/**
+ * IgnoreRulesManager implements a sophisticated "Deepest Opinion Wins" algorithm
+ * for handling hierarchical ignore rules with Athanor's two-tier precedence system.
+ * 
+ * ## Algorithm Overview: "Deepest Opinion Wins"
+ * 
+ * This system perfectly emulates Git's hierarchical ignore behavior while adding
+ * Athanor's specific two-tier precedence. The core principle is simple but powerful:
+ * when checking if a path should be ignored, the deepest relevant ignore file that
+ * has any opinion about that path gets the final say.
+ * 
+ * ## Two-Tier Precedence System
+ * 
+ * The algorithm operates in two distinct tiers, checked in order:
+ * 
+ * **Tier 1: .athignore files (Primary)**
+ * - These files have absolute highest precedence
+ * - If ANY .athignore file in the hierarchy has an opinion about a path, that decision is FINAL
+ * - No .gitignore rules are even consulted if Tier 1 provides an answer
+ * 
+ * **Tier 2: .gitignore files (Secondary)**
+ * - Only consulted if Tier 1 had no opinion AND useGitignore setting is true
+ * - Follows the same "deepest opinion wins" logic within this tier
+ * 
+ * ## Hierarchical Logic Within Each Tier
+ * 
+ * Within each tier, the algorithm:
+ * 1. Identifies all ignore files that are ancestors of the path being checked
+ * 2. Sorts these files from deepest to shallowest (by directory depth)
+ * 3. Iterates through them, starting with the deepest
+ * 4. For each file, calculates the path relative to that file's directory
+ * 5. Checks if that file's rules have any opinion about the relative path
+ * 6. STOPS at the first file that has an opinion and returns that verdict
+ * 
+ * ## Path Relativity
+ * 
+ * This is crucial for correct behavior. Each ignore file's rules are applied
+ * relative to that file's directory. For example:
+ * - `/src/.gitignore` containing "build" only affects `/src/build/`, not `/build/`
+ * - `/src/components/.athignore` containing "*.test.js" only affects test files in `/src/components/`
+ * 
+ * ## Examples
+ * 
+ * ### Example 1: Child Override (Git-style)
+ * ```
+ * /.gitignore: "*.log"          (ignores all .log files)
+ * /src/.gitignore: "!important.log"  (un-ignores important.log in src/)
+ * 
+ * Check: src/important.log
+ * - /src/.gitignore is deeper and has opinion "!important.log" → NOT IGNORED
+ * - /.gitignore never consulted because deeper file had opinion
+ * ```
+ * 
+ * ### Example 2: Athanor Precedence
+ * ```
+ * /.gitignore: "config.json"    (ignore config.json)
+ * /.athignore: "!config.json"   (un-ignore config.json)
+ * 
+ * Check: config.json
+ * - Tier 1 (.athignore): Has opinion "!config.json" → NOT IGNORED
+ * - Tier 2 (.gitignore): Never consulted because Tier 1 had opinion
+ * ```
+ * 
+ * ### Example 3: No Opinion Fallback
+ * ```
+ * /.athignore: "*.log"          (only cares about .log files)
+ * /.gitignore: "*.tmp"          (only cares about .tmp files)
+ * 
+ * Check: file.tmp
+ * - Tier 1 (.athignore): No opinion on .tmp files → returns null
+ * - Tier 2 (.gitignore): Has opinion "*.tmp" → IGNORED
+ * ```
+ * 
+ * ## Key Benefits
+ * 
+ * 1. **Predictable**: The deepest file always wins, making behavior intuitive
+ * 2. **Git-compatible**: Perfectly emulates Git's ignore hierarchy within each tier
+ * 3. **Performance**: Stops at first opinion found, no need to accumulate rules
+ * 4. **Flexible**: Athanor files can override any Git rules at any level
+ * 5. **Path-relative**: Each ignore file only affects its own subtree
+ * 
+ * ## Implementation Notes
+ * 
+ * - All ignore files are discovered via intelligent scanning during loadIgnoreRules()
+ * - Files are pre-sorted by depth (deepest first) for efficient iteration
+ * - The `ignore` library handles the actual pattern matching
+ * - Path normalization ensures consistent Unix-style paths throughout
+ * - The useGitignore setting can completely disable Tier 2
+ */
 class IgnoreRulesManager {
   private lastError: Error | null = null;
   private materialsDir = FILE_SYSTEM.materialsDirName;
@@ -53,70 +142,81 @@ class IgnoreRulesManager {
 
   /**
    * Check if a path should be ignored based on loaded .athignore and .gitignore rules.
+   * Uses the "Deepest Opinion Wins" algorithm with two-tier precedence:
+   * 1. First check .athignore hierarchy (Tier 1) - if any file has an opinion, that's final
+   * 2. Only if Tier 1 has no opinion, check .gitignore hierarchy (Tier 2)
+   * 
    * @param pathToCheck The project-relative path to check.
    * @returns True if the path should be ignored, false otherwise.
    */
   ignores(pathToCheck: string): boolean {
+    // Handle invalid input gracefully
+    if (!pathToCheck || typeof pathToCheck !== 'string') {
+      return false;
+    }
+
+    // Normalize the path for ignore rule processing
     const isDir = pathToCheck.endsWith('/');
     const normalizedPath = PathUtils.normalizeForIgnore(pathToCheck, isDir);
     if (!normalizedPath) {
       return false;
     }
-    const ancestors = PathUtils.getAncestors(normalizedPath);
 
-    const check = (files: IgnoreFile[], parentFiles: IgnoreFile[] = []): boolean | null => {
-      const relevantFiles = files.filter(f => ancestors.includes(f.path));
-
-      for (const file of relevantFiles) { // Deepest to shallowest
-        const checker = ignore();
-
-        // Get all parent files for context (both ath and git)
-        const allParents = [
-          ...parentFiles.filter(p => file.path.startsWith(p.path) && file.path !== p.path),
-          ...files.filter(p => file.path.startsWith(p.path) && file.path !== p.path),
-        ];
-        allParents.sort((a, b) => a.path.split('/').length - b.path.split('/').length);
-
-        for(const parentFile of allParents) {
-          checker.add(parentFile.content);
-        }
-        
-        // Add the current file's rules last to give them precedence
-        checker.add(file.content);
-
-        const pathRelativeToBase = PathUtils.relative(this.baseDir, PathUtils.joinUnix(this.baseDir, normalizedPath));
-        const originalResult = checker.test(pathRelativeToBase);
-
-        // Now check if this specific file's rules made a difference
-        const checkerWithoutCurrent = ignore();
-        for(const parentFile of allParents) {
-          checkerWithoutCurrent.add(parentFile.content);
-        }
-        const parentResult = checkerWithoutCurrent.test(pathRelativeToBase);
-        
-        // If the result changed after adding the current file's rules, it has an opinion.
-        if (originalResult.ignored !== parentResult.ignored || originalResult.unignored !== parentResult.unignored) {
-          return !originalResult.unignored;
-        }
-      }
-      return null;
-    };
-
-    // Tier 1: .athignore
-    const athResult = check(this.athignoreFiles, this.useGitignore ? this.gitignoreFiles : []);
+    // Tier 1: Check .athignore files first (highest precedence)
+    const athResult = this._checkHierarchy(normalizedPath, this.athignoreFiles);
     if (athResult !== null) {
-      return athResult;
+      return athResult; // .athignore hierarchy had a definitive opinion - we're done
     }
 
-    // Tier 2: .gitignore
-    if (this.useGitignore) {
-      const gitResult = check(this.gitignoreFiles);
-      if (gitResult !== null) {
-        return gitResult;
+    // Tier 2: Only check .gitignore if Tier 1 had no opinion and gitignore is enabled
+    if (!this.useGitignore) {
+      return false;
+    }
+
+    const gitResult = this._checkHierarchy(normalizedPath, this.gitignoreFiles);
+    return gitResult ?? false; // Default to not ignored if no opinion found
+  }
+
+  /**
+   * Core helper implementing the "Deepest Opinion Wins" algorithm.
+   * Checks a hierarchy of ignore files (either .athignore or .gitignore) to determine
+   * if a path should be ignored. The deepest relevant ignore file that has an opinion wins.
+   * 
+   * @param pathToCheck Normalized path to check (project-relative)
+   * @param files Array of ignore files, must be sorted deepest to shallowest
+   * @returns true if ignored, false if not ignored, null if no file had an opinion
+   */
+  private _checkHierarchy(pathToCheck: string, files: IgnoreFile[]): boolean | null {
+    // Find all ignore files that are ancestors of the path being checked
+    const ancestors = PathUtils.getAncestors(pathToCheck);
+    const relevantFiles = files.filter(file => ancestors.includes(file.path));
+
+    // Iterate through relevant files (already sorted deepest to shallowest)
+    for (const file of relevantFiles) {
+      // Calculate the path relative to this ignore file's directory
+      const relativePath = file.path === '.' 
+        ? pathToCheck 
+        : PathUtils.relative(file.path, pathToCheck);
+
+      if (!relativePath) {
+        continue; // Skip if we can't calculate a valid relative path
+      }
+
+      // Create a checker with only this file's rules
+      const checker = ignore().add(file.content);
+      
+      // Test if this file has any opinion about the path
+      const result = checker.test(relativePath);
+      
+      // If this file has an opinion (either ignore or unignore), that's our answer
+      if (result.ignored || result.unignored) {
+        // The deepest file with an opinion wins - return the final verdict
+        return checker.ignores(relativePath);
       }
     }
-    
-    return false;
+
+    // No file in this hierarchy had an opinion about the path
+    return null;
   }
 
   /**
