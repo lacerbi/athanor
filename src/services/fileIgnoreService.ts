@@ -3,7 +3,6 @@
 // Creates .athignore files with optional standard rules and handles path normalization for ignore patterns.
 interface AthignoreOptions {
   useStandardIgnore: boolean;
-  importGitignore: boolean;
 }
 
 /**
@@ -40,56 +39,6 @@ export async function createAthignoreFile(
     } else {
       // Extract only the initial comment header (everything up to first blank line)
       finalContent = defaultContent.split(/\n\s*\n/)[0] + '\n\n';
-    }
-
-    // If importing from .gitignore and it exists, add those patterns
-    if (options.importGitignore) {
-      const gitignorePath = await window.pathUtils.join(
-        projectPath,
-        '.gitignore'
-      );
-      const exists = await window.fileService.exists(
-        await window.pathUtils.relative(gitignorePath)
-      );
-
-      if (exists) {
-        const gitignoreContent = await window.fileService.read(
-          await window.pathUtils.relative(gitignorePath),
-          { encoding: 'utf8' }
-        ) as string;
-
-        // Get lines from .gitignore
-        const gitignoreLines = gitignoreContent
-          .split('\n')
-          .map((line) => line.trim())
-          .filter((line) => line);
-
-        // Get existing lines from default content if standard ignore is used
-        const existingLines = options.useStandardIgnore
-          ? defaultContent.split('\n').map((line) => line.trim())
-          : [];
-
-        // Filter out duplicates
-        const uniqueGitignoreLines = gitignoreLines.filter(
-          (line) => !existingLines.includes(line)
-        );
-
-        if (uniqueGitignoreLines.length > 0) {
-          // Add .gitignore section header
-          finalContent +=
-            '\n###############################################################################\n';
-          finalContent += '# IMPORTED FROM .gitignore\n';
-          finalContent +=
-            '# These files were imported from .gitignore at creation.\n';
-          finalContent +=
-            '# These are NOT updated automatically if .gitignore is later changed.\n';
-          finalContent +=
-            '###############################################################################\n\n';
-
-          // Add unique lines
-          finalContent += uniqueGitignoreLines.join('\n') + '\n';
-        }
-      }
     }
 
     // Always add the project files section at the end
