@@ -17,14 +17,32 @@ jest.mock('fs/promises', () => ({
   writeFile: mockFsWriteFile,
 }));
 
-jest.mock('./services/PathUtils');
+jest.mock('./services/PathUtils', () => ({
+  __esModule: true,
+  PathUtils: {
+    normalizeToUnix: jest.fn((p: string) => p.replace(/\\/g, '/')),
+    joinUnix: jest.fn((...paths: string[]) =>
+      paths.join('/').replace(/\/+/g, '/')
+    ),
+    toPlatform: jest.fn((p: string) => p),
+    relative: jest.fn((from: string, to: string) => {
+      if (to.startsWith(from + '/')) {
+        return to.substring(from.length + 1);
+      }
+      return to;
+    }),
+    normalizeForIgnore: jest.fn(
+      (filePath: string, isDirectory: boolean) => {
+        if (!filePath) return null;
+        return isDirectory ? `${filePath}/` : filePath;
+      }
+    ),
+  },
+}));
 
 import { ignoreRulesManager } from './ignoreRulesManager';
-import { PathUtils } from './services/PathUtils';
 import * as path from 'path';
 import { Stats } from 'fs';
-
-const mockPathUtils = PathUtils as jest.Mocked<typeof PathUtils>;
 
 describe('IgnoreRulesManager - Intelligent Scanner', () => {
   const testBaseDir = '/test/project';
@@ -52,28 +70,6 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-
-    // Setup default PathUtils mocks
-    mockPathUtils.normalizeToUnix.mockImplementation((p: string) =>
-      p.replace(/\\/g, '/')
-    );
-    mockPathUtils.joinUnix.mockImplementation((...paths: string[]) =>
-      paths.join('/').replace(/\/+/g, '/')
-    );
-    mockPathUtils.toPlatform.mockImplementation((p: string) => p);
-    mockPathUtils.relative.mockImplementation((from: string, to: string) => {
-      // Simple relative path implementation for tests
-      if (to.startsWith(from + '/')) {
-        return to.substring(from.length + 1);
-      }
-      return to;
-    });
-    mockPathUtils.normalizeForIgnore.mockImplementation(
-      (filePath: string, isDirectory: boolean) => {
-        if (!filePath) return null;
-        return isDirectory ? `${filePath}/` : filePath;
-      }
-    );
 
     // Clear error state to prevent test leakage
     ignoreRulesManager.clearError();
@@ -523,21 +519,6 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     beforeEach(() => {
       // Restore the real addIgnorePattern method for these tests
       jest.restoreAllMocks();
-
-      // Re-setup PathUtils mocks
-      mockPathUtils.normalizeToUnix.mockImplementation((p: string) =>
-        p.replace(/\\/g, '/')
-      );
-      mockPathUtils.joinUnix.mockImplementation((...paths: string[]) =>
-        paths.join('/').replace(/\/+/g, '/')
-      );
-      mockPathUtils.toPlatform.mockImplementation((p: string) => p);
-      mockPathUtils.relative.mockImplementation((from: string, to: string) => {
-        if (to.startsWith(from + '/')) {
-          return to.substring(from.length + 1);
-        }
-        return to;
-      });
 
       // Mock file operations for addIgnorePattern
       mockFsAccess.mockResolvedValue(undefined);
