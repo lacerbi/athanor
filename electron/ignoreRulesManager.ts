@@ -16,6 +16,8 @@ interface IgnoreFile {
   path: string;
   /** Parsed ignore rules using the ignore library */
   rules: ignore.Ignore;
+  /** Raw content of the ignore file */
+  content: string;
 }
 
 class IgnoreRulesManager {
@@ -26,6 +28,7 @@ class IgnoreRulesManager {
   // Master lists of ignore files, sorted from deepest to shallowest
   private athignoreFiles: IgnoreFile[] = [];
   private gitignoreFiles: IgnoreFile[] = [];
+  private useGitignore = true;
 
   // Update base directory and reload rules
   setBaseDir(newDir: string) {
@@ -48,39 +51,92 @@ class IgnoreRulesManager {
     console.log('Ignore rules cleared.');
   }
 
-  // Check if a path should be ignored (temporarily disabled for refactor)
-  ignores(path: string): boolean {
-    // Temporarily return false during refactor - full implementation in Commit 2
+  /**
+   * Check if a path should be ignored based on loaded .athignore and .gitignore rules.
+   * @param pathToCheck The project-relative path to check.
+   * @returns True if the path should be ignored, false otherwise.
+   */
+  ignores(pathToCheck: string): boolean {
+    const isDir = pathToCheck.endsWith('/');
+    const normalizedPath = PathUtils.normalizeForIgnore(pathToCheck, isDir);
+    if (!normalizedPath) {
+      return false;
+    }
+    const ancestors = PathUtils.getAncestors(normalizedPath);
+
+    const check = (files: IgnoreFile[], parentFiles: IgnoreFile[] = []): boolean | null => {
+      const relevantFiles = files.filter(f => ancestors.includes(f.path));
+
+      for (const file of relevantFiles) { // Deepest to shallowest
+        const checker = ignore();
+
+        // Get all parent files for context (both ath and git)
+        const allParents = [
+          ...parentFiles.filter(p => file.path.startsWith(p.path) && file.path !== p.path),
+          ...files.filter(p => file.path.startsWith(p.path) && file.path !== p.path),
+        ];
+        allParents.sort((a, b) => a.path.split('/').length - b.path.split('/').length);
+
+        for(const parentFile of allParents) {
+          checker.add(parentFile.content);
+        }
+        
+        // Add the current file's rules last to give them precedence
+        checker.add(file.content);
+
+        const pathRelativeToBase = PathUtils.relative(this.baseDir, PathUtils.joinUnix(this.baseDir, normalizedPath));
+        const originalResult = checker.test(pathRelativeToBase);
+
+        // Now check if this specific file's rules made a difference
+        const checkerWithoutCurrent = ignore();
+        for(const parentFile of allParents) {
+          checkerWithoutCurrent.add(parentFile.content);
+        }
+        const parentResult = checkerWithoutCurrent.test(pathRelativeToBase);
+        
+        // If the result changed after adding the current file's rules, it has an opinion.
+        if (originalResult.ignored !== parentResult.ignored || originalResult.unignored !== parentResult.unignored) {
+          return !originalResult.unignored;
+        }
+      }
+      return null;
+    };
+
+    // Tier 1: .athignore
+    const athResult = check(this.athignoreFiles, this.useGitignore ? this.gitignoreFiles : []);
+    if (athResult !== null) {
+      return athResult;
+    }
+
+    // Tier 2: .gitignore
+    if (this.useGitignore) {
+      const gitResult = check(this.gitignoreFiles);
+      if (gitResult !== null) {
+        return gitResult;
+      }
+    }
+    
     return false;
   }
 
   /**
    * Helper method to read and parse a single ignore file
-   * @param absolutePath Absolute path to the ignore file
-   * @param isGitignore Whether this is a .gitignore file (adds .git/ rule)
-   * @returns Parsed ignore rules or null if file doesn't exist/can't be read
    */
-  private async _readIgnoreFile(absolutePath: string, isGitignore = false): Promise<ignore.Ignore | null> {
+  private async _readIgnoreFile(absolutePath: string, isGitignore = false): Promise<Pick<IgnoreFile, 'rules' | 'content'> | null> {
     try {
       const content = await fs.readFile(PathUtils.toPlatform(absolutePath), 'utf-8');
       const rules = ignore().add(content);
       if (isGitignore) {
-        rules.add('.git/'); // Always ignore .git directory when using .gitignore
+        rules.add('.git/');
       }
-      return rules;
+      return { rules, content };
     } catch (error) {
-      // File doesn't exist or can't be read - this is normal
       return null;
     }
   }
 
   /**
    * Recursively scan for all ignore files in the project directory
-   * Uses found ignore rules to prune traversal for performance
-   * @param startDir Starting directory for scan (project-relative Unix path)
-   * @param useGitignore Whether to process .gitignore files
-   * @param pruningRules Optional ignore rules to use for pruning traversal
-   * @returns Object containing lists of found athignore and gitignore files
    */
   private async _scanForIgnoreFiles(
     startDir: string, 
@@ -93,62 +149,54 @@ class IgnoreRulesManager {
     const athignores: IgnoreFile[] = [];
     const gitignores: IgnoreFile[] = [];
     
-    // Get absolute platform path for file system operations
     const absoluteStartDir =
       startDir === '.' ? this.baseDir : PathUtils.joinUnix(this.baseDir, startDir);
     if (!absoluteStartDir) return { athignores: [], gitignores: [] };
     const platformStartDir = PathUtils.toPlatform(absoluteStartDir);
     
     try {
-      // Check if directory exists and is accessible
       await fs.access(platformStartDir);
       const stats = await fs.stat(platformStartDir);
       if (!stats.isDirectory()) {
         return { athignores, gitignores };
       }
     } catch (error) {
-      // Directory doesn't exist or isn't accessible
       return { athignores, gitignores };
     }
 
-    // Read ignore files in current directory
     const currentIgnores = ignore();
     let hasCurrentRules = false;
 
-    // Try to read .athignore
     const athignorePath = PathUtils.joinUnix(absoluteStartDir, '.athignore');
-    const athignoreRules = await this._readIgnoreFile(athignorePath);
-    if (athignoreRules) {
+    const athignoreData = await this._readIgnoreFile(athignorePath);
+    if (athignoreData) {
       athignores.push({
         path: startDir,
-        rules: athignoreRules
+        rules: athignoreData.rules,
+        content: athignoreData.content,
       });
-      // Add to current rules for pruning
-      currentIgnores.add(athignoreRules);
+      currentIgnores.add(athignoreData.rules);
       hasCurrentRules = true;
     }
 
-    // Try to read .gitignore (only if useGitignore is true)
     if (useGitignore) {
       const gitignorePath = PathUtils.joinUnix(absoluteStartDir, '.gitignore');
-      const gitignoreRules = await this._readIgnoreFile(gitignorePath, true);
-      if (gitignoreRules) {
+      const gitignoreData = await this._readIgnoreFile(gitignorePath, true);
+      if (gitignoreData) {
         gitignores.push({
           path: startDir,
-          rules: gitignoreRules
+          rules: gitignoreData.rules,
+          content: gitignoreData.content
         });
-        // Add to current rules for pruning (only if no .athignore was found)
         if (!hasCurrentRules) {
-          currentIgnores.add(gitignoreRules);
+          currentIgnores.add(gitignoreData.rules);
         }
       }
     }
 
-    // Read directory contents for recursion
     try {
       const entries = await fs.readdir(platformStartDir);
       
-      // Filter entries to only directories, and apply ignore rules for pruning
       for (const entry of entries) {
         const entryPath = PathUtils.toPlatform(
           PathUtils.joinUnix(absoluteStartDir, entry)
@@ -159,7 +207,6 @@ class IgnoreRulesManager {
           const entryStats = await fs.stat(entryPath);
           isDirectory = entryStats.isDirectory();
         } catch (error) {
-          // Skip entries we can't stat
           continue;
         }
         
@@ -167,29 +214,22 @@ class IgnoreRulesManager {
           continue;
         }
         
-        // Calculate project-relative path for ignore check
         const entryRelativePath = startDir === '.' ? entry : PathUtils.joinUnix(startDir, entry);
         
-        // Skip materials directory from main tree scanning
         if (startDir === '.' && entry === this.materialsDir) {
           continue;
         }
         
-        // Use pruning rules or current ignore rules to prune traversal
-        // Format path for ignore rules (directories should end with /)
         const ignoreTestPath = PathUtils.normalizeForIgnore(entryRelativePath, true);
         if (ignoreTestPath) {
-          // Check against pruning rules first (root-level rules)
           if (pruningRules && pruningRules.ignores(ignoreTestPath)) {
-            continue; // Skip ignored directories
+            continue;
           }
-          // Then check against current directory rules
           if (hasCurrentRules && currentIgnores.ignores(ignoreTestPath)) {
-            continue; // Skip ignored directories
+            continue;
           }
         }
         
-        // Recursively scan subdirectory
         const subResults = await this._scanForIgnoreFiles(entryRelativePath, useGitignore, pruningRules);
         athignores.push(...subResults.athignores);
         gitignores.push(...subResults.gitignores);
@@ -203,33 +243,26 @@ class IgnoreRulesManager {
 
   /**
    * Sort ignore files by directory depth, from deepest to shallowest
-   * @param ignoreFiles Array of ignore files to sort
-   * @returns Sorted array (deepest first)
    */
   private _sortIgnoreFilesByDepth(ignoreFiles: IgnoreFile[]): IgnoreFile[] {
     return ignoreFiles.slice().sort((a, b) => {
-      // Calculate depth by counting path segments
       const depthA = a.path === '.' ? 0 : a.path.split('/').length;
       const depthB = b.path === '.' ? 0 : b.path.split('/').length;
       
-      // Sort deepest first (descending order)
       return depthB - depthA;
     });
   }
 
   // Load ignore rules: scan for all ignore files and sort them
   async loadIgnoreRules() {
-    // Clear existing rules first
     this.clearRules();
 
     const currentBaseDir = this.getBaseDir();
     if (!currentBaseDir) {
-      console.log('No base directory set, skipping ignore rules loading.');
       return;
     }
 
-    // Read project settings to determine if we should use .gitignore
-    let useGitignore = true; // Default to true
+    this.useGitignore = true;
     const projectSettingsPath = PathUtils.toPlatform(
       PathUtils.joinUnix(currentBaseDir, FILE_SYSTEM.materialsDirName, 'project_settings.json')
     );
@@ -238,14 +271,12 @@ class IgnoreRulesManager {
       const raw = await fs.readFile(projectSettingsPath, 'utf-8');
       try {
         const cfg = JSON.parse(raw);
-        useGitignore = cfg.useGitignore ?? true;
+        this.useGitignore = cfg.useGitignore ?? true;
       } catch (parseErr) {
-        // Syntax error → stop scanning but don’t throw (tests expect this)
         console.warn('[ignoreRulesManager] Malformed project_settings.json – skipping ignore scan');
         return;
       }
     } catch (readErr: any) {
-      // Ignore ENOENT (file missing); abort on any other I/O problem
       if (readErr.code && readErr.code !== 'ENOENT') {
         console.warn('[ignoreRulesManager] Cannot read project settings – skipping ignore scan');
         return;
@@ -253,49 +284,32 @@ class IgnoreRulesManager {
     }
 
     try {
-      console.log('Starting intelligent ignore file scan...');
-      
-      // First, read root-level ignore files to create pruning rules
       const rootPruningRules = ignore();
       let hasRootRules = false;
 
-      // Read root .athignore
       const rootAthignorePath = PathUtils.joinUnix(currentBaseDir, '.athignore');
-      const rootAthignoreRules = await this._readIgnoreFile(rootAthignorePath);
-      if (rootAthignoreRules) {
-        rootPruningRules.add(rootAthignoreRules);
+      const rootAthignoreData = await this._readIgnoreFile(rootAthignorePath);
+      if (rootAthignoreData) {
+        rootPruningRules.add(rootAthignoreData.rules);
         hasRootRules = true;
       }
 
-      // Read root .gitignore (only if useGitignore is true)
-      if (useGitignore) {
+      if (this.useGitignore) {
         const rootGitignorePath = PathUtils.joinUnix(currentBaseDir, '.gitignore');
-        const rootGitignoreRules = await this._readIgnoreFile(rootGitignorePath, true);
-        if (rootGitignoreRules) {
-          // Only add gitignore rules if no athignore was found at root
+        const rootGitignoreData = await this._readIgnoreFile(rootGitignorePath, true);
+        if (rootGitignoreData) {
           if (!hasRootRules) {
-            rootPruningRules.add(rootGitignoreRules);
+            rootPruningRules.add(rootGitignoreData.rules);
           }
         }
       }
 
-      // Scan for all ignore files starting from project root, using root rules for pruning
-      const scanResults = await this._scanForIgnoreFiles('.', useGitignore, hasRootRules ? rootPruningRules : undefined);
+      const scanResults = await this._scanForIgnoreFiles('.', this.useGitignore, hasRootRules ? rootPruningRules : undefined);
       
-      // Sort both lists from deepest to shallowest
       this.athignoreFiles = this._sortIgnoreFilesByDepth(scanResults.athignores);
-      this.gitignoreFiles = useGitignore ? this._sortIgnoreFilesByDepth(scanResults.gitignores) : [];
+      this.gitignoreFiles = this.useGitignore ? this._sortIgnoreFilesByDepth(scanResults.gitignores) : [];
       
       console.log(`Ignore file scan complete. Found ${this.athignoreFiles.length} .athignore files and ${this.gitignoreFiles.length} .gitignore files.`);
-      
-      // Log discovered files for debugging
-      if (this.athignoreFiles.length > 0) {
-        console.log('.athignore files found:', this.athignoreFiles.map(f => f.path));
-      }
-      if (this.gitignoreFiles.length > 0) {
-        console.log('.gitignore files found:', this.gitignoreFiles.map(f => f.path));
-      }
-      
     } catch (error) {
       console.error('Error during ignore file scan:', error);
       this.handleError(error, 'scanning ignore files');
@@ -305,20 +319,16 @@ class IgnoreRulesManager {
   // Add new ignore pattern, optionally ignoring all with same name (ignoreAll)
   async addIgnorePattern(itemPath: string, ignoreAll = false): Promise<boolean> {
     try {
-      // Check if path ends with slash before normalization
       const hadTrailingSlash =
         itemPath.endsWith('/') || itemPath.endsWith('\\');
 
       let finalPath: string;
       if (ignoreAll) {
-        // For "ignore all", bypass relativeToCwd and resolveFromBase,
-        // simply normalize and remove any leading slash.
         finalPath = PathUtils.normalizeToUnix(itemPath).replace(/^\/+/, '');
         if (hadTrailingSlash && !finalPath.endsWith('/')) {
           finalPath += '/';
         }
       } else {
-        // For single-item ignore, make the path relative to base dir
         const fullPath = PathUtils.joinUnix(this.baseDir, PathUtils.normalizeToUnix(itemPath));
         const normalizedPath = PathUtils.relative(this.baseDir, fullPath);
         
@@ -332,26 +342,21 @@ class IgnoreRulesManager {
         PathUtils.joinUnix(this.getBaseDir(), '.athignore')
       );
 
-      // Create .athignore if it doesn't exist
       try {
         await fs.access(ignorePath);
       } catch {
         await fs.writeFile(ignorePath, '', 'utf8');
       }
 
-      // Read current content
       const currentContent = await fs.readFile(ignorePath, 'utf8');
       const lines = currentContent.split('\n').filter((line) => line.trim());
 
-      // Add new item if it's not already in the file
       if (!lines.includes(finalPath)) {
         lines.push(finalPath);
 
-        // Write back with normalized line endings
         const newContent = lines.join('\n') + '\n';
         await fs.writeFile(ignorePath, newContent, 'utf8');
 
-        // Reload ignore rules
         await this.loadIgnoreRules();
 
         return true;
