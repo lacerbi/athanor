@@ -80,7 +80,18 @@ export function setupCoreHandlers(
   // Add handler for getting initial project path
   ipcMain.handle('app:get-initial-path', async () => {
     try {
-      // Get application settings
+      // Priority 1: Check for a path provided via CLI
+      const cliPath = _fileService.cliPath;
+      if (cliPath) {
+        const exists = await _fileService.exists(cliPath);
+        const isDir = await _fileService.isDirectory(cliPath);
+        if (exists && isDir) {
+          console.log(`[Athanor] Opening project from CLI path: ${cliPath}`);
+          return cliPath;
+        }
+      }
+
+      // Priority 2: Fallback to the last opened project from settings
       const applicationSettings =
         await _settingsService.getApplicationSettings();
 

@@ -258,6 +258,49 @@ describe('PathUtils', () => {
     });
   });
 
+  describe('getAncestors', () => {
+    test('returns root for files in root directory', () => {
+      expect(PathUtils.getAncestors('file.txt')).toEqual(['.']);
+      expect(PathUtils.getAncestors('./file.txt')).toEqual(['.']);
+    });
+
+    test('returns ancestor directories for nested files', () => {
+      expect(PathUtils.getAncestors('src/file.txt')).toEqual(['src', '.']);
+      expect(PathUtils.getAncestors('src/components/Button.tsx')).toEqual(['src/components', 'src', '.']);
+      expect(PathUtils.getAncestors('a/b/c/d/file.js')).toEqual(['a/b/c/d', 'a/b/c', 'a/b', 'a', '.']);
+    });
+
+    test('works with Windows-style paths', () => {
+      expect(PathUtils.getAncestors('src\\components\\file.ts')).toEqual(['src/components', 'src', '.']);
+    });
+
+    test('handles trailing slashes correctly', () => {
+      expect(PathUtils.getAncestors('src/components/')).toEqual(['src', '.']);
+      expect(PathUtils.getAncestors('src/components/file.txt/')).toEqual(['src/components', 'src', '.']);
+    });
+
+    test('handles empty and invalid inputs', () => {
+      expect(PathUtils.getAncestors('')).toEqual(['.']);
+      expect(PathUtils.getAncestors(null as unknown as string)).toEqual(['.']);
+      expect(PathUtils.getAncestors(undefined as unknown as string)).toEqual(['.']);
+    });
+
+    test('handles absolute paths', () => {
+      expect(PathUtils.getAncestors('/home/user/file.txt')).toEqual(['/home/user', '/home', '.']);
+      expect(PathUtils.getAncestors('C:/Users/test/file.txt')).toEqual(['C:/Users/test', 'C:/Users', 'C:', '.']);
+    });
+
+    test('handles single-level directories', () => {
+      expect(PathUtils.getAncestors('src/')).toEqual(['.']);
+      expect(PathUtils.getAncestors('docs/readme.md')).toEqual(['docs', '.']);
+    });
+
+    test('handles complex nested paths', () => {
+      expect(PathUtils.getAncestors('projects/frontend/src/components/ui/Button/index.tsx'))
+        .toEqual(['projects/frontend/src/components/ui/Button', 'projects/frontend/src/components/ui', 'projects/frontend/src/components', 'projects/frontend/src', 'projects/frontend', 'projects', '.']);
+    });
+  });
+
   describe('sanitizeFilename', () => {
     test('removes invalid characters', () => {
       expect(PathUtils.sanitizeFilename('file:name?.txt')).toBe('file_name_.txt');

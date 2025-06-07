@@ -174,6 +174,26 @@ app.whenReady().then(async () => {
   // Initialize LLM service with API key service
   llmService = new LLMServiceMain(apiKeyService);
 
+  // Handle CLI argument for opening a project
+  const args = process.argv.slice(app.isPackaged ? 1 : 2);
+  const potentialPath = args.find(arg => !arg.startsWith('-'));
+  
+  if (potentialPath) {
+    const absolutePath = path.resolve(potentialPath);
+    try {
+      // Use fileService to check if the path is a valid directory
+      if (await fileService.isDirectory(absolutePath)) {
+        fileService.cliPath = fileService.toUnix(absolutePath);
+        console.log(`[Athanor] CLI project path specified: ${fileService.cliPath}`);
+      } else {
+        console.warn(`[Athanor] CLI path is not a directory, ignoring: ${absolutePath}`);
+      }
+    } catch (error) {
+      // This can happen if the path does not exist at all
+      console.warn(`[Athanor] Invalid CLI path provided, ignoring: ${absolutePath}`, error);
+    }
+  }
+
   setupIpcHandlers(fileService, settingsService, apiKeyService, llmService);
 
   // Read package.json for About panel information
