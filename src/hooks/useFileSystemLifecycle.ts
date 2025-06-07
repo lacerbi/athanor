@@ -317,14 +317,14 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   // Set up listeners for menu commands from main process
   useEffect(() => {
-    const openFolderListener = () => handleOpenFolder();
-    window.electron.receive('menu:open-folder', openFolderListener);
+    const cleanupOpenFolder = window.electron.receive('menu:open-folder', () => handleOpenFolder());
+    const cleanupOpenPath = window.electron.receive('menu:open-path', (path: string) => initializeProject(path));
 
-    const openPathListener = (path: string) => initializeProject(path);
-    window.electron.receive('menu:open-path', openPathListener);
-
-    // Note: Cleanup is handled by the preload bridge implementation
-    // The ipcRenderer listeners are managed internally
+    // Return a cleanup function that will be called when the component unmounts
+    return () => {
+      cleanupOpenFolder();
+      cleanupOpenPath();
+    };
   }, [handleOpenFolder, initializeProject]);
 
   const handleProjectDialogClose = () => {

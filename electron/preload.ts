@@ -18,8 +18,15 @@ contextBridge.exposeInMainWorld('electron', {
   receive: (channel: string, func: (...args: any[]) => void) => {
     const validChannels = ['fromMain', 'menu:open-folder', 'menu:open-path'];
     if (validChannels.includes(channel)) {
-      ipcRenderer.on(channel, (event, ...args) => func(...args));
+      const listener = (event: any, ...args: any[]) => func(...args);
+      ipcRenderer.on(channel, listener);
+      // Return a cleanup function to remove this specific listener
+      return () => {
+        ipcRenderer.removeListener(channel, listener);
+      };
     }
+    // Return a no-op function if the channel is invalid for safety
+    return () => {};
   },
 });
 

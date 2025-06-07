@@ -239,19 +239,10 @@ export function setupCoreHandlers(
         // (This will handle cleaning up old watchers, reloading ignore rules, etc.)
         await _fileService.setBaseDir(selectedPath);
 
-        // Notify renderer of successful folder change
-        if (mainWindow?.webContents && !mainWindow.webContents.isDestroyed()) {
-          mainWindow.webContents.send('fs:folderChanged', selectedPath);
-        }
-
         return selectedPath;
       }
       return null;
     } catch (error) {
-      // Ensure renderer is notified of errors
-      if (mainWindow?.webContents && !mainWindow.webContents.isDestroyed()) {
-        mainWindow.webContents.send('fs:error', String(error));
-      }
       handleError(error, 'opening folder dialog');
     }
   });
