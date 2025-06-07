@@ -23,11 +23,12 @@ Here's a step-by-step guide on how to use its main features:
 
 When you first launch Athanor, you'll be prompted to **select a project folder**.
 
-- If your project doesn't have an `.athignore` file (Athanor's specific ignore file), a dialog will appear:
-  - You can choose to create a **default `.athignore` file**, which includes common rules for files and directories (like `node_modules`, `.git`, etc.).
-  - If a `.gitignore` file exists in your project, you'll have the option to **import its rules** into the new `.athignore` file.
-- Once the folder is selected and, if necessary, the `.athignore` file is created, Athanor will scan your project files and display them in the **File Explorer** on the left panel.
-  - Files and folders listed in `.athignore` will **not** appear in the File Explorer.
+- Athanor works with both `.gitignore` and its own `.athignore` file to determine which files to show.
+  - By default, rules from `.gitignore` are automatically used. You can disable this in the **Settings** tab.
+  - The `.athignore` file is for Athanor-specific rules or for overriding `.gitignore` rules (e.g., to re-include an ignored file).
+- If your project doesn't have an `.athignore` file, a dialog will appear asking if you want to create one with a default set of rules for common files (like `node_modules`, `.git`, etc.).
+- Once the folder is selected, Athanor will scan your project files and display them in the **File Explorer** on the left panel.
+  - Files and folders matching the rules in `.gitignore` (if enabled) and `.athignore` will **not** appear.
 - A hidden `.ath_materials` folder is automatically created in your project to store supplementary materials like documentation fragments or project-specific settings.
 
 ---
