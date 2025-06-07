@@ -9,6 +9,25 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.6.5] - 2025-06-07
+
+### Added
+
+- "Open Folder" and "Open Recent" menu items for easier project access ([`dba6f4a`](https://github.com/lacerbi/athanor/commit/dba6f4a)).
+
+### Fixed
+
+- Resolved a bug that caused listener leaks and unresponsiveness when using the "Open Folder" menu item ([`bbdf6de`](https://github.com/lacerbi/athanor/commit/bbdf6de)).
+- Corrected a state desynchronization issue between application settings on disk and in-memory state ([`20fac02`](https://github.com/lacerbi/athanor/commit/20fac02)).
+
+### Changed
+
+- Refactored the `useFileSystemLifecycle` hook to prevent excessive IPC listener churn and improve stability ([`e8c9207`](https://github.com/lacerbi/athanor/commit/e8c9207)).
+
+### Tests
+
+- Fixed failing unit tests related to recent bug fixes and refactoring ([`1538b0d`](https://github.com/lacerbi/athanor/commit/1538b0d)).
+
 ## [0.6.4] - 2025-06-07
 
 ### Changed
