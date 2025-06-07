@@ -30,6 +30,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
   const testBaseDir = '/test/project';
   let originalConsoleLog: typeof console.log;
   let originalConsoleError: typeof console.error;
+  let originalConsoleWarn: typeof console.warn;
   let loadIgnoreRulesSpy: jest.SpyInstance;
 
   beforeAll(() => {
@@ -38,12 +39,15 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     console.log = jest.fn();
     originalConsoleError = console.error;
     console.error = jest.fn();
+    originalConsoleWarn = console.warn;
+    console.warn = jest.fn();
   });
 
   afterAll(() => {
     // Restore original console
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
+    console.warn = originalConsoleWarn;
    });
 
   beforeEach(() => {
