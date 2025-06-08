@@ -76,7 +76,7 @@ export class RelevanceEngineService {
     const keywords = text
       .toLowerCase()
       .match(/\b[a-zA-Z_][a-zA-Z0-9_-]*\b/g) // Split into words, allow snake/kebab case
-      ?.filter(word => word.length >= 3 && !stopWords.has(word)) || [];
+      ?.filter(word => word.length > 3 && !stopWords.has(word)) || [];
 
     return [...new Set(keywords)]; // Return unique keywords
   }
