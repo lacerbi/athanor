@@ -11,6 +11,9 @@ jest.mock('../utils/fileSelection', () => ({
 import { getSelectableDescendants } from '../utils/fileSelection';
 
 describe('workbenchStore', () => {
+  // Use fake timers to prevent setTimeout leaks
+  jest.useFakeTimers();
+
   beforeEach(() => {
     // Reset store state before each test, ensuring a clean slate.
     useWorkbenchStore.setState({
@@ -30,6 +33,16 @@ describe('workbenchStore', () => {
       developerActionTrigger: 0,
     });
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    // Clear any pending timers between tests
+    jest.clearAllTimers();
+  });
+
+  afterAll(() => {
+    // Restore real timers after all tests complete
+    jest.useRealTimers();
   });
 
   describe('tab management', () => {
