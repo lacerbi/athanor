@@ -1,10 +1,11 @@
-// AI Summary: Orchestrates context analysis by identifying direct dependencies and keyword matches.
-// Uses DependencyScanner for fast, regex-based analysis and FileService to resolve module paths and find keyword-relevant files,
-// forming the "neighboring" context for AI prompts.
+// AI Summary: Orchestrates context analysis using a scoring engine to identify relevant 'neighboring' files.
+// It uses heuristics like shared Git commits, direct dependencies, keyword matching, and path analysis (siblings, co-location) to build a rich context for AI prompts.
 
 import { FileService } from './FileService';
+import type { IGitService } from '../../common/types/git-service';
 import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
+import { CONTEXT_BUILDER } from '../../src/utils/constants';
 
 interface ContextResult {
   selected: string[];
@@ -12,11 +13,13 @@ interface ContextResult {
 }
 
 export class RelevanceEngineService {
-  private fileService: FileService;
+  private readonly fileService: FileService;
+  private readonly gitService: IGitService;
   private readonly resolvableExtensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 
-  constructor(fileService: FileService) {
+  constructor(fileService: FileService, gitService: IGitService) {
     this.fileService = fileService;
+    this.gitService = gitService;
   }
 
   /**
@@ -91,58 +94,131 @@ export class RelevanceEngineService {
     selectedFilePaths: string[],
     taskDescription?: string
   ): Promise<ContextResult> {
-    const dependencyNeighbors = new Set<string>();
-    const keywordMatches = new Set<string>();
+    this.gitService.setBaseDir(this.fileService.getBaseDir());
 
-    // 1. Dependency Analysis
-    for (const filePath of selectedFilePaths) {
-      try {
-        if (!(await this.fileService.exists(filePath))) {
-          console.warn(`[RelevanceEngine] Selected file does not exist, skipping: ${filePath}`);
-          continue;
-        }
+    const scores = new Map<string, number>();
+    const allProjectFiles = await this.fileService.getAllFilePaths();
+    const seedBasket = selectedFilePaths;
+    const seedSet = new Set(seedBasket);
 
-        const content = await this.fileService.read(filePath, { encoding: 'utf-8' }) as string;
-        const dependencies = DependencyScanner.scan(filePath, content);
+    const candidateFiles = allProjectFiles.filter(p => !seedSet.has(p));
+    const candidateSet = new Set(candidateFiles);
 
-        for (const specifier of dependencies) {
-          const resolvedPath = await this.resolveDependency(filePath, specifier);
-          if (resolvedPath) {
-            dependencyNeighbors.add(resolvedPath);
+    const addScore = (filePath: string, score: number) => {
+      scores.set(filePath, (scores.get(filePath) || 0) + score);
+    };
+
+    // --- Heuristics ---
+
+    // Git-based heuristics
+    if (await this.gitService.isGitRepository()) {
+      const sharedCommitCounts = new Map<string, number>();
+      const commitFilesCache = new Map<string, string[]>();
+
+      for (const seedFile of seedBasket) {
+        // Limit to recent history for performance
+        const commits = await this.gitService.getCommitsForFile(seedFile, { maxCount: CONTEXT_BUILDER.MAX_COMMITS_TO_CHECK });
+        for (const commit of commits) {
+          let filesInCommit = commitFilesCache.get(commit.hash);
+          if (!filesInCommit) {
+            filesInCommit = await this.gitService.getFilesForCommit(commit.hash);
+            commitFilesCache.set(commit.hash, filesInCommit);
+          }
+          for (const file of filesInCommit) {
+            if (candidateSet.has(file)) {
+              sharedCommitCounts.set(file, (sharedCommitCounts.get(file) || 0) + 1);
+            }
           }
         }
-      } catch (error) {
-        console.error(`[RelevanceEngine] Error processing file ${filePath} for dependencies:`, error);
+      }
+
+      for (const [file, count] of sharedCommitCounts.entries()) {
+        const score =
+          count >= 3
+            ? CONTEXT_BUILDER.SCORE_SHARED_COMMIT_MULTI
+            : CONTEXT_BUILDER.SCORE_SHARED_COMMIT_SINGLE;
+        addScore(file, score);
       }
     }
 
-    // 2. Task Keyword Analysis
+    // 1. Task Keyword Analysis (Independent of seed files)
     if (taskDescription) {
       const keywords = this._extractKeywords(taskDescription);
       if (keywords.length > 0) {
-        try {
-          const allProjectFiles = await this.fileService.getAllFilePaths();
-          for (const projectFile of allProjectFiles) {
-            const lowerCasePath = projectFile.toLowerCase();
-            if (keywords.some(keyword => lowerCasePath.includes(keyword))) {
-              keywordMatches.add(projectFile);
-            }
+        for (const file of candidateFiles) {
+          const lowerCasePath = file.toLowerCase();
+          const matches = keywords.filter(keyword =>
+            lowerCasePath.includes(keyword)
+          );
+          if (matches.length > 0) {
+            const score =
+              matches.length > 1
+                ? CONTEXT_BUILDER.SCORE_TASK_KEYWORD_MULTI
+                : CONTEXT_BUILDER.SCORE_TASK_KEYWORD_SINGLE;
+            addScore(file, score);
           }
-        } catch (error) {
-          console.error(`[RelevanceEngine] Error during keyword analysis:`, error);
         }
       }
     }
 
-    // 3. Combine results
-    const combinedNeighbors = new Set([...dependencyNeighbors, ...keywordMatches]);
+    // 2. Seed-based Analysis
+    for (const seedFile of seedBasket) {
+      // A. Direct Dependencies
+      try {
+        if (await this.fileService.exists(seedFile)) {
+          const content = (await this.fileService.read(seedFile, {
+            encoding: 'utf-8',
+          })) as string;
+          const dependencies = DependencyScanner.scan(seedFile, content);
+          for (const specifier of dependencies) {
+            const resolvedPath = await this.resolveDependency(
+              seedFile,
+              specifier
+            );
+            if (resolvedPath && !seedSet.has(resolvedPath)) {
+              addScore(resolvedPath, CONTEXT_BUILDER.SCORE_DIRECT_DEPENDENCY);
+            }
+          }
+        }
+      } catch (error) {
+        console.error(
+          `[RelevanceEngine] Error processing file ${seedFile} for dependencies:`,
+          error
+        );
+      }
 
-    // Ensure neighboring files don't include any of the primary selected files
-    selectedFilePaths.forEach(path => combinedNeighbors.delete(path));
+      // B. Path-based heuristics
+      const seedDir = PathUtils.dirname(seedFile);
+      const seedExt = PathUtils.extname(seedFile);
+      const seedBase = PathUtils.basename(seedFile, seedExt);
+
+      for (const candidateFile of candidateFiles) {
+        if (candidateFile === seedFile) continue;
+
+        const candidateDir = PathUtils.dirname(candidateFile);
+        // Folder Co-location
+        if (candidateDir === seedDir) {
+          addScore(candidateFile, CONTEXT_BUILDER.SCORE_SAME_FOLDER);
+
+          // Sibling File (must be in same folder)
+          const candidateExt = PathUtils.extname(candidateFile);
+          const candidateBase = PathUtils.basename(candidateFile, candidateExt);
+          if (seedBase === candidateBase) {
+            addScore(candidateFile, CONTEXT_BUILDER.SCORE_SIBLING_FILE);
+          }
+        }
+      }
+    }
+
+    // --- Final Selection ---
+    const neighboring = Array.from(scores.entries())
+      .filter(([, score]) => score >= CONTEXT_BUILDER.SCORE_THRESHOLD)
+      .sort(([, a], [, b]) => b - a)
+      .map(([path]) => path);
 
     return {
       selected: selectedFilePaths,
-      neighboring: Array.from(combinedNeighbors),
+      neighboring: neighboring,
     };
   }
 }

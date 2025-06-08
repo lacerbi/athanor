@@ -10,11 +10,13 @@ import { SettingsService } from './services/SettingsService';
 import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
+import { GitService } from './services/GitService';
 
 // Create singleton instances
 export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
-export const relevanceEngine = new RelevanceEngineService(fileService);
+export const gitService = new GitService(fileService.getBaseDir());
+export const relevanceEngine = new RelevanceEngineService(fileService, gitService);
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
 
@@ -201,7 +203,7 @@ app.whenReady().then(async () => {
     settingsService,
     apiKeyService,
     llmService,
-    relevanceEngine,
+    relevanceEngine
   );
 
   // Read package.json for About panel information

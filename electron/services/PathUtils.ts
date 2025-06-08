@@ -116,12 +116,13 @@ export class PathUtils {
   /**
    * Get the base name (filename or directory name) from a path
    * @param pathStr Path to extract name from
+   * @param ext Optional file extension to remove from the result
    * @returns Base name (without parent directories)
    */
-  static basename(pathStr: string): string {
+  static basename(pathStr: string, ext?: string): string {
     if (!pathStr) return '';
     const unixPath = PathUtils.normalizeToUnix(pathStr);
-    return path.posix.basename(unixPath);
+    return path.posix.basename(unixPath, ext);
   }
 
   /**
