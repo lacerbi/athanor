@@ -227,7 +227,7 @@ file1 file2 [...]
 <ath_prompt_variant
     id="design-doc"
     label="Design Doc"
-    tooltip="Interactively builds a design document">
+    tooltip="Interactively builds a design document for a complex feature or specification">
 <project>
 # Documentation `{{project_name}}`
 
