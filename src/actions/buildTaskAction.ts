@@ -58,7 +58,7 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
       task,
       defaultVariant,
       rootItems,
-      selectedItems,
+      Array.from(selectedItems), // Convert Set to array for buildDynamicPrompt
       currentDir,
       useWorkbenchStore.getState().taskDescription,
       useWorkbenchStore.getState().taskContext,

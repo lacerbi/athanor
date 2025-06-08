@@ -4,6 +4,7 @@
 import { countTokens, formatTokenCount } from '../utils/tokenCount';
 import { formatSingleFile } from '../utils/codebaseDocumentation';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { useWorkbenchStore } from '../stores/workbenchStore';
 import { generateCodebaseDocumentation } from '../utils/codebaseDocumentation';
 import { DOC_FORMAT } from '../utils/constants';
 
@@ -37,13 +38,25 @@ export async function copySelectedFilesContent(
   params: CopySelectedParams
 ): Promise<void> {
   const { addLog, rootPath } = params;
-  const { selectedItems, fileTree, formatType } =
-    useFileSystemStore.getState();
+  const { fileTree, formatType } = useFileSystemStore.getState();
+  const { tabs, activeTabIndex } = useWorkbenchStore.getState();
 
   try {
+    // Get selected files from active tab
+    const activeTab = tabs[activeTabIndex];
+    const selectedFiles = activeTab?.selectedFiles || [];
+    
+    if (selectedFiles.length === 0) {
+      addLog('No files selected to copy');
+      return;
+    }
+
+    // Convert to Set for generateCodebaseDocumentation compatibility
+    const selectedItemsSet = new Set(selectedFiles);
+
     const { file_contents } = await generateCodebaseDocumentation(
       fileTree,
-      selectedItems,
+      selectedItemsSet,
       rootPath,
       null,
       false, // Always exclude non-selected files for manual copy
@@ -57,7 +70,7 @@ export async function copySelectedFilesContent(
 
     await navigator.clipboard.writeText(file_contents);
     const tokenCount = formatTokenCount(countTokens(file_contents));
-    addLog(`Copied ${selectedItems.size} files to clipboard (${tokenCount})`);
+    addLog(`Copied ${selectedFiles.length} files to clipboard (${tokenCount})`);
   } catch (err) {
     addLog('Failed to copy selected files');
   }

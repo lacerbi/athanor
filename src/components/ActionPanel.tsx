@@ -141,7 +141,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const lastTriggerRef = useRef(developerActionTrigger);
 
   const {
-    selectedItems,
     smartPreviewEnabled,
     toggleSmartPreview,
     includeFileTree,
@@ -166,6 +165,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       setIsLoading(true);
       setIsGeneratingPrompt(true);
 
+      // Get selected files from active tab
+      const activeTab = tabs[activeTabIndex];
+      const selectedFiles = activeTab?.selectedFiles || [];
+
       // Get smart preview configuration and threshold line length from application settings
       const appDefaults = SETTINGS.defaults.application;
       const smartPreviewConfig = {
@@ -184,7 +187,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         prompt,
         variant,
         rootItems,
-        selectedItems,
+        selectedFiles, // Pass ordered array instead of Set
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
         tabs[activeTabIndex].context, // Current tab's context
@@ -209,7 +212,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
   const isTaskEmpty =
     !tabs?.[activeTabIndex] || tabs[activeTabIndex].content.trim().length === 0;
-  const hasNoSelection = selectedItems.size === 0;
+  const hasNoSelection = !tabs?.[activeTabIndex]?.selectedFiles.length;
   const hasNoProject = !rootItems || rootItems.length === 0 || !rootItems[0];
 
   // Show empty state when no project is loaded
@@ -557,19 +560,23 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         key={task.id}
                         className="icon-btn relative bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
                         title={isUserDefined ? "Custom: " + getTaskTooltip(task, isDisabled, reason) : getTaskTooltip(task, isDisabled, reason)}
-                        onClick={() =>
+                        onClick={() => {
+                          const activeTab = tabs[activeTabIndex];
+                          const selectedFiles = activeTab?.selectedFiles || [];
+                          const selectedItemsSet = new Set(selectedFiles); // Convert to Set for buildTaskAction compatibility
+                          
                           buildTaskAction({
                             task,
                             rootItems,
-                            selectedItems,
+                            selectedItems: selectedItemsSet,
                             setOutputContent,
                             addLog,
                             setIsLoading,
                             currentThresholdLineLength:
                               applicationSettings?.thresholdLineLength ??
                               SETTINGS.defaults.application.thresholdLineLength,
-                          })
-                        }
+                          });
+                        }}
                         disabled={isDisabled}
                         onContextMenu={(e) => {
                           e.preventDefault();

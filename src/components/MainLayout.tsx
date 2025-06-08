@@ -8,10 +8,12 @@ import ApplyChangesPanel from './ApplyChangesPanel';
 import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { useWorkbenchStore } from '../stores/workbenchStore';
 import { FileItem } from '../utils/fileTree';
 import { usePanelResize } from '../hooks/usePanelResize';
 import { useLogPanelResize } from '../hooks/useLogPanelResize';
 import { copySelectedFilesContent } from '../actions/ManualCopyAction';
+import { calculateSelectionTotals } from '../utils/fileSelection';
 
 interface MainLayoutProps {
   filesData: FileItem;
@@ -50,10 +52,16 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   } = useLogPanelResize();
   
   const { 
-    selectedFileCount, 
-    selectedLinesTotal,
-    effectiveConfig
+    effectiveConfig,
+    fileTree
   } = useFileSystemStore();
+  const { tabs, activeTabIndex } = useWorkbenchStore();
+
+  // Calculate selection metrics from active workbench tab
+  const activeWorkbenchTab = tabs[activeTabIndex];
+  const selectedFiles = activeWorkbenchTab?.selectedFiles || [];
+  const selectedFileCount = selectedFiles.length;
+  const selectedLinesTotal = calculateSelectionTotals(selectedFiles, fileTree);
 
   const handleFileView = () => {
     onTabChange('viewer');

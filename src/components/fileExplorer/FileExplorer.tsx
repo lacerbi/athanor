@@ -20,7 +20,6 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
   onViewFile = () => {},
   onRefresh = () => {},
 }) => {
-  const { validateSelections } = useFileSystemStore();
   const {
     explorerRef,
     expandedFolders,

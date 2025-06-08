@@ -59,11 +59,14 @@ export function areSomeDescendantsSelected(
 }
 
 // Calculate total lines across selected files
-export function calculateSelectionTotals(selectedItems: Set<string>, fileTree: FileItem[]): number {
+export function calculateSelectionTotals(selectedItems: Set<string> | string[], fileTree: FileItem[]): number {
   if (!fileTree || fileTree.length === 0) return 0;
   let total = 0;
   
-  selectedItems.forEach((id) => {
+  // Convert array to Set if needed for consistent iteration
+  const selectedSet = Array.isArray(selectedItems) ? new Set(selectedItems) : selectedItems;
+  
+  selectedSet.forEach((id) => {
     const item = getFileItemById(id, fileTree);
     if (item?.type === 'file' && item.lineCount) {
       total += item.lineCount;
