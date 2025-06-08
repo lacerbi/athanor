@@ -1,11 +1,12 @@
-// AI Summary: Orchestrates context analysis using a scoring engine to identify relevant 'neighboring' files.
-// It uses heuristics like shared Git commits, direct dependencies, keyword matching, and path analysis (siblings, co-location) to build a rich context for AI prompts.
+// AI Summary: Orchestrates a two-phase context analysis using a scoring engine to identify relevant 'neighboring' files.
+// It uses heuristics like shared Git commits, direct dependencies, and keyword/path analysis to build a rich, token-budgeted context for AI prompts.
 
 import { FileService } from './FileService';
 import type { IGitService } from '../../common/types/git-service';
 import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
-import { CONTEXT_BUILDER } from '../../src/utils/constants';
+import { CONTEXT_BUILDER, SETTINGS } from '../../src/utils/constants';
+import * as PromptUtils from './PromptUtils';
 
 interface ContextResult {
   selected: string[];
@@ -86,139 +87,158 @@ export class RelevanceEngineService {
 
   /**
    * Calculates the context for a given set of selected files and a task description.
-   * @param selectedFilePaths An array of project-relative paths for the selected files.
+   * @param originallySelectedFiles An array of project-relative paths for the selected files.
    * @param taskDescription The user-provided description of the task.
    * @returns An object containing the selected files and their neighboring (dependency and keyword-matched) files.
    */
   public async calculateContext(
-    selectedFilePaths: string[],
+    originallySelectedFiles: string[],
     taskDescription?: string
   ): Promise<ContextResult> {
     this.gitService.setBaseDir(this.fileService.getBaseDir());
-
-    const scores = new Map<string, number>();
     const allProjectFiles = await this.fileService.getAllFilePaths();
-    const seedBasket = selectedFilePaths;
-    const seedSet = new Set(seedBasket);
+    const isGitRepo = await this.gitService.isGitRepository();
+    const originalSelectionSet = new Set(originallySelectedFiles);
 
-    const candidateFiles = allProjectFiles.filter(p => !seedSet.has(p));
-    const candidateSet = new Set(candidateFiles);
+    // This is the core scoring logic that will be used for both preliminary and final rounds.
+    const runScoringRound = async (
+      seedBasket: { path: string, isOriginallySelected: boolean }[],
+      candidateFiles: string[]
+    ): Promise<Map<string, number>> => {
+      const scores = new Map<string, number>();
+      const candidateSet = new Set(candidateFiles);
+      const addScore = (filePath: string, score: number, modifier: number = 1) => {
+        scores.set(filePath, (scores.get(filePath) || 0) + score * modifier);
+      };
 
-    const addScore = (filePath: string, score: number) => {
-      scores.set(filePath, (scores.get(filePath) || 0) + score);
+      // Task Keyword Analysis
+      if (taskDescription) {
+        const keywords = this._extractKeywords(taskDescription);
+        if (keywords.length > 0) {
+          for (const file of candidateFiles) {
+            const lowerCasePath = file.toLowerCase();
+            const matches = keywords.filter(k => lowerCasePath.includes(k));
+            if (matches.length > 0) {
+              const score = matches.length > 1 ? CONTEXT_BUILDER.SCORE_TASK_KEYWORD_MULTI : CONTEXT_BUILDER.SCORE_TASK_KEYWORD_SINGLE;
+              addScore(file, score);
+            }
+          }
+        }
+      }
+
+      const sharedCommitCounts = new Map<string, number>();
+      if (isGitRepo) {
+        const commitFilesCache = new Map<string, string[]>();
+        for (const seed of seedBasket) {
+          const commits = await this.gitService.getCommitsForFile(seed.path, { maxCount: CONTEXT_BUILDER.MAX_COMMITS_TO_CHECK });
+          for (const commit of commits) {
+            let filesInCommit = commitFilesCache.get(commit.hash);
+            if (!filesInCommit) {
+              filesInCommit = await this.gitService.getFilesForCommit(commit.hash);
+              commitFilesCache.set(commit.hash, filesInCommit);
+            }
+            for (const file of filesInCommit) {
+              if (candidateSet.has(file)) {
+                const modifier = seed.isOriginallySelected ? 1.0 : 0.5;
+                sharedCommitCounts.set(file, (sharedCommitCounts.get(file) || 0) + modifier);
+              }
+            }
+          }
+        }
+        for (const [file, count] of sharedCommitCounts.entries()) {
+          const score = count >= 3 ? CONTEXT_BUILDER.SCORE_SHARED_COMMIT_MULTI : CONTEXT_BUILDER.SCORE_SHARED_COMMIT_SINGLE;
+          addScore(file, score);
+        }
+      }
+
+      for (const seed of seedBasket) {
+        const modifier = seed.isOriginallySelected ? 1.0 : 0.5;
+        // Direct Dependencies
+        if (await this.fileService.exists(seed.path)) {
+          const content = await this.fileService.read(seed.path, { encoding: 'utf-8' }) as string;
+          const dependencies = DependencyScanner.scan(seed.path, content);
+          for (const specifier of dependencies) {
+            const resolvedPath = await this.resolveDependency(seed.path, specifier);
+            if (resolvedPath && candidateSet.has(resolvedPath)) {
+              addScore(resolvedPath, CONTEXT_BUILDER.SCORE_DIRECT_DEPENDENCY, modifier);
+            }
+          }
+        }
+
+        // Path-based heuristics
+        const seedDir = PathUtils.dirname(seed.path);
+        const seedExt = PathUtils.extname(seed.path);
+        const seedBase = PathUtils.basename(seed.path, seedExt);
+        for (const candidateFile of candidateFiles) {
+          if (PathUtils.dirname(candidateFile) === seedDir) {
+            addScore(candidateFile, CONTEXT_BUILDER.SCORE_SAME_FOLDER, modifier);
+            const candidateExt = PathUtils.extname(candidateFile);
+            const candidateBase = PathUtils.basename(candidateFile, candidateExt);
+            if (seedBase === candidateBase) {
+              addScore(candidateFile, CONTEXT_BUILDER.SCORE_SIBLING_FILE, modifier);
+            }
+          }
+        }
+      }
+
+      return scores;
     };
 
-    // --- Heuristics ---
+    // --- PHASE 1: SEED BASKET CREATION ---
+    let seedBasket: { path: string, isOriginallySelected: boolean }[] = originallySelectedFiles.map(p => ({ path: p, isOriginallySelected: true }));
 
-    // Git-based heuristics
-    if (await this.gitService.isGitRepository()) {
-      const sharedCommitCounts = new Map<string, number>();
-      const commitFilesCache = new Map<string, string[]>();
+    if (seedBasket.length <= CONTEXT_BUILDER.SEED_TRIGGER_THRESHOLD) {
+      const preliminaryCandidates = allProjectFiles.filter(p => !originalSelectionSet.has(p));
+      const preliminaryScores = await runScoringRound(seedBasket, preliminaryCandidates);
+      const topHeuristicFiles = Array.from(preliminaryScores.entries())
+        .sort(([, a], [, b]) => b - a)
+        .map(([path]) => path);
 
-      for (const seedFile of seedBasket) {
-        // Limit to recent history for performance
-        const commits = await this.gitService.getCommitsForFile(seedFile, { maxCount: CONTEXT_BUILDER.MAX_COMMITS_TO_CHECK });
-        for (const commit of commits) {
-          let filesInCommit = commitFilesCache.get(commit.hash);
-          if (!filesInCommit) {
-            filesInCommit = await this.gitService.getFilesForCommit(commit.hash);
-            commitFilesCache.set(commit.hash, filesInCommit);
-          }
-          for (const file of filesInCommit) {
-            if (candidateSet.has(file)) {
-              sharedCommitCounts.set(file, (sharedCommitCounts.get(file) || 0) + 1);
-            }
-          }
-        }
-      }
-
-      for (const [file, count] of sharedCommitCounts.entries()) {
-        const score =
-          count >= 3
-            ? CONTEXT_BUILDER.SCORE_SHARED_COMMIT_MULTI
-            : CONTEXT_BUILDER.SCORE_SHARED_COMMIT_SINGLE;
-        addScore(file, score);
-      }
-    }
-
-    // 1. Task Keyword Analysis (Independent of seed files)
-    if (taskDescription) {
-      const keywords = this._extractKeywords(taskDescription);
-      if (keywords.length > 0) {
-        for (const file of candidateFiles) {
-          const lowerCasePath = file.toLowerCase();
-          const matches = keywords.filter(keyword =>
-            lowerCasePath.includes(keyword)
-          );
-          if (matches.length > 0) {
-            const score =
-              matches.length > 1
-                ? CONTEXT_BUILDER.SCORE_TASK_KEYWORD_MULTI
-                : CONTEXT_BUILDER.SCORE_TASK_KEYWORD_SINGLE;
-            addScore(file, score);
-          }
+      const filesToAdd = CONTEXT_BUILDER.SEED_BASKET_SIZE - seedBasket.length;
+      for (let i = 0; i < Math.min(topHeuristicFiles.length, filesToAdd); i++) {
+        if (!originalSelectionSet.has(topHeuristicFiles[i])) {
+          seedBasket.push({ path: topHeuristicFiles[i], isOriginallySelected: false });
         }
       }
     }
+    
+    // --- PHASE 2: NEIGHBORHOOD SCORING & SELECTION ---
+    const finalSeedSet = new Set(seedBasket.map(s => s.path));
+    const finalCandidates = allProjectFiles.filter(p => !finalSeedSet.has(p));
+    const finalScores = await runScoringRound(seedBasket, finalCandidates);
 
-    // 2. Seed-based Analysis
-    for (const seedFile of seedBasket) {
-      // A. Direct Dependencies
+    // Greedy Token-Based Selection
+    const sortedNeighbors = Array.from(finalScores.entries())
+      .filter(([, score]) => score >= CONTEXT_BUILDER.SCORE_THRESHOLD)
+      .sort(([, a], [, b]) => b - a);
+
+    const neighboringFiles: string[] = [];
+    let currentTokens = 0;
+    const smartPreviewConfig = {
+      minLines: SETTINGS.defaults.application.minSmartPreviewLines,
+      maxLines: SETTINGS.defaults.application.maxSmartPreviewLines,
+    };
+
+    for (const [filePath] of sortedNeighbors) {
       try {
-        if (await this.fileService.exists(seedFile)) {
-          const content = (await this.fileService.read(seedFile, {
-            encoding: 'utf-8',
-          })) as string;
-          const dependencies = DependencyScanner.scan(seedFile, content);
-          for (const specifier of dependencies) {
-            const resolvedPath = await this.resolveDependency(
-              seedFile,
-              specifier
-            );
-            if (resolvedPath && !seedSet.has(resolvedPath)) {
-              addScore(resolvedPath, CONTEXT_BUILDER.SCORE_DIRECT_DEPENDENCY);
-            }
-          }
+        const content = await this.fileService.read(filePath, { encoding: 'utf-8' }) as string;
+        const preview = PromptUtils.getSmartPreview(content, smartPreviewConfig);
+        const tokenCount = PromptUtils.countTokens(preview);
+
+        if (currentTokens + tokenCount <= CONTEXT_BUILDER.MAX_NEIGHBOR_TOKENS) {
+          neighboringFiles.push(filePath);
+          currentTokens += tokenCount;
+        } else {
+          break;
         }
       } catch (error) {
-        console.error(
-          `[RelevanceEngine] Error processing file ${seedFile} for dependencies:`,
-          error
-        );
-      }
-
-      // B. Path-based heuristics
-      const seedDir = PathUtils.dirname(seedFile);
-      const seedExt = PathUtils.extname(seedFile);
-      const seedBase = PathUtils.basename(seedFile, seedExt);
-
-      for (const candidateFile of candidateFiles) {
-        if (candidateFile === seedFile) continue;
-
-        const candidateDir = PathUtils.dirname(candidateFile);
-        // Folder Co-location
-        if (candidateDir === seedDir) {
-          addScore(candidateFile, CONTEXT_BUILDER.SCORE_SAME_FOLDER);
-
-          // Sibling File (must be in same folder)
-          const candidateExt = PathUtils.extname(candidateFile);
-          const candidateBase = PathUtils.basename(candidateFile, candidateExt);
-          if (seedBase === candidateBase) {
-            addScore(candidateFile, CONTEXT_BUILDER.SCORE_SIBLING_FILE);
-          }
-        }
+        console.error(`[RelevanceEngine] Error processing file for token counting: ${filePath}`, error);
       }
     }
-
-    // --- Final Selection ---
-    const neighboring = Array.from(scores.entries())
-      .filter(([, score]) => score >= CONTEXT_BUILDER.SCORE_THRESHOLD)
-      .sort(([, a], [, b]) => b - a)
-      .map(([path]) => path);
-
+    
     return {
-      selected: selectedFilePaths,
-      neighboring: neighboring,
+      selected: originallySelectedFiles,
+      neighboring: neighboringFiles,
     };
   }
 }
