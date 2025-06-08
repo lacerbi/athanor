@@ -87,7 +87,7 @@ export async function buildDynamicPrompt(
   prompt: PromptData,
   variant: PromptVariant,
   items: FileItem[],
-  selectedFiles: string[], // Changed from Set<string> to string[] to preserve order
+  selectedFiles: string[], // Ordered array to preserve user-defined file priority
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',

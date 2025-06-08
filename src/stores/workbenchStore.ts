@@ -99,15 +99,11 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => {
       })),
 
     // Per-tab file selection management
-    toggleFileSelection: (itemId: string, isFolder: boolean) =>
+    toggleFileSelection: (itemId: string, isFolder: boolean, fileTree: FileItem[]) =>
       set((state) => {
         const activeTab = state.tabs[state.activeTabIndex];
         if (!activeTab) return state;
 
-        // Get file tree from fileSystemStore to find the item and its descendants
-        const { useFileSystemStore } = require('../stores/fileSystemStore');
-        const { fileTree } = useFileSystemStore.getState();
-        
         const currentSelection = new Set(activeTab.selectedFiles);
         let newSelection: string[];
 

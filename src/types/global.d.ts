@@ -76,7 +76,7 @@ export interface WorkbenchState {
   setTabContext: (index: number, context: string) => void; // Added context setter
 
   // Per-tab file selection management
-  toggleFileSelection: (itemId: string, isFolder: boolean) => void;
+  toggleFileSelection: (itemId: string, isFolder: boolean, fileTree: FileItem[]) => void;
   removeFileFromSelection: (itemId: string) => void;
   clearFileSelection: () => void;
   reorderFileSelection: (sourceIndex: number, destinationIndex: number) => void;

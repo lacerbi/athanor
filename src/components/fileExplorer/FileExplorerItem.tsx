@@ -33,7 +33,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   onContextMenu,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const { previewedFilePath, setPreviewedFilePath } = useFileSystemStore();
+  const { previewedFilePath, setPreviewedFilePath, fileTree } = useFileSystemStore();
   const { tabs, activeTabIndex, toggleFileSelection } = useWorkbenchStore();
   const { applicationSettings } = useSettingsStore(); // Get application settings
   const checkboxRef = React.useRef<HTMLInputElement>(null);
@@ -42,9 +42,12 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   const currentThresholdLineLength =
     applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
 
-  // Get current tab's selected files as a Set for efficient lookup
+  // Get current tab's selected files
   const activeTab = tabs[activeTabIndex];
-  const selectedFilesSet = new Set(activeTab?.selectedFiles || []);
+  const selectedFiles = activeTab?.selectedFiles || [];
+  
+  // Convert to Set for efficient O(1) lookups in selection checks
+  const selectedFilesSet = new Set(selectedFiles);
 
   const isExpanded = expandedFolders.has(item.id);
   const hasSelectedDescendants = areSomeDescendantsSelected(
@@ -104,7 +107,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleFileSelection(item.id, item.type === 'folder');
+    toggleFileSelection(item.id, item.type === 'folder', fileTree);
   };
 
   const handleFileClick = (e: React.MouseEvent) => {

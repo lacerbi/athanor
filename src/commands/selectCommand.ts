@@ -1,6 +1,7 @@
 // AI Summary: Handles selection of files based on provided paths with workbench store integration.
 // Validates paths and updates active tab selection state while providing logging feedback.
 import { useWorkbenchStore } from '../stores/workbenchStore';
+import { useFileSystemStore } from '../stores/fileSystemStore';
 
 export interface SelectCommandParams {
   content: string;
@@ -24,8 +25,9 @@ export async function executeSelectCommand({
 
   // Select all specified files for active tab
   // Add files in reverse order so they appear in correct order (newest first)
+  const { fileTree } = useFileSystemStore.getState();
   filePaths.reverse().forEach(filePath => {
-    workbenchStore.toggleFileSelection(filePath, false); // false = not a folder
+    workbenchStore.toggleFileSelection(filePath, false, fileTree); // false = not a folder
   });
 
   // Log success message with all selected files

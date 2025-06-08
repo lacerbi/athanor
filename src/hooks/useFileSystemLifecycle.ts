@@ -101,7 +101,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         // Auto-select newly created file if path was provided
         if (newlyCreatedPath) {
           const { toggleFileSelection } = useWorkbenchStore.getState();
-          toggleFileSelection(newlyCreatedPath, false); // false = not a folder
+          const { fileTree } = useFileSystemStore.getState();
+          toggleFileSelection(newlyCreatedPath, false, fileTree); // false = not a folder
           addLog(`Auto-selected newly created file: ${newlyCreatedPath}`);
         }
 
