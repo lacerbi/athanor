@@ -92,8 +92,10 @@ contextBridge.exposeInMainWorld('electronBridge', {
     sendMessage: (request: any) => llmServiceRenderer.sendMessage(request),
   },
   context: {
-    recalculate: (selectedFilePaths: string[]) =>
-      ipcRenderer.invoke('ath:recalculate-context', selectedFilePaths),
+    recalculate: (request: {
+      selectedFilePaths: string[];
+      taskDescription?: string;
+    }) => ipcRenderer.invoke('ath:recalculate-context', request),
   },
   appShell: {
     openExternalURL: (url: string) => ipcRenderer.invoke('shell:openExternal', url),

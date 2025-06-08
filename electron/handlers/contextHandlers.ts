@@ -7,9 +7,18 @@ import { RelevanceEngineService } from '../services/RelevanceEngineService';
 export function setupContextHandlers(relevanceEngine: RelevanceEngineService) {
   ipcMain.handle(
     'ath:recalculate-context',
-    async (_event, selectedFilePaths: string[]) => {
+    async (
+      _event,
+      {
+        selectedFilePaths,
+        taskDescription,
+      }: { selectedFilePaths: string[]; taskDescription?: string }
+    ) => {
       try {
-        return await relevanceEngine.calculateContext(selectedFilePaths);
+        return await relevanceEngine.calculateContext(
+          selectedFilePaths,
+          taskDescription
+        );
       } catch (error) {
         console.error('Error in ath:recalculate-context IPC handler:', error);
         // In case of an error, return a valid empty response to prevent renderer from breaking

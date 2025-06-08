@@ -241,9 +241,10 @@ declare global {
         >;
       };
       context: {
-        recalculate: (
-          selectedFilePaths: string[]
-        ) => Promise<{
+        recalculate: (request: {
+          selectedFilePaths: string[];
+          taskDescription?: string;
+        }) => Promise<{
           selected: string[];
           neighboring: string[];
         }>;

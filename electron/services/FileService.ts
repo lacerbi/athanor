@@ -398,6 +398,47 @@ export class FileService implements IFileService {
     }
   }
 
+  /**
+   * Get all file paths in the project, respecting ignore rules.
+   * @returns A promise that resolves to an array of project-relative file paths.
+   */
+  async getAllFilePaths(): Promise<string[]> {
+    return this._getAllFilePathsRecursive(this.baseDir);
+  }
+
+  /**
+   * Recursively scans a directory to get all file paths.
+   * @param absoluteDir The absolute directory path to scan.
+   * @returns A promise that resolves to an array of project-relative file paths.
+   */
+  private async _getAllFilePathsRecursive(
+    absoluteDir: string
+  ): Promise<string[]> {
+    let allFiles: string[] = [];
+    try {
+      const entries = await this.readdir(absoluteDir, { applyIgnores: true });
+
+      for (const entry of entries) {
+        const entryAbsPath = this.join(absoluteDir, entry);
+        try {
+          const stats = await this.stats(entryAbsPath);
+          if (stats?.isDirectory()) {
+            const subFiles = await this._getAllFilePathsRecursive(entryAbsPath);
+            allFiles.push(...subFiles);
+          } else if (stats?.isFile()) {
+            allFiles.push(this.relativize(entryAbsPath));
+          }
+        } catch (statError) {
+          // Ignore errors for files that might be deleted during the scan (e.g., temp files)
+          console.warn(`Could not stat path ${entryAbsPath}:`, statError);
+        }
+      }
+    } catch (readError) {
+      console.warn(`Could not read directory ${absoluteDir}:`, readError);
+    }
+    return allFiles;
+  }
+
   // --- Watcher Management ---
   /**
    * Watch a directory for changes

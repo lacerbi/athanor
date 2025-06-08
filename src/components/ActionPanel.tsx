@@ -154,12 +154,26 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
-  const { neighboringFiles: contextNeighboringFiles } = useContextStore();
+  const { neighboringFiles: contextNeighboringFiles, fetchContext } = useContextStore();
   const { applicationSettings, saveApplicationSettings } = useSettingsStore();
   const { isGeneratingPrompt, setIsGeneratingPrompt } = useWorkbenchStore();
 
   // Determine if experimental features should be shown
   const showExperimentalFeatures = applicationSettings?.enableExperimentalFeatures ?? false;
+
+  // Effect to trigger context recalculation when task content or selection changes
+  useEffect(() => {
+    const timeoutHandler = setTimeout(() => {
+      const activeTab = tabs[activeTabIndex];
+      if (activeTab) {
+        fetchContext(activeTab.selectedFiles, activeTab.content);
+      }
+    }, 500); // 500ms debounce
+
+    return () => {
+      clearTimeout(timeoutHandler);
+    };
+  }, [tabs[activeTabIndex]?.content, tabs[activeTabIndex]?.selectedFiles, activeTabIndex, fetchContext]);
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
