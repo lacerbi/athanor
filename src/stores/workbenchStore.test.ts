@@ -13,16 +13,20 @@ import { getSelectableDescendants } from '../utils/fileSelection';
 describe('workbenchStore', () => {
   beforeEach(() => {
     // Reset store state before each test
-    useWorkbenchStore.getState().tabs.splice(0);
-    useWorkbenchStore.getState().tabs.push({
-      id: 'tab-1',
-      name: 'Task 1',
-      content: '',
-      output: 'Welcome to Athanor! ⚗️\n\nI\'m here to increase your productivity with AI assistants.\nTo get started:\n\n1. Write your task or question in the text area to the left\n2. Select relevant files from the file explorer\n3. Click one of the prompt generation buttons\n4. Paste the prompt into a AI assistant\n5. Copy the AI response to the clipboard\n6. Apply the AI Output above!\n\nLet\'s build something great together!',
-      context: '',
-      selectedFiles: [],
+    useWorkbenchStore.setState({
+      tabs: [
+        {
+          id: 'tab-1',
+          name: 'Task 1',
+          content: '',
+          output:
+            "Welcome to Athanor! ⚗️\n\nI'm here to increase your productivity with AI assistants.\nTo get started:\n\n1. Write your task or question in the text area to the left\n2. Select relevant files from the file explorer\n3. Click one of the prompt generation buttons\n4. Paste the prompt into a AI assistant\n5. Copy the AI response to the clipboard\n6. Apply the AI Output above!\n\nLet's build something great together!",
+          context: '',
+          selectedFiles: [],
+        },
+      ],
+      activeTabIndex: 0,
     });
-    useWorkbenchStore.setState({ activeTabIndex: 0 });
     jest.clearAllMocks();
   });
 
@@ -32,10 +36,15 @@ describe('workbenchStore', () => {
       
       // Set some selected files in the current tab
       store.setTabContent(0, 'test content');
-      store.tabs[0].selectedFiles = ['file1.ts', 'file2.ts'];
+      // Update state immutably instead of direct mutation
+      useWorkbenchStore.setState(state => {
+        const newTabs = [...state.tabs];
+        newTabs[0] = { ...newTabs[0], selectedFiles: ['file1.ts', 'file2.ts'] };
+        return { tabs: newTabs };
+      });
       
       // Create a new tab
-      store.createTab();
+      useWorkbenchStore.getState().createTab();
       
       const tabs = useWorkbenchStore.getState().tabs;
       expect(tabs).toHaveLength(2);
