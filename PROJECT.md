@@ -37,6 +37,7 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
       - A **task description**: plain-text or markdown instructions.
       - An **AI output** area: displays the generated prompt for the user to copy.
       - A **context** field: for ephemeral data (like partial commit messages or specific instructions); includes context suggestions based on task content (`contextDetection.ts`).
+      - A **selected files list** which lists selected files in order of relevance; note that separate task tabs have distinct selected files lists.
     - Prompt (`prompt_*.xml`) and Task (`task_*.xml`) templates live in `resources/prompts/` and are loaded on application startup via `promptService.ts`.
     - The user can dynamically switch between prompt/task _variants_ (e.g., different modes like “Query,” “Coder,” “Architect” or task variations like “Default”, “LaTeX”) using context menus in the Action Panel (`PromptContextMenu.tsx`, `TaskContextMenu.tsx`).
 
