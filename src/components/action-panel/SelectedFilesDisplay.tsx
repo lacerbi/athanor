@@ -185,8 +185,7 @@ const SelectedFilesDisplay: React.FC<SelectedFilesDisplayProps> = ({
           {selectedFiles.length > 1 && (
             <div className="p-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
               <p className="text-xs text-gray-600 dark:text-gray-400">
-                💡 Drag to reorder priority. Higher priority files appear first
-                in prompts.
+                💡 Drag to reorder priority.
               </p>
             </div>
           )}
