@@ -5,6 +5,7 @@ import { FileItem } from '../utils/fileTree';
 import { buildFileTree } from '../services/fileSystemService';
 import { createAthignoreFile } from '../services/fileIgnoreService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { loadPrompts, loadTasks } from '../services/promptService';
@@ -55,8 +56,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
 
-  const { validateSelections, clearSelections } = useFileSystemStore();
   const { addLog } = useLogStore();
+  const { clearFileSelection } = useWorkbenchStore();
   const { loadProjectSettings, loadApplicationSettings, projectSettings } =
     useSettingsStore();
 
@@ -86,7 +87,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         await window.fileService.reloadIgnoreRules();
         const { mainTree, materialsTree } =
           await loadAndSetTrees(currentDirectory);
-        validateSelections(mainTree);
+        // Clear selections for active tab when file tree changes
+        clearFileSelection();
         setFilesData(mainTree);
         setResourcesData(materialsTree);
 
@@ -98,8 +100,9 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
         // Auto-select newly created file if path was provided
         if (newlyCreatedPath) {
-          const { selectItems } = useFileSystemStore.getState();
-          selectItems([newlyCreatedPath]);
+          const { toggleFileSelection } = useWorkbenchStore.getState();
+          const { fileTree } = useFileSystemStore.getState();
+          toggleFileSelection(newlyCreatedPath, false, fileTree); // false = not a folder
           addLog(`Auto-selected newly created file: ${newlyCreatedPath}`);
         }
 
@@ -112,7 +115,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       }
       setIsRefreshing(false);
     },
-    [currentDirectory, isRefreshing, validateSelections, addLog]
+    [currentDirectory, isRefreshing, addLog]
   );
 
   const setupWatcher = useCallback(
@@ -142,7 +145,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       setCurrentDirectory(normalizedDir);
 
       const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
-      validateSelections(mainTree);
+      // Clear selections for active tab when initializing new project
+      clearFileSelection();
       setFilesData(mainTree);
       setResourcesData(materialsTree);
 
@@ -197,7 +201,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       setShowProjectDialog(false);
       setPendingDirectory(null);
     },
-    [addLog, setupWatcher, validateSelections, loadProjectSettings]
+    [addLog, setupWatcher, loadProjectSettings]
   );
 
   // Centralized function to process a directory - handles both UI and CLI flows
@@ -308,7 +312,6 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     };
   }, [
     setupWatcher,
-    validateSelections,
     addLog,
     loadApplicationSettings,
     loadProjectSettings,

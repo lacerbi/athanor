@@ -6,6 +6,7 @@ import { createPatch } from 'diff';
 import { AlertTriangle } from 'lucide-react';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { getSmartPreview } from '../utils/codebaseDocumentation';
 import { SETTINGS } from '../utils/constants';
@@ -114,7 +115,7 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
   onReject,
 }) => {
   const [showWarning, setShowWarning] = useState(false);
-  const { selectedItems } = useFileSystemStore();
+  const { tabs, activeTabIndex } = useWorkbenchStore();
   const { applicationSettings } = useSettingsStore();
 
   useEffect(() => {
@@ -130,8 +131,10 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
           return;
         }
 
-        // Check if the file is selected (iterate through selectedItems to find a match)
-        const isSelected = Array.from(selectedItems).some((itemId) =>
+        // Check if the file is selected in the active tab
+        const activeTab = tabs[activeTabIndex];
+        const selectedFiles = activeTab?.selectedFiles || [];
+        const isSelected = selectedFiles.some((itemId) =>
           itemId.endsWith(op.file_path)
         );
         if (isSelected) {
@@ -163,7 +166,7 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
     };
 
     void checkWarning();
-  }, [op.file_path, op.file_operation, selectedItems, applicationSettings]);
+  }, [op.file_path, op.file_operation, tabs, activeTabIndex, applicationSettings]);
 
   return (
     <div className="border border-gray-200 dark:border-gray-600 rounded p-4 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/20">

@@ -36,8 +36,7 @@ Object.defineProperty(global, 'window', {
 describe('buildTaskAction', () => {
   let mockSetIsGeneratingPrompt: jest.Mock;
   let mockResetGeneratingPrompt: jest.Mock;
-  let mockSetTaskDescription: jest.Mock;
-  let mockSetOutputContent: jest.Mock;
+  let mockSetTabContent: jest.Mock;
   let mockAddLog: jest.Mock;
   let mockSetIsLoading: jest.Mock;
   let mockBuildDynamicPrompt: jest.Mock;
@@ -52,19 +51,27 @@ describe('buildTaskAction', () => {
     // Initialize all mock functions
     mockSetIsGeneratingPrompt = jest.fn();
     mockResetGeneratingPrompt = jest.fn();
-    mockSetTaskDescription = jest.fn();
-    mockSetOutputContent = jest.fn();
+    mockSetTabContent = jest.fn();
     mockAddLog = jest.fn();
     mockSetIsLoading = jest.fn();
 
     // Mock workbench store
     mockGetState = useWorkbenchStore.getState as jest.Mock;
     mockGetState.mockReturnValue({
+      tabs: [
+        {
+          id: 'tab-1',
+          name: 'Task 1',
+          content: 'existing task description',
+          output: '',
+          context: 'existing context',
+          selectedFiles: [],
+        },
+      ],
+      activeTabIndex: 0,
       setIsGeneratingPrompt: mockSetIsGeneratingPrompt,
       resetGeneratingPrompt: mockResetGeneratingPrompt,
-      setTaskDescription: mockSetTaskDescription,
-      taskDescription: 'existing task description',
-      taskContext: 'existing context',
+      setTabContent: mockSetTabContent,
     });
 
     // Mock buildDynamicPrompt
@@ -119,7 +126,6 @@ describe('buildTaskAction', () => {
       task: defaultTask,
       rootItems: defaultRootItems,
       selectedItems: defaultSelectedItems,
-      setOutputContent: mockSetOutputContent,
       addLog: mockAddLog,
       setIsLoading: mockSetIsLoading,
       currentThresholdLineLength: 200,
@@ -215,7 +221,7 @@ describe('buildTaskAction', () => {
         defaultTask,
         defaultTask.variants[0], // default variant
         defaultRootItems,
-        defaultSelectedItems,
+        Array.from(defaultSelectedItems),
         '/fake/project/dir',
         'existing task description',
         'existing context',
@@ -225,7 +231,7 @@ describe('buildTaskAction', () => {
       );
 
       // Verify task description is updated
-      expect(mockSetTaskDescription).toHaveBeenCalledWith(mockProcessedPrompt);
+      expect(mockSetTabContent).toHaveBeenCalledWith(0, mockProcessedPrompt);
 
       // Verify success log
       expect(mockAddLog).toHaveBeenCalledWith('Test Task task prompt loaded and processed');
@@ -282,9 +288,6 @@ describe('buildTaskAction', () => {
         'Error processing Test Task task:',
         expect.any(Error)
       );
-      expect(mockSetOutputContent).toHaveBeenCalledWith(
-        'Error processing Test Task task. Check console for details.'
-      );
       expect(mockAddLog).toHaveBeenCalledWith('Failed to process Test Task task');
       expect(mockResetGeneratingPrompt).toHaveBeenCalledTimes(1);
       expect(mockSetIsLoading).toHaveBeenCalledWith(false);
@@ -299,9 +302,6 @@ describe('buildTaskAction', () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         'Error processing Test Task task:',
         directoryError
-      );
-      expect(mockSetOutputContent).toHaveBeenCalledWith(
-        'Error processing Test Task task. Check console for details.'
       );
       expect(mockAddLog).toHaveBeenCalledWith('Failed to process Test Task task');
       expect(mockResetGeneratingPrompt).toHaveBeenCalledTimes(1);
@@ -318,9 +318,6 @@ describe('buildTaskAction', () => {
         'Error processing Test Task task:',
         promptError
       );
-      expect(mockSetOutputContent).toHaveBeenCalledWith(
-        'Error processing Test Task task. Check console for details.'
-      );
       expect(mockAddLog).toHaveBeenCalledWith('Failed to process Test Task task');
       expect(mockResetGeneratingPrompt).toHaveBeenCalledTimes(1);
       expect(mockSetIsLoading).toHaveBeenCalledWith(false);
@@ -333,8 +330,8 @@ describe('buildTaskAction', () => {
       };
       const params = { ...defaultParams, task: taskWithNoVariants };
 
-      // Make setTaskDescription also throw to test multiple error conditions
-      mockSetTaskDescription.mockImplementation(() => {
+      // Make setTabContent also throw to test multiple error conditions
+      mockSetTabContent.mockImplementation(() => {
         throw new Error('State update failed');
       });
 
@@ -471,7 +468,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         complexRootItems,
-        new Set(['/src/components/Button.tsx']),
+        Array.from(new Set(['/src/components/Button.tsx'])),
         expect.anything(),
         expect.anything(),
         expect.anything(),
@@ -493,7 +490,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
-        new Set<string>(),
+        Array.from(new Set<string>()),
         expect.anything(),
         expect.anything(),
         expect.anything(),

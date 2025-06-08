@@ -7,8 +7,10 @@ import { FILE_SYSTEM, SETTINGS, DRAG_DROP } from '../../utils/constants'; // Re-
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
+  getSelectableDescendants,
 } from '../../utils/fileSelection';
 import { useFileSystemStore } from '../../stores/fileSystemStore';
+import { useWorkbenchStore } from '../../stores/workbenchStore';
 import { useSettingsStore } from '../../stores/settingsStore'; // Added settings store
 
 interface FileExplorerItemProps {
@@ -31,24 +33,31 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   onContextMenu,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const {
-    selectedItems,
-    toggleItemSelection,
-    previewedFilePath,
-    setPreviewedFilePath,
-  } = useFileSystemStore();
+  const { previewedFilePath, setPreviewedFilePath, fileTree } = useFileSystemStore();
+  const { tabs, activeTabIndex, toggleFileSelection } = useWorkbenchStore();
   const { applicationSettings } = useSettingsStore(); // Get application settings
   const checkboxRef = React.useRef<HTMLInputElement>(null);
 
   const appDefaults = SETTINGS.defaults.application;
-  const currentThresholdLineLength = applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
+  const currentThresholdLineLength =
+    applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
+
+  // Get current tab's selected files
+  const activeTab = tabs[activeTabIndex];
+  const selectedFiles = activeTab?.selectedFiles || [];
+  
+  // Convert to Set for efficient O(1) lookups in selection checks
+  const selectedFilesSet = new Set(selectedFiles);
 
   const isExpanded = expandedFolders.has(item.id);
   const hasSelectedDescendants = areSomeDescendantsSelected(
     item,
-    selectedItems
+    selectedFilesSet
   );
-  const allDescendantsSelected = areAllDescendantsSelected(item, selectedItems);
+  const allDescendantsSelected = areAllDescendantsSelected(
+    item,
+    selectedFilesSet
+  );
   const isEmpty = isEmptyFolder(item);
   const isCurrentlyViewed = item.path === previewedFilePath;
   const isLongFile =
@@ -71,12 +80,12 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
     try {
       // Use the item's ID which is already relative to root
       const relativePath = item.id === '/' ? '' : item.id;
-      
+
       // Set both the custom MIME type and fallback text
       e.dataTransfer.setData('text/plain', relativePath);
       e.dataTransfer.effectAllowed = 'copy';
       setIsDragging(true);
-      
+
       console.log('Started drag with path:', relativePath);
     } catch (error) {
       console.error('Error preparing drag data:', error);
@@ -98,7 +107,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
 
   const handleCheckboxClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    toggleItemSelection(item);
+    toggleFileSelection(item.id, item.type === 'folder', fileTree);
   };
 
   const handleFileClick = (e: React.MouseEvent) => {
@@ -135,7 +144,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
         </div>
 
         {/* Draggable content area */}
-        <div 
+        <div
           className={`flex flex-1 items-center ${
             !isEmpty ? DRAG_DROP.classes.draggable : ''
           } ${isDragging ? DRAG_DROP.classes.dragging : ''}`}
@@ -145,30 +154,36 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
         >
           {/* Folder expand/collapse button or file icon */}
           <div className="flex-shrink-0">
-          {item.type === 'folder' ? (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                onToggleFolder(item.id);
-              }}
-              className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded flex-shrink-0"
-            >
-              {isExpanded ? (
-                <ChevronDown size={16} className="flex-shrink-0" />
-              ) : (
-                <ChevronRight size={16} className="flex-shrink-0" />
-              )}
-            </button>
-          ) : level === 0 && item.name === 'External Resources' ? (
-            <div className="p-1">
-              <Book size={16} className="text-purple-600 dark:text-purple-400" />
-            </div>
-          ) : (
-            <div className="p-1">
-              <File size={16} className="file-icon text-gray-600 dark:text-gray-400" />
-            </div>
-          )}
-        </div>
+            {item.type === 'folder' ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onToggleFolder(item.id);
+                }}
+                className="p-1 hover:bg-gray-200 dark:hover:bg-gray-600 rounded flex-shrink-0"
+              >
+                {isExpanded ? (
+                  <ChevronDown size={16} className="flex-shrink-0" />
+                ) : (
+                  <ChevronRight size={16} className="flex-shrink-0" />
+                )}
+              </button>
+            ) : level === 0 && item.name === 'External Resources' ? (
+              <div className="p-1">
+                <Book
+                  size={16}
+                  className="text-purple-600 dark:text-purple-400"
+                />
+              </div>
+            ) : (
+              <div className="p-1">
+                <File
+                  size={16}
+                  className="file-icon text-gray-600 dark:text-gray-400"
+                />
+              </div>
+            )}
+          </div>
 
           {/* Filename */}
           <span

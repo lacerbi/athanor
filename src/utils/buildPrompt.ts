@@ -27,63 +27,59 @@ export interface PromptVariables {
   include_ai_summaries?: boolean;
 }
 
-// Get list of selected files with relative paths and line counts
+// Get list of selected files with relative paths and line counts, preserving order
 function getSelectedFilesWithInfo(
   items: FileItem[],
-  selectedItems: Set<string>,
+  selectedFiles: string[],
   rootPath: string
 ): string {
-  const selectedFiles: string[] = [];
+  const filesWithInfo: string[] = [];
 
-  function traverse(item: FileItem) {
-    if (item.type === 'file' && selectedItems.has(item.id)) {
+  // Create a map for quick file lookup
+  const fileMap = new Map<string, FileItem>();
+  function buildFileMap(item: FileItem) {
+    if (item.type === 'file') {
+      fileMap.set(item.id, item);
+    }
+    item.children?.forEach(buildFileMap);
+  }
+  items.forEach(buildFileMap);
+
+  // Process selected files in order
+  selectedFiles.forEach(fileId => {
+    const item = fileMap.get(fileId);
+    if (item) {
       // Use item.id which is already relative path, just remove leading slash
       const relativePath = item.id.replace(/^\//, '');
       const lineCount = item.lineCount || '?';
-      selectedFiles.push(`${relativePath} (${lineCount} lines)`);
+      filesWithInfo.push(`${relativePath} (${lineCount} lines)`);
     }
-    item.children?.forEach(traverse);
-  }
+  });
 
-  items.forEach(traverse);
-  return selectedFiles.sort().join('\n');
+  return filesWithInfo.join('\n');
 }
 
-// Get list of selected files with relative paths only
+// Get list of selected files with relative paths only, preserving order
 function getSelectedFilesList(
   items: FileItem[],
-  selectedItems: Set<string>,
+  selectedFiles: string[],
   rootPath: string
 ): string {
-  const selectedFiles: string[] = [];
+  const filesList: string[] = [];
 
-  function traverse(item: FileItem) {
-    if (item.type === 'file' && selectedItems.has(item.id)) {
-      // Use item.id which is already relative path, just remove leading slash
-      const relativePath = item.id.replace(/^\//, '');
-      selectedFiles.push(relativePath);
-    }
-    item.children?.forEach(traverse);
-  }
+  // Process selected files in order, just clean up the paths
+  selectedFiles.forEach(fileId => {
+    // Use fileId which is already relative path, just remove leading slash
+    const relativePath = fileId.replace(/^\//, '');
+    filesList.push(relativePath);
+  });
 
-  items.forEach(traverse);
-  return selectedFiles.sort().join('\n');
+  return filesList.join('\n');
 }
 
-// Check if any files are selected in the tree
-function hasSelectedFiles(
-  items: FileItem[],
-  selectedItems: Set<string>
-): boolean {
-  for (const item of items) {
-    if (item.type === 'file' && selectedItems.has(item.id)) {
-      return true;
-    }
-    if (item.children && hasSelectedFiles(item.children, selectedItems)) {
-      return true;
-    }
-  }
-  return false;
+// Check if any files are selected
+function hasSelectedFiles(selectedFiles: string[]): boolean {
+  return selectedFiles.length > 0;
 }
 
 // Build a dynamic prompt using prompt data and variant
@@ -91,7 +87,7 @@ export async function buildDynamicPrompt(
   prompt: PromptData,
   variant: PromptVariant,
   items: FileItem[],
-  selectedItems: Set<string>,
+  selectedFiles: string[], // Ordered array to preserve user-defined file priority
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',
@@ -159,10 +155,13 @@ export async function buildDynamicPrompt(
     }
   }
 
+  // Convert selectedFiles array to Set for generateCodebaseDocumentation compatibility
+  const selectedItemsSet = new Set(selectedFiles);
+
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
     items,
-    selectedItems,
+    selectedItemsSet,
     rootPath,
     config,
     smartPreviewEnabled,
@@ -191,13 +190,13 @@ export async function buildDynamicPrompt(
     project_info: projectInfoForPrompt,
     task_description: taskDescription,
     task_context: formattedTaskContext,
-    selected_files: getSelectedFilesList(items, selectedItems, rootPath),
+    selected_files: getSelectedFilesList(items, selectedFiles, rootPath),
     selected_files_with_info: getSelectedFilesWithInfo(
       items,
-      selectedItems,
+      selectedFiles,
       rootPath
     ),
-    codebase_legend: hasSelectedFiles(items, selectedItems)
+    codebase_legend: hasSelectedFiles(selectedFiles)
       ? '## Legend\n\n* = likely relevant file or folder for the current task'
       : '',
     threshold_line_length: activeThresholdLineLength,

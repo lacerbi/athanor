@@ -45,6 +45,7 @@ import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
 import type { ApplicationSettings } from '../types/global';
 import SendViaApiControls from './action-panel/SendViaApiControls';
 import CustomPromptsHelpModal from './action-panel/CustomPromptsHelpModal';
+import SelectedFilesDisplay from './action-panel/SelectedFilesDisplay';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -69,11 +70,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     setTabContent,
     setTabOutput,
     setTabContext,
-    taskDescription, // Legacy support
-    outputContent, // Legacy support
-    setTaskDescription,
-    setOutputContent,
     developerActionTrigger,
+    removeFileFromSelection,
+    clearFileSelection,
+    reorderFileSelection,
   } = useWorkbenchStore();
 
   // Detect contexts from current task
@@ -141,7 +141,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const lastTriggerRef = useRef(developerActionTrigger);
 
   const {
-    selectedItems,
     smartPreviewEnabled,
     toggleSmartPreview,
     includeFileTree,
@@ -166,6 +165,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
       setIsLoading(true);
       setIsGeneratingPrompt(true);
 
+      // Get selected files from active tab
+      const activeTab = tabs[activeTabIndex];
+      const selectedFiles = activeTab?.selectedFiles || [];
+
       // Get smart preview configuration and threshold line length from application settings
       const appDefaults = SETTINGS.defaults.application;
       const smartPreviewConfig = {
@@ -184,7 +187,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         prompt,
         variant,
         rootItems,
-        selectedItems,
+        selectedFiles, // Pass ordered array instead of Set
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
         tabs[activeTabIndex].context, // Current tab's context
@@ -192,7 +195,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         smartPreviewConfig, // Pass the smart preview configuration from settings
         currentThresholdLineLength // Pass the current threshold line length
       );
-      setOutputContent(result);
+      setTabOutput(activeTabIndex, result);
       addLog(`Generated ${prompt.label} prompt`);
       await copyToClipboard({ content: result, addLog });
     } catch (error) {
@@ -209,7 +212,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
 
   const isTaskEmpty =
     !tabs?.[activeTabIndex] || tabs[activeTabIndex].content.trim().length === 0;
-  const hasNoSelection = selectedItems.size === 0;
+  const hasNoSelection = !tabs?.[activeTabIndex]?.selectedFiles.length;
   const hasNoProject = !rootItems || rootItems.length === 0 || !rootItems[0];
 
   // Show empty state when no project is loaded
@@ -293,7 +296,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   </div>
                 </div>
               </div>
-              <div className="flex-none">
+              <div className="flex-none flex items-center gap-2">
                 <button
                   onClick={() => handleManualCopy(tabs[activeTabIndex].content)}
                   className="flex items-center px-2 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
@@ -302,6 +305,12 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   <Copy className="w-4 h-4 mr-1" />
                   Copy
                 </button>
+                <SelectedFilesDisplay
+                  selectedFiles={tabs[activeTabIndex]?.selectedFiles || []}
+                  removeFileFromSelection={removeFileFromSelection}
+                  clearFileSelection={clearFileSelection}
+                  reorderFileSelection={reorderFileSelection}
+                />
               </div>
             </div>
             {/* Text Area */}
@@ -557,19 +566,22 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         key={task.id}
                         className="icon-btn relative bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
                         title={isUserDefined ? "Custom: " + getTaskTooltip(task, isDisabled, reason) : getTaskTooltip(task, isDisabled, reason)}
-                        onClick={() =>
+                        onClick={() => {
+                          const activeTab = tabs[activeTabIndex];
+                          const selectedFiles = activeTab?.selectedFiles || [];
+                          const selectedItemsSet = new Set(selectedFiles); // Convert to Set for buildTaskAction compatibility
+                          
                           buildTaskAction({
                             task,
                             rootItems,
-                            selectedItems,
-                            setOutputContent,
+                            selectedItems: selectedItemsSet,
                             addLog,
                             setIsLoading,
                             currentThresholdLineLength:
                               applicationSettings?.thresholdLineLength ??
                               SETTINGS.defaults.application.thresholdLineLength,
-                          })
-                        }
+                          });
+                        }}
                         disabled={isDisabled}
                         onContextMenu={(e) => {
                           e.preventDefault();

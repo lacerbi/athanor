@@ -46,6 +46,11 @@ describe('FileService', () => {
     fileService['baseDir'] = '/test/dir';
   });
 
+  afterEach(async () => {
+    // Ensure any watchers created during a test are cleaned up
+    await fileService.cleanupWatchers();
+  });
+
   describe('Path Helpers', () => {
     test('toUnix delegates to PathUtils.normalizeToUnix', () => {
       const spy = jest.spyOn(PathUtils, 'normalizeToUnix');

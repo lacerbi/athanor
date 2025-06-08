@@ -9,6 +9,30 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.6.7] - 2025-06-08
+
+### Added
+
+- **Per-Task File Selection**: Each task tab now maintains its own independent list of selected files, decoupling it from the global file explorer selection ([`186ab3a`](https://github.com/lacerbi/athanor/commit/186ab3a)).
+- **Task File List Popover**: Added a UI popover to the workbench to clearly display the files associated with the currently active task ([`79bc75a`](https://github.com/lacerbi/athanor/commit/79bc75a)).
+
+### Refactor
+
+- Refactored file selection state management from the global `fileSystemStore` to the task-specific `workbenchStore` to support per-task contexts ([`186ab3a`](https://github.com/lacerbi/athanor/commit/186ab3a)).
+- Removed legacy file selection functions made redundant by the new implementation ([`320198b`](https://github.com/lacerbi/athanor/commit/320198b)).
+
+### Documentation
+
+- Added a `design-doc` variant to the 'Architect' prompt template ([`2307038`](https://github.com/lacerbi/athanor/commit/2307038)).
+- Updated `PROJECT.md` to document the new per-task file selection functionality ([`255e9b7`](https://github.com/lacerbi/athanor/commit/255e9b7)).
+
+### Tests
+
+- Added comprehensive unit tests for the new per-task file selection feature and its state management ([`035e983`](https://github.com/lacerbi/athanor/commit/035e983)).
+- Fixed a `setTimeout` leak in `workbenchStore` tests to improve test suite stability ([`6faa082`](https://github.com/lacerbi/athanor/commit/6faa082)).
+- Corrected an issue with watcher cleanup in `FileService` tests to prevent listener leaks ([`e62c84d`](https://github.com/lacerbi/athanor/commit/e62c84d)).
+- Resolved multiple other failing tests to ensure overall test suite health ([`6ac902b`](https://github.com/lacerbi/athanor/commit/6ac902b), [`dcb81d5`](https://github.com/lacerbi/athanor/commit/dcb81d5)).
+
 ## [0.6.6] - 2025-06-07
 
 ### Added

@@ -61,6 +61,7 @@ export interface TaskTab {
   content: string;
   output: string;
   context: string; // Added context field for task context tracking
+  selectedFiles: string[]; // Ordered array of selected file paths for this tab
 }
 
 export interface WorkbenchState {
@@ -74,13 +75,13 @@ export interface WorkbenchState {
   setTabOutput: (index: number, text: string) => void;
   setTabContext: (index: number, context: string) => void; // Added context setter
 
+  // Per-tab file selection management
+  toggleFileSelection: (itemId: string, isFolder: boolean, fileTree: FileItem[]) => void;
+  removeFileFromSelection: (itemId: string) => void;
+  clearFileSelection: () => void;
+  reorderFileSelection: (sourceIndex: number, destinationIndex: number) => void;
+
   // Legacy support and additional state
-  taskDescription: string; // Maps to active tab content
-  outputContent: string; // Maps to active tab output
-  taskContext: string; // Added for legacy compatibility
-  setTaskDescription: (text: string) => void;
-  setOutputContent: (text: string) => void;
-  setTaskContext: (context: string) => void; // Added context setter for legacy support
   resetTaskDescription: (text: string) => void;
   developerActionTrigger: number;
   triggerDeveloperAction: () => void;
