@@ -12,6 +12,7 @@ import {
   CopyFailedDiffParams,
 } from './ManualCopyAction';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { useWorkbenchStore } from '../stores/workbenchStore';
 import * as tokenCountUtils from '../utils/tokenCount';
 import * as codebaseDocumentationUtils from '../utils/codebaseDocumentation';
 import { DOC_FORMAT } from '../utils/constants';
@@ -19,6 +20,12 @@ import { DOC_FORMAT } from '../utils/constants';
 // Mock the external dependencies
 jest.mock('../stores/fileSystemStore', () => ({
   useFileSystemStore: {
+    getState: jest.fn(),
+  },
+}));
+
+jest.mock('../stores/workbenchStore', () => ({
+  useWorkbenchStore: {
     getState: jest.fn(),
   },
 }));
@@ -55,10 +62,23 @@ describe('ManualCopyAction', () => {
 
     // Default mock implementations
     (useFileSystemStore.getState as jest.Mock).mockReturnValue({
-      selectedItems: new Set(['file1.ts', 'file2.js']),
       fileTree: [],
       smartPreviewEnabled: true,
       formatType: DOC_FORMAT.XML,
+    });
+
+    (useWorkbenchStore.getState as jest.Mock).mockReturnValue({
+      tabs: [
+        {
+          id: 'tab-1',
+          name: 'Task 1',
+          content: '',
+          output: '',
+          context: '',
+          selectedFiles: ['file1.ts', 'file2.js'],
+        },
+      ],
+      activeTabIndex: 0,
     });
 
     (tokenCountUtils.countTokens as jest.Mock).mockReturnValue(150);
@@ -268,7 +288,7 @@ describe('ManualCopyAction', () => {
 
       expect(codebaseDocumentationUtils.generateCodebaseDocumentation).toHaveBeenCalledWith(
         [], // fileTree from store
-        new Set(['file1.ts', 'file2.js']), // selectedItems from store
+        new Set(['file1.ts', 'file2.js']), // selectedFiles from active tab converted to Set
         '/project/root',
         null,
         false, // Always exclude non-selected files for manual copy
@@ -281,10 +301,23 @@ describe('ManualCopyAction', () => {
 
     it('should always exclude non-selected files regardless of smartPreviewEnabled setting', async () => {
       (useFileSystemStore.getState as jest.Mock).mockReturnValue({
-        selectedItems: new Set(['single.ts']),
         fileTree: [{ id: '1', name: 'test', type: 'file' }],
         smartPreviewEnabled: true, // Even when smart preview is enabled
         formatType: DOC_FORMAT.MARKDOWN,
+      });
+
+      (useWorkbenchStore.getState as jest.Mock).mockReturnValue({
+        tabs: [
+          {
+            id: 'tab-1',
+            name: 'Task 1',
+            content: '',
+            output: '',
+            context: '',
+            selectedFiles: ['single.ts'],
+          },
+        ],
+        activeTabIndex: 0,
       });
 
       const params: CopySelectedParams = {
