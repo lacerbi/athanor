@@ -10,7 +10,6 @@ export interface BuildTaskActionParams {
   task: TaskData;
   rootItems: FileItem[];
   selectedItems: Set<string>;
-  setOutputContent: (content: string) => void;
   addLog: (message: string) => void;
   setIsLoading: (loading: boolean) => void;
   currentThresholdLineLength: number;
@@ -21,7 +20,6 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     task,
     rootItems,
     selectedItems,
-    setOutputContent,
     addLog,
     setIsLoading,
     currentThresholdLineLength,
@@ -39,7 +37,7 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
   }
 
   // Get workbench store methods for state management
-  const { setIsGeneratingPrompt, resetGeneratingPrompt, setTaskDescription } = useWorkbenchStore.getState();
+  const { tabs, activeTabIndex, setIsGeneratingPrompt, resetGeneratingPrompt, setTabContent } = useWorkbenchStore.getState();
 
   setIsLoading(true);
   setIsGeneratingPrompt(true); // Set global loading state
@@ -53,6 +51,12 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
       throw new Error(`No variant found for task ${task.id}`);
     }
 
+    // Get current active tab
+    const activeTab = tabs[activeTabIndex];
+    if (!activeTab) {
+      throw new Error('No active tab found');
+    }
+
     // Build prompt with task content
     const processedTaskDescription = await buildDynamicPrompt(
       task,
@@ -60,23 +64,20 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
       rootItems,
       Array.from(selectedItems), // Convert Set to array for buildDynamicPrompt
       currentDir,
-      useWorkbenchStore.getState().taskDescription,
-      useWorkbenchStore.getState().taskContext,
+      activeTab.content,
+      activeTab.context,
       undefined, // passedFormatTypeOverride
       undefined, // smartPreviewConfigInput
       currentThresholdLineLength
     );
 
     // Update task description in workbench
-    setTaskDescription(processedTaskDescription);
+    setTabContent(activeTabIndex, processedTaskDescription);
     addLog(`${task.label} task prompt loaded and processed`);
 
     // No longer triggering developer action automatically from here
   } catch (error) {
     console.error(`Error processing ${task.label} task:`, error);
-    setOutputContent(
-      `Error processing ${task.label} task. Check console for details.`
-    );
     addLog(`Failed to process ${task.label} task`);
     // Ensure state is reset on error
     resetGeneratingPrompt();

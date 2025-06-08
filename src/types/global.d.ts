@@ -82,12 +82,6 @@ export interface WorkbenchState {
   reorderFileSelection: (sourceIndex: number, destinationIndex: number) => void;
 
   // Legacy support and additional state
-  taskDescription: string; // Maps to active tab content
-  outputContent: string; // Maps to active tab output
-  taskContext: string; // Added for legacy compatibility
-  setTaskDescription: (text: string) => void;
-  setOutputContent: (text: string) => void;
-  setTaskContext: (context: string) => void; // Added context setter for legacy support
   resetTaskDescription: (text: string) => void;
   developerActionTrigger: number;
   triggerDeveloperAction: () => void;

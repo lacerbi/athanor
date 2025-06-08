@@ -70,10 +70,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     setTabContent,
     setTabOutput,
     setTabContext,
-    taskDescription, // Legacy support
-    outputContent, // Legacy support
-    setTaskDescription,
-    setOutputContent,
     developerActionTrigger,
     removeFileFromSelection,
     clearFileSelection,
@@ -199,7 +195,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         smartPreviewConfig, // Pass the smart preview configuration from settings
         currentThresholdLineLength // Pass the current threshold line length
       );
-      setOutputContent(result);
+      setTabOutput(activeTabIndex, result);
       addLog(`Generated ${prompt.label} prompt`);
       await copyToClipboard({ content: result, addLog });
     } catch (error) {
@@ -579,7 +575,6 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             task,
                             rootItems,
                             selectedItems: selectedItemsSet,
-                            setOutputContent,
                             addLog,
                             setIsLoading,
                             currentThresholdLineLength:

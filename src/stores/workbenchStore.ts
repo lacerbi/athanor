@@ -198,35 +198,6 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => {
         };
       }),
 
-    // Legacy support - getters
-    get taskDescription() {
-      return get().tabs[get().activeTabIndex]?.content ?? '';
-    },
-
-    get outputContent() {
-      return get().tabs[get().activeTabIndex]?.output ?? '';
-    },
-
-    get taskContext() {
-      return get().tabs[get().activeTabIndex]?.context ?? '';
-    },
-
-    // Legacy support - setters
-    setTaskDescription: (text: string) => {
-      const state = get();
-      state.setTabContent(state.activeTabIndex, text);
-    },
-
-    setOutputContent: (text: string) => {
-      const state = get();
-      state.setTabOutput(state.activeTabIndex, text);
-    },
-
-    setTaskContext: (context: string) => {
-      const state = get();
-      state.setTabContext(state.activeTabIndex, context);
-    },
-
     resetTaskDescription: (text: string) => {
       const state = get();
       state.setTabContent(state.activeTabIndex, text);

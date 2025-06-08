@@ -12,7 +12,7 @@ import { getSelectableDescendants } from '../utils/fileSelection';
 
 describe('workbenchStore', () => {
   beforeEach(() => {
-    // Reset store state before each test
+    // Reset store state before each test, ensuring a clean slate.
     useWorkbenchStore.setState({
       tabs: [
         {
@@ -26,57 +26,54 @@ describe('workbenchStore', () => {
         },
       ],
       activeTabIndex: 0,
+      isGeneratingPrompt: false,
+      developerActionTrigger: 0,
     });
     jest.clearAllMocks();
   });
 
   describe('tab management', () => {
     it('should create a new tab with inherited selection', () => {
-      const store = useWorkbenchStore.getState();
-      
       // Set some selected files in the current tab
-      store.setTabContent(0, 'test content');
+      useWorkbenchStore.getState().setTabContent(0, 'test content');
       // Update state immutably instead of direct mutation
       useWorkbenchStore.setState(state => {
         const newTabs = [...state.tabs];
         newTabs[0] = { ...newTabs[0], selectedFiles: ['file1.ts', 'file2.ts'] };
         return { tabs: newTabs };
       });
-      
+
       // Create a new tab
       useWorkbenchStore.getState().createTab();
-      
-      const tabs = useWorkbenchStore.getState().tabs;
+
+      const { tabs, activeTabIndex } = useWorkbenchStore.getState();
       expect(tabs).toHaveLength(2);
       expect(tabs[1].name).toBe('Task 2');
       expect(tabs[1].selectedFiles).toEqual(['file1.ts', 'file2.ts']);
-      expect(useWorkbenchStore.getState().activeTabIndex).toBe(1);
+      expect(activeTabIndex).toBe(1);
     });
 
     it('should remove tab and adjust active index', () => {
-      const store = useWorkbenchStore.getState();
-      
       // Create additional tabs
-      store.createTab();
-      store.createTab();
-      
-      expect(store.tabs).toHaveLength(3);
-      expect(store.activeTabIndex).toBe(2);
-      
+      useWorkbenchStore.getState().createTab();
+      useWorkbenchStore.getState().createTab();
+
+      let state = useWorkbenchStore.getState();
+      expect(state.tabs).toHaveLength(3);
+      expect(state.activeTabIndex).toBe(2);
+
       // Remove middle tab
-      store.removeTab(1);
-      
+      useWorkbenchStore.getState().removeTab(1);
+
       const updatedStore = useWorkbenchStore.getState();
       expect(updatedStore.tabs).toHaveLength(2);
       expect(updatedStore.activeTabIndex).toBe(1);
     });
 
     it('should create new Task 1 when removing last tab', () => {
-      const store = useWorkbenchStore.getState();
-      
       // Remove the only tab
-      store.removeTab(0);
-      
+      useWorkbenchStore.getState().removeTab(0);
+
       const updatedStore = useWorkbenchStore.getState();
       expect(updatedStore.tabs).toHaveLength(1);
       expect(updatedStore.tabs[0].name).toBe('Task 1');
@@ -119,181 +116,138 @@ describe('workbenchStore', () => {
     ];
 
     it('should toggle file selection correctly', () => {
-      const store = useWorkbenchStore.getState();
-      
       // Select a file
-      store.toggleFileSelection('/readme.md', false, mockFileTree);
-      
-      expect(store.tabs[0].selectedFiles).toEqual(['/readme.md']);
-      
+      useWorkbenchStore.getState().toggleFileSelection('/readme.md', false, mockFileTree);
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(['/readme.md']);
+
       // Select another file (should be added to beginning)
-      store.toggleFileSelection('/src/file1.ts', false, mockFileTree);
-      
-      expect(store.tabs[0].selectedFiles).toEqual(['/src/file1.ts', '/readme.md']);
-      
+      useWorkbenchStore.getState().toggleFileSelection('/src/file1.ts', false, mockFileTree);
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(['/src/file1.ts', '/readme.md']);
+
       // Deselect first file
-      store.toggleFileSelection('/src/file1.ts', false, mockFileTree);
-      
-      expect(store.tabs[0].selectedFiles).toEqual(['/readme.md']);
+      useWorkbenchStore.getState().toggleFileSelection('/src/file1.ts', false, mockFileTree);
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(['/readme.md']);
     });
 
     it('should select all descendants when selecting a folder', () => {
       const mockGetSelectableDescendants = getSelectableDescendants as jest.MockedFunction<typeof getSelectableDescendants>;
       mockGetSelectableDescendants.mockReturnValue(['/src/file1.ts', '/src/file2.ts']);
-      
-      const store = useWorkbenchStore.getState();
-      
+
       // Select the folder
-      store.toggleFileSelection('/src', true, mockFileTree);
-      
-      expect(store.tabs[0].selectedFiles).toEqual(['/src/file1.ts', '/src/file2.ts']);
+      useWorkbenchStore.getState().toggleFileSelection('/src', true, mockFileTree);
+
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(['/src/file1.ts', '/src/file2.ts']);
       expect(mockGetSelectableDescendants).toHaveBeenCalledWith(mockFileTree[0]);
     });
 
     it('should deselect all descendants when deselecting a folder with all children selected', () => {
       const mockGetSelectableDescendants = getSelectableDescendants as jest.MockedFunction<typeof getSelectableDescendants>;
       mockGetSelectableDescendants.mockReturnValue(['/src/file1.ts', '/src/file2.ts']);
-      
-      const store = useWorkbenchStore.getState();
-      
+
       // Pre-select all files in the folder
-      store.tabs[0].selectedFiles = ['/src/file1.ts', '/src/file2.ts'];
-      
+      useWorkbenchStore.setState(state => ({
+        tabs: state.tabs.map((t, i) => (i === 0 ? { ...t, selectedFiles: ['/src/file1.ts', '/src/file2.ts'] } : t)),
+      }));
+
       // Deselect the folder
-      store.toggleFileSelection('/src', true, mockFileTree);
-      
-      expect(store.tabs[0].selectedFiles).toEqual([]);
+      useWorkbenchStore.getState().toggleFileSelection('/src', true, mockFileTree);
+
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual([]);
     });
 
     it('should select remaining descendants when selecting a folder with some children selected', () => {
       const mockGetSelectableDescendants = getSelectableDescendants as jest.MockedFunction<typeof getSelectableDescendants>;
       mockGetSelectableDescendants.mockReturnValue(['/src/file1.ts', '/src/file2.ts']);
-      
-      const store = useWorkbenchStore.getState();
-      
+
       // Pre-select one file
-      store.tabs[0].selectedFiles = ['/src/file1.ts'];
-      
+      useWorkbenchStore.setState(state => ({
+        tabs: state.tabs.map((t, i) => (i === 0 ? { ...t, selectedFiles: ['/src/file1.ts'] } : t)),
+      }));
+
       // Select the folder
-      store.toggleFileSelection('/src', true, mockFileTree);
-      
-      expect(store.tabs[0].selectedFiles).toEqual(['/src/file2.ts', '/src/file1.ts']);
+      useWorkbenchStore.getState().toggleFileSelection('/src', true, mockFileTree);
+
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(['/src/file2.ts', '/src/file1.ts']);
     });
 
     it('should handle folder selection when folder item is not found', () => {
-      const store = useWorkbenchStore.getState();
-      
       // Try to select a non-existent folder
-      store.toggleFileSelection('/nonexistent', true, mockFileTree);
-      
-      expect(store.tabs[0].selectedFiles).toEqual(['/nonexistent']);
-      
+      useWorkbenchStore.getState().toggleFileSelection('/nonexistent', true, mockFileTree);
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(['/nonexistent']);
+
       // Try to deselect it
-      store.tabs[0].selectedFiles = ['/nonexistent'];
-      store.toggleFileSelection('/nonexistent', true, mockFileTree);
-      
-      expect(store.tabs[0].selectedFiles).toEqual([]);
+      useWorkbenchStore.getState().toggleFileSelection('/nonexistent', true, mockFileTree);
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual([]);
     });
 
     it('should remove file from selection', () => {
-      const store = useWorkbenchStore.getState();
-      
       // Set up some selected files
-      store.tabs[0].selectedFiles = ['/src/file1.ts', '/readme.md', '/src/file2.ts'];
-      
+      useWorkbenchStore.setState(state => ({
+        tabs: state.tabs.map((t, i) => (i === 0 ? { ...t, selectedFiles: ['/src/file1.ts', '/readme.md', '/src/file2.ts'] } : t)),
+      }));
+
       // Remove middle file
-      store.removeFileFromSelection('/readme.md');
-      
-      expect(store.tabs[0].selectedFiles).toEqual(['/src/file1.ts', '/src/file2.ts']);
+      useWorkbenchStore.getState().removeFileFromSelection('/readme.md');
+
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(['/src/file1.ts', '/src/file2.ts']);
     });
 
     it('should clear all file selections', () => {
-      const store = useWorkbenchStore.getState();
-      
       // Set up some selected files
-      store.tabs[0].selectedFiles = ['/src/file1.ts', '/readme.md', '/src/file2.ts'];
-      
+      useWorkbenchStore.setState(state => ({
+        tabs: state.tabs.map((t, i) => (i === 0 ? { ...t, selectedFiles: ['/src/file1.ts', '/readme.md', '/src/file2.ts'] } : t)),
+      }));
+
       // Clear selection
-      store.clearFileSelection();
-      
-      expect(store.tabs[0].selectedFiles).toEqual([]);
+      useWorkbenchStore.getState().clearFileSelection();
+
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual([]);
     });
 
     it('should reorder file selection', () => {
-      const store = useWorkbenchStore.getState();
-      
       // Set up some selected files
-      store.tabs[0].selectedFiles = ['/src/file1.ts', '/readme.md', '/src/file2.ts'];
-      
+      useWorkbenchStore.setState(state => ({
+        tabs: state.tabs.map((t, i) => (i === 0 ? { ...t, selectedFiles: ['/src/file1.ts', '/readme.md', '/src/file2.ts'] } : t)),
+      }));
+
       // Move first item to last position
-      store.reorderFileSelection(0, 2);
-      
-      expect(store.tabs[0].selectedFiles).toEqual(['/readme.md', '/src/file2.ts', '/src/file1.ts']);
+      useWorkbenchStore.getState().reorderFileSelection(0, 2);
+
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(['/readme.md', '/src/file2.ts', '/src/file1.ts']);
     });
 
     it('should not reorder when source and destination are the same', () => {
-      const store = useWorkbenchStore.getState();
-      
-      // Set up some selected files
       const originalSelection = ['/src/file1.ts', '/readme.md', '/src/file2.ts'];
-      store.tabs[0].selectedFiles = [...originalSelection];
-      
+      useWorkbenchStore.setState(state => ({
+        tabs: state.tabs.map((t, i) => (i === 0 ? { ...t, selectedFiles: [...originalSelection] } : t)),
+      }));
+
       // Try to move item to same position
-      store.reorderFileSelection(1, 1);
-      
-      expect(store.tabs[0].selectedFiles).toEqual(originalSelection);
-    });
-  });
+      useWorkbenchStore.getState().reorderFileSelection(1, 1);
 
-  describe('legacy compatibility', () => {
-    it('should provide legacy getters for active tab content', () => {
-      const store = useWorkbenchStore.getState();
-      
-      store.setTabContent(0, 'test task');
-      store.setTabOutput(0, 'test output');
-      store.setTabContext(0, 'test context');
-      
-      expect(store.taskDescription).toBe('test task');
-      expect(store.outputContent).toBe('test output');
-      expect(store.taskContext).toBe('test context');
-    });
-
-    it('should provide legacy setters that update active tab', () => {
-      const store = useWorkbenchStore.getState();
-      
-      store.setTaskDescription('legacy task');
-      store.setOutputContent('legacy output');
-      store.setTaskContext('legacy context');
-      
-      expect(store.tabs[0].content).toBe('legacy task');
-      expect(store.tabs[0].output).toBe('legacy output');
-      expect(store.tabs[0].context).toBe('legacy context');
+      expect(useWorkbenchStore.getState().tabs[0].selectedFiles).toEqual(originalSelection);
     });
   });
 
   describe('prompt generation state', () => {
     it('should manage prompt generation state', () => {
-      const store = useWorkbenchStore.getState();
-      
-      expect(store.isGeneratingPrompt).toBe(false);
-      
-      store.setIsGeneratingPrompt(true);
-      expect(store.isGeneratingPrompt).toBe(true);
-      
-      store.resetGeneratingPrompt();
-      expect(store.isGeneratingPrompt).toBe(false);
+      expect(useWorkbenchStore.getState().isGeneratingPrompt).toBe(false);
+
+      useWorkbenchStore.getState().setIsGeneratingPrompt(true);
+      expect(useWorkbenchStore.getState().isGeneratingPrompt).toBe(true);
+
+      useWorkbenchStore.getState().resetGeneratingPrompt();
+      expect(useWorkbenchStore.getState().isGeneratingPrompt).toBe(false);
     });
 
     it('should trigger developer action', () => {
-      const store = useWorkbenchStore.getState();
-      
-      const initialTrigger = store.developerActionTrigger;
-      expect(store.isGeneratingPrompt).toBe(false);
-      
-      store.triggerDeveloperAction();
-      
-      expect(store.developerActionTrigger).toBe(initialTrigger + 1);
-      expect(store.isGeneratingPrompt).toBe(true);
+      const initialTrigger = useWorkbenchStore.getState().developerActionTrigger;
+      expect(useWorkbenchStore.getState().isGeneratingPrompt).toBe(false);
+
+      useWorkbenchStore.getState().triggerDeveloperAction();
+
+      expect(useWorkbenchStore.getState().developerActionTrigger).toBe(initialTrigger + 1);
+      expect(useWorkbenchStore.getState().isGeneratingPrompt).toBe(true);
     });
   });
 });
