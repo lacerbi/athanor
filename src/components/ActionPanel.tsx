@@ -45,6 +45,7 @@ import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
 import type { ApplicationSettings } from '../types/global';
 import SendViaApiControls from './action-panel/SendViaApiControls';
 import CustomPromptsHelpModal from './action-panel/CustomPromptsHelpModal';
+import SelectedFilesDisplay from './action-panel/SelectedFilesDisplay';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -74,6 +75,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     setTaskDescription,
     setOutputContent,
     developerActionTrigger,
+    removeFileFromSelection,
+    clearFileSelection,
+    reorderFileSelection,
   } = useWorkbenchStore();
 
   // Detect contexts from current task
@@ -296,7 +300,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   </div>
                 </div>
               </div>
-              <div className="flex-none">
+              <div className="flex-none flex items-center gap-2">
                 <button
                   onClick={() => handleManualCopy(tabs[activeTabIndex].content)}
                   className="flex items-center px-2 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
@@ -305,6 +309,12 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   <Copy className="w-4 h-4 mr-1" />
                   Copy
                 </button>
+                <SelectedFilesDisplay
+                  selectedFiles={tabs[activeTabIndex]?.selectedFiles || []}
+                  removeFileFromSelection={removeFileFromSelection}
+                  clearFileSelection={clearFileSelection}
+                  reorderFileSelection={reorderFileSelection}
+                />
               </div>
             </div>
             {/* Text Area */}
