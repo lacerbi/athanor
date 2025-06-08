@@ -19,9 +19,9 @@ The system will automatically identify and prioritize files based on a rich set 
 
 #### **1.2. Interactive Workflow**
 
-A core principle of this feature is its **interactive and transparent workflow**. Rather than being an invisible, one-time process that runs in the background, context-building is designed as a live dialogue between the developer and the workbench. As the user types a task description or modifies their file selection, the File Explorer will dynamically update to visually distinguish between the three tiers of files (`Selected`, `Neighboring`, and `Other`).
+A core principle of this feature is its **interactive and transparent workflow**. Rather than being an invisible, one-time process, context-building is a live dialogue between the developer and the workbench. As the user works within a specific task tab—typing a description or modifying the per-task file selection—the File Explorer will dynamically update to visually distinguish between the three tiers of files (`Selected`, `Neighboring`, and `Other`).
 
-This transforms the file list into a real-time dashboard of the system's reasoning, allowing the user to inspect, guide, and refine the context _before_ committing to the final prompt generation. This interactive loop is essential for moving beyond "black-box" prompt engineering and toward a more deliberate, controllable, and ultimately more effective development process.
+This transforms the file list into a real-time dashboard of the system's reasoning, allowing the user to inspect, guide, and refine the context for the active task _before_ committing to the final prompt generation. This interactive loop is essential for moving beyond "black-box" prompt engineering and toward a more deliberate, controllable, and ultimately more effective development process.
 
 #### **2. Core Concepts & Heuristics**
 
@@ -158,10 +158,11 @@ An expert developer should plan for the following architectural changes:
 - **IPC Communication:**
     - A primary IPC channel, e.g., `ath:recalculate-context`, will be invoked from the renderer whenever the context needs to be updated (file selection changes, task description is edited).
     - The main process will perform the full analysis and return the complete three-tiered context model (`{ selected: [...], neighboring: [...] }`) to the renderer.
-- **UI / Renderer Integration:**
-    - The `FileExplorer.tsx` component will need to be updated to visually distinguish between the three tiers of files (e.g., with different checkbox states, icons, or background colors).
-    - State management (likely in `workbenchStore.ts` or a new `contextStore.ts`) will hold the current context state.
-    - React hooks (`useEffect`) will be used to trigger the `ath:recalculate-context` IPC call when dependencies like `selectedFileIds` or `taskDescription` change.
+  - **UI / Renderer Integration:**
+        - The `FileExplorer.tsx` component will be updated to visually distinguish between the three tiers of files (e.g., with different icons or background colors).
+        - The relevance engine will source its inputs (user-selected files, task description) from the active task tab managed by `workbenchStore.ts`.
+        - State management for the computed context (`{ selected: [...], neighboring: [...] }`) will be held in the renderer, likely in a new `contextStore.ts` or integrated into `workbenchStore.ts`.
+        - React hooks (`useEffect`) will trigger the context recalculation when dependencies from the active tab change (e.g., `selectedFiles`, `taskDescription`).
 - **Performance & Caching:**
     - The project dependency graph and the file mention map are expensive to compute and should be cached in the `.ath_materials` folder. They should only be recomputed when file changes are detected by Chokidar.
     - The analysis of the task description should be debounced to avoid excessive IPC calls while the user is typing.
