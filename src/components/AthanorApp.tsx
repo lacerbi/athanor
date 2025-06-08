@@ -128,15 +128,6 @@ const AthanorApp: React.FC = () => {
     setLastTabChangeTime(Date.now());
   };
 
-  // Handle tab change side effects
-  useEffect(() => {
-    if (activeTab !== 'workbench' && lastTabChangeTime > 0) {
-      const timeSinceLastChange = Date.now() - lastTabChangeTime;
-      if (timeSinceLastChange < 100) {
-        refreshFileSystem(true);
-      }
-    }
-  }, [activeTab, lastTabChangeTime, refreshFileSystem]);
 
   // Show welcome screen when no project is loaded
   if (!currentDirectory && !showProjectDialog) {

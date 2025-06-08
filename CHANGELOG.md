@@ -9,6 +9,12 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.6.8] - 2025-06-08
+
+### Fixed
+
+- Resolved a critical bug where the user's file selection was incorrectly cleared when switching between main application tabs or when the file system refreshed ([`72bc205`](https://github.com/lacerbi/athanor/commit/72bc205)).
+
 ## [0.6.7] - 2025-06-08
 
 ### Added

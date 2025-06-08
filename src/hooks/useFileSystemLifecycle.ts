@@ -87,8 +87,6 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         await window.fileService.reloadIgnoreRules();
         const { mainTree, materialsTree } =
           await loadAndSetTrees(currentDirectory);
-        // Clear selections for active tab when file tree changes
-        clearFileSelection();
         setFilesData(mainTree);
         setResourcesData(materialsTree);
 
@@ -201,7 +199,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       setShowProjectDialog(false);
       setPendingDirectory(null);
     },
-    [addLog, setupWatcher, loadProjectSettings]
+    [addLog, setupWatcher, loadProjectSettings, clearFileSelection]
   );
 
   // Centralized function to process a directory - handles both UI and CLI flows
