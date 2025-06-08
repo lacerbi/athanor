@@ -7,16 +7,25 @@ import { setupFileWatchHandlers } from './handlers/fileWatchHandlers';
 import { setupSettingsHandlers } from './handlers/settingsHandlers';
 import { registerSecureApiKeyIpc } from './handlers/secureApiKeyIpc';
 import { registerLlmIpc } from './handlers/llmIpc';
+import { setupContextHandlers } from './handlers/contextHandlers';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
 import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
+import { RelevanceEngineService } from './services/RelevanceEngineService';
 
-export function setupIpcHandlers(fileService: FileService, settingsService: SettingsService, apiKeyService: ApiKeyServiceMain, llmService: LLMServiceMain) {
+export function setupIpcHandlers(
+  fileService: FileService,
+  settingsService: SettingsService,
+  apiKeyService: ApiKeyServiceMain,
+  llmService: LLMServiceMain,
+  relevanceEngine: RelevanceEngineService,
+) {
   setupCoreHandlers(fileService, settingsService);
   setupFileOperationHandlers(fileService);
   setupFileWatchHandlers(fileService);
   setupSettingsHandlers(settingsService);
   registerSecureApiKeyIpc(apiKeyService);
   registerLlmIpc(llmService);
+  setupContextHandlers(relevanceEngine);
 }

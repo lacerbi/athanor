@@ -9,10 +9,12 @@ import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
 import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
+import { RelevanceEngineService } from './services/RelevanceEngineService';
 
 // Create singleton instances
 export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
+export const relevanceEngine = new RelevanceEngineService(fileService);
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
 
@@ -194,7 +196,13 @@ app.whenReady().then(async () => {
     }
   }
 
-  setupIpcHandlers(fileService, settingsService, apiKeyService, llmService);
+  setupIpcHandlers(
+    fileService,
+    settingsService,
+    apiKeyService,
+    llmService,
+    relevanceEngine,
+  );
 
   // Read package.json for About panel information
   const packageJson = require('../package.json');

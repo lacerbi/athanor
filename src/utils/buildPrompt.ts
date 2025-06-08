@@ -88,6 +88,7 @@ export async function buildDynamicPrompt(
   variant: PromptVariant,
   items: FileItem[],
   selectedFiles: string[], // Ordered array to preserve user-defined file priority
+  neighboringFiles: string[],
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',
@@ -97,7 +98,6 @@ export async function buildDynamicPrompt(
 ): Promise<string> {
   // Get the store settings and effective configuration
   const {
-    smartPreviewEnabled,
     includeFileTree,
     formatType: storeFormatType,
     includeProjectInfo,
@@ -155,16 +155,17 @@ export async function buildDynamicPrompt(
     }
   }
 
-  // Convert selectedFiles array to Set for generateCodebaseDocumentation compatibility
+  // Convert file arrays to Sets for efficient lookup
   const selectedItemsSet = new Set(selectedFiles);
+  const neighboringItemsSet = new Set(neighboringFiles);
 
   // Generate codebase documentation
   const codebaseDoc = await generateCodebaseDocumentation(
     items,
     selectedItemsSet,
+    neighboringItemsSet,
     rootPath,
     config,
-    smartPreviewEnabled,
     actualFormatType, // Use the derived actualFormatType
     config.project_info_path, // Pass project_info_path to avoid duplication
     smartPreviewConfig,

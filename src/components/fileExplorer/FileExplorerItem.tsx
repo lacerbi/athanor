@@ -7,11 +7,11 @@ import { FILE_SYSTEM, SETTINGS, DRAG_DROP } from '../../utils/constants'; // Re-
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
-  getSelectableDescendants,
 } from '../../utils/fileSelection';
 import { useFileSystemStore } from '../../stores/fileSystemStore';
 import { useWorkbenchStore } from '../../stores/workbenchStore';
 import { useSettingsStore } from '../../stores/settingsStore'; // Added settings store
+import { useContextStore } from '../../stores/contextStore';
 
 interface FileExplorerItemProps {
   item: FileItem;
@@ -36,11 +36,16 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   const { previewedFilePath, setPreviewedFilePath, fileTree } = useFileSystemStore();
   const { tabs, activeTabIndex, toggleFileSelection } = useWorkbenchStore();
   const { applicationSettings } = useSettingsStore(); // Get application settings
+  const { selectedFiles: contextSelected, neighboringFiles } = useContextStore();
   const checkboxRef = React.useRef<HTMLInputElement>(null);
 
   const appDefaults = SETTINGS.defaults.application;
   const currentThresholdLineLength =
     applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
+
+  // Determine the context tier for visual styling
+  const isContextSelected = contextSelected.has(item.id);
+  const isNeighboring = neighboringFiles.has(item.id);
 
   // Get current tab's selected files
   const activeTab = tabs[activeTabIndex];
@@ -126,7 +131,13 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   return (
     <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
-        className="flex items-center py-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+        className={`flex items-center py-1 rounded-sm hover:bg-gray-200/50 dark:hover:bg-gray-700/50 ${
+          isContextSelected
+            ? 'bg-blue-100 dark:bg-blue-900/40'
+            : isNeighboring
+              ? 'bg-green-100 dark:bg-green-900/30'
+              : ''
+        }`}
         onClick={handleFileClick}
         onContextMenu={(e) => onContextMenu(e, item)}
       >

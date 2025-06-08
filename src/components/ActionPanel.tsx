@@ -39,6 +39,7 @@ import { copyToClipboard } from '../actions/ManualCopyAction';
 import { buildTaskAction } from '../actions';
 import { getActionTooltip, getTaskTooltip } from '../actions';
 import { useTaskStore } from '../stores/taskStore';
+import { useContextStore } from '../stores/contextStore';
 import { useFileDrop } from '../hooks/useFileDrop';
 import { useSettingsStore } from '../stores/settingsStore';
 import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
@@ -153,6 +154,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
+  const { neighboringFiles: contextNeighboringFiles } = useContextStore();
   const { applicationSettings, saveApplicationSettings } = useSettingsStore();
   const { isGeneratingPrompt, setIsGeneratingPrompt } = useWorkbenchStore();
 
@@ -188,6 +190,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         variant,
         rootItems,
         selectedFiles, // Pass ordered array instead of Set
+        Array.from(contextNeighboringFiles),
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
         tabs[activeTabIndex].context, // Current tab's context

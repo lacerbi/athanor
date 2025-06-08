@@ -3,7 +3,6 @@
 
 import { GitService } from './GitService';
 import { exec } from 'child_process';
-import { promisify } from 'util';
 import * as fs from 'fs/promises';
 
 // Mock child_process and fs
@@ -14,26 +13,10 @@ const mockExec = exec as jest.MockedFunction<typeof exec>;
 const mockFsAccess = fs.access as jest.MockedFunction<typeof fs.access>;
 
 // Mock promisify to return a function that returns a promise
-jest.mock('util', () => ({
-  ...jest.requireActual('util'),
-  promisify: jest.fn((fn) => {
-    if (fn === exec) {
-      return jest.fn((command: string, options?: any) => {
-        return new Promise((resolve, reject) => {
-          // Call the mocked exec with a callback
-          (fn as any)(command, options, (error: any, stdout: string, stderr: string) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve({ stdout, stderr });
-            }
-          });
-        });
-      });
-    }
-    return jest.requireActual('util').promisify(fn);
-  }),
-}));
+jest.mock('util', () => {
+  // Re-export the actual util implementation; no custom promisify needed
+  return { ...jest.requireActual('util') };
+});
 
 describe('GitService', () => {
   let gitService: GitService;

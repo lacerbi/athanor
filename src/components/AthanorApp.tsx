@@ -8,6 +8,8 @@ import { useFileSystemLifecycle } from '../hooks/useFileSystemLifecycle';
 import { useLogStore, LogEntry } from '../stores/logStore';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useWorkbenchStore } from '../stores/workbenchStore';
+import { useContextStore } from '../stores/contextStore';
 import { TabType } from './AthanorTabs';
 
 const AthanorApp: React.FC = () => {
@@ -25,6 +27,8 @@ const AthanorApp: React.FC = () => {
   };
   const { setChangeAppliedCallback } = useApplyChangesStore();
   const { applicationSettings, loadApplicationSettings } = useSettingsStore();
+  const { tabs, activeTabIndex } = useWorkbenchStore();
+  const { fetchContext, clearContext } = useContextStore();
 
   // File System Lifecycle
   const {
@@ -40,6 +44,24 @@ const AthanorApp: React.FC = () => {
     handleCreateProject,
     handleProjectDialogClose,
   } = useFileSystemLifecycle();
+
+  // Fetch context when file selection changes for the active tab
+  useEffect(() => {
+    const activeTab = tabs[activeTabIndex];
+    const selectedFiles = activeTab?.selectedFiles;
+    if (selectedFiles) {
+      fetchContext(selectedFiles);
+    }
+  }, [tabs, activeTabIndex, fetchContext]);
+
+  // Clear context when project changes
+  useEffect(() => {
+    // This effect runs when currentDirectory changes.
+    // When a project is closed, currentDirectory becomes null.
+    if (!currentDirectory) {
+      clearContext();
+    }
+  }, [currentDirectory, clearContext]);
 
   // Auto-scroll logs panel
   useEffect(() => {

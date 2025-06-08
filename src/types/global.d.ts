@@ -240,6 +240,14 @@ declare global {
             }
         >;
       };
+      context: {
+        recalculate: (
+          selectedFilePaths: string[]
+        ) => Promise<{
+          selected: string[];
+          neighboring: string[];
+        }>;
+      };
       appShell: {
         /**
          * Opens an external URL in the default browser
