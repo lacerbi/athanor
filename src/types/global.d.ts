@@ -246,7 +246,8 @@ declare global {
           taskDescription?: string;
         }) => Promise<{
           selected: string[];
-          neighboring: string[];
+          allNeighbors: Array<{ path: string; score: number }>;
+          promptNeighbors: string[];
         }>;
       };
       appShell: {

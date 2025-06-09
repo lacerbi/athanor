@@ -59,7 +59,7 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     }
 
     // Get neighboring files from the context store
-    const { neighboringFiles } = useContextStore.getState();
+    const { promptNeighborPaths } = useContextStore.getState();
 
     // Build prompt with task content
     const processedTaskDescription = await buildDynamicPrompt(
@@ -67,7 +67,7 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
       defaultVariant,
       rootItems,
       Array.from(selectedItems), // Convert Set to array for buildDynamicPrompt
-      Array.from(neighboringFiles),
+      Array.from(promptNeighborPaths),
       currentDir,
       activeTab.content,
       activeTab.context,

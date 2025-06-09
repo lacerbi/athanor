@@ -36,7 +36,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   const { previewedFilePath, setPreviewedFilePath, fileTree } = useFileSystemStore();
   const { tabs, activeTabIndex, toggleFileSelection } = useWorkbenchStore();
   const { applicationSettings } = useSettingsStore(); // Get application settings
-  const { selectedFiles: contextSelected, neighboringFiles } = useContextStore();
+  const { selectedFiles: contextSelected, neighboringFiles, maxNeighborScore } = useContextStore();
   const checkboxRef = React.useRef<HTMLInputElement>(null);
 
   const appDefaults = SETTINGS.defaults.application;
@@ -45,7 +45,8 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
 
   // Determine the context tier for visual styling
   const isContextSelected = contextSelected.has(item.id);
-  const isNeighboring = neighboringFiles.has(item.id);
+  const relevanceScore = neighboringFiles.get(item.id);
+  const isNeighboring = relevanceScore !== undefined;
 
   // Get current tab's selected files
   const activeTab = tabs[activeTabIndex];
@@ -131,13 +132,22 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   return (
     <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
-        className={`flex items-center py-1 rounded-sm hover:bg-gray-200/50 dark:hover:bg-gray-700/50 ${
-          isContextSelected
-            ? 'bg-blue-100 dark:bg-blue-900/40'
-            : isNeighboring
-              ? 'bg-green-100 dark:bg-green-900/30'
-              : ''
-        }`}
+        className={(() => {
+          let className = 'flex items-center py-1 rounded-sm hover:bg-gray-200/50 dark:hover:bg-gray-700/50';
+          if (isContextSelected) {
+            className += ' bg-blue-100 dark:bg-blue-900/40';
+          }
+          return className;
+        })()}
+        style={(() => {
+          if (isContextSelected || !isNeighboring || maxNeighborScore === 0) {
+            return {};
+          }
+          const normalized = (relevanceScore || 0) / maxNeighborScore;
+          const transformed = 1 - Math.pow(1 - normalized, 2); // Spec's curve f(x) = 1 - (1-x)^2
+          // Use a semi-transparent green that works on both light/dark themes
+          return { backgroundColor: `rgba(74, 222, 128, ${transformed * 0.4})` };
+        })()}
         onClick={handleFileClick}
         onContextMenu={(e) => onContextMenu(e, item)}
       >

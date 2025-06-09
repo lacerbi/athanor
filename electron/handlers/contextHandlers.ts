@@ -22,7 +22,7 @@ export function setupContextHandlers(relevanceEngine: RelevanceEngineService) {
       } catch (error) {
         console.error('Error in ath:recalculate-context IPC handler:', error);
         // In case of an error, return a valid empty response to prevent renderer from breaking
-        return { selected: selectedFilePaths, neighboring: [] };
+        return { selected: selectedFilePaths, allNeighbors: [], promptNeighbors: [] };
       }
     }
   );

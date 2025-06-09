@@ -154,7 +154,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
-  const { neighboringFiles: contextNeighboringFiles, fetchContext } = useContextStore();
+  const { promptNeighborPaths, fetchContext } = useContextStore();
   const { applicationSettings, saveApplicationSettings } = useSettingsStore();
   const { isGeneratingPrompt, setIsGeneratingPrompt } = useWorkbenchStore();
 
@@ -204,7 +204,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         variant,
         rootItems,
         selectedFiles, // Pass ordered array instead of Set
-        Array.from(contextNeighboringFiles),
+        Array.from(promptNeighborPaths),
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
         tabs[activeTabIndex].context, // Current tab's context

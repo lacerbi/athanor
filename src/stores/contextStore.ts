@@ -6,7 +6,9 @@ import { create } from 'zustand';
 
 interface ContextState {
   selectedFiles: Set<string>;
-  neighboringFiles: Set<string>;
+  neighboringFiles: Map<string, number>;
+  maxNeighborScore: number;
+  promptNeighborPaths: Set<string>;
   isLoading: boolean;
   fetchContext: (selectedPaths: string[], taskDescription?: string) => Promise<void>;
   clearContext: () => void;
@@ -14,7 +16,9 @@ interface ContextState {
 
 export const useContextStore = create<ContextState>((set) => ({
   selectedFiles: new Set(),
-  neighboringFiles: new Set(),
+  neighboringFiles: new Map(),
+  maxNeighborScore: 0,
+  promptNeighborPaths: new Set(),
   isLoading: false,
 
   fetchContext: async (selectedPaths: string[], taskDescription?: string) => {
@@ -23,7 +27,13 @@ export const useContextStore = create<ContextState>((set) => ({
       (!selectedPaths || selectedPaths.length === 0) &&
       (!taskDescription || taskDescription.trim() === '')
     ) {
-      set({ selectedFiles: new Set(), neighboringFiles: new Set(), isLoading: false });
+      set({ 
+        selectedFiles: new Set(), 
+        neighboringFiles: new Map(), 
+        maxNeighborScore: 0,
+        promptNeighborPaths: new Set(),
+        isLoading: false 
+      });
       return;
     }
 
@@ -33,9 +43,14 @@ export const useContextStore = create<ContextState>((set) => ({
         selectedFilePaths: selectedPaths,
         taskDescription,
       });
+      const neighborMap = new Map(result.allNeighbors.map(n => [n.path, n.score]));
+      const maxScore = Math.max(0, ...neighborMap.values());
+
       set({
         selectedFiles: new Set(result.selected),
-        neighboringFiles: new Set(result.neighboring),
+        neighboringFiles: neighborMap,
+        maxNeighborScore: maxScore,
+        promptNeighborPaths: new Set(result.promptNeighbors),
         isLoading: false,
       });
     } catch (error) {
@@ -47,7 +62,9 @@ export const useContextStore = create<ContextState>((set) => ({
   clearContext: () => {
     set({
       selectedFiles: new Set(),
-      neighboringFiles: new Set(),
+      neighboringFiles: new Map(),
+      maxNeighborScore: 0,
+      promptNeighborPaths: new Set(),
       isLoading: false,
     });
   },

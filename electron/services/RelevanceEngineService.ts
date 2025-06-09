@@ -10,7 +10,8 @@ import * as PromptUtils from './PromptUtils';
 
 interface ContextResult {
   selected: string[];
-  neighboring: string[];
+  allNeighbors: Array<{ path: string; score: number }>;
+  promptNeighbors: string[];
 }
 
 export class RelevanceEngineService {
@@ -212,7 +213,7 @@ export class RelevanceEngineService {
       .filter(([, score]) => score >= CONTEXT_BUILDER.SCORE_THRESHOLD)
       .sort(([, a], [, b]) => b - a);
 
-    const neighboringFiles: string[] = [];
+    const promptNeighbors: string[] = [];
     let currentTokens = 0;
     const smartPreviewConfig = {
       minLines: SETTINGS.defaults.application.minSmartPreviewLines,
@@ -226,7 +227,7 @@ export class RelevanceEngineService {
         const tokenCount = PromptUtils.countTokens(preview);
 
         if (currentTokens + tokenCount <= CONTEXT_BUILDER.MAX_NEIGHBOR_TOKENS) {
-          neighboringFiles.push(filePath);
+          promptNeighbors.push(filePath);
           currentTokens += tokenCount;
         } else {
           break;
@@ -238,7 +239,8 @@ export class RelevanceEngineService {
     
     return {
       selected: originallySelectedFiles,
-      neighboring: neighboringFiles,
+      allNeighbors: sortedNeighbors.map(([path, score]) => ({ path, score })),
+      promptNeighbors: promptNeighbors,
     };
   }
 }
