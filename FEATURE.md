@@ -20,9 +20,10 @@ The system will automatically identify and prioritize files based on a rich set 
 #### **1.2. Interactive Workflow**
 
 A core principle of this feature is its **interactive and transparent workflow**. Rather than being an invisible, one-time process, context-building is a live dialogue between the developer and the workbench. As the user works within a specific task tab—typing a description or modifying the per-task file selection—the File Explorer will dynamically update to visually represent the context. This goes beyond a simple three-tier distinction:
-* **Selected Files** are clearly marked.
-* **Neighboring Files** are highlighted with a variable intensity that directly reflects their calculated `totalRelevanceScore`. This provides a granular, at-a-glance understanding of *how* relevant the system believes each file is to the task.
-* **Other Files** remain un-highlighted.
+
+- **Selected Files** are clearly marked.
+- **Neighboring Files** are highlighted with a variable intensity that directly reflects their calculated `totalRelevanceScore`. This provides a granular, at-a-glance understanding of _how_ relevant the system believes each file is to the task.
+- **Other Files** remain un-highlighted.
 
 This transforms the file list into a real-time dashboard of the system's reasoning, allowing the user to inspect, guide, and refine the context for the active task _before_ committing to the final prompt generation. This interactive loop is essential for moving beyond "black-box" prompt engineering and toward a more deliberate, controllable, and ultimately more effective development process.
 
@@ -114,32 +115,32 @@ const MAX_NEIGHBOR_TOKENS = 10000;
 **Process:**
 
 1.  **Check Selection Count:** Given a list of `originallySelectedFiles` from the user:
-      - **If `originallySelectedFiles.length > SEED_TRIGGER_THRESHOLD`:** The user's selection is treated as the definitive seed. These files are added directly to the "Seed Basket," and each is marked as `isOriginallySelected: true`.
-      - **If `originallySelectedFiles.length <= SEED_TRIGGER_THRESHOLD` (including the "no selection" case):** A "seeding round" is triggered to find a good starting context.
-        a. A preliminary scoring round is run using the rules from Phase 2 to score all other project files.
-        b. The `originallySelectedFiles` are added to the Seed Basket first, marked as `isOriginallySelected: true`.
-        c. The top-scoring files from the preliminary round are then added to the Seed Basket until it reaches `SEED_BASKET_SIZE`. These heuristically added files are marked as `isOriginallySelected: false`.
+    - **If `originallySelectedFiles.length > SEED_TRIGGER_THRESHOLD`:** The user's selection is treated as the definitive seed. These files are added directly to the "Seed Basket," and each is marked as `isOriginallySelected: true`.
+    - **If `originallySelectedFiles.length <= SEED_TRIGGER_THRESHOLD` (including the "no selection" case):** A "seeding round" is triggered to find a good starting context.
+      a. A preliminary scoring round is run using the rules from Phase 2 to score all other project files.
+      b. The `originallySelectedFiles` are added to the Seed Basket first, marked as `isOriginallySelected: true`.
+      c. The top-scoring files from the preliminary round are then added to the Seed Basket until it reaches `SEED_BASKET_SIZE`. These heuristically added files are marked as `isOriginallySelected: false`.
 
 ##### **3.3. Phase 2: Neighborhood Scoring & Final Selection**
 
-**Goal:** Score every file *not* in the Seed Basket to determine its relevance, then greedily select the best ones for the prompt based on a token budget.
+**Goal:** Score every file _not_ in the Seed Basket to determine its relevance, then greedily select the best ones for the prompt based on a token budget.
 
 **A. Neighborhood Scoring:**
 
 For each candidate file outside the Seed Basket, a `totalRelevanceScore` is calculated. The scoring logic iterates through each file in the Seed Basket and applies the following rules. Note the "seed modifier," which reduces the score contribution from files that were not part of the user's original selection.
 
-| Heuristic                 | Trigger Condition                                         | Base Score  | Notes                                                                                |
-| :-------------------------- | :--------------------------------------------------------- | :---------- | :----------------------------------------------------------------------------------- |
-| **Direct Dependency** | Is a dependency of a seed file.                           | 50          | Score is halved if the seed file was not originally selected.                        |
-| **Task Keywords** | Path matches keywords from task description.              | 40 / 60     | 40 for 1 match, 60 for 2+. Independent of seed files.                                |
-| **Shared Commits** | Shares Git commits with a seed file.                      | 30 / 50     | 30 for 1-2 commits, 50 for 3+. Score is halved if seed was not originally selected.  |
-| **Actively Editing** | File `mtime` indicates modification in the last hour.     | 35          | Independent of seed files. Captures live, uncommitted changes from the file system.  |
-| **Sibling File** | Is a sibling of a seed file.                              | 25          | Score is halved if the seed file was not originally selected.                        |
-| **Project Hub** | Is identified as a project "hub" file.                    | 20          | Independent of seed files.                                                           |
-| **Recent Commit Activity** | Was included in a Git commit recently.                    | 10          | Independent of seed files. Based on `git log`.                                       |
-| **Folder Co-location** | In the same folder as a seed file.                        | 10          | Score is halved if the seed file was not originally selected.                        |
-| **File Mention** | A seed file's content mentions the candidate file's name. | 8           | Score is halved if seed was not originally selected. Uses pre-computed cache.        |
-| **Global Keywords** | Path contains a generic global keyword.                   | 5           | Independent of seed files.                                                           |
+| Heuristic                  | Trigger Condition                                         | Base Score | Notes                                                                               |
+| :------------------------- | :-------------------------------------------------------- | :--------- | :---------------------------------------------------------------------------------- |
+| **Direct Dependency**      | Is a dependency of a seed file.                           | 50         | Score is halved if the seed file was not originally selected.                       |
+| **Task Keywords**          | Path matches keywords from task description.              | 40 / 60    | 40 for 1 match, 60 for 2+. Independent of seed files.                               |
+| **Shared Commits**         | Shares Git commits with a seed file.                      | 30 / 50    | 30 for 1-2 commits, 50 for 3+. Score is halved if seed was not originally selected. |
+| **Actively Editing**       | File `mtime` indicates modification in the last hour.     | 35         | Independent of seed files. Captures live, uncommitted changes from the file system. |
+| **Sibling File**           | Is a sibling of a seed file.                              | 25         | Score is halved if the seed file was not originally selected.                       |
+| **Project Hub**            | Is identified as a project "hub" file.                    | 20         | Independent of seed files.                                                          |
+| **Recent Commit Activity** | Was included in a Git commit recently.                    | 10         | Independent of seed files. Based on `git log`.                                      |
+| **Folder Co-location**     | In the same folder as a seed file.                        | 10         | Score is halved if the seed file was not originally selected.                       |
+| **File Mention**           | A seed file's content mentions the candidate file's name. | 8          | Score is halved if seed was not originally selected. Uses pre-computed cache.       |
+| **Global Keywords**        | Path contains a generic global keyword.                   | 5          | Independent of seed files.                                                          |
 
 **B. Greedy Token-Based Selection:**
 
@@ -162,23 +163,23 @@ The visualization of file relevance in the UI is a direct representation of the 
 
 An expert developer should plan for the following architectural changes:
 
-  - **New Main Process Services:**
-      - `RelevanceEngineService.ts`: The central orchestrator that implements the two-phase algorithm.
-      - `ProjectGraphService.ts`: Manages the creation, caching, and querying of the project-wide dependency graph to identify Hub files. This service should also be responsible for the **pre-computation and caching of the file mention analysis** to ensure high performance. This should run in the background.
-      - `GitService.ts`: A dedicated module to interface with the Git command line for commit and activity analysis.
-      - `DependencyScanner.ts`: A stateless service for performing the fast, regex-based dependency scanning. It will be **language-aware, using a map of file extensions to language-specific regex patterns** to support a polyglot environment.
-  - **IPC Communication:**
-      - A primary IPC channel, e.g., `ath:recalculate-context`, will be invoked from the renderer whenever the context needs to be updated (file selection changes, task description is edited).
-      - The main process will perform the full analysis and return the complete three-tiered context model (`{ selected: [...], neighboring: [...] }`) to the renderer.
-  - **UI / Renderer Integration:**
-      - The `FileExplorer.tsx` component will be updated to render the three-tiered context model. This includes applying a distinct style for **Selected** files and a variable-intensity background highlight for **Neighboring** files based on their final relevance score.
-      - The relevance engine will source its inputs (user-selected files, task description) from the active task tab managed by `workbenchStore.ts`.
-      - State management for the computed context (`{ selected: [...], neighboring: [...] }`) will be held in the renderer, likely in a new `contextStore.ts` or integrated into `workbenchStore.ts`.
-      - React hooks (`useEffect`) will trigger the context recalculation when dependencies from the active tab change (e.g., `selectedFiles`, `taskDescription`).
-  - **Performance & Caching:**
-      - The project dependency graph and the file mention map are expensive to compute and should be cached in the `.ath_materials` folder. They should only be recomputed when file changes are detected by Chokidar.
-      - The analysis of the task description should be debounced to avoid excessive IPC calls while the user is typing.
-      - Git operations should be executed asynchronously in the main process to avoid blocking the UI.
+- **New Main Process Services:**
+  - `RelevanceEngineService.ts`: The central orchestrator that implements the two-phase algorithm.
+  - `ProjectGraphService.ts`: Manages the creation, caching, and querying of the project-wide dependency graph to identify Hub files. This service should also be responsible for the **pre-computation and caching of the file mention analysis** to ensure high performance. This should run in the background.
+  - `GitService.ts`: A dedicated module to interface with the Git command line for commit and activity analysis.
+  - `DependencyScanner.ts`: A stateless service for performing the fast, regex-based dependency scanning. It will be **language-aware, using a map of file extensions to language-specific regex patterns** to support a polyglot environment.
+- **IPC Communication:**
+  - A primary IPC channel, e.g., `ath:recalculate-context`, will be invoked from the renderer whenever the context needs to be updated (file selection changes, task description is edited).
+  - The main process will perform the full analysis and return the complete three-tiered context model (`{ selected: [...], neighboring: [...] }`) to the renderer.
+- **UI / Renderer Integration:**
+  - The `FileExplorer.tsx` component will be updated to render the three-tiered context model. This includes applying a distinct style for **Selected** files and a variable-intensity background highlight for **Neighboring** files based on their final relevance score.
+  - The relevance engine will source its inputs (user-selected files, task description) from the active task tab managed by `workbenchStore.ts`.
+  - State management for the computed context (`{ selected: [...], neighboring: [...] }`) will be held in the renderer, likely in a new `contextStore.ts` or integrated into `workbenchStore.ts`.
+  - React hooks (`useEffect`) will trigger the context recalculation when dependencies from the active tab change (e.g., `selectedFiles`, `taskDescription`).
+- **Performance & Caching:**
+  - The project dependency graph and the file mention map are expensive to compute and should be cached in the `.ath_materials` folder. They should only be recomputed when file changes are detected by Chokidar.
+  - The analysis of the task description should be debounced to avoid excessive IPC calls while the user is typing.
+  - Git operations should be executed asynchronously in the main process to avoid blocking the UI.
 
 By following this specification, a developer can build a sophisticated, powerful, and highly valuable feature that will significantly enhance Athanor's core capabilities.
 
@@ -192,68 +193,68 @@ To manage the complexity of the **Dynamic & Intelligent Context Builder**, the f
 
 #### **Stage 1: Foundational Backend Services (Completed)**
 
-  - **Goal:** Establish the core, non-UI backend services required for context analysis.
-  - **Implementation:**
-      - A `GitService.ts` was created to interface with the local Git repository for commit history analysis.
-      - A stateless `DependencyScanner.ts` was implemented for fast, regex-based dependency scanning across multiple languages.
-  - **Outcome:** Foundational backend infrastructure is in place and unit-tested.
+- **Goal:** Establish the core, non-UI backend services required for context analysis.
+- **Implementation:**
+  - A `GitService.ts` was created to interface with the local Git repository for commit history analysis.
+  - A stateless `DependencyScanner.ts` was implemented for fast, regex-based dependency scanning across multiple languages.
+- **Outcome:** Foundational backend infrastructure is in place and unit-tested.
 
 #### **Stage 2: Three-Tier UI Driven by Manual File Selection (Completed)**
 
-  - **Goal:** Implement the user-facing three-tier context model (`Selected`, `Neighboring`, `Other`) driven by manual file selections.
-  - **Implementation:**
-      - A `RelevanceEngineService.ts` was created, initially identifying direct dependencies of selected files as the "neighboring" context.
-      - The `FileExplorerItem.tsx` component was updated to visually render the three tiers.
-      - `buildPrompt.ts` was enhanced to consume the new context object (full content for selected files, smart previews for neighboring files).
-  - **Outcome:** The feature became visible and interactive. The File Explorer now provides feedback based on file selection, and the prompt builder is more intelligent.
+- **Goal:** Implement the user-facing three-tier context model (`Selected`, `Neighboring`, `Other`) driven by manual file selections.
+- **Implementation:**
+  - A `RelevanceEngineService.ts` was created, initially identifying direct dependencies of selected files as the "neighboring" context.
+  - The `FileExplorerItem.tsx` component was updated to visually render the three tiers.
+  - `buildPrompt.ts` was enhanced to consume the new context object (full content for selected files, smart previews for neighboring files).
+- **Outcome:** The feature became visible and interactive. The File Explorer now provides feedback based on file selection, and the prompt builder is more intelligent.
 
 #### **Stage 3: Live Task Description Analysis (Completed)**
 
-  - **Goal:** Make the context builder dynamic by reacting to the user's written intent in real-time.
-  - **Implementation:**
-      - The `RelevanceEngineService.ts` was enhanced to process the `taskDescription` text and implement the "Task Keywords" heuristic.
-      - The `ActionPanel.tsx` was wired up to trigger a debounced context recalculation as the user types in the task description area.
-  - **Outcome:** The UI became dynamic. The File Explorer now updates automatically as the user types, providing immediate feedback on how their task description influences the context.
+- **Goal:** Make the context builder dynamic by reacting to the user's written intent in real-time.
+- **Implementation:**
+  - The `RelevanceEngineService.ts` was enhanced to process the `taskDescription` text and implement the "Task Keywords" heuristic.
+  - The `ActionPanel.tsx` was wired up to trigger a debounced context recalculation as the user types in the task description area.
+- **Outcome:** The UI became dynamic. The File Explorer now updates automatically as the user types, providing immediate feedback on how their task description influences the context.
 
 #### **Stage 4: Comprehensive Scoring Engine (Completed)**
 
-  - **Goal:** Upgrade the context builder's intelligence by implementing the full, multi-faceted scoring algorithm.
-  - **Implementation:**
-      - The `RelevanceEngineService.ts` was fully developed with the complete two-phase scoring logic defined in the specification.
-      - Heuristics relying on the foundational services, such as `Shared Commits`, `Sibling File`, and `Folder Co-location`, were integrated.
-  - **Outcome:** The quality of "neighboring" context suggestions improved dramatically. The system now uses a sophisticated, weighted model to determine relevance, transparently enhancing the user experience.
+- **Goal:** Upgrade the context builder's intelligence by implementing the full, multi-faceted scoring algorithm.
+- **Implementation:**
+  - The `RelevanceEngineService.ts` was fully developed with the complete two-phase scoring logic defined in the specification.
+  - Heuristics relying on the foundational services, such as `Shared Commits`, `Sibling File`, and `Folder Co-location`, were integrated.
+- **Outcome:** The quality of "neighboring" context suggestions improved dramatically. The system now uses a sophisticated, weighted model to determine relevance, transparently enhancing the user experience.
 
 #### **Stage 5: Granular UI Relevance Visualization**
 
-  - **Goal:** Implement the detailed UI feedback mechanism, showing not just *what* is relevant, but *how* relevant it is.
-  - **Implementation:**
-      - Enhance `FileExplorerItem.tsx` to apply background highlighting to "Neighboring" files.
-      - The component will receive the relevance score for each file from the `RelevanceEngineService`.
-      - Implement the client-side logic for the visualization: score thresholding, normalization, the non-linear transform (`1 - (1 - x)^2`), and mapping the final value to a color gradient.
-  - **Outcome:** The user interface provides a much richer, more intuitive understanding of the context builder's suggestions. The "Neighboring" files are no longer a monolithic block but are visually ranked by relevance, allowing for faster user comprehension.
+- **Goal:** Implement the detailed UI feedback mechanism, showing not just _what_ is relevant, but _how_ relevant it is.
+- **Implementation:**
+  - Enhance `FileExplorerItem.tsx` to apply background highlighting to "Neighboring" files.
+  - The component will receive the relevance score for each file from the `RelevanceEngineService`.
+  - Implement the client-side logic for the visualization: score thresholding, normalization, the non-linear transform (`1 - (1 - x)^2`), and mapping the final value to a color gradient.
+- **Outcome:** The user interface provides a much richer, more intuitive understanding of the context builder's suggestions. The "Neighboring" files are no longer a monolithic block but are visually ranked by relevance, allowing for faster user comprehension.
 
 #### **Stage 6: Advanced Graph-Based Analysis**
 
-  - **Goal:** Introduce a deeper level of project understanding by analyzing the entire codebase for high-level structure and implicit relationships.
-  - **Implementation:**
-      - Create `ProjectGraphService.ts` to build a project-wide dependency graph and a file-mention map.
-      - This service will identify "Hub Files" and find non-obvious file mentions.
-      - Integrate these new `Project Hub` and `File Mention` heuristics into the scoring engine.
-  - **Outcome:** The context builder can now identify globally important files (e.g., configs, base styles, core utilities) even if they aren't directly imported by the selected files, leading to a more holistic and accurate context.
+- **Goal:** Introduce a deeper level of project understanding by analyzing the entire codebase for high-level structure and implicit relationships.
+- **Implementation:**
+  - Create `ProjectGraphService.ts` to build a project-wide dependency graph and a file-mention map.
+  - This service will identify "Hub Files" and find non-obvious file mentions.
+  - Integrate these new `Project Hub` and `File Mention` heuristics into the scoring engine.
+- **Outcome:** The context builder can now identify globally important files (e.g., configs, base styles, core utilities) even if they aren't directly imported by the selected files, leading to a more holistic and accurate context.
 
 #### **Stage 7: Performance & Caching**
 
-  - **Goal:** Ensure the advanced analysis from Stage 6 is performant and does not slow down application startup or use.
-  - **Implementation:**
-      - Add caching logic to `ProjectGraphService.ts`.
-      - The computed graph and mention map will be serialized to a JSON file in the `.ath_materials` directory.
-      - On subsequent runs, the service will load from the cache, only rebuilding it when source files have changed (detected via Chokidar).
-  - **Outcome:** The feature becomes fast and scalable, providing advanced analysis without a recurring performance penalty, making it suitable for large, real-world projects.
+- **Goal:** Ensure the advanced analysis from Stage 6 is performant and does not slow down application startup or use.
+- **Implementation:**
+  - Add caching logic to `ProjectGraphService.ts`.
+  - The computed graph and mention map will be serialized to a JSON file in the `.ath_materials` directory.
+  - On subsequent runs, the service will load from the cache, only rebuilding it when source files have changed (detected via Chokidar).
+- **Outcome:** The feature becomes fast and scalable, providing advanced analysis without a recurring performance penalty, making it suitable for large, real-world projects.
 
 #### **Stage 8: Live Activity & User Configuration**
 
-  - **Goal:** Complete the feature by incorporating real-time file activity and allowing users to customize the engine's behavior.
-  - **Implementation:**
-      - Integrate the final heuristics: `Actively Editing` (by tracking file `mtime` from Chokidar) and `Recent Commit Activity`.
-      - Add a "Context Builder Settings" section to the project settings UI, allowing users to tune key scoring parameters.
-  - **Outcome:** The feature is now complete. It's fully dynamic, reacting to what the user is selecting, typing, and editing. It's also configurable, allowing expert users to tailor its behavior to their specific needs, fulfilling all design goals.
+- **Goal:** Complete the feature by incorporating real-time file activity and allowing users to customize the engine's behavior.
+- **Implementation:**
+  - Integrate the final heuristics: `Actively Editing` (by tracking file `mtime` from Chokidar) and `Recent Commit Activity`.
+  - Add a "Context Builder Settings" section to the project settings UI, allowing users to tune key scoring parameters.
+- **Outcome:** The feature is now complete. It's fully dynamic, reacting to what the user is selecting, typing, and editing. It's also configurable, allowing expert users to tailor its behavior to their specific needs, fulfilling all design goals.

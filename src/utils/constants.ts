@@ -4,7 +4,7 @@
 export const DOC_FORMAT = {
   MARKDOWN: 'markdown',
   XML: 'xml',
-  DEFAULT: 'xml',  // Set XML as the default format
+  DEFAULT: 'xml', // Set XML as the default format
 };
 
 export const FILE_SYSTEM = {
@@ -27,12 +27,12 @@ export const SETTINGS = {
   // Filenames for settings files
   PROJECT_SETTINGS_FILENAME: 'project_settings.json',
   APP_SETTINGS_FILENAME: 'application_settings.json',
-  
+
   // Configuration limits
   limits: {
     MAX_RECENT_PROJECTS: 10,
   },
-  
+
   // Default settings
   defaults: {
     project: {
@@ -74,17 +74,17 @@ export const UI = {
     fast: '150ms',
     normal: '200ms',
     slow: '300ms',
-    
+
     // Floating label
     labelOffset: '0.5rem',
     labelDelay: '50ms',
     labelDuration: '200ms',
-    
+
     // Icon scaling
     iconScale: '1.1',
     iconDuration: '200ms',
   },
-  
+
   // Menu configuration
   menu: {
     padding: 16, // Minimum padding from viewport edges
@@ -92,14 +92,14 @@ export const UI = {
     minWidth: 200, // Minimum width for context menus
     buttonSpacing: 8, // Space between button edge and menu
   },
-  
+
   // Button interaction states
   button: {
     pressDelay: '50ms',
     pressDuration: '100ms',
     contextDelay: '150ms', // Delay before showing context menu
   },
-  
+
   // Context field configuration
   context: {
     height: '2.5rem',
@@ -126,14 +126,14 @@ export const DRAG_DROP = {
 export const CONTEXT_BUILDER = {
   // Phase 1: Seeding
   SEED_TRIGGER_THRESHOLD: 2,
-  SEED_BASKET_SIZE: 5,
+  SEED_BASKET_SIZE: 3,
 
   // Phase 2: Scoring Weights
   SCORE_DIRECT_DEPENDENCY: 50,
   SCORE_TASK_KEYWORD_SINGLE: 40,
   SCORE_TASK_KEYWORD_MULTI: 60,
-  SCORE_SHARED_COMMIT_SINGLE: 30,
-  SCORE_SHARED_COMMIT_MULTI: 50,
+  SCORE_SHARED_COMMIT_SINGLE: 5,
+  SCORE_SHARED_COMMIT_MULTI: 10,
   SCORE_ACTIVELY_EDITING: 35,
   SCORE_SIBLING_FILE: 25,
   SCORE_PROJECT_HUB: 20,
@@ -145,5 +145,5 @@ export const CONTEXT_BUILDER = {
   // Phase 2: Final Selection
   MAX_NEIGHBOR_TOKENS: 10000,
   SCORE_THRESHOLD: 1,
-  MAX_COMMITS_TO_CHECK: 20,
+  MAX_COMMITS_TO_CHECK: 3,
 };
