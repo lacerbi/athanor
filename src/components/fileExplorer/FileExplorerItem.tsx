@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, File, Scissors, Book } from 'lucide-react';
 import { FileItem, getBaseName, isEmptyFolder } from '../../utils/fileTree';
-import { FILE_SYSTEM, SETTINGS, DRAG_DROP } from '../../utils/constants'; // Re-added FILE_SYSTEM
+import { FILE_SYSTEM, SETTINGS, DRAG_DROP, CONTEXT_BUILDER } from '../../utils/constants';
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
@@ -140,11 +140,24 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           return className;
         })()}
         style={(() => {
-          if (isContextSelected || !isNeighboring || maxNeighborScore === 0) {
+          if (isContextSelected || !isNeighboring || !relevanceScore) {
             return {};
           }
-          const normalized = (relevanceScore || 0) / maxNeighborScore;
-          const transformed = 1 - Math.pow(1 - normalized, 2); // Spec's curve f(x) = 1 - (1-x)^2
+          
+          // Apply thresholding: only highlight files with score >= threshold (per specification)
+          if (relevanceScore < CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) {
+            return {};
+          }
+          
+          // Normalize to [0.05, 1.0] range as specified
+          // Map from [VISUALIZATION_THRESHOLD, MAX_VISUALIZATION_SCORE] to [0.05, 1.0]
+          const clampedScore = Math.min(relevanceScore, CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE);
+          const rawNormalized = (clampedScore - CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) / (CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE - CONTEXT_BUILDER.VISUALIZATION_THRESHOLD);
+          const normalized = 0.05 + (rawNormalized * 0.95);
+          
+          // Apply the non-linear transform: f(x) = 1 - (1-x)^2
+          const transformed = 1 - Math.pow(1 - normalized, 2);
+          
           // Use a semi-transparent green that works on both light/dark themes
           return { backgroundColor: `rgba(74, 222, 128, ${transformed * 0.4})` };
         })()}
