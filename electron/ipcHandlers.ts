@@ -13,6 +13,7 @@ import { SettingsService } from './services/SettingsService';
 import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
+import { ProjectGraphService } from './services/ProjectGraphService';
 
 export function setupIpcHandlers(
   fileService: FileService,
@@ -20,6 +21,8 @@ export function setupIpcHandlers(
   apiKeyService: ApiKeyServiceMain,
   llmService: LLMServiceMain,
   relevanceEngine: RelevanceEngineService,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  projectGraphService: ProjectGraphService
 ) {
   setupCoreHandlers(fileService, settingsService);
   setupFileOperationHandlers(fileService);

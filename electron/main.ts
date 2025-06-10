@@ -11,11 +11,13 @@ import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { GitService } from './services/GitService';
+import { ProjectGraphService } from './services/ProjectGraphService';
 
 // Create singleton instances
 export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
 export const gitService = new GitService(fileService.getBaseDir());
+export const projectGraphService = new ProjectGraphService(fileService);
 export const relevanceEngine = new RelevanceEngineService(fileService, gitService);
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
@@ -198,12 +200,24 @@ app.whenReady().then(async () => {
     }
   }
 
+  // Listen for base directory changes to trigger project-wide analysis
+  fileService.on('base-dir-changed', async () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('graph-analysis:started');
+    }
+    await projectGraphService.analyzeProject();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('graph-analysis:finished');
+    }
+  });
+
   setupIpcHandlers(
     fileService,
     settingsService,
     apiKeyService,
     llmService,
-    relevanceEngine
+    relevanceEngine,
+    projectGraphService
   );
 
   // Read package.json for About panel information

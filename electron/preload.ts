@@ -16,7 +16,13 @@ contextBridge.exposeInMainWorld('electron', {
     }
   },
   receive: (channel: string, func: (...args: any[]) => void) => {
-    const validChannels = ['fromMain', 'menu:open-folder', 'menu:open-path'];
+    const validChannels = [
+      'fromMain',
+      'menu:open-folder',
+      'menu:open-path',
+      'graph-analysis:started',
+      'graph-analysis:finished',
+    ];
     if (validChannels.includes(channel)) {
       const listener = (event: any, ...args: any[]) => func(...args);
       ipcRenderer.on(channel, listener);
