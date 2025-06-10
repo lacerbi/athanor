@@ -22,21 +22,6 @@ export const useContextStore = create<ContextState>((set) => ({
   isLoading: false,
 
   fetchContext: async (selectedPaths: string[], taskDescription?: string) => {
-    // If there's nothing to calculate context from, reset the state.
-    if (
-      (!selectedPaths || selectedPaths.length === 0) &&
-      (!taskDescription || taskDescription.trim() === '')
-    ) {
-      set({ 
-        selectedFiles: new Set(), 
-        neighboringFiles: new Map(), 
-        maxNeighborScore: 0,
-        promptNeighborPaths: new Set(),
-        isLoading: false 
-      });
-      return;
-    }
-
     set({ isLoading: true });
     try {
       const result = await window.electronBridge.context.recalculate({
