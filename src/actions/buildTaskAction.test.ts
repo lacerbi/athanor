@@ -86,7 +86,7 @@ describe('buildTaskAction', () => {
     // Mock context store
     mockGetContextState = useContextStore.getState as jest.Mock;
     mockGetContextState.mockReturnValue({
-      neighboringFiles: new Set<string>(),
+      promptNeighborPaths: new Set<string>(),
     });
 
     // Mock buildDynamicPrompt
