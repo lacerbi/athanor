@@ -157,6 +157,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { promptNeighborPaths, fetchContext } = useContextStore();
   const { applicationSettings, saveApplicationSettings } = useSettingsStore();
   const { isGeneratingPrompt, setIsGeneratingPrompt } = useWorkbenchStore();
+  const { isGraphAnalysisInProgress } = useFileSystemStore();
+  const isBusy = isLoading || isGeneratingPrompt || isGraphAnalysisInProgress;
 
   // Determine if experimental features should be shown
   const showExperimentalFeatures = applicationSettings?.enableExperimentalFeatures ?? false;
@@ -520,7 +522,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         className="icon-btn relative bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
                         title={isUserDefined ? "Custom: " + (prompt.tooltip || prompt.label) : (prompt.tooltip || prompt.label)}
                         onClick={async () => {
-                          if (isLoading || isTaskEmpty) return;
+                          if (isBusy || isTaskEmpty) return;
                           await generatePrompt(prompt, variant);
                         }}
                         onContextMenu={(e) => {
@@ -532,9 +534,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             y: e.clientY,
                           });
                         }}
-                        disabled={
-                          isLoading || isGeneratingPrompt || isTaskEmpty
-                        }
+                        disabled={isBusy || isTaskEmpty}
                         data-edge={getFloatingLabelPosition(prompt.id)}
                         data-prompt-id={prompt.id}
                         aria-label={prompt.label}
@@ -566,10 +566,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       ? (Icons as any)[task.icon]
                       : null;
                     const isDisabled =
-                      isLoading ||
-                      isGeneratingPrompt ||
-                      (task.requires === 'selected' && hasNoSelection);
-                    const reason = isLoading
+                      isBusy || (task.requires === 'selected' && hasNoSelection);
+                    const reason = isBusy
                       ? 'loading'
                       : hasNoSelection
                         ? 'noSelection'
@@ -654,7 +652,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   setActiveVariant(contextMenu.promptId, variantId);
 
                   // Only trigger prompt generation if the button is not disabled
-                  if (!isLoading && !isTaskEmpty) {
+                  if (!isBusy && !isTaskEmpty) {
                     await generatePrompt(prompt, variant);
                   }
                 }
@@ -736,7 +734,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               addLog={addLog}
               setActivePanelTab={setActivePanelTab}
               setParentIsLoading={setIsLoading}
-              isSendingRequest={isGeneratingPrompt}
+              isSendingRequest={isBusy}
               setStoreIsGeneratingPrompt={setIsGeneratingPrompt}
             />
           )}

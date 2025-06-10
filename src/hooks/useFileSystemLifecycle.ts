@@ -60,6 +60,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const { clearFileSelection } = useWorkbenchStore();
   const { loadProjectSettings, loadApplicationSettings, projectSettings } =
     useSettingsStore();
+  const { setIsGraphAnalysisInProgress } = useFileSystemStore();
 
   // Track previous project settings to detect changes
   const prevProjectSettingsRef = useRef<typeof projectSettings>(undefined);
@@ -379,13 +380,29 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       'menu:open-path',
       (path: string) => processDirectory(path)
     );
+    const cleanupGraphStarted = window.electron.receive(
+      'graph-analysis:started',
+      () => {
+        addLog('Starting project graph analysis...');
+        setIsGraphAnalysisInProgress(true);
+      }
+    );
+    const cleanupGraphFinished = window.electron.receive(
+      'graph-analysis:finished',
+      () => {
+        addLog('Project graph analysis finished.');
+        setIsGraphAnalysisInProgress(false);
+      }
+    );
 
     // Return a cleanup function that will be called when the component unmounts
     return () => {
       cleanupOpenFolder();
       cleanupOpenPath();
+      cleanupGraphStarted();
+      cleanupGraphFinished();
     };
-  }, [handleOpenFolder, processDirectory]);
+  }, [handleOpenFolder, processDirectory, addLog, setIsGraphAnalysisInProgress]);
 
   const handleProjectDialogClose = () => {
     setShowProjectDialog(false);
