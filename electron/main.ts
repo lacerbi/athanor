@@ -18,7 +18,11 @@ export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
 export const gitService = new GitService(fileService.getBaseDir());
 export const projectGraphService = new ProjectGraphService(fileService);
-export const relevanceEngine = new RelevanceEngineService(fileService, gitService);
+export const relevanceEngine = new RelevanceEngineService(
+	fileService,
+	gitService,
+	projectGraphService
+);
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
 

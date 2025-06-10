@@ -7,6 +7,7 @@ import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
 import { CONTEXT_BUILDER, SETTINGS } from '../../src/utils/constants';
 import * as PromptUtils from './PromptUtils';
+import { ProjectGraphService } from './ProjectGraphService';
 
 interface ContextResult {
   selected: string[];
@@ -17,11 +18,17 @@ interface ContextResult {
 export class RelevanceEngineService {
   private readonly fileService: FileService;
   private readonly gitService: IGitService;
+  private readonly projectGraphService: ProjectGraphService;
   private readonly resolvableExtensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
 
-  constructor(fileService: FileService, gitService: IGitService) {
+  constructor(
+    fileService: FileService,
+    gitService: IGitService,
+    projectGraphService: ProjectGraphService
+  ) {
     this.fileService = fileService;
     this.gitService = gitService;
+    this.projectGraphService = projectGraphService;
   }
 
   /**
@@ -127,6 +134,14 @@ export class RelevanceEngineService {
         }
       }
 
+      // Project Hub Analysis
+      const hubFiles = new Set(this.projectGraphService.getHubFiles());
+      for (const file of candidateFiles) {
+        if (hubFiles.has(file)) {
+          addScore(file, CONTEXT_BUILDER.SCORE_PROJECT_HUB);
+        }
+      }
+
       const sharedCommitCounts = new Map<string, number>();
       if (isGitRepo) {
         const commitFilesCache = new Map<string, string[]>();
@@ -163,6 +178,14 @@ export class RelevanceEngineService {
             if (resolvedPath && candidateSet.has(resolvedPath)) {
               addScore(resolvedPath, CONTEXT_BUILDER.SCORE_DIRECT_DEPENDENCY, modifier);
             }
+          }
+        }
+
+        // File Mentions
+        const mentionedFiles = this.projectGraphService.getMentionsForFile(seed.path);
+        for (const mentionedFile of mentionedFiles) {
+          if (candidateSet.has(mentionedFile)) {
+            addScore(mentionedFile, CONTEXT_BUILDER.SCORE_FILE_MENTION, modifier);
           }
         }
 
