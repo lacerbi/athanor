@@ -147,8 +147,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
     <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
         className={(() => {
-          let className =
-            'flex items-center py-1 rounded-sm hover:bg-gray-200/50 dark:hover:bg-gray-700/50';
+          let className = 'file-item-row flex items-center py-1 rounded-sm';
           if (isContextSelected) {
             className += ' bg-blue-100 dark:bg-blue-900/40';
           } else if (isHeuristicSeed) {
