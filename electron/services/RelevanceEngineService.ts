@@ -8,7 +8,7 @@ import { PathUtils } from './PathUtils';
 import { CONTEXT_BUILDER, SETTINGS } from '../../src/utils/constants';
 import * as PromptUtils from './PromptUtils';
 import { ProjectGraphService } from './ProjectGraphService';
-import { extractKeywords } from './TaskAnalysisUtils';
+import { analyzeTaskDescription } from './TaskAnalysisUtils';
 
 interface ContextResult {
   userSelected: string[];
@@ -115,19 +115,62 @@ export class RelevanceEngineService {
         scores.set(filePath, (scores.get(filePath) || 0) + score * modifier);
       };
 
-      // Task Keyword Analysis
+      // Task Analysis with Hierarchical Scoring
       if (taskDescription) {
-        const keywords = extractKeywords(taskDescription);
+        const { pathMentions, keywords } = analyzeTaskDescription(taskDescription);
+        const scoredByPath = new Set<string>();
+
+        // High-Priority: Path-based scoring
+        for (const mentionedPath of pathMentions) {
+          // Normalize the mentioned path: lowercase, Unix separators, remove leading ./ and trailing /
+          let normalizedMention = PathUtils.normalizeToUnix(mentionedPath.toLowerCase());
+          if (normalizedMention.startsWith('./')) {
+            normalizedMention = normalizedMention.slice(2);
+          }
+          normalizedMention = PathUtils.removeTrailingSlash(normalizedMention);
+
+          for (const candidateFile of candidateFiles) {
+            if (scoredByPath.has(candidateFile)) continue;
+
+            const normalizedCandidate = candidateFile.toLowerCase();
+
+            // Exact Match - highest priority
+            if (normalizedCandidate === normalizedMention) {
+              addScore(candidateFile, CONTEXT_BUILDER.SCORE_TASK_PATH_EXACT_MATCH);
+              scoredByPath.add(candidateFile);
+              continue;
+            }
+
+            // Folder Match - matches files within the mentioned folder
+            if (normalizedCandidate.startsWith(normalizedMention + '/')) {
+              addScore(candidateFile, CONTEXT_BUILDER.SCORE_TASK_PATH_FOLDER_MATCH);
+              scoredByPath.add(candidateFile);
+              continue;
+            }
+
+            // Basename or Partial Match
+            const candidateBasename = PathUtils.basename(normalizedCandidate);
+            if (candidateBasename === normalizedMention || normalizedCandidate.endsWith(normalizedMention)) {
+              addScore(candidateFile, CONTEXT_BUILDER.SCORE_TASK_PATH_BASENAME_OR_PARTIAL_MATCH);
+              scoredByPath.add(candidateFile);
+              continue;
+            }
+          }
+        }
+
+        // Lower-Priority: General keyword scoring (excluding already scored files)
         if (keywords.length > 0) {
-          for (const file of candidateFiles) {
-            const lowerCasePath = file.toLowerCase();
+          for (const candidateFile of candidateFiles) {
+            if (scoredByPath.has(candidateFile)) continue;
+
+            const lowerCasePath = candidateFile.toLowerCase();
             const matches = keywords.filter((k) => lowerCasePath.includes(k));
             if (matches.length > 0) {
               const score =
                 matches.length > 1
                   ? CONTEXT_BUILDER.SCORE_TASK_KEYWORD_MULTI
                   : CONTEXT_BUILDER.SCORE_TASK_KEYWORD_SINGLE;
-              addScore(file, score);
+              addScore(candidateFile, score);
             }
           }
         }
