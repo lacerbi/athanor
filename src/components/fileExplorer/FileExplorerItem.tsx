@@ -36,7 +36,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   const { previewedFilePath, setPreviewedFilePath, fileTree } = useFileSystemStore();
   const { tabs, activeTabIndex, toggleFileSelection } = useWorkbenchStore();
   const { applicationSettings } = useSettingsStore(); // Get application settings
-  const { selectedFiles: contextSelected, neighboringFiles, maxNeighborScore } = useContextStore();
+  const { selectedFiles: contextSelected, heuristicSeedPaths, neighboringFiles, maxNeighborScore } = useContextStore();
   const checkboxRef = React.useRef<HTMLInputElement>(null);
 
   const appDefaults = SETTINGS.defaults.application;
@@ -45,6 +45,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
 
   // Determine the context tier for visual styling
   const isContextSelected = contextSelected.has(item.id);
+  const isHeuristicSeed = heuristicSeedPaths.includes(item.id);
   const relevanceScore = neighboringFiles.get(item.id);
   const isNeighboring = relevanceScore !== undefined;
 
@@ -136,6 +137,8 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           let className = 'flex items-center py-1 rounded-sm hover:bg-gray-200/50 dark:hover:bg-gray-700/50';
           if (isContextSelected) {
             className += ' bg-blue-100 dark:bg-blue-900/40';
+          } else if (isHeuristicSeed) {
+            className += ' file-item--heuristic-seed';
           }
           return className;
         })()}

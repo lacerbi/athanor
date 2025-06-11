@@ -10,7 +10,8 @@ import * as PromptUtils from './PromptUtils';
 import { ProjectGraphService } from './ProjectGraphService';
 
 interface ContextResult {
-  selected: string[];
+  userSelected: string[];
+  heuristicSeedFiles: string[];
   allNeighbors: Array<{ path: string; score: number }>;
   promptNeighbors: string[];
 }
@@ -260,8 +261,14 @@ export class RelevanceEngineService {
       }
     }
     
+    // Separate heuristically added files from user selections
+    const heuristicSeedFiles = seedBasket
+      .filter(seed => !seed.isOriginallySelected)
+      .map(seed => seed.path);
+    
     return {
-      selected: originallySelectedFiles,
+      userSelected: originallySelectedFiles,
+      heuristicSeedFiles: heuristicSeedFiles,
       allNeighbors: sortedNeighbors.map(([path, score]) => ({ path, score })),
       promptNeighbors: promptNeighbors,
     };

@@ -245,7 +245,8 @@ declare global {
           selectedFilePaths: string[];
           taskDescription?: string;
         }) => Promise<{
-          selected: string[];
+          userSelected: string[];
+          heuristicSeedFiles: string[];
           allNeighbors: Array<{ path: string; score: number }>;
           promptNeighbors: string[];
         }>;

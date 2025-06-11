@@ -246,6 +246,17 @@ html.dark .user-defined-template:hover {
   background-color: #8b5cf6 !important; /* purple-500 for dark mode hover */
 }
 
+/* Heuristic seed file highlighting */
+.file-item--heuristic-seed {
+  background-color: rgba(236, 253, 245, 0.5); /* A light green tint */
+  border-left: 2px dashed #34d399; /* A dashed green border */
+}
+
+html.dark .file-item--heuristic-seed {
+  background-color: rgba(16, 47, 32, 0.5); /* A dark green tint */
+  border-left: 2px dashed #34d399;
+}
+
 /* Configure tooltips with proper pointer event handling */
 *[title] {
   position: relative;

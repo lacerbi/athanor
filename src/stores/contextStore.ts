@@ -6,6 +6,8 @@ import { create } from 'zustand';
 
 interface ContextState {
   selectedFiles: Set<string>;
+  userSelectedPaths: string[];
+  heuristicSeedPaths: string[];
   neighboringFiles: Map<string, number>;
   maxNeighborScore: number;
   promptNeighborPaths: Set<string>;
@@ -16,6 +18,8 @@ interface ContextState {
 
 export const useContextStore = create<ContextState>((set) => ({
   selectedFiles: new Set(),
+  userSelectedPaths: [],
+  heuristicSeedPaths: [],
   neighboringFiles: new Map(),
   maxNeighborScore: 0,
   promptNeighborPaths: new Set(),
@@ -32,7 +36,9 @@ export const useContextStore = create<ContextState>((set) => ({
       const maxScore = Math.max(0, ...neighborMap.values());
 
       set({
-        selectedFiles: new Set(result.selected),
+        selectedFiles: new Set(result.userSelected),
+        userSelectedPaths: result.userSelected,
+        heuristicSeedPaths: result.heuristicSeedFiles,
         neighboringFiles: neighborMap,
         maxNeighborScore: maxScore,
         promptNeighborPaths: new Set(result.promptNeighbors),
@@ -47,6 +53,8 @@ export const useContextStore = create<ContextState>((set) => ({
   clearContext: () => {
     set({
       selectedFiles: new Set(),
+      userSelectedPaths: [],
+      heuristicSeedPaths: [],
       neighboringFiles: new Map(),
       maxNeighborScore: 0,
       promptNeighborPaths: new Set(),
