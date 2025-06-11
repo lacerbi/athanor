@@ -160,32 +160,39 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
             return {};
           }
 
-          // Apply thresholding: only highlight files with score >= threshold (per specification)
+          // Apply thresholding: only highlight files with score >= threshold
           if (relevanceScore < CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) {
             return {};
           }
 
-          // Normalize to [0.05, 1.0] range as specified
-          // Map from [VISUALIZATION_THRESHOLD, MAX_VISUALIZATION_SCORE] to [0.05, 1.0]
+          // Calculate normalized relevance factor (0.0 to 1.0)
+          const range =
+            CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE -
+            CONTEXT_BUILDER.VISUALIZATION_THRESHOLD;
+          if (range <= 0) {
+            return {}; // Prevent division by zero
+          }
+
           const clampedScore = Math.min(
             relevanceScore,
             CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE
           );
-          const rawNormalized =
-            (clampedScore - CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) /
-            (CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE -
-              CONTEXT_BUILDER.VISUALIZATION_THRESHOLD);
-          const normalized = 0.05 + rawNormalized * 0.95;
+          const relevanceFactor =
+            (clampedScore - CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) / range;
 
           // Apply the non-linear transform: f(x) = 1 - (1-x)^2
-          const transformed = 1 - Math.pow(1 - normalized, 2);
+          const transformedFactor = 1 - Math.pow(1 - relevanceFactor, 2);
 
-          // Use different base alpha values for light and dark themes
-          const baseAlpha = isDarkMode ? 0.15 : 0.4;
-          const finalAlpha = transformed * baseAlpha;
-
-          // Use a semi-transparent green that works on both light/dark themes
-          return { backgroundColor: `rgba(74, 222, 128, ${finalAlpha})` };
+          // Use the same base colors as selection but with scaling opacity
+          if (isDarkMode) {
+            // Dark mode: match dark:bg-blue-900/40 behavior, which is already semi-transparent.
+            const finalAlpha = transformedFactor * 0.4;
+            return { backgroundColor: `rgba(30, 58, 138, ${finalAlpha})` };
+          } else {
+            // Light mode: use blue-100 color with scaling opacity to match bg-blue-100 at max
+            const finalAlpha = transformedFactor;
+            return { backgroundColor: `rgba(219, 234, 254, ${finalAlpha})` };
+          }
         })()}
         onClick={handleFileClick}
         onContextMenu={(e) => onContextMenu(e, item)}
