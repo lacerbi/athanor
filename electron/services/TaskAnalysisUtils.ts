@@ -2,7 +2,7 @@
 // Core function: extractKeywords() - extracts meaningful keywords from text for context relevance scoring.
 // Uses a comprehensive stop-word list to filter out noise, handles file paths, and normalizes punctuation.
 
-import { BASE_STOPWORDS_SET } from './stopwords';
+import { ALLOWED_SHORT_WORDS_SET, BASE_STOPWORDS_SET } from './wordFilters';
 
 /**
  * Extracts meaningful keywords from a text string for context analysis.
@@ -38,7 +38,11 @@ export function extractKeywords(text: string, extraStopWords?: Iterable<string>)
       .match(tokenRegex) // Extract tokens including file paths
       ?.map(word => word.replace(/[.,…]+$/, '')) // Remove trailing dots, commas, or ellipsis
       ?.filter(word => word.length > 0) // Remove empty strings that might result from replace
-      ?.filter(word => !stopWords.has(word)) || []; // Filter out stop words
+      ?.filter(word => !stopWords.has(word)) // Filter out stop words
+      // Filter out short words unless they are in the allowed list
+      ?.filter(word => word.length > 3 || ALLOWED_SHORT_WORDS_SET.has(word))
+      // Filter out tokens that are just file extensions (e.g., .js, .docs)
+      ?.filter(word => !/^\.[a-z0-9]{1,4}$/i.test(word)) || [];
 
   return [...new Set(keywords)]; // Return unique keywords
 }

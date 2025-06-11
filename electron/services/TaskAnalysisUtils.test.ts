@@ -101,7 +101,7 @@ describe('TaskAnalysisUtils', () => {
     describe('example tag filtering', () => {
       it('should ignore content within <example> tags', () => {
         const result = extractKeywords('Process auth-utils, not this: <example>const x = 1; src/fake.js</example>. See also component.tsx.');
-        expect(result).toEqual(['auth-utils', 'see', 'component.tsx']);
+        expect(result).toEqual(['auth-utils', 'component.tsx']);
       });
 
       it('should ignore content within <examples> tags', () => {
@@ -151,7 +151,34 @@ describe('TaskAnalysisUtils', () => {
         
         expect(withoutFilter).toContain('src/fake.js');
         expect(withFilter).not.toContain('src/fake.js');
-        expect(withFilter).toEqual(['auth-utils', 'see', 'component.tsx']);
+        expect(withFilter).toEqual(['auth-utils', 'component.tsx']);
+      });
+    });
+
+    describe('new filter rules', () => {
+      it('should preserve allowed short words like "gui" or "cli"', () => {
+        const result = extractKeywords('Implement new gui design for the cli');
+        expect(result).toEqual(['gui', 'design', 'cli']); // 'new' is short and not allowed
+      });
+
+      it('should filter short, non-allowed words', () => {
+        const result = extractKeywords('a new car to fix the bug'); // Most are short or stopwords
+        expect(result).toEqual([]);
+      });
+
+      it('should filter file extensions like .json or .md', () => {
+        const result = extractKeywords('check the .json and .md files');
+        expect(result).toEqual([]); // All words are stopwords or filtered extensions
+      });
+
+      it('should not filter full file names with extensions', () => {
+        const result = extractKeywords('check config.json file');
+        expect(result).toEqual(['config.json']);
+      });
+
+      it('should not filter dot-files', () => {
+        const result = extractKeywords('update the .gitignore and .prettierrc');
+        expect(result).toEqual(['.gitignore', '.prettierrc']);
       });
     });
   });
