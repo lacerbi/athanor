@@ -8,6 +8,7 @@ import { PathUtils } from './PathUtils';
 import { CONTEXT_BUILDER, SETTINGS } from '../../src/utils/constants';
 import * as PromptUtils from './PromptUtils';
 import { ProjectGraphService } from './ProjectGraphService';
+import { extractKeywords } from './TaskAnalysisUtils';
 
 interface ContextResult {
   userSelected: string[];
@@ -73,26 +74,6 @@ export class RelevanceEngineService {
     return null;
   }
 
-  /**
-   * Extracts keywords from a text string for context analysis.
-   * @param text The text to process.
-   * @returns An array of unique, lowercase keywords.
-   */
-  private _extractKeywords(text: string): string[] {
-    if (!text) return [];
-
-    const stopWords = new Set([
-      'a', 'an', 'the', 'is', 'in', 'it', 'of', 'for', 'on', 'with', 'to', 'and', 'or',
-      'fix', 'update', 'change', 'add', 'remove', 'implement', 'refactor', 'style'
-    ]);
-
-    const keywords = text
-      .toLowerCase()
-      .match(/\b[a-zA-Z_][a-zA-Z0-9_-]*\b/g) // Split into words, allow snake/kebab case
-      ?.filter(word => word.length > 3 && !stopWords.has(word)) || [];
-
-    return [...new Set(keywords)]; // Return unique keywords
-  }
 
   /**
    * Calculates the context for a given set of selected files and a task description.
@@ -122,7 +103,7 @@ export class RelevanceEngineService {
 
       // Task Keyword Analysis
       if (taskDescription) {
-        const keywords = this._extractKeywords(taskDescription);
+        const keywords = extractKeywords(taskDescription);
         if (keywords.length > 0) {
           for (const file of candidateFiles) {
             const lowerCasePath = file.toLowerCase();
