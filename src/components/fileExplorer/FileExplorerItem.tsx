@@ -3,7 +3,12 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, File, Scissors, Book } from 'lucide-react';
 import { FileItem, getBaseName, isEmptyFolder } from '../../utils/fileTree';
-import { FILE_SYSTEM, SETTINGS, DRAG_DROP, CONTEXT_BUILDER } from '../../utils/constants';
+import {
+  FILE_SYSTEM,
+  SETTINGS,
+  DRAG_DROP,
+  CONTEXT_BUILDER,
+} from '../../utils/constants';
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
@@ -12,6 +17,7 @@ import { useFileSystemStore } from '../../stores/fileSystemStore';
 import { useWorkbenchStore } from '../../stores/workbenchStore';
 import { useSettingsStore } from '../../stores/settingsStore'; // Added settings store
 import { useContextStore } from '../../stores/contextStore';
+import useDarkMode from '../../hooks/useDarkMode';
 
 interface FileExplorerItemProps {
   item: FileItem;
@@ -33,10 +39,17 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   onContextMenu,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const { previewedFilePath, setPreviewedFilePath, fileTree } = useFileSystemStore();
+  const { previewedFilePath, setPreviewedFilePath, fileTree } =
+    useFileSystemStore();
   const { tabs, activeTabIndex, toggleFileSelection } = useWorkbenchStore();
   const { applicationSettings } = useSettingsStore(); // Get application settings
-  const { selectedFiles: contextSelected, heuristicSeedPaths, neighboringFiles, maxNeighborScore } = useContextStore();
+  const {
+    selectedFiles: contextSelected,
+    heuristicSeedPaths,
+    neighboringFiles,
+    maxNeighborScore,
+  } = useContextStore();
+  const isDarkMode = useDarkMode();
   const checkboxRef = React.useRef<HTMLInputElement>(null);
 
   const appDefaults = SETTINGS.defaults.application;
@@ -52,7 +65,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   // Get current tab's selected files
   const activeTab = tabs[activeTabIndex];
   const selectedFiles = activeTab?.selectedFiles || [];
-  
+
   // Convert to Set for efficient O(1) lookups in selection checks
   const selectedFilesSet = new Set(selectedFiles);
 
@@ -134,7 +147,8 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
     <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
         className={(() => {
-          let className = 'flex items-center py-1 rounded-sm hover:bg-gray-200/50 dark:hover:bg-gray-700/50';
+          let className =
+            'flex items-center py-1 rounded-sm hover:bg-gray-200/50 dark:hover:bg-gray-700/50';
           if (isContextSelected) {
             className += ' bg-blue-100 dark:bg-blue-900/40';
           } else if (isHeuristicSeed) {
@@ -146,23 +160,33 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
           if (isContextSelected || !isNeighboring || !relevanceScore) {
             return {};
           }
-          
+
           // Apply thresholding: only highlight files with score >= threshold (per specification)
           if (relevanceScore < CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) {
             return {};
           }
-          
+
           // Normalize to [0.05, 1.0] range as specified
           // Map from [VISUALIZATION_THRESHOLD, MAX_VISUALIZATION_SCORE] to [0.05, 1.0]
-          const clampedScore = Math.min(relevanceScore, CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE);
-          const rawNormalized = (clampedScore - CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) / (CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE - CONTEXT_BUILDER.VISUALIZATION_THRESHOLD);
-          const normalized = 0.05 + (rawNormalized * 0.95);
-          
+          const clampedScore = Math.min(
+            relevanceScore,
+            CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE
+          );
+          const rawNormalized =
+            (clampedScore - CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) /
+            (CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE -
+              CONTEXT_BUILDER.VISUALIZATION_THRESHOLD);
+          const normalized = 0.05 + rawNormalized * 0.95;
+
           // Apply the non-linear transform: f(x) = 1 - (1-x)^2
           const transformed = 1 - Math.pow(1 - normalized, 2);
-          
+
+          // Use different base alpha values for light and dark themes
+          const baseAlpha = isDarkMode ? 0.15 : 0.4;
+          const finalAlpha = transformed * baseAlpha;
+
           // Use a semi-transparent green that works on both light/dark themes
-          return { backgroundColor: `rgba(74, 222, 128, ${transformed * 0.4})` };
+          return { backgroundColor: `rgba(74, 222, 128, ${finalAlpha})` };
         })()}
         onClick={handleFileClick}
         onContextMenu={(e) => onContextMenu(e, item)}
