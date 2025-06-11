@@ -50,6 +50,7 @@ export const SETTINGS = {
       lastOpenedProjectPath: undefined,
       recentProjectPaths: [],
       uiTheme: 'Auto',
+      fileViewerWrapEnabled: false,
     },
   },
 };

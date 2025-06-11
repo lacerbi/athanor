@@ -32,6 +32,7 @@ export interface ApplicationSettings {
   lastOpenedProjectPath?: string | null;
   recentProjectPaths?: string[];
   uiTheme?: string;
+  fileViewerWrapEnabled?: boolean;
 
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;
