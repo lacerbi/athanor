@@ -21,7 +21,13 @@ export class RelevanceEngineService {
   private readonly fileService: FileService;
   private readonly gitService: IGitService;
   private readonly projectGraphService: ProjectGraphService;
-  private readonly resolvableExtensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
+  private readonly resolvableExtensions = [
+    '.ts',
+    '.tsx',
+    '.js',
+    '.jsx',
+    '.json',
+  ];
 
   constructor(
     fileService: FileService,
@@ -39,20 +45,25 @@ export class RelevanceEngineService {
    * @param specifier The module specifier from the import/require statement.
    * @returns A project-relative path to the dependency file, or null if not found.
    */
-  private async resolveDependency(sourceFilePath: string, specifier: string): Promise<string | null> {
+  private async resolveDependency(
+    sourceFilePath: string,
+    specifier: string
+  ): Promise<string | null> {
     // Ignore node_modules and other non-relative paths for now
     if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
       return null;
     }
 
     const sourceDir = PathUtils.dirname(sourceFilePath);
-    const potentialPath = PathUtils.normalizeToUnix(PathUtils.joinUnix(sourceDir, specifier));
+    const potentialPath = PathUtils.normalizeToUnix(
+      PathUtils.joinUnix(sourceDir, specifier)
+    );
 
     // Check for exact match if it's not a directory
     if (await this.fileService.exists(potentialPath)) {
-        if (!(await this.fileService.isDirectory(potentialPath))) {
-            return potentialPath;
-        }
+      if (!(await this.fileService.isDirectory(potentialPath))) {
+        return potentialPath;
+      }
     }
 
     // Try with extensions
@@ -62,18 +73,17 @@ export class RelevanceEngineService {
         return pathWithExt;
       }
     }
-    
+
     // Try as a directory with an index file
     for (const ext of this.resolvableExtensions) {
-        const indexPath = PathUtils.joinUnix(potentialPath, `index${ext}`);
-        if (await this.fileService.exists(indexPath)) {
-            return indexPath;
-        }
+      const indexPath = PathUtils.joinUnix(potentialPath, `index${ext}`);
+      if (await this.fileService.exists(indexPath)) {
+        return indexPath;
+      }
     }
 
     return null;
   }
-
 
   /**
    * Calculates the context for a given set of selected files and a task description.
@@ -92,12 +102,16 @@ export class RelevanceEngineService {
 
     // This is the core scoring logic that will be used for both preliminary and final rounds.
     const runScoringRound = async (
-      seedBasket: { path: string, isOriginallySelected: boolean }[],
+      seedBasket: { path: string; isOriginallySelected: boolean }[],
       candidateFiles: string[]
     ): Promise<Map<string, number>> => {
       const scores = new Map<string, number>();
       const candidateSet = new Set(candidateFiles);
-      const addScore = (filePath: string, score: number, modifier: number = 1) => {
+      const addScore = (
+        filePath: string,
+        score: number,
+        modifier: number = 1
+      ) => {
         scores.set(filePath, (scores.get(filePath) || 0) + score * modifier);
       };
 
@@ -107,9 +121,12 @@ export class RelevanceEngineService {
         if (keywords.length > 0) {
           for (const file of candidateFiles) {
             const lowerCasePath = file.toLowerCase();
-            const matches = keywords.filter(k => lowerCasePath.includes(k));
+            const matches = keywords.filter((k) => lowerCasePath.includes(k));
             if (matches.length > 0) {
-              const score = matches.length > 1 ? CONTEXT_BUILDER.SCORE_TASK_KEYWORD_MULTI : CONTEXT_BUILDER.SCORE_TASK_KEYWORD_SINGLE;
+              const score =
+                matches.length > 1
+                  ? CONTEXT_BUILDER.SCORE_TASK_KEYWORD_MULTI
+                  : CONTEXT_BUILDER.SCORE_TASK_KEYWORD_SINGLE;
               addScore(file, score);
             }
           }
@@ -125,49 +142,76 @@ export class RelevanceEngineService {
       }
 
       const sharedCommitCounts = new Map<string, number>();
+      /*
       if (isGitRepo) {
         const commitFilesCache = new Map<string, string[]>();
         for (const seed of seedBasket) {
-          const commits = await this.gitService.getCommitsForFile(seed.path, { maxCount: CONTEXT_BUILDER.MAX_COMMITS_TO_CHECK });
+          const commits = await this.gitService.getCommitsForFile(seed.path, {
+            maxCount: CONTEXT_BUILDER.MAX_COMMITS_TO_CHECK,
+          });
           for (const commit of commits) {
             let filesInCommit = commitFilesCache.get(commit.hash);
             if (!filesInCommit) {
-              filesInCommit = await this.gitService.getFilesForCommit(commit.hash);
+              filesInCommit = await this.gitService.getFilesForCommit(
+                commit.hash
+              );
               commitFilesCache.set(commit.hash, filesInCommit);
             }
             for (const file of filesInCommit) {
               if (candidateSet.has(file)) {
                 const modifier = seed.isOriginallySelected ? 1.0 : 0.5;
-                sharedCommitCounts.set(file, (sharedCommitCounts.get(file) || 0) + modifier);
+                sharedCommitCounts.set(
+                  file,
+                  (sharedCommitCounts.get(file) || 0) + modifier
+                );
               }
             }
           }
         }
         for (const [file, count] of sharedCommitCounts.entries()) {
-          const score = count >= 3 ? CONTEXT_BUILDER.SCORE_SHARED_COMMIT_MULTI : CONTEXT_BUILDER.SCORE_SHARED_COMMIT_SINGLE;
+          const score =
+            count >= 3
+              ? CONTEXT_BUILDER.SCORE_SHARED_COMMIT_MULTI
+              : CONTEXT_BUILDER.SCORE_SHARED_COMMIT_SINGLE;
           addScore(file, score);
         }
       }
+      */
 
       for (const seed of seedBasket) {
         const modifier = seed.isOriginallySelected ? 1.0 : 0.5;
         // Direct Dependencies
         if (await this.fileService.exists(seed.path)) {
-          const content = await this.fileService.read(seed.path, { encoding: 'utf-8' }) as string;
+          const content = (await this.fileService.read(seed.path, {
+            encoding: 'utf-8',
+          })) as string;
           const dependencies = DependencyScanner.scan(seed.path, content);
           for (const specifier of dependencies) {
-            const resolvedPath = await this.resolveDependency(seed.path, specifier);
+            const resolvedPath = await this.resolveDependency(
+              seed.path,
+              specifier
+            );
             if (resolvedPath && candidateSet.has(resolvedPath)) {
-              addScore(resolvedPath, CONTEXT_BUILDER.SCORE_DIRECT_DEPENDENCY, modifier);
+              addScore(
+                resolvedPath,
+                CONTEXT_BUILDER.SCORE_DIRECT_DEPENDENCY,
+                modifier
+              );
             }
           }
         }
 
         // File Mentions
-        const mentionedFiles = this.projectGraphService.getMentionsForFile(seed.path);
+        const mentionedFiles = this.projectGraphService.getMentionsForFile(
+          seed.path
+        );
         for (const mentionedFile of mentionedFiles) {
           if (candidateSet.has(mentionedFile)) {
-            addScore(mentionedFile, CONTEXT_BUILDER.SCORE_FILE_MENTION, modifier);
+            addScore(
+              mentionedFile,
+              CONTEXT_BUILDER.SCORE_FILE_MENTION,
+              modifier
+            );
           }
         }
 
@@ -177,11 +221,22 @@ export class RelevanceEngineService {
         const seedBase = PathUtils.basename(seed.path, seedExt);
         for (const candidateFile of candidateFiles) {
           if (PathUtils.dirname(candidateFile) === seedDir) {
-            addScore(candidateFile, CONTEXT_BUILDER.SCORE_SAME_FOLDER, modifier);
+            addScore(
+              candidateFile,
+              CONTEXT_BUILDER.SCORE_SAME_FOLDER,
+              modifier
+            );
             const candidateExt = PathUtils.extname(candidateFile);
-            const candidateBase = PathUtils.basename(candidateFile, candidateExt);
+            const candidateBase = PathUtils.basename(
+              candidateFile,
+              candidateExt
+            );
             if (seedBase === candidateBase) {
-              addScore(candidateFile, CONTEXT_BUILDER.SCORE_SIBLING_FILE, modifier);
+              addScore(
+                candidateFile,
+                CONTEXT_BUILDER.SCORE_SIBLING_FILE,
+                modifier
+              );
             }
           }
         }
@@ -191,11 +246,20 @@ export class RelevanceEngineService {
     };
 
     // --- PHASE 1: SEED BASKET CREATION ---
-    let seedBasket: { path: string, isOriginallySelected: boolean }[] = originallySelectedFiles.map(p => ({ path: p, isOriginallySelected: true }));
+    let seedBasket: { path: string; isOriginallySelected: boolean }[] =
+      originallySelectedFiles.map((p) => ({
+        path: p,
+        isOriginallySelected: true,
+      }));
 
     if (seedBasket.length <= CONTEXT_BUILDER.SEED_TRIGGER_THRESHOLD) {
-      const preliminaryCandidates = allProjectFiles.filter(p => !originalSelectionSet.has(p));
-      const preliminaryScores = await runScoringRound(seedBasket, preliminaryCandidates);
+      const preliminaryCandidates = allProjectFiles.filter(
+        (p) => !originalSelectionSet.has(p)
+      );
+      const preliminaryScores = await runScoringRound(
+        seedBasket,
+        preliminaryCandidates
+      );
       const topHeuristicFiles = Array.from(preliminaryScores.entries())
         .sort(([, a], [, b]) => b - a)
         .map(([path]) => path);
@@ -203,14 +267,17 @@ export class RelevanceEngineService {
       const filesToAdd = CONTEXT_BUILDER.SEED_BASKET_SIZE - seedBasket.length;
       for (let i = 0; i < Math.min(topHeuristicFiles.length, filesToAdd); i++) {
         if (!originalSelectionSet.has(topHeuristicFiles[i])) {
-          seedBasket.push({ path: topHeuristicFiles[i], isOriginallySelected: false });
+          seedBasket.push({
+            path: topHeuristicFiles[i],
+            isOriginallySelected: false,
+          });
         }
       }
     }
-    
+
     // --- PHASE 2: NEIGHBORHOOD SCORING & SELECTION ---
-    const finalSeedSet = new Set(seedBasket.map(s => s.path));
-    const finalCandidates = allProjectFiles.filter(p => !finalSeedSet.has(p));
+    const finalSeedSet = new Set(seedBasket.map((s) => s.path));
+    const finalCandidates = allProjectFiles.filter((p) => !finalSeedSet.has(p));
     const finalScores = await runScoringRound(seedBasket, finalCandidates);
 
     // Greedy Token-Based Selection
@@ -227,8 +294,13 @@ export class RelevanceEngineService {
 
     for (const [filePath] of sortedNeighbors) {
       try {
-        const content = await this.fileService.read(filePath, { encoding: 'utf-8' }) as string;
-        const preview = PromptUtils.getSmartPreview(content, smartPreviewConfig);
+        const content = (await this.fileService.read(filePath, {
+          encoding: 'utf-8',
+        })) as string;
+        const preview = PromptUtils.getSmartPreview(
+          content,
+          smartPreviewConfig
+        );
         const tokenCount = PromptUtils.countTokens(preview);
 
         if (currentTokens + tokenCount <= CONTEXT_BUILDER.MAX_NEIGHBOR_TOKENS) {
@@ -238,15 +310,18 @@ export class RelevanceEngineService {
           break;
         }
       } catch (error) {
-        console.error(`[RelevanceEngine] Error processing file for token counting: ${filePath}`, error);
+        console.error(
+          `[RelevanceEngine] Error processing file for token counting: ${filePath}`,
+          error
+        );
       }
     }
-    
+
     // Separate heuristically added files from user selections
     const heuristicSeedFiles = seedBasket
-      .filter(seed => !seed.isOriginallySelected)
-      .map(seed => seed.path);
-    
+      .filter((seed) => !seed.isOriginallySelected)
+      .map((seed) => seed.path);
+
     return {
       userSelected: originallySelectedFiles,
       heuristicSeedFiles: heuristicSeedFiles,

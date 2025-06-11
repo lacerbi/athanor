@@ -23,11 +23,14 @@ export function extractKeywords(text: string, extraStopWords?: Iterable<string>)
     stopWords = new Set([...BASE_STOPWORDS_SET, ...extraStopWords]);
   }
 
+  // Remove content within <example> and <examples> tags before processing
+  const cleanedText = text.replace(/<(example|examples)>[\s\S]*?<\/\1>/gi, '');
+
   // Use more permissive regex to capture file paths, kebab-case, snake_case, and words
   const tokenRegex = /[\w./-]+/g;
 
   // Normalize backslashes to forward slashes before tokenization
-  const normalizedText = text.replace(/\\/g, '/');
+  const normalizedText = cleanedText.replace(/\\/g, '/');
 
   const keywords =
     normalizedText

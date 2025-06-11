@@ -97,5 +97,62 @@ describe('TaskAnalysisUtils', () => {
       const result3 = extractKeywords(text, ['unique', 'identifier']);
       expect(result3).toEqual([]);
     });
+
+    describe('example tag filtering', () => {
+      it('should ignore content within <example> tags', () => {
+        const result = extractKeywords('Process auth-utils, not this: <example>const x = 1; src/fake.js</example>. See also component.tsx.');
+        expect(result).toEqual(['auth-utils', 'see', 'component.tsx']);
+      });
+
+      it('should ignore content within <examples> tags', () => {
+        const result = extractKeywords('Process authentication <examples>function login() { return true; }</examples> system.');
+        expect(result).toEqual(['authentication', 'system']);
+      });
+
+      it('should handle multiple example tags', () => {
+        const result = extractKeywords('Fix <example>bad code</example> and <examples>more bad code</examples> in unique-module.');
+        expect(result).toEqual(['unique-module']);
+      });
+
+      it('should handle mixed content with example tags', () => {
+        const result = extractKeywords('Process FileService.ts <example>src/services/FileService.ts</example> with authentication.');
+        expect(result).toEqual(['fileservice.ts', 'authentication']);
+      });
+
+      it('should work normally when no example tags are present', () => {
+        const result = extractKeywords('Process FileService.ts with authentication.');
+        expect(result).toEqual(['fileservice.ts', 'authentication']);
+      });
+
+      it('should ignore file paths within example tags', () => {
+        const result = extractKeywords('Ignore path <example>src/services/FileService.ts</example>.');
+        expect(result).toEqual([]);
+      });
+
+      it('should handle example tags with multiline content', () => {
+        const result = extractKeywords(`Process authentication <example>
+          function login() {
+            return true;
+          }
+          const path = 'src/fake.js';
+        </example> system.`);
+        expect(result).toEqual(['authentication', 'system']);
+      });
+
+      it('should handle case-insensitive example tags', () => {
+        const result = extractKeywords('Fix <EXAMPLE>bad code</EXAMPLE> and <Examples>more bad</Examples> in unique-module.');
+        expect(result).toEqual(['unique-module']);
+      });
+
+      it('should demonstrate that example content would be included without filtering', () => {
+        // This test shows what would happen if we didn't filter example tags
+        const withoutFilter = extractKeywords('Process auth-utils, const x = 1; src/fake.js. See also component.tsx.');
+        const withFilter = extractKeywords('Process auth-utils, <example>const x = 1; src/fake.js</example>. See also component.tsx.');
+        
+        expect(withoutFilter).toContain('src/fake.js');
+        expect(withFilter).not.toContain('src/fake.js');
+        expect(withFilter).toEqual(['auth-utils', 'see', 'component.tsx']);
+      });
+    });
   });
 });
