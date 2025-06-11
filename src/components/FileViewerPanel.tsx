@@ -291,7 +291,7 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
         </div>
       )}
       {isText && !error && fileContent && (
-        <div className={`w-full h-full rounded font-mono text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 scrollbar-thin file-viewer-syntax-highlighter-wrapper ${
+        <div className={`w-full h-full rounded font-mono text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 scrollbar-thin file-viewer-syntax-highlighter-wrapper relative ${
           isWrapEnabled ? 'overflow-auto' : 'overflow-hidden'
         }`}>
           <SyntaxHighlighter
@@ -311,6 +311,11 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
               textAlign: 'right'
             }}
             customStyle={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              height: '100%',
+              width: '100%',
               margin: 0,
               padding: '0.5rem',
               backgroundColor: 'transparent',
@@ -320,8 +325,6 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
               lineHeight: '1.25rem',
               overflowX: isWrapEnabled ? 'hidden' : 'auto',
               overflowY: 'auto',
-              width: '100%',
-              maxWidth: '100%',
               boxSizing: 'border-box'
             }}
             codeTagProps={{
