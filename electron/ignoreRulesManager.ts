@@ -113,6 +113,7 @@ class IgnoreRulesManager {
   private lastError: Error | null = null;
   private materialsDir = FILE_SYSTEM.materialsDirName;
   private baseDir = '';
+  private lastLoadTime = 0;
   
   // Master lists of ignore files, sorted from deepest to shallowest
   private athignoreFiles: IgnoreFile[] = [];
@@ -120,12 +121,10 @@ class IgnoreRulesManager {
   private useGitignore = true;
 
   // Update base directory and reload rules
-  setBaseDir(newDir: string) {
+  async setBaseDir(newDir: string) {
     this.baseDir = PathUtils.normalizeToUnix(newDir);
     this.clearRules();
-    this.loadIgnoreRules().catch((error) => {
-      console.error('Error reloading ignore rules:', error);
-    });
+    await this.loadIgnoreRules();
   }
 
   // Get current base directory
@@ -355,6 +354,12 @@ class IgnoreRulesManager {
 
   // Load ignore rules: scan for all ignore files and sort them
   async loadIgnoreRules() {
+    const now = Date.now();
+    if (now - this.lastLoadTime < 500) {
+      return; // Debounce subsequent calls within 500ms
+    }
+    this.lastLoadTime = now;
+
     this.clearRules();
 
     const currentBaseDir = this.getBaseDir();

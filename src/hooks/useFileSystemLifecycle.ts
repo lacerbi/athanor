@@ -206,7 +206,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   // Centralized function to process a directory - handles both UI and CLI flows
   const processDirectory = useCallback(
     async (directory: string | null) => {
-      if (!directory) {
+      if (!directory || directory === currentDirectory) {
         return;
       }
 
@@ -227,7 +227,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         setShowProjectDialog(true);
       }
     },
-    [initializeProject, addLog]
+    [initializeProject, addLog, currentDirectory]
   );
 
   const handleCreateProject = useCallback(

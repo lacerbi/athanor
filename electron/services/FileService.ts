@@ -157,10 +157,9 @@ export class FileService extends EventEmitter implements IFileService {
     this.baseDir = normalizedDir;
     
     // Perform initial setup or update
-    ignoreRulesManager.setBaseDir(this.baseDir);
+    await ignoreRulesManager.setBaseDir(this.baseDir);
     this.materialsDir = PathUtils.joinUnix(this.baseDir, FILE_SYSTEM.materialsDirName);
     await this.ensureMaterialsDir();
-    await this.reloadIgnoreRules();
     
     console.log(`Base directory set to: ${this.baseDir}`);
     

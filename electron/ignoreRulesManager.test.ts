@@ -90,6 +90,9 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     // Clear error state to prevent test leakage
     ignoreRulesManager.clearError();
 
+    // Reset debounce timer to prevent state leakage between tests
+    (ignoreRulesManager as any).lastLoadTime = 0;
+
     // Mock loadIgnoreRules for tests that don't call the real method.
     // This spy is restored in the 'loadIgnoreRules' describe block.
     loadIgnoreRulesSpy = jest
