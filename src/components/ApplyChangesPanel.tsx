@@ -23,15 +23,18 @@ const DiffLine: React.FC<DiffLineProps> = ({ content, type }) => {
 
   switch (type) {
     case 'add':
-      lineClass += ' bg-green-100 dark:bg-blue-900/30 text-green-900 dark:text-blue-100';
+      lineClass +=
+        ' bg-green-100 dark:bg-blue-900/30 text-green-900 dark:text-blue-100';
       prefix = '+';
       break;
     case 'remove':
-      lineClass += ' bg-red-100 dark:bg-orange-900/30 text-red-900 dark:text-orange-100';
+      lineClass +=
+        ' bg-red-100 dark:bg-orange-900/30 text-red-900 dark:text-orange-100';
       prefix = '-';
       break;
     case 'header':
-      lineClass += ' bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-semibold';
+      lineClass +=
+        ' bg-blue-100 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-semibold';
       prefix = '@';
       break;
     default:
@@ -93,8 +96,8 @@ const DiffView: React.FC<{
   };
 
   return (
-    <div className="overflow-x-auto bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 p-2">
-      <div className="space-y-0">
+    <div className="overflow-x-auto bg-gray-50 dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-600 p-2 min-w-0">
+      <div className="space-y-0 min-w-max">
         {lines.map((line, index) => renderDiffLine(line, index))}
       </div>
     </div>
@@ -153,8 +156,12 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
 
         // Get smart preview configuration from settings with fallback to defaults
         const config = {
-          minLines: applicationSettings?.minSmartPreviewLines ?? SETTINGS.defaults.application.minSmartPreviewLines,
-          maxLines: applicationSettings?.maxSmartPreviewLines ?? SETTINGS.defaults.application.maxSmartPreviewLines,
+          minLines:
+            applicationSettings?.minSmartPreviewLines ??
+            SETTINGS.defaults.application.minSmartPreviewLines,
+          maxLines:
+            applicationSettings?.maxSmartPreviewLines ??
+            SETTINGS.defaults.application.maxSmartPreviewLines,
         };
 
         const preview = getSmartPreview(content, config);
@@ -166,14 +173,22 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
     };
 
     void checkWarning();
-  }, [op.file_path, op.file_operation, tabs, activeTabIndex, applicationSettings]);
+  }, [
+    op.file_path,
+    op.file_operation,
+    tabs,
+    activeTabIndex,
+    applicationSettings,
+  ]);
 
   return (
-    <div className="border border-gray-200 dark:border-gray-600 rounded p-4 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/20">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex flex-col gap-1">
+    <div className="border border-gray-200 dark:border-gray-600 rounded p-4 bg-white dark:bg-gray-800 shadow-sm dark:shadow-gray-900/20 flex flex-col">
+      <div className="flex justify-between items-start mb-4 flex-shrink-0">
+        <div className="flex flex-col gap-1 min-w-0">
           <div className="flex items-start gap-2">
-            <p className="font-semibold break-all text-gray-900 dark:text-gray-100">{op.file_path}</p>
+            <p className="font-semibold break-all text-gray-900 dark:text-gray-100">
+              {op.file_path}
+            </p>
             {showWarning && (
               <div
                 className="text-amber-500 dark:text-amber-400 flex-shrink-0"
@@ -204,13 +219,15 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
         </div>
       </div>
 
-      <DiffView
-        oldText={op.old_code}
-        newText={op.new_code}
-        filePath={op.file_path}
-      />
+      <div className="min-w-0 w-full">
+        <DiffView
+          oldText={op.old_code}
+          newText={op.new_code}
+          filePath={op.file_path}
+        />
+      </div>
 
-      <div className="mt-4 flex justify-between items-center">
+      <div className="mt-4 flex justify-between items-center flex-shrink-0">
         <div className="flex gap-2">
           <button
             className="px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
@@ -231,7 +248,9 @@ const FileOperationItem: React.FC<FileOperationItemProps> = ({
         {(op.accepted || op.rejected) && (
           <span
             className={`text-sm font-medium ${
-              op.accepted ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+              op.accepted
+                ? 'text-green-600 dark:text-green-400'
+                : 'text-red-600 dark:text-red-400'
             }`}
           >
             {op.accepted ? 'Changes Accepted' : 'Changes Rejected'}
@@ -246,7 +265,7 @@ const ApplyChangesPanel: React.FC = () => {
   const { activeOperations, applyChange, rejectChange } =
     useApplyChangesStore();
   const { fileTree } = useFileSystemStore();
-  
+
   const hasProject = fileTree.length > 0;
 
   if (!hasProject) {
@@ -258,8 +277,9 @@ const ApplyChangesPanel: React.FC = () => {
             Apply AI Changes
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            When you get code suggestions from AI assistants, paste them into the workbench. 
-            Athanor will parse the changes and show them here for review before applying to your files.
+            When you get code suggestions from AI assistants, paste them into
+            the workbench. Athanor will parse the changes and show them here for
+            review before applying to your files.
           </p>
           <button
             onClick={() => window.fileService.openFolder()}
