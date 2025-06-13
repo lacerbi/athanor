@@ -329,56 +329,165 @@ const ApplyChangesPanel: React.FC = () => {
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [currentDiffBlocks, setCurrentDiffBlocks] = useState<number[]>([]);
   const diffViewRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
+  const stickyHeaderRef = useRef<HTMLDivElement>(null);
+  const isManualNavigationRef = useRef(false);
+  const manualNavigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const hasProject = fileTree.length > 0;
 
   // Navigation handlers
+  const NAVIGATION_PADDING_ABOVE = 16; // Space above the target element when navigating
+
   const goTop = () => {
     containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const goPrev = () => {
     const targetIdx = Math.max(0, currentIdx - 1);
+    if (targetIdx === currentIdx) return; // Already at the beginning
+    
     if (targetIdx >= 0 && targetIdx < itemRefs.current.length) {
       const element = itemRefs.current[targetIdx];
-      if (element && containerRef.current) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const elementHeight = element.offsetHeight;
-        const viewportHeight = containerRect.height;
+      if (element && containerRef.current && stickyHeaderRef.current) {
+        // Disable scroll-based updates during manual navigation
+        isManualNavigationRef.current = true;
+        
+        // Clear any existing timeout
+        if (manualNavigationTimeoutRef.current) {
+          clearTimeout(manualNavigationTimeoutRef.current);
+        }
+        
+        // Get the sticky header height
+        const headerHeight = stickyHeaderRef.current.offsetHeight;
+        
+        // Calculate the target scroll position
+        // We want the top of the element to be NAVIGATION_PADDING_ABOVE pixels below the sticky header
+        const elementTop = element.offsetTop;
+        const targetScrollTop = elementTop - headerHeight - NAVIGATION_PADDING_ABOVE;
+        const currentScrollTop = containerRef.current.scrollTop;
 
-        // Center the element in the viewport
-        const scrollTop =
-          element.offsetTop -
-          containerRef.current.offsetTop -
-          (viewportHeight - elementHeight) / 2;
+        // Update the current index immediately
+        setCurrentIdx(targetIdx);
 
-        containerRef.current.scrollTo({
-          top: Math.max(0, scrollTop),
-          behavior: 'smooth',
+        // Check if we actually need to scroll
+        if (Math.abs(targetScrollTop - currentScrollTop) < 2) {
+          // Already at the target position, just re-enable scroll updates
+          isManualNavigationRef.current = false;
+          return;
+        }
+
+        // Set up scroll end detection
+        let scrollEndTimer: NodeJS.Timeout | null = null;
+        let hasScrolled = false;
+        
+        const onScroll = () => {
+          hasScrolled = true;
+          if (scrollEndTimer) clearTimeout(scrollEndTimer);
+          scrollEndTimer = setTimeout(() => {
+            // Re-enable scroll-based updates after scrolling stops
+            isManualNavigationRef.current = false;
+            containerRef.current?.removeEventListener('scroll', onScroll);
+            if (scrollEndTimer) clearTimeout(scrollEndTimer);
+          }, 150); // 150ms after last scroll event
+        };
+        
+        // Add scroll listener before scrolling
+        containerRef.current.addEventListener('scroll', onScroll, { passive: true });
+        
+        // Force the scroll to happen
+        requestAnimationFrame(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTo({
+              top: Math.max(0, targetScrollTop),
+              behavior: 'smooth',
+            });
+          }
         });
+        
+        // Backup timeout in case scroll event detection fails
+        manualNavigationTimeoutRef.current = setTimeout(() => {
+          isManualNavigationRef.current = false;
+          containerRef.current?.removeEventListener('scroll', onScroll);
+          if (!hasScrolled && containerRef.current) {
+            // Force scroll if it didn't happen
+            containerRef.current.scrollTop = Math.max(0, targetScrollTop);
+          }
+        }, 1000); // 1 second backup timeout
       }
     }
   };
 
   const goNext = () => {
     const targetIdx = Math.min(activeOperations.length - 1, currentIdx + 1);
+    if (targetIdx === currentIdx) return; // Already at the end
+    
     if (targetIdx >= 0 && targetIdx < itemRefs.current.length) {
       const element = itemRefs.current[targetIdx];
-      if (element && containerRef.current) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const elementHeight = element.offsetHeight;
-        const viewportHeight = containerRect.height;
+      if (element && containerRef.current && stickyHeaderRef.current) {
+        // Disable scroll-based updates during manual navigation
+        isManualNavigationRef.current = true;
+        
+        // Clear any existing timeout
+        if (manualNavigationTimeoutRef.current) {
+          clearTimeout(manualNavigationTimeoutRef.current);
+        }
+        
+        // Get the sticky header height
+        const headerHeight = stickyHeaderRef.current.offsetHeight;
+        
+        // Calculate the target scroll position
+        // We want the top of the element to be NAVIGATION_PADDING_ABOVE pixels below the sticky header
+        const elementTop = element.offsetTop;
+        const targetScrollTop = elementTop - headerHeight - NAVIGATION_PADDING_ABOVE;
+        const currentScrollTop = containerRef.current.scrollTop;
 
-        // Center the element in the viewport
-        const scrollTop =
-          element.offsetTop -
-          containerRef.current.offsetTop -
-          (viewportHeight - elementHeight) / 2;
+        // Update the current index immediately
+        setCurrentIdx(targetIdx);
 
-        containerRef.current.scrollTo({
-          top: Math.max(0, scrollTop),
-          behavior: 'smooth',
+        // Check if we actually need to scroll
+        if (Math.abs(targetScrollTop - currentScrollTop) < 2) {
+          // Already at the target position, just re-enable scroll updates
+          isManualNavigationRef.current = false;
+          return;
+        }
+
+        // Set up scroll end detection
+        let scrollEndTimer: NodeJS.Timeout | null = null;
+        let hasScrolled = false;
+        
+        const onScroll = () => {
+          hasScrolled = true;
+          if (scrollEndTimer) clearTimeout(scrollEndTimer);
+          scrollEndTimer = setTimeout(() => {
+            // Re-enable scroll-based updates after scrolling stops
+            isManualNavigationRef.current = false;
+            containerRef.current?.removeEventListener('scroll', onScroll);
+            if (scrollEndTimer) clearTimeout(scrollEndTimer);
+          }, 150); // 150ms after last scroll event
+        };
+        
+        // Add scroll listener before scrolling
+        containerRef.current.addEventListener('scroll', onScroll, { passive: true });
+        
+        // Force the scroll to happen
+        requestAnimationFrame(() => {
+          if (containerRef.current) {
+            containerRef.current.scrollTo({
+              top: Math.max(0, targetScrollTop),
+              behavior: 'smooth',
+            });
+          }
         });
+        
+        // Backup timeout in case scroll event detection fails
+        manualNavigationTimeoutRef.current = setTimeout(() => {
+          isManualNavigationRef.current = false;
+          containerRef.current?.removeEventListener('scroll', onScroll);
+          if (!hasScrolled && containerRef.current) {
+            // Force scroll if it didn't happen
+            containerRef.current.scrollTop = Math.max(0, targetScrollTop);
+          }
+        }, 1000); // 1 second backup timeout
       }
     }
   };
@@ -559,71 +668,55 @@ const ApplyChangesPanel: React.FC = () => {
     setCurrentDiffBlocks([]);
   }, [currentIdx]);
 
-  // Handle scroll to update current index based on viewport center
+  // Handle scroll to update current index based on the item at the top of the viewport
   useEffect(() => {
     const handleScroll = () => {
-      if (!containerRef.current || itemRefs.current.length === 0) return;
+      if (
+        !containerRef.current ||
+        !stickyHeaderRef.current ||
+        itemRefs.current.length === 0
+      ) {
+        return;
+      }
 
-      const containerRect = containerRef.current.getBoundingClientRect();
-      const viewportCenter = containerRect.top + containerRect.height / 2;
+      // The focal point should be where items appear after navigation
+      // This is NAVIGATION_PADDING_ABOVE pixels below the bottom of the sticky header
+      const headerRect = stickyHeaderRef.current.getBoundingClientRect();
+      const headerBottom = headerRect.bottom;
+      const focalPointY = headerBottom + NAVIGATION_PADDING_ABOVE;
 
-      // Find which item contains the viewport center
-      let targetIdx = currentIdx;
+      let newCurrentIdx = -1;
 
-      for (let idx = 0; idx < itemRefs.current.length; idx++) {
-        const itemRef = itemRefs.current[idx];
+      // Find the last item whose top is at or above the focal point
+      for (let i = 0; i < itemRefs.current.length; i++) {
+        const itemRef = itemRefs.current[i];
         if (!itemRef) continue;
 
         const itemRect = itemRef.getBoundingClientRect();
-
-        // Check if viewport center is within this item's bounds
-        if (
-          itemRect.top <= viewportCenter &&
-          itemRect.bottom >= viewportCenter
-        ) {
-          targetIdx = idx;
+        // Check if the top of the item has scrolled past the focal point
+        if (itemRect.top <= focalPointY) {
+          newCurrentIdx = i;
+        } else {
+          // Since items are ordered, we can stop once we find one below the focal point
           break;
         }
       }
 
-      // If no item contains the center, find the closest one
-      if (targetIdx === currentIdx) {
-        let closestIdx = 0;
-        let closestDistance = Infinity;
-
-        itemRefs.current.forEach((itemRef, idx) => {
-          if (!itemRef) return;
-
-          const itemRect = itemRef.getBoundingClientRect();
-
-          // Distance from viewport center to closest edge of the item
-          let distance: number;
-          if (itemRect.bottom < viewportCenter) {
-            distance = viewportCenter - itemRect.bottom;
-          } else if (itemRect.top > viewportCenter) {
-            distance = itemRect.top - viewportCenter;
-          } else {
-            distance = 0;
-          }
-
-          if (distance < closestDistance) {
-            closestDistance = distance;
-            closestIdx = idx;
-          }
-        });
-
-        targetIdx = closestIdx;
+      // If no item's top has passed the focal point (e.g. at the very top of the list),
+      // default to the first item.
+      if (newCurrentIdx === -1 && itemRefs.current.length > 0) {
+        newCurrentIdx = 0;
       }
 
-      // Update current index if it changed
-      if (targetIdx !== currentIdx) {
-        setCurrentIdx(targetIdx);
+      // Only update if we're not in manual navigation mode
+      if (!isManualNavigationRef.current && newCurrentIdx !== -1 && newCurrentIdx !== currentIdx) {
+        setCurrentIdx(newCurrentIdx);
       }
     };
 
     const container = containerRef.current;
     if (container) {
-      container.addEventListener('scroll', handleScroll);
+      container.addEventListener('scroll', handleScroll, { passive: true });
       // Initial check
       handleScroll();
     }
@@ -634,6 +727,15 @@ const ApplyChangesPanel: React.FC = () => {
       }
     };
   }, [currentIdx, activeOperations.length]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (manualNavigationTimeoutRef.current) {
+        clearTimeout(manualNavigationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!hasProject) {
     return (
@@ -672,7 +774,7 @@ const ApplyChangesPanel: React.FC = () => {
   return (
     <div ref={containerRef} className="relative h-full overflow-y-auto">
       {activeOperations.length > 0 && (
-        <div className="sticky top-0 z-10 flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur px-4 py-2 border-b border-gray-200 dark:border-gray-700">
+        <div ref={stickyHeaderRef} className="sticky top-0 z-10 flex items-center gap-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur px-4 py-2 border-b border-gray-200 dark:border-gray-700">
           <button
             onClick={goTop}
             className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors"
