@@ -28,7 +28,28 @@ const AthanorApp: React.FC = () => {
   const { setChangeAppliedCallback } = useApplyChangesStore();
   const { applicationSettings, loadApplicationSettings } = useSettingsStore();
   const { tabs, activeTabIndex } = useWorkbenchStore();
-  const { fetchContext, clearContext } = useContextStore();
+  const { fetchContext, clearContext, setIsAnalyzingGraph } = useContextStore();
+
+  // Listen for graph analysis events
+  useEffect(() => {
+    const removeStartedListener = window.electron.receive(
+      'graph-analysis:started',
+      () => {
+        setIsAnalyzingGraph(true);
+      }
+    );
+    const removeFinishedListener = window.electron.receive(
+      'graph-analysis:finished',
+      () => {
+        setIsAnalyzingGraph(false);
+      }
+    );
+
+    return () => {
+      removeStartedListener();
+      removeFinishedListener();
+    };
+  }, [setIsAnalyzingGraph]);
 
   // File System Lifecycle
   const {

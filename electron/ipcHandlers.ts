@@ -1,6 +1,8 @@
 // AI Summary: Sets up all IPC handlers by importing and initializing modular handler functions.
 // Coordinates core, file operation, and file watch handlers for unified IPC communication.
 // Now accepts and injects FileService instance to all handlers.
+import { ipcMain } from 'electron';
+import { mainWindow } from './windowManager';
 import { setupCoreHandlers } from './handlers/coreHandlers';
 import { setupFileOperationHandlers } from './handlers/fileOperationHandlers';
 import { setupFileWatchHandlers } from './handlers/fileWatchHandlers';
@@ -21,7 +23,6 @@ export function setupIpcHandlers(
   apiKeyService: ApiKeyServiceMain,
   llmService: LLMServiceMain,
   relevanceEngine: RelevanceEngineService,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   projectGraphService: ProjectGraphService
 ) {
   setupCoreHandlers(fileService, settingsService);
@@ -31,4 +32,14 @@ export function setupIpcHandlers(
   registerSecureApiKeyIpc(apiKeyService);
   registerLlmIpc(llmService);
   setupContextHandlers(relevanceEngine);
+
+  ipcMain.handle('graph:force-reanalyze', async () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('graph-analysis:started');
+    }
+    await projectGraphService.analyzeProject();
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('graph-analysis:finished');
+    }
+  });
 }

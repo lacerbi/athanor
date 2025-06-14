@@ -252,6 +252,9 @@ declare global {
           promptNeighbors: string[];
         }>;
       };
+      graph: {
+        forceReanalyze: () => Promise<void>;
+      };
       appShell: {
         /**
          * Opens an external URL in the default browser

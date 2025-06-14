@@ -103,6 +103,9 @@ contextBridge.exposeInMainWorld('electronBridge', {
       taskDescription?: string;
     }) => ipcRenderer.invoke('ath:recalculate-context', request),
   },
+  graph: {
+    forceReanalyze: () => ipcRenderer.invoke('graph:force-reanalyze'),
+  },
   appShell: {
     openExternalURL: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
     openPath: (path: string) => ipcRenderer.invoke('shell:openPath', path),

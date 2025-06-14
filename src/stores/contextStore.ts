@@ -12,8 +12,10 @@ interface ContextState {
   maxNeighborScore: number;
   promptNeighborPaths: Set<string>;
   isLoading: boolean;
+  isAnalyzingGraph: boolean;
   fetchContext: (selectedPaths: string[], taskDescription?: string) => Promise<void>;
   clearContext: () => void;
+  setIsAnalyzingGraph: (isAnalyzing: boolean) => void;
 }
 
 export const useContextStore = create<ContextState>((set) => ({
@@ -24,6 +26,7 @@ export const useContextStore = create<ContextState>((set) => ({
   maxNeighborScore: 0,
   promptNeighborPaths: new Set(),
   isLoading: false,
+  isAnalyzingGraph: false,
 
   fetchContext: async (selectedPaths: string[], taskDescription?: string) => {
     set({ isLoading: true });
@@ -61,4 +64,7 @@ export const useContextStore = create<ContextState>((set) => ({
       isLoading: false,
     });
   },
+
+  setIsAnalyzingGraph: (isAnalyzing: boolean) =>
+    set({ isAnalyzingGraph: isAnalyzing }),
 }));

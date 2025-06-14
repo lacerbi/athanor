@@ -155,6 +155,8 @@
     [
       "electron/ipcHandlers.ts",
       [
+        "electron",
+        "./windowManager",
         "./handlers/coreHandlers",
         "./handlers/fileOperationHandlers",
         "./handlers/fileWatchHandlers",
@@ -167,7 +169,8 @@
         "./modules/secure-api-storage/main",
         "./modules/llm/main/LLMServiceMain",
         "./services/RelevanceEngineService",
-        "./services/ProjectGraphService"
+        "./services/ProjectGraphService",
+        "graph:force-reanalyze"
       ]
     ],
     [
@@ -1111,6 +1114,7 @@
         "./AthanorTabs",
         "../stores/fileSystemStore",
         "../stores/workbenchStore",
+        "../stores/contextStore",
         "../utils/fileTree",
         "../hooks/usePanelResize",
         "../hooks/useLogPanelResize",
@@ -1979,6 +1983,7 @@
       [
         "electron/handlers/coreHandlers.test.ts",
         "electron/handlers/coreHandlers.ts",
+        "electron/ipcHandlers.ts",
         "electron/main.ts"
       ]
     ],
@@ -2445,7 +2450,8 @@
         "src/actions/buildTaskAction.ts",
         "src/components/ActionPanel.tsx",
         "src/components/AthanorApp.tsx",
-        "src/components/fileExplorer/FileExplorerItem.tsx"
+        "src/components/fileExplorer/FileExplorerItem.tsx",
+        "src/components/MainLayout.tsx"
       ]
     ],
     [
@@ -2968,7 +2974,9 @@
         "electron/services/FileService.ts",
         "electron/services/ProjectGraphService.ts",
         "electron/services/RelevanceEngineService.ts",
-        "electron/services/SettingsService.ts"
+        "electron/services/SettingsService.ts",
+        "electron/windowManager.ts",
+        "tests/__mocks__/electron.ts"
       ]
     ],
     [
@@ -3947,7 +3955,8 @@
         "src/stores/logStore.ts",
         "src/stores/settingsStore.ts",
         "src/stores/workbenchStore.ts",
-        "src/utils/fileTree.ts"
+        "src/utils/fileTree.ts",
+        "tests/__mocks__/electron.ts"
       ]
     ],
     [
@@ -4029,6 +4038,7 @@
         "src/components/SettingsPanel.tsx",
         "src/hooks/useLogPanelResize.ts",
         "src/hooks/usePanelResize.ts",
+        "src/stores/contextStore.ts",
         "src/stores/fileSystemStore.ts",
         "src/stores/logStore.ts",
         "src/stores/workbenchStore.ts",
@@ -4440,9 +4450,9 @@
     "src/actions/ManualCopyAction.ts",
     "src/stores/applyChangesStore.ts",
     "electron/modules/secure-api-storage/common/providers/ProviderInterface.ts",
+    "src/stores/contextStore.ts",
     "src/types/promptTypes.ts",
     "electron/services/SettingsService.ts",
-    "src/stores/contextStore.ts",
     "src/utils/fileSelection.ts"
   ]
 }
