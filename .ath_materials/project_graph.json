@@ -187,6 +187,7 @@
         "./services/RelevanceEngineService",
         "./services/GitService",
         "./services/ProjectGraphService",
+        "../src/utils/constants",
         "[Main] Analysis worker already running, skipping trigger.",
         "menu:open-path",
         "../package.json"
@@ -2632,6 +2633,7 @@
         "electron/handlers/coreHandlers.test.ts",
         "electron/handlers/coreHandlers.ts",
         "electron/ignoreRulesManager.ts",
+        "electron/main.ts",
         "electron/services/FileService.ts",
         "electron/services/RelevanceEngineService.ts",
         "electron/services/SettingsService.ts",
@@ -3018,6 +3020,7 @@
         "electron/workers/projectAnalysisWorker.ts",
         "package.json",
         "src/App.tsx",
+        "src/utils/constants.ts",
         "tests/__mocks__/electron.ts"
       ]
     ],

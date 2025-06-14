@@ -16,6 +16,7 @@ import {
   ProjectGraphService,
   ProjectGraphCache,
 } from './services/ProjectGraphService';
+import { PROJECT_ANALYSIS } from '../src/utils/constants';
 
 // Create singleton instances
 export const fileService = new FileService();
@@ -359,9 +360,13 @@ app.whenReady().then(async () => {
   const scheduleInactivityCheck = () => {
     if (inactivityTimer) clearTimeout(inactivityTimer);
     inactivityTimer = setTimeout(() => {
-      console.log('[Main] User inactive for 5s. Running analysis.');
+      console.log(
+        `[Main] User inactive for ${
+          PROJECT_ANALYSIS.USER_INACTIVITY_DELAY / 1000
+        }s. Running analysis.`
+       );
       runAnalysisAndCatch();
-    }, 5000);
+    }, PROJECT_ANALYSIS.USER_INACTIVITY_DELAY);
   };
 
   const scheduleAnalysis = () => {
@@ -380,7 +385,10 @@ app.whenReady().then(async () => {
     graphIsPotentiallyStale = true;
     if (fsDebounceTimer) clearTimeout(fsDebounceTimer);
     if (inactivityTimer) clearTimeout(inactivityTimer);
-    fsDebounceTimer = setTimeout(scheduleAnalysis, 30000);
+    fsDebounceTimer = setTimeout(
+      scheduleAnalysis,
+      PROJECT_ANALYSIS.FILE_SYSTEM_QUIESCENCE_DELAY
+    );
   });
 
   if (mainWindow) {

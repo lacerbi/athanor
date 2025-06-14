@@ -156,3 +156,11 @@ export const CONTEXT_BUILDER = {
   VISUALIZATION_THRESHOLD: 5,
   MAX_VISUALIZATION_SCORE: 100,
 };
+
+// Project Analysis Configuration
+export const PROJECT_ANALYSIS = {
+  // Delay in ms after the last file system change before considering the system quiet.
+  FILE_SYSTEM_QUIESCENCE_DELAY: 30000, // 30 seconds
+  // Delay in ms of user inactivity before triggering analysis.
+  USER_INACTIVITY_DELAY: 5000, // 5 seconds
+};
