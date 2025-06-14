@@ -1,6 +1,6 @@
 // AI Summary: Global type definitions for Athanor. Includes interfaces for Electron bridge (file system, LLM service, UI, API keys, settings),
 // application state (task tabs, panel resizing), core types (FileItem, FileOperation, commands), and external libraries (Tiktoken).
-// Defines window extensions for IPC and custom DragEvent types. Updated to reflect new LLM ModelInfo structure in electronBridge.
+// Defines window extensions for IPC and custom DragEvent types. Updated to include `userActivity` on the electronBridge.
 // Augment DragEvent to include custom file path data
 interface AthanorDataTransfer extends DataTransfer {
   setData(format: 'application/x-athanor-filepath', data: string): void;
@@ -241,6 +241,7 @@ declare global {
             }
         >;
       };
+      userActivity: () => void;
       context: {
         recalculate: (request: {
           selectedFilePaths: string[];

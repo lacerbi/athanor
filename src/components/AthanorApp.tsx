@@ -1,5 +1,6 @@
 // AI Summary: Root application component that coordinates file system lifecycle and layout.
-// Manages application state and delegates rendering to MainLayout component.
+// Manages application state and delegates rendering to MainLayout component. Now includes listeners
+// for graph analysis events and sends user activity events to the main process.
 import React, { useRef, useEffect } from 'react';
 import { getBaseName } from '../utils/fileTree';
 import MainLayout from './MainLayout';
@@ -170,6 +171,35 @@ const AthanorApp: React.FC = () => {
     setActiveTab(newTab);
     setLastTabChangeTime(Date.now());
   };
+
+  // Notify main process of user activity
+  useEffect(() => {
+    const debounce = (func: () => void, delay: number) => {
+      let timeout: NodeJS.Timeout;
+      return function(...args: []) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func(...args), delay);
+      };
+    };
+
+    const notifyUserActivity = () => {
+      if (window.electronBridge?.userActivity) {
+         window.electronBridge.userActivity();
+      }
+    };
+    
+    const debouncedActivityNotif = debounce(notifyUserActivity, 250);
+
+    window.addEventListener('mousemove', debouncedActivityNotif);
+    window.addEventListener('keydown', debouncedActivityNotif);
+    window.addEventListener('scroll', debouncedActivityNotif);
+
+    return () => {
+      window.removeEventListener('mousemove', debouncedActivityNotif);
+      window.removeEventListener('keydown', debouncedActivityNotif);
+      window.removeEventListener('scroll', debouncedActivityNotif);
+    };
+  }, []);
 
 
   // Show welcome screen when no project is loaded

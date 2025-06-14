@@ -1,5 +1,6 @@
 // AI Summary: Core file system service coordinating path handling, file operations, watchers,
-// and ignore rules with consistent error handling and path normalization. Emits 'base-dir-changed' event.
+// and ignore rules with consistent error handling and path normalization. Emits 'base-dir-changed'
+// and 'file-changed' events.
 
 import * as fs from 'fs/promises';
 import { Stats, constants, statSync } from 'fs';
@@ -519,6 +520,7 @@ export class FileService extends EventEmitter implements IFileService {
         // Only forward valid events
         if (event === 'add' || event === 'change' || event === 'unlink' || 
             event === 'addDir' || event === 'unlinkDir') {
+          this.emit('file-changed', { event, path: relPath });
           callback(event, relPath);
         }
       });

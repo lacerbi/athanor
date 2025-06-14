@@ -1,5 +1,6 @@
 // AI Summary: Exposes protected methods for IPC communication and file system operations.
-// Now includes FileService, PathUtils interfaces, and secure API key management.
+// Now includes FileService, PathUtils interfaces, secure API key management, and a `userActivity`
+// event sender for intelligent background processing.
 
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPCChannelNames } from './modules/secure-api-storage/common/types';
@@ -97,6 +98,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
     getModels: (providerId: string) => llmServiceRenderer.getModels(providerId as any),
     sendMessage: (request: any) => llmServiceRenderer.sendMessage(request),
   },
+  userActivity: () => ipcRenderer.send('user-activity'),
   context: {
     recalculate: (request: {
       selectedFilePaths: string[];
