@@ -160,7 +160,8 @@ export async function generateCodebaseDocumentation(
   formatType: string = DOC_FORMAT.MARKDOWN,
   projectInfoFilePath?: string,
   smartPreviewConfig: { minLines: number; maxLines: number } = { minLines: 10, maxLines: 20 },
-  currentThresholdLineLength?: number // Added, to be passed down if needed
+  currentThresholdLineLength?: number, // Added, to be passed down if needed
+  enableSmartPreview: boolean = true
 ): Promise<{ file_contents: string; file_tree: string }> {
   const rawFileTreeContent = generateFileTree(items, selectedItems);
   const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>\n`;
@@ -171,6 +172,11 @@ export async function generateCodebaseDocumentation(
     if (item.type === 'file') {
       const isSelected = selectedItems.has(item.id);
       const isNeighboring = neighboringItems.has(item.id);
+
+      // If it's a neighboring file and smart previews are turned off, skip it entirely.
+      if (isNeighboring && !isSelected && !enableSmartPreview) {
+        return;
+      }
 
       // Only include content for selected or neighboring files
       if (!isSelected && !isNeighboring) {
@@ -184,8 +190,8 @@ export async function generateCodebaseDocumentation(
           : item.path;
         
         // Add placeholder message instead of duplicating content
-        fileContents += (fileContents ? '\n' : '') + 
-          `# ${relativePath}${isSelected ? ' *' : ''}\n\n` + 
+        fileContents += (fileContents ? '\n' : '') +
+          `# ${relativePath}${isSelected ? ' *' : ''}\n\n` +
           `The content of this file is fully reported above inside \`<project_info>\` tags.\n`;
         return;
       }

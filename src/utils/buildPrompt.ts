@@ -102,6 +102,7 @@ export async function buildDynamicPrompt(
     formatType: storeFormatType,
     includeProjectInfo,
     effectiveConfig,
+    smartPreviewEnabled,
   } = useFileSystemStore.getState();
 
   // Handle smartPreviewConfig with centralized defaults and warning
@@ -169,7 +170,8 @@ export async function buildDynamicPrompt(
     actualFormatType, // Use the derived actualFormatType
     config.project_info_path, // Pass project_info_path to avoid duplication
     smartPreviewConfig,
-    activeThresholdLineLength // Pass the active threshold
+    activeThresholdLineLength, // Pass the active threshold
+    smartPreviewEnabled
   );
 
   // Format task context if non-empty
