@@ -1,7 +1,7 @@
 // AI Summary: Handles Electron window creation, lifecycle management and error handling.
 // Manages main window instance with proper web preferences and development/production
 // environment handling. Implements window failure handling and cleanup.
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, app } from 'electron';
 import * as path from 'path';
 
 const isDev = process.env.NODE_ENV === 'development';
@@ -15,8 +15,8 @@ export async function createWindow() {
       path.join(__dirname, 'renderer', 'main_window', 'preload.js') // Dev path
     : path.join(__dirname, 'renderer', 'main_window', 'preload.js'); // Production path
 
-  // Create the browser window
-  mainWindow = new BrowserWindow({
+  // Create the browser window options
+  const browserWindowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1200,
     height: 800,
     webPreferences: {
@@ -25,7 +25,29 @@ export async function createWindow() {
       contextIsolation: true,
       sandbox: true,
     },
-  });
+  };
+
+  // Set icon for development mode with platform-specific handling
+  if (isDev) {
+    let iconPath: string;
+    const platform = process.platform;
+    const appPath = app.getAppPath();
+    
+    if (platform === 'win32') {
+      iconPath = path.join(appPath, 'resources', 'images', 'athanor.ico');
+    } else if (platform === 'darwin') {
+      iconPath = path.join(appPath, 'resources', 'images', 'athanor.icns');
+    } else {
+      // Linux and other platforms
+      iconPath = path.join(appPath, 'resources', 'images', 'athanor.png');
+    }
+    
+    console.log('Setting dev icon path:', iconPath);
+    browserWindowOptions.icon = iconPath;
+  }
+
+  // Create the browser window
+  mainWindow = new BrowserWindow(browserWindowOptions);
 
   // Load the app
   if (isDev) {
