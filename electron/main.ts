@@ -2,6 +2,7 @@
 // and IPC communication between processes. Handles application lifecycle events, path resolution,
 // and uncaught exception handling with proper cleanup of file watchers.
 import { app, BrowserWindow, Menu, nativeTheme, ipcMain } from 'electron';
+import { Worker } from 'worker_threads';
 import * as path from 'path';
 import { createWindow, mainWindow } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
@@ -11,7 +12,10 @@ import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { GitService } from './services/GitService';
-import { ProjectGraphService } from './services/ProjectGraphService';
+import {
+	ProjectGraphService,
+	ProjectGraphCache,
+} from './services/ProjectGraphService';
 
 // Create singleton instances
 export const fileService = new FileService();
@@ -25,6 +29,54 @@ export const relevanceEngine = new RelevanceEngineService(
 );
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
+
+function runProjectAnalysisWorker() {
+	return new Promise<void>((resolve, reject) => {
+		console.log('[Main] Spawning project analysis worker...');
+		if (mainWindow && !mainWindow.isDestroyed()) {
+			mainWindow.webContents.send('graph-analysis:started');
+		}
+
+		// Path to worker must be correct after compilation.
+		// NOTE: Webpack is now configured to compile the worker script.
+		// This path points to the compiled worker JS file alongside the main bundle.
+		const worker = new Worker(path.join(__dirname, 'projectAnalysisWorker.js'), {
+			workerData: { baseDir: fileService.getBaseDir() },
+		});
+
+		worker.on(
+			'message',
+			(message: { success: boolean; data?: ProjectGraphCache; error?: string }) => {
+				if (message.success && message.data) {
+					projectGraphService.populateGraphFromData(message.data);
+					projectGraphService.saveGraphToCache();
+					console.log('[Main] Received graph data from worker and updated cache.');
+				} else {
+					console.error('[Main] Worker reported an error:', message.error);
+				}
+			}
+		);
+
+		worker.on('error', (error: Error) => {
+			console.error('[Main] Worker thread error:', error);
+			// The 'exit' event will still fire, so we don't send 'finished' here
+			// to avoid sending it twice.
+			reject(error);
+		});
+
+		worker.on('exit', (code: number) => {
+			if (code !== 0) {
+				console.error(`[Main] Worker stopped with exit code ${code}`);
+			} else {
+				console.log('[Main] Worker finished successfully.');
+			}
+			if (mainWindow && !mainWindow.isDestroyed()) {
+				mainWindow.webContents.send('graph-analysis:finished');
+			}
+			resolve();
+		});
+	});
+}
 
 // Get the base directory of the Athanor application
 export function getAppBasePath(): string {
@@ -217,13 +269,12 @@ app.whenReady().then(async () => {
       console.log(
         '[ProjectGraphService] Cache not found or invalid, starting full analysis.'
       );
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('graph-analysis:started');
-      }
-      await projectGraphService.analyzeProject();
-      if (mainWindow && !mainWindow.isDestroyed()) {
-        mainWindow.webContents.send('graph-analysis:finished');
-      }
+      await runProjectAnalysisWorker().catch((err) => {
+        console.error(
+          'Error running project analysis worker on base-dir-changed:',
+          err
+        );
+      });
     }
   });
 
@@ -235,6 +286,12 @@ app.whenReady().then(async () => {
     relevanceEngine,
     projectGraphService
   );
+
+	ipcMain.handle('graph:force-reanalyze', async () => {
+		await runProjectAnalysisWorker().catch((err) => {
+			console.error('Error running manual project analysis:', err);
+		});
+	});
 
   // Read package.json for About panel information
   const packageJson = require('../package.json');

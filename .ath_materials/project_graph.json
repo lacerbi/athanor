@@ -169,14 +169,14 @@
         "./modules/secure-api-storage/main",
         "./modules/llm/main/LLMServiceMain",
         "./services/RelevanceEngineService",
-        "./services/ProjectGraphService",
-        "graph:force-reanalyze"
+        "./services/ProjectGraphService"
       ]
     ],
     [
       "electron/main.ts",
       [
         "electron",
+        "worker_threads",
         "path",
         "./windowManager",
         "./ipcHandlers",
@@ -187,6 +187,7 @@
         "./services/RelevanceEngineService",
         "./services/GitService",
         "./services/ProjectGraphService",
+        "[Main] Spawning project analysis worker...",
         "menu:open-path",
         "../package.json"
       ]
@@ -523,6 +524,7 @@
         "./FileService",
         "./DependencyScanner",
         "./PathUtils",
+        "project_graph.json",
         "[ProjectGraphService] Failed to save graph to cache:",
         "./"
       ]
@@ -585,6 +587,14 @@
         "electron",
         "path",
         "renderer"
+      ]
+    ],
+    [
+      "electron/workers/projectAnalysisWorker.ts",
+      [
+        "worker_threads",
+        "../services/FileService",
+        "../services/ProjectGraphService"
       ]
     ],
     [
@@ -1897,7 +1907,8 @@
         "electron/services/FileService.test.ts",
         "electron/services/ProjectGraphService.ts",
         "electron/services/RelevanceEngineService.ts",
-        "electron/services/SettingsService.ts"
+        "electron/services/SettingsService.ts",
+        "electron/workers/projectAnalysisWorker.ts"
       ]
     ],
     [
@@ -1934,7 +1945,8 @@
       [
         "electron/ipcHandlers.ts",
         "electron/main.ts",
-        "electron/services/RelevanceEngineService.ts"
+        "electron/services/RelevanceEngineService.ts",
+        "electron/workers/projectAnalysisWorker.ts"
       ]
     ],
     [
@@ -1986,6 +1998,10 @@
         "electron/ipcHandlers.ts",
         "electron/main.ts"
       ]
+    ],
+    [
+      "electron/workers/projectAnalysisWorker.ts",
+      []
     ],
     [
       "FEATURE.md",
@@ -2991,6 +3007,7 @@
         "electron/services/RelevanceEngineService.ts",
         "electron/services/SettingsService.ts",
         "electron/windowManager.ts",
+        "electron/workers/projectAnalysisWorker.ts",
         "package.json",
         "src/App.tsx",
         "tests/__mocks__/electron.ts"
@@ -3419,6 +3436,14 @@
         "src/index.css",
         "src/index.tsx",
         "tests/__mocks__/electron.ts"
+      ]
+    ],
+    [
+      "electron/workers/projectAnalysisWorker.ts",
+      [
+        "electron/main.ts",
+        "electron/services/FileService.ts",
+        "electron/services/ProjectGraphService.ts"
       ]
     ],
     [
@@ -4414,6 +4439,7 @@
       "webpack.main.config.js",
       [
         "electron/main.ts",
+        "electron/workers/projectAnalysisWorker.ts",
         "tests/__mocks__/electron.ts"
       ]
     ],
@@ -4440,8 +4466,8 @@
     "src/stores/logStore.ts",
     "src/stores/workbenchStore.ts",
     "src/stores/fileSystemStore.ts",
-    "electron/modules/llm/common/types.ts",
     "electron/services/FileService.ts",
+    "electron/modules/llm/common/types.ts",
     "src/stores/settingsStore.ts",
     "electron/modules/secure-api-storage/common/types.ts",
     "electron/services/PathUtils.ts",

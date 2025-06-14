@@ -7,7 +7,7 @@ import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
 
 // Define a type for the cache data structure
-interface ProjectGraphCache {
+export interface ProjectGraphCache {
   dependencyGraph: [string, string[]][];
   dependentsGraph: [string, string[]][];
   fileMentions: [string, string[]][];
@@ -28,6 +28,30 @@ export class ProjectGraphService {
 
   constructor(private readonly fileService: FileService) {}
 
+  /**
+   * Returns the current graph state as a serializable object.
+   * @returns The project graph cache data.
+   */
+  public getGraphData(): ProjectGraphCache {
+    return {
+      dependencyGraph: Array.from(this.dependencyGraph.entries()),
+      dependentsGraph: Array.from(this.dependentsGraph.entries()),
+      fileMentions: Array.from(this.fileMentions.entries()),
+      hubFiles: this.hubFiles,
+    };
+  }
+
+  /**
+   * Populates the service's internal state from serialized graph data.
+   * @param data The project graph cache data.
+   */
+  public populateGraphFromData(data: ProjectGraphCache): void {
+    this.dependencyGraph = new Map(data.dependencyGraph);
+    this.dependentsGraph = new Map(data.dependentsGraph);
+    this.fileMentions = new Map(data.fileMentions);
+    this.hubFiles = data.hubFiles;
+  }
+
   private getCachePath(): string {
     const materialsDir = this.fileService.getMaterialsDir();
     return this.fileService.join(materialsDir, CACHE_FILENAME);
@@ -36,12 +60,7 @@ export class ProjectGraphService {
   async saveGraphToCache(): Promise<void> {
     try {
       const cachePath = this.getCachePath();
-      const cacheData: ProjectGraphCache = {
-        dependencyGraph: Array.from(this.dependencyGraph.entries()),
-        dependentsGraph: Array.from(this.dependentsGraph.entries()),
-        fileMentions: Array.from(this.fileMentions.entries()),
-        hubFiles: this.hubFiles,
-      };
+      const cacheData = this.getGraphData();
       const jsonContent = JSON.stringify(cacheData, null, 2);
       await this.fileService.write(cachePath, jsonContent);
       console.log(
@@ -75,10 +94,7 @@ export class ProjectGraphService {
         throw new Error('Invalid cache data format');
       }
 
-      this.dependencyGraph = new Map(cacheData.dependencyGraph);
-      this.dependentsGraph = new Map(cacheData.dependentsGraph);
-      this.fileMentions = new Map(cacheData.fileMentions);
-      this.hubFiles = cacheData.hubFiles;
+      this.populateGraphFromData(cacheData);
 
       console.log(
         `[ProjectGraphService] Successfully loaded graph from cache at ${cachePath}`

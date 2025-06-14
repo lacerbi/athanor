@@ -32,14 +32,4 @@ export function setupIpcHandlers(
   registerSecureApiKeyIpc(apiKeyService);
   registerLlmIpc(llmService);
   setupContextHandlers(relevanceEngine);
-
-  ipcMain.handle('graph:force-reanalyze', async () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('graph-analysis:started');
-    }
-    await projectGraphService.analyzeProject();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('graph-analysis:finished');
-    }
-  });
 }
