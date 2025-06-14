@@ -667,15 +667,18 @@ const ApplyChangesPanel: React.FC = () => {
       }
     }
 
-    // If we are inside a diff block, the reference for the next search
-    // should be the *end* of that block. Otherwise, it's the top visible line.
-    let searchRefLine = topLineIndex;
+    // Determine whether we're effectively **inside** the current diff block.
+    // Treat the few context lines that precede the first “+/-” line as part of
+    // the block so that pressing “Next Diff” while they are visible still jumps
+    // forward.  Adjust `DIFF_NAV_CONTEXT_LINES` if needed.
+    const DIFF_NAV_CONTEXT_LINES = 3;
+    let searchRefLine: number;
     const currentBlock = currentDiffBlocks.find(
-      (b) => topLineIndex >= b.start && topLineIndex <= b.end
+      (b) =>
+        topLineIndex >= b.start - DIFF_NAV_CONTEXT_LINES &&
+        topLineIndex <= b.end
     );
-    if (currentBlock) {
-      searchRefLine = currentBlock.end;
-    }
+    searchRefLine = currentBlock ? currentBlock.end : topLineIndex;
 
     // Find the first diff block that starts AFTER the reference line
     const targetBlock = currentDiffBlocks.find(
@@ -793,14 +796,17 @@ const ApplyChangesPanel: React.FC = () => {
         (block) => block.start < topLineIndex
       );
 
-      // For 'next', the logic must mirror goNextDiff to avoid getting stuck
-      let searchRefLine = topLineIndex;
+      // For “next”, mirror goNextDiff’s logic so the enabled/disabled state is
+      // accurate even when the viewport is on pre-hunk context lines.
+      const DIFF_NAV_CONTEXT_LINES = 3;
+      let searchRefLine: number;
       const currentBlock = currentDiffBlocks.find(
-        (b) => topLineIndex >= b.start && topLineIndex <= b.end
+        (b) =>
+          topLineIndex >= b.start - DIFF_NAV_CONTEXT_LINES &&
+          topLineIndex <= b.end
       );
-      if (currentBlock) {
-        searchRefLine = currentBlock.end;
-      }
+      searchRefLine = currentBlock ? currentBlock.end : topLineIndex;
+
       const hasNext = currentDiffBlocks.some(
         (block) => block.start > searchRefLine
       );
