@@ -1,5 +1,5 @@
 // AI Summary: Displays and manages file changes from AI output with diff visualization.
-// Provides GitHub-style diff highlighting with accept/reject controls.
+// Provides GitHub-style diff highlighting with accept/reject controls, including logic to merge nearby diffs into a single block.
 // Handles warnings for large files and tracks change approval state.
 import React, { useState, useEffect, useRef } from 'react';
 import { createPatch } from 'diff';
@@ -10,6 +10,13 @@ import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { getSmartPreview } from '../utils/codebaseDocumentation';
 import { SETTINGS } from '../utils/constants';
+
+const DIFF_MERGE_THRESHOLD = 2; // Diffs separated by 2 or fewer context lines are merged
+
+interface DiffBlock {
+  start: number;
+  end: number;
+}
 
 interface DiffLineProps {
   content: string;
@@ -50,11 +57,64 @@ const DiffLine: React.FC<DiffLineProps> = ({ content, type }) => {
   );
 };
 
+const calculateMergedDiffBlocks = (lines: string[]): DiffBlock[] => {
+  if (!lines || lines.length === 0) {
+    return [];
+  }
+
+  // Step 1: Find all individual change hunks
+  const hunks: DiffBlock[] = [];
+  let inHunk = false;
+  let currentHunk: DiffBlock = { start: -1, end: -1 };
+
+  lines.forEach((line, index) => {
+    const isDiffLine = line.startsWith('+') || line.startsWith('-');
+
+    if (isDiffLine && !inHunk) {
+      inHunk = true;
+      currentHunk = { start: index, end: index };
+    } else if (isDiffLine && inHunk) {
+      currentHunk.end = index;
+    } else if (!isDiffLine && inHunk) {
+      inHunk = false;
+      hunks.push(currentHunk);
+    }
+  });
+
+  if (inHunk) {
+    hunks.push(currentHunk); // Add the last hunk if the file ends with a diff
+  }
+
+  if (hunks.length === 0) {
+    return [];
+  }
+
+  // Step 2: Merge hunks that are close to each other
+  const mergedBlocks: DiffBlock[] = [hunks[0]];
+
+  for (let i = 1; i < hunks.length; i++) {
+    const prevBlock = mergedBlocks[mergedBlocks.length - 1];
+    const currentHunk = hunks[i];
+
+    const linesBetween = currentHunk.start - prevBlock.end - 1;
+
+    if (linesBetween <= DIFF_MERGE_THRESHOLD) {
+      // Merge with the previous block
+      prevBlock.end = currentHunk.end;
+    } else {
+      // Start a new block
+      mergedBlocks.push(currentHunk);
+    }
+  }
+
+  return mergedBlocks;
+};
+
 const DiffView: React.FC<{
   oldText: string;
   newText: string;
   filePath: string;
-  onDiffBlocksCalculated?: (blocks: number[]) => void;
+  onDiffBlocksCalculated?: (blocks: DiffBlock[]) => void;
   diffViewRef?: React.RefObject<HTMLDivElement>;
 }> = ({ oldText, newText, filePath, onDiffBlocksCalculated, diffViewRef }) => {
   // Only normalize line endings for comparison
@@ -85,26 +145,9 @@ const DiffView: React.FC<{
 
   // Calculate diff blocks (consecutive sequences of +/- lines)
   useEffect(() => {
-    const diffBlocks: number[] = [];
-    let inDiffBlock = false;
-    let blockStartIndex = -1;
-
-    lines.forEach((line, index) => {
-      const isDiffLine = line.startsWith('+') || line.startsWith('-');
-
-      if (isDiffLine && !inDiffBlock) {
-        // Start of a new diff block
-        inDiffBlock = true;
-        blockStartIndex = index;
-        diffBlocks.push(index);
-      } else if (!isDiffLine && inDiffBlock) {
-        // End of diff block
-        inDiffBlock = false;
-      }
-    });
-
     if (onDiffBlocksCalculated) {
-      onDiffBlocksCalculated(diffBlocks);
+      const mergedBlocks = calculateMergedDiffBlocks(lines);
+      onDiffBlocksCalculated(mergedBlocks);
     }
   }, [lines, onDiffBlocksCalculated]);
 
@@ -144,7 +187,7 @@ interface FileOperationItemProps {
   onAccept: (idx: number) => void;
   onReject: (idx: number) => void;
   isActive?: boolean;
-  onDiffBlocksCalculated?: (blocks: number[]) => void;
+  onDiffBlocksCalculated?: (blocks: DiffBlock[]) => void;
   diffViewRef?: React.RefObject<HTMLDivElement>;
 }
 
@@ -327,7 +370,9 @@ const ApplyChangesPanel: React.FC = () => {
   const [currentIdx, setCurrentIdx] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
-  const [currentDiffBlocks, setCurrentDiffBlocks] = useState<number[]>([]);
+  const [currentDiffBlocks, setCurrentDiffBlocks] = useState<DiffBlock[]>([]);
+  const [isPrevDiffDisabled, setIsPrevDiffDisabled] = useState(true);
+  const [isNextDiffDisabled, setIsNextDiffDisabled] = useState(true);
   const diffViewRefs = useRef<React.RefObject<HTMLDivElement>[]>([]);
   const stickyHeaderRef = useRef<HTMLDivElement>(null);
   const isManualNavigationRef = useRef(false);
@@ -525,54 +570,46 @@ const ApplyChangesPanel: React.FC = () => {
 
     const diffViewRef = diffViewRefs.current[currentIdx];
     const diffView = diffViewRef?.current;
-    if (!diffView || currentDiffBlocks.length === 0) return;
+    if (!diffView || currentDiffBlocks.length === 0 || !containerRef.current) {
+      return;
+    }
 
-    // Get current scroll position within the diff view
-    const diffViewRect = diffView.getBoundingClientRect();
-    const containerRect = containerRef.current?.getBoundingClientRect();
-    if (!containerRect) return;
-
-    // Find visible line elements
+    const containerRect = containerRef.current.getBoundingClientRect();
     const lineElements = diffView.querySelectorAll('[data-line-index]');
-    let currentLineIndex = -1;
+    let topLineIndex = -1;
 
-    // Find the topmost visible line
+    // Find the topmost visible line (with a small offset to be less sensitive)
     for (let i = 0; i < lineElements.length; i++) {
       const lineRect = lineElements[i].getBoundingClientRect();
       if (lineRect.top >= containerRect.top) {
-        currentLineIndex = parseInt(
+        topLineIndex = parseInt(
           lineElements[i].getAttribute('data-line-index') || '-1'
         );
         break;
       }
     }
 
-    // Find previous diff block
-    let targetBlock = -1;
+    // Find the last diff block whose start is before the current top line
+    let targetBlock: DiffBlock | null = null;
     for (let i = currentDiffBlocks.length - 1; i >= 0; i--) {
-      if (currentDiffBlocks[i] < currentLineIndex) {
+      if (currentDiffBlocks[i].start < topLineIndex) {
         targetBlock = currentDiffBlocks[i];
         break;
       }
     }
 
-    // If no previous block, go to last block (wrap around)
-    if (targetBlock === -1 && currentDiffBlocks.length > 0) {
-      targetBlock = currentDiffBlocks[currentDiffBlocks.length - 1];
-    }
-
-    // Scroll to target block
-    if (targetBlock !== -1) {
+    // Scroll to the target block if found
+    if (targetBlock) {
       const targetElement = diffView.querySelector(
-        `[data-line-index="${targetBlock}"]`
+        `[data-line-index="${targetBlock.start}"]`
       );
-      if (targetElement && containerRef.current) {
+      if (targetElement) {
         const targetRect = targetElement.getBoundingClientRect();
         const scrollTop =
           containerRef.current.scrollTop +
           targetRect.top -
           containerRect.top -
-          50;
+          50; // 50px offset for better visibility
         containerRef.current.scrollTo({
           top: scrollTop,
           behavior: 'smooth',
@@ -586,54 +623,46 @@ const ApplyChangesPanel: React.FC = () => {
 
     const diffViewRef = diffViewRefs.current[currentIdx];
     const diffView = diffViewRef?.current;
-    if (!diffView || currentDiffBlocks.length === 0) return;
+    if (!diffView || currentDiffBlocks.length === 0 || !containerRef.current) {
+      return;
+    }
 
-    // Get current scroll position within the diff view
-    const diffViewRect = diffView.getBoundingClientRect();
-    const containerRect = containerRef.current?.getBoundingClientRect();
-    if (!containerRect) return;
-
-    // Find visible line elements
+    const containerRect = containerRef.current.getBoundingClientRect();
     const lineElements = diffView.querySelectorAll('[data-line-index]');
-    let currentLineIndex = -1;
+    let topLineIndex = -1;
 
     // Find the topmost visible line
     for (let i = 0; i < lineElements.length; i++) {
       const lineRect = lineElements[i].getBoundingClientRect();
       if (lineRect.top >= containerRect.top) {
-        currentLineIndex = parseInt(
+        topLineIndex = parseInt(
           lineElements[i].getAttribute('data-line-index') || '-1'
         );
         break;
       }
     }
 
-    // Find next diff block
-    let targetBlock = -1;
+    // Find the first diff block whose start is after the current top line
+    let targetBlock: DiffBlock | null = null;
     for (let i = 0; i < currentDiffBlocks.length; i++) {
-      if (currentDiffBlocks[i] > currentLineIndex) {
+      if (currentDiffBlocks[i].start > topLineIndex) {
         targetBlock = currentDiffBlocks[i];
         break;
       }
     }
 
-    // If no next block, go to first block (wrap around)
-    if (targetBlock === -1 && currentDiffBlocks.length > 0) {
-      targetBlock = currentDiffBlocks[0];
-    }
-
-    // Scroll to target block
-    if (targetBlock !== -1) {
+    // Scroll to the target block if found
+    if (targetBlock) {
       const targetElement = diffView.querySelector(
-        `[data-line-index="${targetBlock}"]`
+        `[data-line-index="${targetBlock.start}"]`
       );
-      if (targetElement && containerRef.current) {
+      if (targetElement) {
         const targetRect = targetElement.getBoundingClientRect();
         const scrollTop =
           containerRef.current.scrollTop +
           targetRect.top -
           containerRect.top -
-          50;
+          50; // 50px offset for better visibility
         containerRef.current.scrollTo({
           top: scrollTop,
           behavior: 'smooth',
@@ -667,6 +696,75 @@ const ApplyChangesPanel: React.FC = () => {
     // Reset diff blocks when switching files
     setCurrentDiffBlocks([]);
   }, [currentIdx]);
+
+  // Handle scroll to update diff navigation button states
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let debounceTimer: NodeJS.Timeout;
+
+    const updateButtonStates = () => {
+      const diffViewRef = diffViewRefs.current[currentIdx];
+      const diffView = diffViewRef?.current;
+
+      if (
+        !diffView ||
+        !containerRef.current ||
+        currentDiffBlocks.length === 0
+      ) {
+        setIsPrevDiffDisabled(true);
+        setIsNextDiffDisabled(true);
+        return;
+      }
+
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const lineElements = diffView.querySelectorAll('[data-line-index]');
+      let topLineIndex = -1;
+
+      for (let i = 0; i < lineElements.length; i++) {
+        const lineRect = lineElements[i].getBoundingClientRect();
+        if (lineRect.top >= containerRect.top) {
+          topLineIndex = parseInt(
+            lineElements[i].getAttribute('data-line-index') || '-1'
+          );
+          break;
+        }
+      }
+
+      if (topLineIndex === -1 && lineElements.length > 0) {
+        topLineIndex =
+          parseInt(
+            lineElements[lineElements.length - 1].getAttribute(
+              'data-line-index'
+            ) || '-1'
+          ) + 1;
+      }
+
+      const hasPrev = currentDiffBlocks.some(
+        (block) => block.start < topLineIndex
+      );
+      const hasNext = currentDiffBlocks.some(
+        (block) => block.start >= topLineIndex
+      );
+
+      setIsPrevDiffDisabled(!hasPrev);
+      setIsNextDiffDisabled(!hasNext);
+    };
+
+    const debouncedHandler = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(updateButtonStates, 100);
+    };
+
+    container.addEventListener('scroll', debouncedHandler, { passive: true });
+    updateButtonStates(); // Initial check
+
+    return () => {
+      clearTimeout(debounceTimer);
+      container.removeEventListener('scroll', debouncedHandler);
+    };
+  }, [currentIdx, currentDiffBlocks]);
 
   // Handle scroll to update current index based on the item at the top of the viewport
   useEffect(() => {
@@ -814,14 +912,14 @@ const ApplyChangesPanel: React.FC = () => {
           <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-2" />
           <button
             onClick={goPrevDiff}
-            disabled={currentDiffBlocks.length === 0}
+            disabled={isPrevDiffDisabled}
             className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700"
           >
             Prev Diff
           </button>
           <button
             onClick={goNextDiff}
-            disabled={currentDiffBlocks.length === 0}
+            disabled={isNextDiffDisabled}
             className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700"
           >
             Next Diff
