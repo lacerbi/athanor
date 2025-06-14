@@ -206,12 +206,24 @@ app.whenReady().then(async () => {
 
   // Listen for base directory changes to trigger project-wide analysis
   fileService.on('base-dir-changed', async () => {
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('graph-analysis:started');
-    }
-    await projectGraphService.analyzeProject();
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.webContents.send('graph-analysis:finished');
+    const loadedFromCache = await projectGraphService.loadGraphFromCache();
+    if (loadedFromCache) {
+      console.log('[ProjectGraphService] Successfully loaded graph from cache.');
+      // Still send the finished event so the UI can react
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('graph-analysis:finished');
+      }
+    } else {
+      console.log(
+        '[ProjectGraphService] Cache not found or invalid, starting full analysis.'
+      );
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('graph-analysis:started');
+      }
+      await projectGraphService.analyzeProject();
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('graph-analysis:finished');
+      }
     }
   });
 

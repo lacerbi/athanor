@@ -6,6 +6,16 @@ import { FileService } from './FileService';
 import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
 
+// Define a type for the cache data structure
+interface ProjectGraphCache {
+  dependencyGraph: [string, string[]][];
+  dependentsGraph: [string, string[]][];
+  fileMentions: [string, string[]][];
+  hubFiles: string[];
+}
+
+const CACHE_FILENAME = 'project_graph.json';
+
 // Define a threshold for what constitutes a "hub file"
 const HUB_FILE_IN_DEGREE_THRESHOLD = 5; // A file is a hub if 5+ other files import it
 const MAX_HUB_FILES = 10; // Or if it's in the top 10 most imported files, with at least 2 imports
@@ -17,6 +27,72 @@ export class ProjectGraphService {
   private hubFiles: string[] = [];
 
   constructor(private readonly fileService: FileService) {}
+
+  private getCachePath(): string {
+    const materialsDir = this.fileService.getMaterialsDir();
+    return this.fileService.join(materialsDir, CACHE_FILENAME);
+  }
+
+  async saveGraphToCache(): Promise<void> {
+    try {
+      const cachePath = this.getCachePath();
+      const cacheData: ProjectGraphCache = {
+        dependencyGraph: Array.from(this.dependencyGraph.entries()),
+        dependentsGraph: Array.from(this.dependentsGraph.entries()),
+        fileMentions: Array.from(this.fileMentions.entries()),
+        hubFiles: this.hubFiles,
+      };
+      const jsonContent = JSON.stringify(cacheData, null, 2);
+      await this.fileService.write(cachePath, jsonContent);
+      console.log(
+        `[ProjectGraphService] Successfully saved graph to cache at ${cachePath}`
+      );
+    } catch (error) {
+      console.error('[ProjectGraphService] Failed to save graph to cache:', error);
+    }
+  }
+
+  async loadGraphFromCache(): Promise<boolean> {
+    const cachePath = this.getCachePath();
+    if (!(await this.fileService.exists(cachePath))) {
+      return false;
+    }
+
+    try {
+      const jsonContent = (await this.fileService.read(cachePath, {
+        encoding: 'utf-8',
+      })) as string;
+      const cacheData: ProjectGraphCache = JSON.parse(jsonContent);
+
+      // Validate data before populating
+      if (
+        !cacheData ||
+        !Array.isArray(cacheData.dependencyGraph) ||
+        !Array.isArray(cacheData.dependentsGraph) ||
+        !Array.isArray(cacheData.fileMentions) ||
+        !Array.isArray(cacheData.hubFiles)
+      ) {
+        throw new Error('Invalid cache data format');
+      }
+
+      this.dependencyGraph = new Map(cacheData.dependencyGraph);
+      this.dependentsGraph = new Map(cacheData.dependentsGraph);
+      this.fileMentions = new Map(cacheData.fileMentions);
+      this.hubFiles = cacheData.hubFiles;
+
+      console.log(
+        `[ProjectGraphService] Successfully loaded graph from cache at ${cachePath}`
+      );
+      return true;
+    } catch (error) {
+      console.error('[ProjectGraphService] Failed to load graph from cache:', error);
+      // Clean up potentially corrupt cache file
+      await this.fileService
+        .remove(cachePath)
+        .catch((err) => console.error(`Failed to remove corrupt cache file: ${err}`));
+      return false;
+    }
+  }
 
   /**
    * Analyzes all files in the project to build dependency and mention graphs.
@@ -33,8 +109,8 @@ export class ProjectGraphService {
 
     const allFiles = await this.fileService.getAllFilePaths();
     if (allFiles.length === 0) {
-        console.log('[ProjectGraphService] No files to analyze.');
-        return;
+      console.log('[ProjectGraphService] No files to analyze.');
+      return;
     }
 
     const fileBasenames = new Map<string, string>(); // Map basename to full path
@@ -82,7 +158,12 @@ export class ProjectGraphService {
     // Second pass: build dependents graph and identify hub files
     await this.buildDependentsGraphAndIdentifyHubs(allFiles);
 
-    console.log(`[ProjectGraphService] Analysis complete. Found ${this.hubFiles.length} hub files.`);
+    // Save the results to cache
+    await this.saveGraphToCache();
+
+    console.log(
+      `[ProjectGraphService] Analysis complete. Found ${this.hubFiles.length} hub files.`
+    );
   }
 
   /**

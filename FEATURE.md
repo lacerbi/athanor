@@ -189,7 +189,7 @@ By following this specification, a developer can build a sophisticated, powerful
 
 To manage the complexity of the **Dynamic & Intelligent Context Builder**, the feature's development is divided into eight distinct, incremental stages. This approach ensures continuous integration and allows for testing and refinement throughout the development cycle.
 
-**Current Status (June 2025):** Implementation is complete up to and including Stage 4. The application now features a live, interactive context builder with a comprehensive scoring engine. The next phases will focus on implementing the granular UI, deeper project analysis, and performance optimization.
+**Current Status (June 2025):** Implementation is complete up to and including Stage 6. The application now features a live, interactive context builder with a comprehensive scoring engine, granular UI relevance visualization, and advanced graph-based project analysis. The next phases will focus on performance optimization and integrating live file activity.
 
 #### **Stage 1: Foundational Backend Services (Completed)**
 
@@ -244,12 +244,13 @@ To manage the complexity of the **Dynamic & Intelligent Context Builder**, the f
 
 #### **Stage 7: Performance & Caching**
 
-- **Goal:** Ensure the advanced analysis from Stage 6 is performant and does not slow down application startup or use.
+- **Goal:** Ensure the advanced graph analysis is performant by implementing a hybrid caching strategy that minimizes disruption while keeping data fresh.
 - **Implementation:**
-  - Add caching logic to `ProjectGraphService.ts`.
-  - The computed graph and mention map will be serialized to a JSON file in the `.ath_materials` directory.
-  - On subsequent runs, the service will load from the cache, only rebuilding it when source files have changed (detected via Chokidar).
-- **Outcome:** The feature becomes fast and scalable, providing advanced analysis without a recurring performance penalty, making it suitable for large, real-world projects.
+  - **Hybrid Rebuild Strategy:** A two-pronged approach is implemented:
+    1.  **Intelligent Background Rebuild:** Analysis is automatically triggered off the main thread (using a Node.js `worker_thread`) after a period of file system quiescence (3s) and user inactivity (5s idle or window blur). This prevents UI stutter and runs when the user is not actively engaged.
+    2.  **Manual On-Demand Rebuild:** A "Refresh Project Analysis" button is added to the UI, allowing users to force a rebuild at any time.
+  - **Caching in `ProjectGraphService.ts`:** The service now includes `saveToCache()` and `loadFromCache()` methods to serialize the graph to `.ath_materials/project_graph.json`. On startup, the cache is loaded, falling back to a full analysis only if the cache is missing or stale.
+- **Outcome:** The feature is now fast and scalable, providing advanced analysis without a recurring performance penalty. The intelligent refresh logic ensures the data is up-to-date without interrupting the user's workflow, making it suitable for large, real-world projects.
 
 #### **Stage 8: Live Activity & User Configuration**
 
