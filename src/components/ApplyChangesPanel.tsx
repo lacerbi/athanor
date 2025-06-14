@@ -642,14 +642,20 @@ const ApplyChangesPanel: React.FC = () => {
       }
     }
 
-    // Find the first diff block whose start is after the current top line
-    let targetBlock: DiffBlock | null = null;
-    for (let i = 0; i < currentDiffBlocks.length; i++) {
-      if (currentDiffBlocks[i].start > topLineIndex) {
-        targetBlock = currentDiffBlocks[i];
-        break;
-      }
+    // If we are inside a diff block, the reference for the next search
+    // should be the *end* of that block. Otherwise, it's the top visible line.
+    let searchRefLine = topLineIndex;
+    const currentBlock = currentDiffBlocks.find(
+      (b) => topLineIndex >= b.start && topLineIndex <= b.end
+    );
+    if (currentBlock) {
+      searchRefLine = currentBlock.end;
     }
+
+    // Find the first diff block that starts AFTER the reference line
+    const targetBlock = currentDiffBlocks.find(
+      (block) => block.start > searchRefLine
+    );
 
     // Scroll to the target block if found
     if (targetBlock) {
@@ -744,8 +750,17 @@ const ApplyChangesPanel: React.FC = () => {
       const hasPrev = currentDiffBlocks.some(
         (block) => block.start < topLineIndex
       );
+
+      // For 'next', the logic must mirror goNextDiff to avoid getting stuck
+      let searchRefLine = topLineIndex;
+      const currentBlock = currentDiffBlocks.find(
+        (b) => topLineIndex >= b.start && topLineIndex <= b.end
+      );
+      if (currentBlock) {
+        searchRefLine = currentBlock.end;
+      }
       const hasNext = currentDiffBlocks.some(
-        (block) => block.start >= topLineIndex
+        (block) => block.start > searchRefLine
       );
 
       setIsPrevDiffDisabled(!hasPrev);
