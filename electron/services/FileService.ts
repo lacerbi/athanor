@@ -406,7 +406,8 @@ export class FileService extends EventEmitter implements IFileService {
    * @returns A promise that resolves to an array of project-relative file paths.
    */
   async getAllFilePaths(): Promise<string[]> {
-    return this._getAllFilePathsRecursive(this.getBaseDir());
+    const allFiles = await this._getAllFilePathsRecursive(this.getBaseDir());
+    return allFiles.sort((a, b) => a.localeCompare(b));
   }
 
   /**
@@ -439,7 +440,7 @@ export class FileService extends EventEmitter implements IFileService {
     } catch (readError) {
       console.warn(`Could not read directory ${absoluteDir}:`, readError);
     }
-    return allFiles.sort((a, b) => a.localeCompare(b));
+    return allFiles;
   }
 
   // --- Watcher Management ---
