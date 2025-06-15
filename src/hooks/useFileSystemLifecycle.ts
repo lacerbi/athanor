@@ -8,6 +8,7 @@ import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useContextStore } from '../stores/contextStore';
 import { loadPrompts, loadTasks } from '../services/promptService';
 import { readAthanorConfig } from '../utils/configUtils';
 import { SETTINGS } from '../utils/constants';
@@ -61,6 +62,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const { loadProjectSettings, loadApplicationSettings, projectSettings } =
     useSettingsStore();
   const { setIsGraphAnalysisInProgress } = useFileSystemStore();
+  const { fetchContext } = useContextStore();
 
   // Track previous project settings to detect changes
   const prevProjectSettingsRef = useRef<typeof projectSettings>(undefined);
@@ -392,6 +394,13 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       () => {
         addLog('Project graph analysis finished.');
         setIsGraphAnalysisInProgress(false);
+        
+        // Trigger initial context calculation to populate neighboring files
+        console.log('Graph analysis finished, triggering initial context calculation.');
+        fetchContext([], '').catch(err => {
+          console.error('Initial context calculation failed:', err);
+          addLog('Could not retrieve initial neighboring files.');
+        });
       }
     );
 

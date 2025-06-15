@@ -1192,6 +1192,7 @@
         "../stores/workbenchStore",
         "../stores/logStore",
         "../stores/settingsStore",
+        "../stores/contextStore",
         "../services/promptService",
         "../utils/configUtils",
         "../utils/constants",
@@ -2468,7 +2469,8 @@
         "src/components/ActionPanel.tsx",
         "src/components/AthanorApp.tsx",
         "src/components/fileExplorer/FileExplorerItem.tsx",
-        "src/components/MainLayout.tsx"
+        "src/components/MainLayout.tsx",
+        "src/hooks/useFileSystemLifecycle.ts"
       ]
     ],
     [
@@ -2568,7 +2570,29 @@
     ],
     [
       "src/types/global.d.ts",
-      []
+      [
+        "electron/handlers/settingsHandlers.ts",
+        "electron/services/SettingsService.ts",
+        "src/actions/ApplyAiOutputAction.test.ts",
+        "src/actions/ApplyAiOutputAction.ts",
+        "src/commands/applyChangesCommand.ts",
+        "src/commands/parser/applyChangesParser.ts",
+        "src/commands/types.ts",
+        "src/components/action-panel/SendViaApiControls.tsx",
+        "src/components/ActionPanel.tsx",
+        "src/components/ApplicationSettingsPane.tsx",
+        "src/components/FileViewerPanel.tsx",
+        "src/components/ProjectSettingsPane.tsx",
+        "src/hooks/useFileSystemLifecycle.ts",
+        "src/stores/applyChangesStore.ts",
+        "src/stores/fileSystemStore.ts",
+        "src/stores/settingsStore.ts",
+        "src/stores/workbenchStore.ts",
+        "src/utils/buildPrompt.ts",
+        "src/utils/codebaseDocumentation.ts",
+        "src/utils/configUtils.ts",
+        "src/utils/fileOperations.ts"
+      ]
     ],
     [
       "src/types/promptTypes.ts",
@@ -4121,6 +4145,7 @@
         "src/services/fileIgnoreService.ts",
         "src/services/fileSystemService.ts",
         "src/services/promptService.ts",
+        "src/stores/contextStore.ts",
         "src/stores/fileSystemStore.ts",
         "src/stores/logStore.ts",
         "src/stores/settingsStore.ts",
@@ -4466,6 +4491,7 @@
   ],
   "hubFiles": [
     "src/utils/constants.ts",
+    "src/types/global.d.ts",
     "src/utils/fileTree.ts",
     "src/stores/logStore.ts",
     "src/stores/workbenchStore.ts",
@@ -4479,8 +4505,8 @@
     "electron/modules/llm/main/clients/types.ts",
     "src/actions/ManualCopyAction.ts",
     "src/stores/applyChangesStore.ts",
-    "electron/modules/secure-api-storage/common/providers/ProviderInterface.ts",
     "src/stores/contextStore.ts",
+    "electron/modules/secure-api-storage/common/providers/ProviderInterface.ts",
     "src/types/promptTypes.ts",
     "electron/services/SettingsService.ts",
     "src/utils/fileSelection.ts"
