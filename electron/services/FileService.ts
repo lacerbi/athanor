@@ -439,7 +439,7 @@ export class FileService extends EventEmitter implements IFileService {
     } catch (readError) {
       console.warn(`Could not read directory ${absoluteDir}:`, readError);
     }
-    return allFiles;
+    return allFiles.sort((a, b) => a.localeCompare(b));
   }
 
   // --- Watcher Management ---
