@@ -123,7 +123,6 @@ class IgnoreRulesManager {
   // Update base directory and reload rules
   async setBaseDir(newDir: string) {
     this.baseDir = PathUtils.normalizeToUnix(newDir);
-    this.clearRules();
     await this.loadIgnoreRules();
   }
 
