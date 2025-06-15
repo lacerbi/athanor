@@ -13,12 +13,16 @@ interface ContextState {
   promptNeighborPaths: Set<string>;
   isLoading: boolean;
   isAnalyzingGraph: boolean;
-  fetchContext: (selectedPaths: string[], taskDescription?: string) => Promise<void>;
+  lastRequestId: number;
+  fetchContext: (
+    selectedPaths: string[],
+    taskDescription?: string
+  ) => Promise<void>;
   clearContext: () => void;
   setIsAnalyzingGraph: (isAnalyzing: boolean) => void;
 }
 
-export const useContextStore = create<ContextState>((set) => ({
+export const useContextStore = create<ContextState>((set, get) => ({
   selectedFiles: new Set(),
   userSelectedPaths: [],
   heuristicSeedPaths: [],
@@ -27,29 +31,43 @@ export const useContextStore = create<ContextState>((set) => ({
   promptNeighborPaths: new Set(),
   isLoading: false,
   isAnalyzingGraph: false,
+  lastRequestId: 0,
 
   fetchContext: async (selectedPaths: string[], taskDescription?: string) => {
-    set({ isLoading: true });
+    const currentRequestId = get().lastRequestId + 1;
+    set({ isLoading: true, lastRequestId: currentRequestId });
+
     try {
       const result = await window.electronBridge.context.recalculate({
         selectedFilePaths: selectedPaths,
         taskDescription,
       });
-      const neighborMap = new Map(result.allNeighbors.map(n => [n.path, n.score]));
-      const maxScore = Math.max(0, ...neighborMap.values());
+      
+      // Check if this is still the most recent request
+      if (get().lastRequestId === currentRequestId) {
+        const neighborMap = new Map(
+          result.allNeighbors.map((n) => [n.path, n.score])
+        );
+        const maxScore = Math.max(0, ...neighborMap.values());
 
-      set({
-        selectedFiles: new Set(result.userSelected),
-        userSelectedPaths: result.userSelected,
-        heuristicSeedPaths: result.heuristicSeedFiles,
-        neighboringFiles: neighborMap,
-        maxNeighborScore: maxScore,
-        promptNeighborPaths: new Set(result.promptNeighbors),
-        isLoading: false,
-      });
+        set({
+          selectedFiles: new Set(result.userSelected),
+          userSelectedPaths: result.userSelected,
+          heuristicSeedPaths: result.heuristicSeedFiles,
+          neighboringFiles: neighborMap,
+          maxNeighborScore: maxScore,
+          promptNeighborPaths: new Set(result.promptNeighbors),
+          isLoading: false,
+        });
+      }
+      // If not the latest, do nothing.
+
     } catch (error) {
       console.error('Failed to fetch context:', error);
-      set({ isLoading: false });
+      // Also check here so a stale error doesn't affect a new request's loading state.
+      if (get().lastRequestId === currentRequestId) {
+        set({ isLoading: false });
+      }
     }
   },
 
