@@ -177,11 +177,17 @@ export class RelevanceEngineService {
       }
 
       // Project Hub Analysis
-      const hubFiles = new Set(this.projectGraphService.getHubFiles());
-      for (const file of candidateFiles) {
-        if (hubFiles.has(file)) {
-          addScore(file, CONTEXT_BUILDER.SCORE_PROJECT_HUB);
-        }
+      const hubFiles = this.projectGraphService.getHubFiles();
+      if (hubFiles.length > 0) {
+        hubFiles.forEach((hubFile, rank) => {
+          if (candidateSet.has(hubFile)) {
+            const score = Math.max(
+              CONTEXT_BUILDER.SCORE_PROJECT_HUB_MAX - rank,
+              CONTEXT_BUILDER.SCORE_PROJECT_HUB_MIN
+            );
+            addScore(hubFile, score);
+          }
+        });
       }
 
       const sharedCommitCounts = new Map<string, number>();

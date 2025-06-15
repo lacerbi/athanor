@@ -227,24 +227,31 @@ export class ProjectGraphService {
     // Identify hub files based on in-degree
     const sortedByInDegree = [...inDegrees.entries()].sort((a, b) => b[1] - a[1]);
     
-    const potentialHubs = new Set<string>();
+    const hubFiles: string[] = [];
+    const addedHubs = new Set<string>();
 
     // Add files that meet the absolute threshold
     sortedByInDegree.forEach(([path, count]) => {
         if (count >= HUB_FILE_IN_DEGREE_THRESHOLD) {
-            potentialHubs.add(path);
+            if (!addedHubs.has(path)) {
+                hubFiles.push(path);
+                addedHubs.add(path);
+            }
         }
     });
 
     // Add top N files if we still have room, ensuring they have at least 2 dependents
-    for (let i = 0; i < sortedByInDegree.length && potentialHubs.size < MAX_HUB_FILES; i++) {
-        const [path, count] = sortedByInDegree[i];
-        if (count >= 2) {
-            potentialHubs.add(path);
+    for (const [path, count] of sortedByInDegree) {
+        if (hubFiles.length >= MAX_HUB_FILES) {
+            break;
+        }
+        if (!addedHubs.has(path) && count >= 2) {
+            hubFiles.push(path);
+            addedHubs.add(path);
         }
     }
 
-    this.hubFiles = Array.from(potentialHubs);
+    this.hubFiles = hubFiles;
   }
 
   /**
