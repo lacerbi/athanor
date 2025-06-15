@@ -60,9 +60,10 @@ export class ProjectGraphService {
   async saveGraphToCache(): Promise<void> {
     try {
       const cachePath = this.getCachePath();
+      const relativeCachePath = this.fileService.relativize(cachePath);
       const cacheData = this.getGraphData();
       const jsonContent = JSON.stringify(cacheData, null, 2);
-      await this.fileService.write(cachePath, jsonContent);
+      await this.fileService.write(relativeCachePath, jsonContent);
       console.log(
         `[ProjectGraphService] Successfully saved graph to cache at ${cachePath}`
       );
@@ -73,12 +74,13 @@ export class ProjectGraphService {
 
   async loadGraphFromCache(): Promise<boolean> {
     const cachePath = this.getCachePath();
-    if (!(await this.fileService.exists(cachePath))) {
+    const relativeCachePath = this.fileService.relativize(cachePath);
+    if (!(await this.fileService.exists(relativeCachePath))) {
       return false;
     }
 
     try {
-      const jsonContent = (await this.fileService.read(cachePath, {
+      const jsonContent = (await this.fileService.read(relativeCachePath, {
         encoding: 'utf-8',
       })) as string;
       const cacheData: ProjectGraphCache = JSON.parse(jsonContent);
@@ -104,7 +106,7 @@ export class ProjectGraphService {
       console.error('[ProjectGraphService] Failed to load graph from cache:', error);
       // Clean up potentially corrupt cache file
       await this.fileService
-        .remove(cachePath)
+        .remove(relativeCachePath)
         .catch((err) => console.error(`Failed to remove corrupt cache file: ${err}`));
       return false;
     }
