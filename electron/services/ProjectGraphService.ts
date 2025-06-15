@@ -264,7 +264,18 @@ export class ProjectGraphService {
     if (allFiles.has(resolved)) return resolved;
     
     // Check with common extensions
-    const extensions = ['.ts', '.tsx', '.js', '.jsx', '.json', '.css', '.scss', '.py', '.java', '.go'];
+    const extensions = [
+      // JS/TS Ecosystem
+      '.ts', '.tsx', '.d.ts',
+      '.js', '.jsx', '.mjs', '.cjs',
+      '.json', '.node',
+      // Component Frameworks
+      '.vue', '.svelte',
+      // Styling
+      '.css', '.scss', '.sass', '.less', '.styl',
+      // Other common languages from original list
+      '.py', '.java', '.go'
+    ];
     for (const ext of extensions) {
         const pathWithExt = `${resolved}${ext}`;
         if (allFiles.has(pathWithExt)) return pathWithExt;
