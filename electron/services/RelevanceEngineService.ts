@@ -118,50 +118,72 @@ export class RelevanceEngineService {
       // Task Analysis with Hierarchical Scoring
       if (taskDescription) {
         const { pathMentions, keywords } = analyzeTaskDescription(taskDescription);
-        const scoredByPath = new Set<string>();
+        const pathScores = new Map<string, number>();
 
-        // High-Priority: Path-based scoring
-        for (const mentionedPath of pathMentions) {
-          // Normalize the mentioned path: lowercase, Unix separators, remove leading ./ and trailing /
-          let normalizedMention = PathUtils.normalizeToUnix(mentionedPath.toLowerCase());
-          if (normalizedMention.startsWith('./')) {
-            normalizedMention = normalizedMention.slice(2);
-          }
-          normalizedMention = PathUtils.removeTrailingSlash(normalizedMention);
+        // High-Priority: Path-based scoring.
+        // Iterate through each candidate file and find its best score across all path mentions.
+        // This ensures the highest-value match (e.g., exact match) always wins.
+        for (const candidateFile of candidateFiles) {
+          let maxScoreForFile = 0;
+          const normalizedCandidate = candidateFile.toLowerCase();
+          const candidateBasename = PathUtils.basename(normalizedCandidate);
 
-          for (const candidateFile of candidateFiles) {
-            if (scoredByPath.has(candidateFile)) continue;
-
-            const normalizedCandidate = candidateFile.toLowerCase();
+          for (const mentionedPath of pathMentions) {
+            // Normalize the mentioned path: lowercase, Unix separators, remove leading ./ and trailing /
+            let normalizedMention = PathUtils.normalizeToUnix(
+              mentionedPath.toLowerCase()
+            );
+            if (normalizedMention.startsWith('./')) {
+              normalizedMention = normalizedMention.slice(2);
+            }
+            normalizedMention = PathUtils.removeTrailingSlash(normalizedMention);
 
             // Exact Match - highest priority
             if (normalizedCandidate === normalizedMention) {
-              addScore(candidateFile, CONTEXT_BUILDER.SCORE_TASK_PATH_EXACT_MATCH);
-              scoredByPath.add(candidateFile);
-              continue;
+              maxScoreForFile = Math.max(
+                maxScoreForFile,
+                CONTEXT_BUILDER.SCORE_TASK_PATH_EXACT_MATCH
+              );
+              // Optimization: We've found the best possible score for this file,
+              // so we can stop checking other mentions for it.
+              break;
             }
 
-            // Folder Match - matches files within the mentioned folder
+            // Folder Match
             if (normalizedCandidate.startsWith(normalizedMention + '/')) {
-              addScore(candidateFile, CONTEXT_BUILDER.SCORE_TASK_PATH_FOLDER_MATCH);
-              scoredByPath.add(candidateFile);
-              continue;
+              maxScoreForFile = Math.max(
+                maxScoreForFile,
+                CONTEXT_BUILDER.SCORE_TASK_PATH_FOLDER_MATCH
+              );
             }
 
             // Basename or Partial Match
-            const candidateBasename = PathUtils.basename(normalizedCandidate);
-            if (candidateBasename === normalizedMention || normalizedCandidate.endsWith(normalizedMention)) {
-              addScore(candidateFile, CONTEXT_BUILDER.SCORE_TASK_PATH_BASENAME_OR_PARTIAL_MATCH);
-              scoredByPath.add(candidateFile);
-              continue;
+            if (
+              candidateBasename === normalizedMention ||
+              normalizedCandidate.endsWith(normalizedMention)
+            ) {
+              maxScoreForFile = Math.max(
+                maxScoreForFile,
+                CONTEXT_BUILDER.SCORE_TASK_PATH_BASENAME_OR_PARTIAL_MATCH
+              );
             }
           }
+
+          if (maxScoreForFile > 0) {
+            pathScores.set(candidateFile, maxScoreForFile);
+          }
+        }
+
+        // Apply the calculated best scores
+        for (const [file, score] of pathScores.entries()) {
+          addScore(file, score);
         }
 
         // Lower-Priority: General keyword scoring (excluding already scored files)
         if (keywords.length > 0) {
           for (const candidateFile of candidateFiles) {
-            if (scoredByPath.has(candidateFile)) continue;
+            // This check ensures we don't add keyword scores to files that already got a path score
+            if (pathScores.has(candidateFile)) continue;
 
             const lowerCasePath = candidateFile.toLowerCase();
             const matches = keywords.filter((k) => lowerCasePath.includes(k));
