@@ -53,7 +53,7 @@ export function analyzeTaskDescription(text: string): AnalyzedTaskDescription {
     
     // Check if token looks like a path
     const isPath = token.includes('/') || token.includes('\\') || // Has path separators
-                   /\.[a-z0-9]+$/i.test(token) || // Files with extensions (component.tsx, config.json)
+                   /\.[a-zA-Z][a-zA-Z0-9-]{0,7}$/i.test(token) || // Files with extensions (component.tsx, config.json)
                    /^\.[a-z][a-z0-9_-]+$/i.test(token); // Dot files like .gitignore, .prettierrc
     
     if (isPath) {

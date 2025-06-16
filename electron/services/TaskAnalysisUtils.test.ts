@@ -117,6 +117,18 @@ describe('TaskAnalysisUtils', () => {
       expect(Array.from(result.pathMentions)).toEqual(['.gitignore']);
       expect(result.keywords).toEqual(['dotfile', 'fine']);
     });
+
+    it('should not misidentify version numbers as path mentions', () => {
+      const result = analyzeTaskDescription('The library is at version v1.2.3, check component.ts');
+      expect(Array.from(result.pathMentions)).toEqual(['component.ts']);
+      expect(result.keywords).toEqual(['v1.2.3']); // 'library' and 'version' are stopwords
+    });
+
+    it('should not misidentify IP addresses as path mentions', () => {
+      const result = analyzeTaskDescription('Connect to 127.0.0.1 and update settings.json');
+      expect(Array.from(result.pathMentions)).toEqual(['settings.json']);
+      expect(result.keywords).toEqual(['127.0.0.1']); // 'connect' is a stopword
+    });
   });
 
   describe('extractKeywords (deprecated)', () => {
