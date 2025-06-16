@@ -117,7 +117,8 @@ export class RelevanceEngineService {
 
       // Task Analysis with Hierarchical Scoring
       if (taskDescription) {
-        const { pathMentions, keywords } = analyzeTaskDescription(taskDescription);
+        const { pathMentions, keywords } =
+          analyzeTaskDescription(taskDescription);
         const pathScores = new Map<string, number>();
 
         // High-Priority: Path-based scoring.
@@ -136,7 +137,8 @@ export class RelevanceEngineService {
             if (normalizedMention.startsWith('./')) {
               normalizedMention = normalizedMention.slice(2);
             }
-            normalizedMention = PathUtils.removeTrailingSlash(normalizedMention);
+            normalizedMention =
+              PathUtils.removeTrailingSlash(normalizedMention);
 
             // Exact Match - highest priority
             if (normalizedCandidate === normalizedMention) {
@@ -159,8 +161,9 @@ export class RelevanceEngineService {
 
             // Basename or Partial Match
             if (
-              candidateBasename === normalizedMention ||
-              normalizedCandidate.endsWith(normalizedMention)
+              normalizedMention &&
+              (candidateBasename === normalizedMention ||
+                normalizedCandidate.endsWith(normalizedMention))
             ) {
               maxScoreForFile = Math.max(
                 maxScoreForFile,
@@ -317,12 +320,15 @@ export class RelevanceEngineService {
     };
 
     // --- PHASE 1: SEED BASKET CREATION ---
-    let seedBasket: { path: string; isOriginallySelected: boolean; score: number }[] =
-      originallySelectedFiles.map((p) => ({
-        path: p,
-        isOriginallySelected: true,
-        score: Infinity,
-      }));
+    let seedBasket: {
+      path: string;
+      isOriginallySelected: boolean;
+      score: number;
+    }[] = originallySelectedFiles.map((p) => ({
+      path: p,
+      isOriginallySelected: true,
+      score: Infinity,
+    }));
 
     if (seedBasket.length <= CONTEXT_BUILDER.SEED_TRIGGER_THRESHOLD) {
       const preliminaryCandidates = allProjectFiles.filter(
@@ -332,8 +338,9 @@ export class RelevanceEngineService {
         seedBasket,
         preliminaryCandidates
       );
-      const topHeuristicFiles = Array.from(preliminaryScores.entries())
-        .sort(([, a], [, b]) => b - a);
+      const topHeuristicFiles = Array.from(preliminaryScores.entries()).sort(
+        ([, a], [, b]) => b - a
+      );
 
       const filesToAdd = CONTEXT_BUILDER.SEED_BASKET_SIZE - seedBasket.length;
       for (let i = 0; i < Math.min(topHeuristicFiles.length, filesToAdd); i++) {

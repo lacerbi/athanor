@@ -898,7 +898,8 @@
       "src/components/action-panel/SelectedFilesDisplay.tsx",
       [
         "react",
-        "lucide-react"
+        "lucide-react",
+        "../../stores/contextStore"
       ]
     ],
     [
@@ -1197,7 +1198,7 @@
         "../utils/configUtils",
         "../utils/constants",
         "../types/global",
-        ");\n  const [isRefreshing, setIsRefreshing] = useState(false);\n  const [appVersion, setAppVersion] = useState<string>("
+        ");\r\n  const [isRefreshing, setIsRefreshing] = useState(false);\r\n  const [appVersion, setAppVersion] = useState<string>("
       ]
     ],
     [
@@ -2466,6 +2467,7 @@
       [
         "src/actions/buildTaskAction.test.ts",
         "src/actions/buildTaskAction.ts",
+        "src/components/action-panel/SelectedFilesDisplay.tsx",
         "src/components/ActionPanel.tsx",
         "src/components/AthanorApp.tsx",
         "src/components/fileExplorer/FileExplorerItem.tsx",
@@ -3902,7 +3904,9 @@
       [
         "src/commands/parser/index.ts",
         "src/index.css",
-        "src/index.tsx"
+        "src/index.tsx",
+        "src/stores/contextStore.ts",
+        "src/utils/fileTree.ts"
       ]
     ],
     [
@@ -4501,11 +4505,11 @@
     "src/stores/settingsStore.ts",
     "electron/modules/secure-api-storage/common/types.ts",
     "electron/services/PathUtils.ts",
+    "src/stores/contextStore.ts",
     "src/types/taskTypes.ts",
     "electron/modules/llm/main/clients/types.ts",
     "src/actions/ManualCopyAction.ts",
     "src/stores/applyChangesStore.ts",
-    "src/stores/contextStore.ts",
     "electron/modules/secure-api-storage/common/providers/ProviderInterface.ts",
     "src/types/promptTypes.ts",
     "electron/services/SettingsService.ts",

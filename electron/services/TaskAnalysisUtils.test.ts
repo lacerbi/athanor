@@ -105,6 +105,18 @@ describe('TaskAnalysisUtils', () => {
       expect(Array.from(result.pathMentions)).toEqual(['src/utils/helper.ts']);
       expect(result.keywords).toEqual([]);
     });
+
+    it('should filter out meaningless path-like tokens', () => {
+      const result = analyzeTaskDescription('Fix issue in . or maybe ./ or just /');
+      expect(Array.from(result.pathMentions)).toEqual([]);
+      expect(result.keywords).toEqual(['maybe']); // 'issue' is a stopword, 'maybe' is not
+    });
+
+    it('should not confuse meaningless tokens with dotfiles', () => {
+      const result = analyzeTaskDescription('A dotfile like .gitignore is fine, but not . or ./');
+      expect(Array.from(result.pathMentions)).toEqual(['.gitignore']);
+      expect(result.keywords).toEqual(['dotfile', 'fine']);
+    });
   });
 
   describe('extractKeywords (deprecated)', () => {

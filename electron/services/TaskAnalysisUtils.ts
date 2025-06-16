@@ -40,6 +40,12 @@ export function analyzeTaskDescription(text: string): AnalyzedTaskDescription {
 
   // Separate tokens into path mentions and potential keywords
   for (const token of tokens) {
+    // Filter out meaningless path-like tokens (like '.', './', '\', etc.)
+    const meaninglessPathPatterns = /^[./\\]+$/;
+    if (meaninglessPathPatterns.test(token)) {
+      continue; // Skip these tokens entirely
+    }
+    
     // Filter out pure file extensions (like .js, .py, .json, .md)
     if (/^\.[a-z0-9]{1,5}$/i.test(token)) {
       continue; // Skip pure extensions
@@ -60,7 +66,11 @@ export function analyzeTaskDescription(text: string): AnalyzedTaskDescription {
   // Filter keywords using the existing logic
   const keywords = filterKeywords(potentialKeywords);
 
-  return { pathMentions, keywords };
+  // Final safeguard: remove any empty strings that might have slipped through
+  const cleanedPathMentions = new Set([...pathMentions].filter(path => path.trim().length > 0));
+  const cleanedKeywords = keywords.filter(keyword => keyword.trim().length > 0);
+
+  return { pathMentions: cleanedPathMentions, keywords: cleanedKeywords };
 }
 
 /**
