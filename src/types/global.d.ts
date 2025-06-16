@@ -248,7 +248,7 @@ declare global {
           taskDescription?: string;
         }) => Promise<{
           userSelected: string[];
-          heuristicSeedFiles: string[];
+          heuristicSeedFiles: Array<{ path: string; score: number }>;
           allNeighbors: Array<{ path: string; score: number }>;
           promptNeighbors: string[];
         }>;

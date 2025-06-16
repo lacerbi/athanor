@@ -45,7 +45,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   const { applicationSettings } = useSettingsStore(); // Get application settings
   const {
     selectedFiles: contextSelected,
-    heuristicSeedPaths,
+    heuristicSeedFiles,
     neighboringFiles,
     maxNeighborScore,
   } = useContextStore();
@@ -58,7 +58,7 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
 
   // Determine the context tier for visual styling
   const isContextSelected = contextSelected.has(item.id);
-  const isHeuristicSeed = heuristicSeedPaths.includes(item.id);
+  const isHeuristicSeed = heuristicSeedFiles.some(seed => seed.path === item.id);
   const relevanceScore = neighboringFiles.get(item.id);
   const isNeighboring = relevanceScore !== undefined;
 

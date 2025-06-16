@@ -12,7 +12,7 @@ import { analyzeTaskDescription } from './TaskAnalysisUtils';
 
 interface ContextResult {
   userSelected: string[];
-  heuristicSeedFiles: string[];
+  heuristicSeedFiles: Array<{ path: string; score: number }>;
   allNeighbors: Array<{ path: string; score: number }>;
   promptNeighbors: string[];
 }
@@ -295,10 +295,11 @@ export class RelevanceEngineService {
     };
 
     // --- PHASE 1: SEED BASKET CREATION ---
-    let seedBasket: { path: string; isOriginallySelected: boolean }[] =
+    let seedBasket: { path: string; isOriginallySelected: boolean; score: number }[] =
       originallySelectedFiles.map((p) => ({
         path: p,
         isOriginallySelected: true,
+        score: Infinity,
       }));
 
     if (seedBasket.length <= CONTEXT_BUILDER.SEED_TRIGGER_THRESHOLD) {
@@ -310,15 +311,16 @@ export class RelevanceEngineService {
         preliminaryCandidates
       );
       const topHeuristicFiles = Array.from(preliminaryScores.entries())
-        .sort(([, a], [, b]) => b - a)
-        .map(([path]) => path);
+        .sort(([, a], [, b]) => b - a);
 
       const filesToAdd = CONTEXT_BUILDER.SEED_BASKET_SIZE - seedBasket.length;
       for (let i = 0; i < Math.min(topHeuristicFiles.length, filesToAdd); i++) {
-        if (!originalSelectionSet.has(topHeuristicFiles[i])) {
+        const [path, score] = topHeuristicFiles[i];
+        if (!originalSelectionSet.has(path)) {
           seedBasket.push({
-            path: topHeuristicFiles[i],
+            path: path,
             isOriginallySelected: false,
+            score: score,
           });
         }
       }
@@ -369,7 +371,7 @@ export class RelevanceEngineService {
     // Separate heuristically added files from user selections
     const heuristicSeedFiles = seedBasket
       .filter((seed) => !seed.isOriginallySelected)
-      .map((seed) => seed.path);
+      .map((seed) => ({ path: seed.path, score: seed.score }));
 
     return {
       userSelected: originallySelectedFiles,

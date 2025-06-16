@@ -75,6 +75,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     removeFileFromSelection,
     clearFileSelection,
     reorderFileSelection,
+    toggleFileSelection,
   } = useWorkbenchStore();
 
   // Detect contexts from current task
@@ -329,6 +330,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   removeFileFromSelection={removeFileFromSelection}
                   clearFileSelection={clearFileSelection}
                   reorderFileSelection={reorderFileSelection}
+                  toggleFileSelection={toggleFileSelection}
+                  rootItems={rootItems}
                 />
               </div>
             </div>
