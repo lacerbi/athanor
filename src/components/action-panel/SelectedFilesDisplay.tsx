@@ -9,7 +9,11 @@ interface SelectedFilesDisplayProps {
   removeFileFromSelection: (itemId: string) => void;
   clearFileSelection: () => void;
   reorderFileSelection: (sourceIndex: number, destinationIndex: number) => void;
-  toggleFileSelection: (itemId: string, isFolder: boolean, fileTree: any[]) => void;
+  toggleFileSelection: (
+    itemId: string,
+    isFolder: boolean,
+    fileTree: any[]
+  ) => void;
   rootItems: any[];
 }
 
@@ -33,10 +37,14 @@ const SelectedFilesDisplay: React.FC<SelectedFilesDisplayProps> = ({
   // Create unified list of suggested files
   const suggestedFiles = useMemo(() => {
     const selectedSet = new Set(selectedFiles);
-    const combined: Array<{ path: string; score: number; isHeuristic: boolean }> = [];
+    const combined: Array<{
+      path: string;
+      score: number;
+      isHeuristic: boolean;
+    }> = [];
 
     // Add heuristic seed files
-    heuristicSeedFiles.forEach(file => {
+    heuristicSeedFiles.forEach((file) => {
       if (!selectedSet.has(file.path)) {
         combined.push({ ...file, isHeuristic: true });
       }
@@ -158,7 +166,7 @@ const SelectedFilesDisplay: React.FC<SelectedFilesDisplayProps> = ({
           </div>
 
           {/* File List */}
-          <div className="max-h-80 overflow-y-auto">
+          <div className="max-h-48 overflow-y-auto">
             {selectedFiles.length === 0 ? (
               <div className="p-4 text-center text-gray-500 dark:text-gray-400">
                 No files selected for this task
@@ -172,7 +180,7 @@ const SelectedFilesDisplay: React.FC<SelectedFilesDisplayProps> = ({
                     onDragStart={(e) => handleDragStart(e, index)}
                     onDragOver={(e) => handleDragOver(e, index)}
                     onDragEnd={handleDragEnd}
-                    className={`flex items-center gap-2 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-move group
+                    className={`flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-move group
                       ${draggedIndex === index ? 'opacity-50' : ''}
                       ${dragOverIndex === index && draggedIndex !== index ? 'border-t-2 border-blue-500' : ''}
                     `}
@@ -216,19 +224,19 @@ const SelectedFilesDisplay: React.FC<SelectedFilesDisplayProps> = ({
           {suggestedFiles.length > 0 && (
             <>
               <div className="p-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                  Potentially Relevant Files ({suggestedFiles.length})
+                <h4
+                  className="text-sm font-semibold text-gray-900 dark:text-gray-100"
+                  title="Files identified by Athanor's relevance engine"
+                >
+                  Smart Context Suggestion ({suggestedFiles.length})
                 </h4>
-                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                  Files identified by Athanor's relevance engine
-                </p>
               </div>
               <div className="max-h-60 overflow-y-auto">
                 <div className="p-2">
                   {suggestedFiles.map((file, index) => (
                     <div
                       key={`suggested-${file.path}-${index}`}
-                      className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
+                      className="flex items-center gap-2 py-1 px-2 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors group"
                     >
                       {/* File Type Indicator */}
                       <div className="flex-shrink-0">
@@ -262,12 +270,16 @@ const SelectedFilesDisplay: React.FC<SelectedFilesDisplayProps> = ({
                         className="flex-1 min-w-0 text-sm text-gray-700 dark:text-gray-300"
                         title={file.path.replace(/^\//, '')}
                       >
-                        <div className="truncate">{formatFilePath(file.path)}</div>
+                        <div className="truncate">
+                          {formatFilePath(file.path)}
+                        </div>
                       </div>
 
                       {/* Promote Button */}
                       <button
-                        onClick={() => toggleFileSelection(file.path, false, rootItems)}
+                        onClick={() =>
+                          toggleFileSelection(file.path, false, rootItems)
+                        }
                         className="flex-shrink-0 p-1 text-gray-400 dark:text-gray-500 hover:text-green-600 dark:hover:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20 rounded transition-colors opacity-0 group-hover:opacity-100"
                         title="Add to selection"
                       >
