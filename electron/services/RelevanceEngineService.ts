@@ -10,6 +10,7 @@ import * as PromptUtils from './PromptUtils';
 import { ProjectGraphService } from './ProjectGraphService';
 import { analyzeTaskDescription } from './TaskAnalysisUtils';
 import { UserActivityService } from './UserActivityService';
+import { DependencyResolver } from './DependencyResolver';
 
 interface ContextResult {
   userSelected: string[];
@@ -23,13 +24,6 @@ export class RelevanceEngineService {
   private readonly gitService: IGitService;
   private readonly projectGraphService: ProjectGraphService;
   private readonly userActivityService: UserActivityService;
-  private readonly resolvableExtensions = [
-    '.ts',
-    '.tsx',
-    '.js',
-    '.jsx',
-    '.json',
-  ];
 
   constructor(
     fileService: FileService,
@@ -43,51 +37,6 @@ export class RelevanceEngineService {
     this.userActivityService = userActivityService;
   }
 
-  /**
-   * Resolves a dependency specifier to a project-relative file path.
-   * @param sourceFilePath The project-relative path of the file containing the import.
-   * @param specifier The module specifier from the import/require statement.
-   * @returns A project-relative path to the dependency file, or null if not found.
-   */
-  private async resolveDependency(
-    sourceFilePath: string,
-    specifier: string
-  ): Promise<string | null> {
-    // Ignore node_modules and other non-relative paths for now
-    if (!specifier.startsWith('.') && !specifier.startsWith('/')) {
-      return null;
-    }
-
-    const sourceDir = PathUtils.dirname(sourceFilePath);
-    const potentialPath = PathUtils.normalizeToUnix(
-      PathUtils.joinUnix(sourceDir, specifier)
-    );
-
-    // Check for exact match if it's not a directory
-    if (await this.fileService.exists(potentialPath)) {
-      if (!(await this.fileService.isDirectory(potentialPath))) {
-        return potentialPath;
-      }
-    }
-
-    // Try with extensions
-    for (const ext of this.resolvableExtensions) {
-      const pathWithExt = `${potentialPath}${ext}`;
-      if (await this.fileService.exists(pathWithExt)) {
-        return pathWithExt;
-      }
-    }
-
-    // Try as a directory with an index file
-    for (const ext of this.resolvableExtensions) {
-      const indexPath = PathUtils.joinUnix(potentialPath, `index${ext}`);
-      if (await this.fileService.exists(indexPath)) {
-        return indexPath;
-      }
-    }
-
-    return null;
-  }
 
   /**
    * Calculates the context for a given set of selected files and a task description.
@@ -282,9 +231,10 @@ export class RelevanceEngineService {
           })) as string;
           const dependencies = DependencyScanner.scan(seed.path, content);
           for (const specifier of dependencies) {
-            const resolvedPath = await this.resolveDependency(
+            const resolvedPath = await DependencyResolver.resolve(
               seed.path,
-              specifier
+              specifier,
+              this.fileService
             );
             if (resolvedPath && candidateSet.has(resolvedPath)) {
               addScore(

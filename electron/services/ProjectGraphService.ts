@@ -7,6 +7,7 @@ import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
 import type { IGitService } from '../../common/types/git-service';
 import { PROJECT_ANALYSIS } from '../../src/utils/constants';
+import { DependencyResolver } from './DependencyResolver';
 
 // Define a type for the cache data structure
 export interface ProjectGraphCache {
@@ -312,7 +313,7 @@ export class ProjectGraphService {
     // Populate dependents and calculate in-degrees by resolving specifiers
     for (const [importerPath, specifiers] of this.dependencyGraph.entries()) {
       for (const specifier of specifiers) {
-          const resolvedPath = await this.resolveSimpleDependency(importerPath, specifier, allFilesSet);
+          const resolvedPath = await DependencyResolver.resolve(importerPath, specifier, this.fileService);
           if (resolvedPath) {
             // Add to dependents graph
             const dependents = this.dependentsGraph.get(resolvedPath) || [];
@@ -356,45 +357,6 @@ export class ProjectGraphService {
     this.hubFiles = hubFiles;
   }
 
-  /**
-   * A simplified dependency resolver for graph building.
-   * This is a simple heuristic and doesn't support complex pathing like aliases or node_modules.
-   */
-  private async resolveSimpleDependency(sourceFile: string, specifier: string, allFiles: Set<string>): Promise<string | null> {
-    // For now, only handle relative paths as that's what DependencyScanner is good at.
-    if (!specifier.startsWith('./') && !specifier.startsWith('../')) {
-        return null;
-    }
-
-    const sourceDir = PathUtils.dirname(sourceFile);
-    const resolved = PathUtils.normalizeToUnix(PathUtils.joinUnix(sourceDir, specifier));
-
-    // Check for exact match first
-    if (allFiles.has(resolved)) return resolved;
-    
-    // Check with common extensions
-    const extensions = [
-      // JS/TS Ecosystem
-      '.ts', '.tsx', '.d.ts',
-      '.js', '.jsx', '.mjs', '.cjs',
-      '.json', '.node',
-      // Component Frameworks
-      '.vue', '.svelte',
-      // Styling
-      '.css', '.scss', '.sass', '.less', '.styl',
-      // Other common languages from original list
-      '.py', '.java', '.go'
-    ];
-    for (const ext of extensions) {
-        const pathWithExt = `${resolved}${ext}`;
-        if (allFiles.has(pathWithExt)) return pathWithExt;
-
-        const indexPath = PathUtils.joinUnix(resolved, `index${ext}`);
-        if (allFiles.has(indexPath)) return indexPath;
-    }
-    
-    return null;
-  }
 
   /**
    * Gets the list of identified project hub files.
