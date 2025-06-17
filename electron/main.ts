@@ -12,6 +12,7 @@ import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { GitService } from './services/GitService';
+import { UserActivityService } from './services/UserActivityService';
 import {
   ProjectGraphService,
   ProjectGraphCache,
@@ -23,6 +24,7 @@ export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
 export const gitService = new GitService(fileService.getBaseDir());
 export const projectGraphService = new ProjectGraphService(fileService, gitService);
+export const userActivityService = new UserActivityService(fileService);
 export const relevanceEngine = new RelevanceEngineService(
   fileService,
   gitService,
@@ -312,7 +314,8 @@ app.whenReady().then(async () => {
     apiKeyService,
     llmService,
     relevanceEngine,
-    projectGraphService
+    projectGraphService,
+    userActivityService
   );
 
   ipcMain.handle('graph:force-reanalyze', () => {
@@ -442,6 +445,7 @@ app.on('window-all-closed', () => {
   fileService.cleanupWatchers().catch((err) => {
     console.error('Error cleaning up FileService watchers:', err);
   });
+  userActivityService.cleanup();
 
   // Quit on all windows closed (except on macOS)
   if (process.platform !== 'darwin') {

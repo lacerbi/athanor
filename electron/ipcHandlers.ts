@@ -16,6 +16,7 @@ import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { ProjectGraphService } from './services/ProjectGraphService';
+import { UserActivityService } from './services/UserActivityService';
 
 export function setupIpcHandlers(
   fileService: FileService,
@@ -23,7 +24,8 @@ export function setupIpcHandlers(
   apiKeyService: ApiKeyServiceMain,
   llmService: LLMServiceMain,
   relevanceEngine: RelevanceEngineService,
-  projectGraphService: ProjectGraphService
+  projectGraphService: ProjectGraphService,
+  userActivityService: UserActivityService
 ) {
   setupCoreHandlers(fileService, settingsService);
   setupFileOperationHandlers(fileService);
