@@ -525,6 +525,7 @@
         "./FileService",
         "./DependencyScanner",
         "./PathUtils",
+        "../../common/types/git-service",
         "project_graph.json",
         "[ProjectGraphService] Failed to save graph to cache:",
         "./"
@@ -595,7 +596,8 @@
       [
         "worker_threads",
         "../services/FileService",
-        "../services/ProjectGraphService"
+        "../services/ProjectGraphService",
+        "../services/GitService"
       ]
     ],
     [
@@ -1286,7 +1288,7 @@
       "src/stores/contextStore.ts",
       [
         "zustand",
-        ",\n\n  fetchContext: async (selectedPaths: string[], taskDescription?: string) => {\n    if (process.env.NODE_ENV !=="
+        ",\r\n\r\n  fetchContext: async (selectedPaths: string[], taskDescription?: string) => {\r\n    if (process.env.NODE_ENV !=="
       ]
     ],
     [
@@ -1603,6 +1605,7 @@
       "common/types/git-service.ts",
       [
         "electron/services/GitService.ts",
+        "electron/services/ProjectGraphService.ts",
         "electron/services/RelevanceEngineService.ts"
       ]
     ],
@@ -1920,7 +1923,8 @@
       "electron/services/GitService.ts",
       [
         "electron/main.ts",
-        "electron/services/GitService.test.ts"
+        "electron/services/GitService.test.ts",
+        "electron/workers/projectAnalysisWorker.ts"
       ]
     ],
     [
@@ -3375,6 +3379,8 @@
     [
       "electron/services/ProjectGraphService.ts",
       [
+        "common/types/git-service.ts",
+        "src/commands/types.ts",
         "src/commands/parser/index.ts",
         "electron/services/DependencyScanner.ts",
         "electron/services/FileService.ts",
@@ -3467,6 +3473,7 @@
       [
         "electron/main.ts",
         "electron/services/FileService.ts",
+        "electron/services/GitService.ts",
         "electron/services/ProjectGraphService.ts"
       ]
     ],
@@ -3501,6 +3508,7 @@
         ".github/ISSUE_TEMPLATE/config.yml",
         "electron/main.ts",
         "electron/modules/llm/main/config.ts",
+        "electron/modules/secure-api-storage/common/errors.ts",
         "src/commands/parser/index.ts",
         "electron/preload.ts",
         "src/index.css",
@@ -4510,5 +4518,6 @@
     "src/types/promptTypes.ts",
     "electron/services/SettingsService.ts",
     "src/utils/fileSelection.ts"
-  ]
+  ],
+  "sharedCommitGraph": []
 }

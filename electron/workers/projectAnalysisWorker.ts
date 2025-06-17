@@ -1,6 +1,7 @@
 import { parentPort, workerData } from 'worker_threads';
 import { FileService } from '../services/FileService';
 import { ProjectGraphService } from '../services/ProjectGraphService';
+import { GitService } from '../services/GitService';
 
 if (!parentPort) {
   throw new Error('This script must be run as a worker thread.');
@@ -16,7 +17,8 @@ if (!parentPort) {
     console.log(`[Worker] Starting project analysis for: ${baseDir}`);
 
     const fileService = new FileService();
-    const projectGraphService = new ProjectGraphService(fileService);
+    const gitService = new GitService(baseDir);
+    const projectGraphService = new ProjectGraphService(fileService, gitService);
 
     await fileService.setBaseDir(baseDir);
 

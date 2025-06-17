@@ -22,7 +22,7 @@ import { PROJECT_ANALYSIS } from '../src/utils/constants';
 export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
 export const gitService = new GitService(fileService.getBaseDir());
-export const projectGraphService = new ProjectGraphService(fileService);
+export const projectGraphService = new ProjectGraphService(fileService, gitService);
 export const relevanceEngine = new RelevanceEngineService(
   fileService,
   gitService,

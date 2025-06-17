@@ -1,10 +1,11 @@
-// AI Summary: Analyzes the project structure to build a dependency graph and file mention map.
+// AI Summary: Analyzes the project structure to build a dependency graph, file mention map, and shared commit history.
 // Identifies "hub files" with high in-degrees and provides methods to query relationships,
 // supporting the RelevanceEngineService with deeper contextual insights.
 
 import { FileService } from './FileService';
 import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
+import type { IGitService } from '../../common/types/git-service';
 
 // Define a type for the cache data structure
 export interface ProjectGraphCache {
@@ -12,6 +13,7 @@ export interface ProjectGraphCache {
   dependentsGraph: [string, string[]][];
   fileMentions: [string, string[]][];
   hubFiles: string[];
+  sharedCommitGraph: [string, { file: string; count: number }[]][];
 }
 
 const CACHE_FILENAME = 'project_graph.json';
@@ -25,8 +27,13 @@ export class ProjectGraphService {
   private dependentsGraph: Map<string, string[]> = new Map();
   private fileMentions: Map<string, string[]> = new Map();
   private hubFiles: string[] = [];
+  private sharedCommitGraph: Map<string, { file: string; count: number }[]> =
+    new Map();
 
-  constructor(private readonly fileService: FileService) {}
+  constructor(
+    private readonly fileService: FileService,
+    private readonly gitService: IGitService
+  ) {}
 
   /**
    * Returns the current graph state as a serializable object.
@@ -38,6 +45,7 @@ export class ProjectGraphService {
       dependentsGraph: Array.from(this.dependentsGraph.entries()),
       fileMentions: Array.from(this.fileMentions.entries()),
       hubFiles: this.hubFiles,
+      sharedCommitGraph: Array.from(this.sharedCommitGraph.entries()),
     };
   }
 
@@ -50,6 +58,7 @@ export class ProjectGraphService {
     this.dependentsGraph = new Map(data.dependentsGraph);
     this.fileMentions = new Map(data.fileMentions);
     this.hubFiles = data.hubFiles;
+    this.sharedCommitGraph = new Map(data.sharedCommitGraph || []);
   }
 
   private getCachePath(): string {
@@ -91,7 +100,8 @@ export class ProjectGraphService {
         !Array.isArray(cacheData.dependencyGraph) ||
         !Array.isArray(cacheData.dependentsGraph) ||
         !Array.isArray(cacheData.fileMentions) ||
-        !Array.isArray(cacheData.hubFiles)
+        !Array.isArray(cacheData.hubFiles) ||
+        !Array.isArray(cacheData.sharedCommitGraph)
       ) {
         throw new Error('Invalid cache data format');
       }
@@ -124,6 +134,7 @@ export class ProjectGraphService {
     this.dependentsGraph.clear();
     this.fileMentions.clear();
     this.hubFiles = [];
+    this.sharedCommitGraph.clear();
 
     const allFiles = await this.fileService.getAllFilePaths();
     if (allFiles.length === 0) {
