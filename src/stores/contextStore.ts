@@ -14,6 +14,7 @@ interface ContextState {
   isLoading: boolean;
   isAnalyzingGraph: boolean;
   lastRequestId: number;
+  lastKey: string;
   fetchContext: (
     selectedPaths: string[],
     taskDescription?: string
@@ -32,10 +33,29 @@ export const useContextStore = create<ContextState>((set, get) => ({
   isLoading: false,
   isAnalyzingGraph: false,
   lastRequestId: 0,
+  lastKey: '',
 
   fetchContext: async (selectedPaths: string[], taskDescription?: string) => {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(
+        '[CTX] fetchContext called',
+        { selectedPaths, taskDescription },
+        new Date().toISOString(),
+      );
+    }
+
+    // Create a key from the current inputs
+    const key = JSON.stringify([selectedPaths, taskDescription || '']);
+    // If the key is the same as the last one, do nothing.
+    if (key === get().lastKey) {
+      if (process.env.NODE_ENV !== 'production') {
+        console.debug('[CTX] fetchContext – identical key, early exit');
+      }
+      return;
+    }
+
     const currentRequestId = get().lastRequestId + 1;
-    set({ isLoading: true, lastRequestId: currentRequestId });
+    set({ isLoading: true, lastKey: key, lastRequestId: currentRequestId });
 
     try {
       const result = await window.electronBridge.context.recalculate({
@@ -80,6 +100,7 @@ export const useContextStore = create<ContextState>((set, get) => ({
       maxNeighborScore: 0,
       promptNeighborPaths: new Set(),
       isLoading: false,
+      lastKey: '',
     });
   },
 

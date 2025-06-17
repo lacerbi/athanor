@@ -10,6 +10,7 @@ import {
 } from '../utils/contextDetection';
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { WorkbenchState } from '../types/global';
 import {
   Copy,
   FileText,
@@ -32,6 +33,7 @@ import type { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
+import { useShallow } from 'zustand/react/shallow';
 import { usePromptStore } from '../stores/promptStore';
 import { buildDynamicPrompt } from '../utils/buildPrompt';
 import { FileItem } from '../utils/fileTree';
@@ -53,6 +55,10 @@ interface ActionPanelProps {
   setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
   isActive: boolean;
 }
+
+// Stable default values to prevent reference equality issues
+const EMPTY_STRING = '';
+const EMPTY_ARRAY: string[] = [];
 
 const ActionPanel: React.FC<ActionPanelProps> = ({
   rootItems,
@@ -164,19 +170,30 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   // Determine if experimental features should be shown
   const showExperimentalFeatures = applicationSettings?.enableExperimentalFeatures ?? false;
 
-  // Effect to trigger context recalculation when task content or selection changes
-  useEffect(() => {
-    const timeoutHandler = setTimeout(() => {
-      const activeTab = tabs[activeTabIndex];
-      if (activeTab) {
-        fetchContext(activeTab.selectedFiles, activeTab.content);
-      }
-    }, 500); // 500ms debounce
+  // Use a memoized selector to prevent unnecessary re-renders.
+  // This ensures the context-fetching effect only runs when relevant data changes.
+  const { content, selectedFiles } = useWorkbenchStore(
+    useShallow((state: WorkbenchState) => {
+      const tab = state.tabs[state.activeTabIndex];
+      // Use stable default values to prevent reference equality issues
+      return {
+        content: tab?.content ?? EMPTY_STRING,
+        selectedFiles: tab?.selectedFiles ?? EMPTY_ARRAY,
+      };
+    })
+  );
 
-    return () => {
-      clearTimeout(timeoutHandler);
-    };
-  }, [tabs[activeTabIndex]?.content, tabs[activeTabIndex]?.selectedFiles, activeTabIndex, fetchContext]);
+  // Effect: recalculate context when description or selection *really* changes,
+  // but never while a prompt is being generated.
+  useEffect(() => {
+    if (isBusy) return;              // 🚦 NEW GUARD
+
+    const timeoutHandler = setTimeout(() => {
+      fetchContext(selectedFiles, content);
+    }, 500);
+
+    return () => clearTimeout(timeoutHandler);
+  }, [content, selectedFiles, isBusy]);  // note: fetchContext removed from deps
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
