@@ -347,9 +347,15 @@ export class RelevanceEngineService {
     const finalCandidates = allProjectFiles.filter((p) => !finalSeedSet.has(p));
     const finalScores = await runScoringRound(seedBasket, finalCandidates);
 
+    // Calculate dynamic threshold based on maximum neighbor score
+    const maxScore = Math.max(0, ...finalScores.values());
+    const dynamicCutoff = maxScore * CONTEXT_BUILDER.NEIGHBOR_SCORE_CUTOFF_RATIO;
+
     // Greedy Token-Based Selection
     const sortedNeighbors = Array.from(finalScores.entries())
-      .filter(([, score]) => score >= CONTEXT_BUILDER.SCORE_THRESHOLD)
+      .filter(([, score]) => 
+        score >= dynamicCutoff && score >= CONTEXT_BUILDER.SCORE_THRESHOLD
+      )
       .sort(([, a], [, b]) => b - a);
 
     const promptNeighbors: string[] = [];
