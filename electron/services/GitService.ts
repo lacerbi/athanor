@@ -161,6 +161,34 @@ export class GitService implements IGitService {
   }
 
   /**
+   * Get recent commit hashes for the entire repository
+   * @param maxCount The maximum number of commit hashes to return
+   * @returns Array of commit hashes
+   */
+  async getRecentCommitHashes(maxCount: number): Promise<string[]> {
+    try {
+      if (!(await this.isGitRepository())) {
+        return [];
+      }
+
+      const command = `log --pretty=format:%H -n ${maxCount}`;
+      const output = await this.executeGitCommand(command);
+
+      if (!output || !output.trim()) {
+        return [];
+      }
+
+      return output
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+    } catch (error) {
+      console.error(`Error getting recent commit hashes:`, error);
+      return [];
+    }
+  }
+
+  /**
    * Execute a git command in the base directory
    * @param command Git command to execute (without 'git' prefix)
    * @returns Command output

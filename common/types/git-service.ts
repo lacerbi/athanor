@@ -44,6 +44,13 @@ export interface IGitService {
   getRecentlyCommittedFiles(daysAgo: number): Promise<string[]>;
 
   /**
+   * Get recent commit hashes for the entire repository
+   * @param maxCount The maximum number of commit hashes to return
+   * @returns Array of commit hashes
+   */
+  getRecentCommitHashes(maxCount: number): Promise<string[]>;
+
+  /**
    * Set the base directory for Git operations
    * @param baseDir Absolute path to the Git repository root
    */

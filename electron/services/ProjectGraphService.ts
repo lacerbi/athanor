@@ -6,6 +6,7 @@ import { FileService } from './FileService';
 import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
 import type { IGitService } from '../../common/types/git-service';
+import { PROJECT_ANALYSIS } from '../../src/utils/constants';
 
 // Define a type for the cache data structure
 export interface ProjectGraphCache {
@@ -187,11 +188,77 @@ export class ProjectGraphService {
     // Second pass: build dependents graph and identify hub files
     await this.buildDependentsGraphAndIdentifyHubs(allFiles);
 
+    // Third pass: analyze shared commits
+    await this.analyzeSharedCommits();
+
     // Save the results to cache
     await this.saveGraphToCache();
 
     console.log(
       `[ProjectGraphService] Analysis complete. Found ${this.hubFiles.length} hub files.`
+    );
+  }
+
+  /**
+   * Analyzes the git history to find files that are frequently committed together.
+   * This is an expensive operation that should only be run in the background.
+   */
+  private async analyzeSharedCommits(): Promise<void> {
+    if (!(await this.gitService.isGitRepository())) {
+      console.log(
+        '[ProjectGraphService] Not a Git repository, skipping shared commit analysis.'
+      );
+      return;
+    }
+
+    console.log('[ProjectGraphService] Analyzing shared commits...');
+    const MAX_COMMITS_TO_ANALYZE =
+      PROJECT_ANALYSIS.MAX_COMMITS_FOR_SHARED_ANALYSIS;
+    const recentHashes = await this.gitService.getRecentCommitHashes(
+      MAX_COMMITS_TO_ANALYZE
+    );
+
+    if (recentHashes.length === 0) {
+      console.log('[ProjectGraphService] No recent commits found to analyze.');
+      return;
+    }
+
+    const filePairCounts = new Map<string, number>();
+
+    for (const hash of recentHashes) {
+      // Filter out merge commits which can have a large number of files unrelated to a single change
+      const files = await this.gitService.getFilesForCommit(hash);
+      // Heuristic: ignore huge commits and commits with only one file
+      if (files.length > 1 && files.length < 20) {
+        // Sort files to ensure consistent pairing for the key
+        files.sort();
+        for (let i = 0; i < files.length; i++) {
+          for (let j = i + 1; j < files.length; j++) {
+            const fileA = files[i];
+            const fileB = files[j];
+            const key = `${fileA}\t${fileB}`; // Use a separator that is unlikely to be in a file path
+            filePairCounts.set(key, (filePairCounts.get(key) || 0) + 1);
+          }
+        }
+      }
+    }
+
+    // Transform pair counts into the final graph structure
+    for (const [key, count] of filePairCounts.entries()) {
+      const [fileA, fileB] = key.split('\t');
+
+      // Add edge from A to B
+      const peersA = this.sharedCommitGraph.get(fileA) || [];
+      peersA.push({ file: fileB, count });
+      this.sharedCommitGraph.set(fileA, peersA);
+
+      // Add edge from B to A
+      const peersB = this.sharedCommitGraph.get(fileB) || [];
+      peersB.push({ file: fileA, count });
+      this.sharedCommitGraph.set(fileB, peersB);
+    }
+    console.log(
+      `[ProjectGraphService] Shared commit analysis complete. Found ${filePairCounts.size} co-committed file pairs.`
     );
   }
 
@@ -339,5 +406,16 @@ export class ProjectGraphService {
    */
   public getDependentsForFile(filePath: string): string[] {
     return this.dependentsGraph.get(filePath) || [];
+  }
+
+  /**
+   * Gets the list of files that are frequently committed with the given file.
+   * @param filePath The project-relative path of the file to check.
+   * @returns An array of objects, each containing a peer file path and the shared commit count.
+   */
+  public getSharedCommitPeers(
+    filePath: string
+  ): { file: string; count: number }[] {
+    return this.sharedCommitGraph.get(filePath) || [];
   }
 }
