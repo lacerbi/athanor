@@ -93,11 +93,13 @@ export class RelevanceEngineService {
    * Calculates the context for a given set of selected files and a task description.
    * @param originallySelectedFiles An array of project-relative paths for the selected files.
    * @param taskDescription The user-provided description of the task.
+   * @param options Configuration options including maxNeighborTokens.
    * @returns An object containing the selected files and their neighboring (dependency and keyword-matched) files.
    */
   public async calculateContext(
     originallySelectedFiles: string[],
-    taskDescription?: string
+    taskDescription: string | undefined,
+    options: { maxNeighborTokens: number }
   ): Promise<ContextResult> {
     this.gitService.setBaseDir(this.fileService.getBaseDir());
     const allProjectFiles = await this.fileService.getAllFilePaths();
@@ -408,7 +410,7 @@ export class RelevanceEngineService {
         );
         const tokenCount = PromptUtils.countTokens(preview);
 
-        if (currentTokens + tokenCount <= CONTEXT_BUILDER.MAX_NEIGHBOR_TOKENS) {
+        if (currentTokens + tokenCount <= options.maxNeighborTokens) {
           promptNeighbors.push(filePath);
           currentTokens += tokenCount;
         } else {

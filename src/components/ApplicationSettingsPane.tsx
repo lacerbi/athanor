@@ -34,6 +34,9 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
   const [thresholdLineLengthInput, setThresholdLineLengthInput] = useState<string>(
     String(SETTINGS.defaults.application.thresholdLineLength)
   );
+  const [maxSmartContextTokens, setMaxSmartContextTokens] = useState<string>(
+    String(SETTINGS.defaults.application.maxSmartContextTokens)
+  );
   const [uiTheme, setUiTheme] = useState<string>(
     SETTINGS.defaults.application.uiTheme
   );
@@ -72,6 +75,13 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
             defaults.thresholdLineLength
         )
       );
+      setMaxSmartContextTokens(
+        String(
+          applicationSettings.maxSmartContextTokens ??
+            applicationDefaults.maxSmartContextTokens ??
+            defaults.maxSmartContextTokens
+        )
+      );
       setUiTheme(
         applicationSettings.uiTheme ??
           applicationDefaults.uiTheme ??
@@ -99,6 +109,12 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
         String(
           applicationDefaults.thresholdLineLength ??
             defaults.thresholdLineLength
+        )
+      );
+      setMaxSmartContextTokens(
+        String(
+          applicationDefaults.maxSmartContextTokens ??
+            defaults.maxSmartContextTokens
         )
       );
       setUiTheme(
@@ -153,6 +169,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
     const minValue = parseInt(minSmartPreviewLines, 10);
     const maxValue = parseInt(maxSmartPreviewLines, 10);
     const thresholdValue = parseInt(thresholdLineLengthInput, 10);
+    const tokenLimitValue = parseInt(maxSmartContextTokens, 10);
 
     // Validate and apply defaults/limits
     const defaults = SETTINGS.defaults.application;
@@ -169,6 +186,11 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
         ? (applicationDefaults.thresholdLineLength ??
           defaults.thresholdLineLength)
         : Math.min(thresholdValue, 2000);
+    const validatedTokenLimit =
+      isNaN(tokenLimitValue) || tokenLimitValue < 0
+        ? (applicationDefaults.maxSmartContextTokens ??
+          defaults.maxSmartContextTokens)
+        : Math.min(tokenLimitValue, 100000);
 
     // Ensure max >= min
     const finalMin = validatedMin;
@@ -179,6 +201,7 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       minSmartPreviewLines: finalMin,
       maxSmartPreviewLines: finalMax,
       thresholdLineLength: validatedThreshold,
+      maxSmartContextTokens: validatedTokenLimit,
       uiTheme,
     });
   };
@@ -211,7 +234,13 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
     uiTheme !==
       (applicationSettings?.uiTheme ??
         applicationDefaults.uiTheme ??
-        defaults.uiTheme);
+        defaults.uiTheme) ||
+    maxSmartContextTokens !==
+      String(
+        applicationSettings?.maxSmartContextTokens ??
+          applicationDefaults.maxSmartContextTokens ??
+          defaults.maxSmartContextTokens
+      );
 
   const handleMinSmartPreviewLinesChange = (
     e: React.ChangeEvent<HTMLInputElement>
@@ -307,6 +336,37 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
       setThresholdLineLengthInput('2000'); // Max value
     } else {
       setThresholdLineLengthInput(String(numericValue));
+    }
+  };
+
+  const handleMaxSmartContextTokensChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value;
+    // Allow only numeric input
+    if (/^\d*$/.test(value) && value.length <= 6) {
+      setMaxSmartContextTokens(value);
+    }
+  };
+
+  const handleMaxSmartContextTokensBlur = (
+    e: React.FocusEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value.trim();
+    const numericValue = parseInt(value, 10);
+
+    // Validate and clamp the value
+    if (isNaN(numericValue) || numericValue < 0) {
+      setMaxSmartContextTokens(
+        String(
+          applicationDefaults.maxSmartContextTokens ??
+            SETTINGS.defaults.application.maxSmartContextTokens
+        )
+      ); // Reset to default
+    } else if (numericValue > 100000) {
+      setMaxSmartContextTokens('100000'); // Max value
+    } else {
+      setMaxSmartContextTokens(String(numericValue));
     }
   };
 
@@ -488,6 +548,39 @@ const ApplicationSettingsPane: React.FC<ApplicationSettingsPaneProps> = ({
                     }
                   />
                   <span className="text-sm text-gray-500 dark:text-gray-400">lines</span>
+                </div>
+              </div>
+
+              {/* Smart Context Token Limit */}
+              <div className="space-y-2">
+                <div className="flex items-center space-x-2">
+                  <label
+                    htmlFor="maxSmartContextTokens"
+                    className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Smart Context Token Limit
+                  </label>
+                  <div
+                    className="relative group"
+                    title="Maximum tokens for files added by Smart Context. Set to 0 to disable. (0-100000). Default: 10000."
+                  >
+                    <HelpCircle className="w-4 h-4 text-gray-400 dark:text-gray-500 cursor-help" />
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="maxSmartContextTokens"
+                    type="text"
+                    value={maxSmartContextTokens}
+                    onChange={handleMaxSmartContextTokensChange}
+                    onBlur={handleMaxSmartContextTokensBlur}
+                    placeholder="10000"
+                    className="w-24 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:bg-gray-50 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400"
+                    disabled={
+                      isLoadingApplicationSettings || isSavingApplication
+                    }
+                  />
+                  <span className="text-sm text-gray-500 dark:text-gray-400">tokens</span>
                 </div>
               </div>
             </div>

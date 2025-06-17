@@ -3,8 +3,13 @@
 
 import { ipcMain } from 'electron';
 import { RelevanceEngineService } from '../services/RelevanceEngineService';
+import { SettingsService } from '../services/SettingsService';
+import { SETTINGS } from '../../src/utils/constants';
 
-export function setupContextHandlers(relevanceEngine: RelevanceEngineService) {
+export function setupContextHandlers(
+  relevanceEngine: RelevanceEngineService,
+  settingsService: SettingsService
+) {
   ipcMain.handle(
     'ath:recalculate-context',
     async (
@@ -15,14 +20,19 @@ export function setupContextHandlers(relevanceEngine: RelevanceEngineService) {
       }: { selectedFilePaths: string[]; taskDescription?: string }
     ) => {
       try {
+        // Fetch application settings to get the token limit
+        const appSettings = await settingsService.getApplicationSettings();
+        const maxTokens = appSettings?.maxSmartContextTokens ?? SETTINGS.defaults.application.maxSmartContextTokens;
+
         return await relevanceEngine.calculateContext(
           selectedFilePaths,
-          taskDescription
+          taskDescription,
+          { maxNeighborTokens: maxTokens }
         );
       } catch (error) {
         console.error('Error in ath:recalculate-context IPC handler:', error);
         // In case of an error, return a valid empty response to prevent renderer from breaking
-        return { selected: selectedFilePaths, allNeighbors: [], promptNeighbors: [] };
+        return { userSelected: selectedFilePaths, heuristicSeedFiles: [], allNeighbors: [], promptNeighbors: [] };
       }
     }
   );

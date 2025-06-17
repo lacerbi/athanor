@@ -28,6 +28,7 @@ export interface ApplicationSettings {
   minSmartPreviewLines?: number;
   maxSmartPreviewLines?: number;
   thresholdLineLength?: number;
+  maxSmartContextTokens?: number;
   lastSelectedApiPresetId?: string | null;
   lastOpenedProjectPath?: string | null;
   recentProjectPaths?: string[];

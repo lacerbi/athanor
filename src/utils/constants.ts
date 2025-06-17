@@ -46,6 +46,7 @@ export const SETTINGS = {
       minSmartPreviewLines: 10,
       maxSmartPreviewLines: 20,
       thresholdLineLength: 200,
+      maxSmartContextTokens: 10000,
       lastSelectedApiPresetId: null,
       lastOpenedProjectPath: undefined,
       recentProjectPaths: [],
@@ -149,7 +150,6 @@ export const CONTEXT_BUILDER = {
   SCORE_GLOBAL_KEYWORD: 5,
 
   // Phase 2: Final Selection
-  MAX_NEIGHBOR_TOKENS: 10000,
   SCORE_THRESHOLD: 1,
   NEIGHBOR_SCORE_CUTOFF_RATIO: 0.2,
   MAX_COMMITS_TO_CHECK: 3,

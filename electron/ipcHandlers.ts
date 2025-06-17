@@ -33,5 +33,5 @@ export function setupIpcHandlers(
   setupSettingsHandlers(settingsService);
   registerSecureApiKeyIpc(apiKeyService);
   registerLlmIpc(llmService);
-  setupContextHandlers(relevanceEngine);
+  setupContextHandlers(relevanceEngine, settingsService);
 }
