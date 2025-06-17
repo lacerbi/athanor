@@ -9,6 +9,7 @@ import { CONTEXT_BUILDER, SETTINGS } from '../../src/utils/constants';
 import * as PromptUtils from './PromptUtils';
 import { ProjectGraphService } from './ProjectGraphService';
 import { analyzeTaskDescription } from './TaskAnalysisUtils';
+import { UserActivityService } from './UserActivityService';
 
 interface ContextResult {
   userSelected: string[];
@@ -21,6 +22,7 @@ export class RelevanceEngineService {
   private readonly fileService: FileService;
   private readonly gitService: IGitService;
   private readonly projectGraphService: ProjectGraphService;
+  private readonly userActivityService: UserActivityService;
   private readonly resolvableExtensions = [
     '.ts',
     '.tsx',
@@ -32,11 +34,13 @@ export class RelevanceEngineService {
   constructor(
     fileService: FileService,
     gitService: IGitService,
-    projectGraphService: ProjectGraphService
+    projectGraphService: ProjectGraphService,
+    userActivityService: UserActivityService
   ) {
     this.fileService = fileService;
     this.gitService = gitService;
     this.projectGraphService = projectGraphService;
+    this.userActivityService = userActivityService;
   }
 
   /**
@@ -197,6 +201,20 @@ export class RelevanceEngineService {
                   : CONTEXT_BUILDER.SCORE_TASK_KEYWORD_SINGLE;
               addScore(candidateFile, score);
             }
+          }
+        }
+      }
+
+      // Actively Editing Analysis
+      const activeFiles = this.userActivityService.getActiveFiles();
+      if (activeFiles.length > 0) {
+        const activeFilesSet = new Set(activeFiles);
+        for (const candidateFile of candidateFiles) {
+          if (activeFilesSet.has(candidateFile)) {
+            addScore(
+              candidateFile,
+              CONTEXT_BUILDER.SCORE_ACTIVELY_EDITING
+            );
           }
         }
       }

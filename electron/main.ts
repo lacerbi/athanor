@@ -28,7 +28,8 @@ export const userActivityService = new UserActivityService(fileService);
 export const relevanceEngine = new RelevanceEngineService(
   fileService,
   gitService,
-  projectGraphService
+  projectGraphService,
+  userActivityService
 );
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
