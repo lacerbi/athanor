@@ -48,7 +48,7 @@ function runProjectAnalysisWorker(): Promise<void> {
     // NOTE: Webpack is now configured to compile the worker script.
     // This path points to the compiled worker JS file alongside the main bundle.
     const worker = new Worker(
-      path.join(__dirname, 'projectAnalysisWorker.js'),
+      path.join(__dirname, '../projectAnalysisWorker.js'),
       {
         workerData: { baseDir: fileService.getBaseDir() },
       }

@@ -2,7 +2,7 @@ const path = require('path');
 
 module.exports = {
   entry: {
-    main: './electron/main.ts',
+    'main/index': './electron/main.ts',
     projectAnalysisWorker: './electron/workers/projectAnalysisWorker.ts',
   },
   module: {

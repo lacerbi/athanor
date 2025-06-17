@@ -6,9 +6,9 @@
   },
   "main": ".webpack/main",
   "scripts": {
-    "start": "cross-env NODE_ENV=development concurrently \"webpack serve --config webpack.renderer.config.js\" \"webpack --config webpack.preload.config.js --watch\" \"electron-forge start\"",
+    "start": "electron-forge start",
     "dev": "npm start",
-    "package": "cross-env NODE_ENV=production electron-forge package",
+    "package": "cross-env DEBUG=electron-forge:* NODE_ENV=production electron-forge package",
     "make": "cross-env NODE_ENV=production electron-forge make",
     "build:win": "cross-env NODE_ENV=production electron-forge make --platform win32",
     "lint": "eslint ./src --ext .ts,.tsx",

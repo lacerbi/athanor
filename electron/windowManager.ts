@@ -4,23 +4,20 @@
 import { BrowserWindow, app } from 'electron';
 import * as path from 'path';
 
+declare const MAIN_WINDOW_WEBPACK_ENTRY: string;
+declare const MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY: string;
+
 const isDev = process.env.NODE_ENV === 'development';
-const DEV_SERVER_URL = 'http://localhost:8080';
 
 export let mainWindow: BrowserWindow | null = null;
 
 export async function createWindow() {
-  const preloadPath = isDev
-    ? //    ? path.join(__dirname, 'main_window', 'preload.js') // Dev path
-      path.join(__dirname, 'renderer', 'main_window', 'preload.js') // Dev path
-    : path.join(__dirname, 'renderer', 'main_window', 'preload.js'); // Production path
-
   // Create the browser window options
   const browserWindowOptions: Electron.BrowserWindowConstructorOptions = {
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: preloadPath,
+      preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
@@ -50,23 +47,11 @@ export async function createWindow() {
   mainWindow = new BrowserWindow(browserWindowOptions);
 
   // Load the app
+  mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
+
+  // Open the DevTools automatically in development
   if (isDev) {
-    console.log('Loading from dev server:', DEV_SERVER_URL);
-    mainWindow.loadURL(DEV_SERVER_URL).catch((error) => {
-      console.error('Failed to load dev server:', error);
-    });
     mainWindow.webContents.openDevTools();
-  } else {
-    const prodHtmlPath = path.join(
-      __dirname,
-      'renderer',
-      'main_window',
-      'index.html'
-    );
-    console.log('Loading production html from:', prodHtmlPath);
-    mainWindow.loadFile(prodHtmlPath).catch((error) => {
-      console.error('Failed to load index.html:', error);
-    });
   }
 
   // Handle window failures
