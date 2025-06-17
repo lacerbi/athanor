@@ -216,29 +216,17 @@ export class RelevanceEngineService {
       }
 
       const sharedCommitCounts = new Map<string, number>();
-      /*
       if (isGitRepo) {
-        const commitFilesCache = new Map<string, string[]>();
         for (const seed of seedBasket) {
-          const commits = await this.gitService.getCommitsForFile(seed.path, {
-            maxCount: CONTEXT_BUILDER.MAX_COMMITS_TO_CHECK,
-          });
-          for (const commit of commits) {
-            let filesInCommit = commitFilesCache.get(commit.hash);
-            if (!filesInCommit) {
-              filesInCommit = await this.gitService.getFilesForCommit(
-                commit.hash
+          const peers = this.projectGraphService.getSharedCommitPeers(seed.path);
+          const modifier = seed.isOriginallySelected ? 1.0 : 0.5;
+          for (const peer of peers) {
+            if (candidateSet.has(peer.file)) {
+              sharedCommitCounts.set(
+                peer.file,
+                (sharedCommitCounts.get(peer.file) || 0) +
+                  peer.count * modifier
               );
-              commitFilesCache.set(commit.hash, filesInCommit);
-            }
-            for (const file of filesInCommit) {
-              if (candidateSet.has(file)) {
-                const modifier = seed.isOriginallySelected ? 1.0 : 0.5;
-                sharedCommitCounts.set(
-                  file,
-                  (sharedCommitCounts.get(file) || 0) + modifier
-                );
-              }
             }
           }
         }
@@ -250,7 +238,6 @@ export class RelevanceEngineService {
           addScore(file, score);
         }
       }
-      */
 
       for (const seed of seedBasket) {
         const modifier = seed.isOriginallySelected ? 1.0 : 0.5;

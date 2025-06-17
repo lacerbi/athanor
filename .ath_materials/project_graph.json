@@ -526,6 +526,7 @@
         "./DependencyScanner",
         "./PathUtils",
         "../../common/types/git-service",
+        "../../src/utils/constants",
         "project_graph.json",
         "[ProjectGraphService] Failed to save graph to cache:",
         "./"
@@ -2655,6 +2656,7 @@
         "electron/ignoreRulesManager.ts",
         "electron/main.ts",
         "electron/services/FileService.ts",
+        "electron/services/ProjectGraphService.ts",
         "electron/services/RelevanceEngineService.ts",
         "electron/services/SettingsService.ts",
         "src/actions/ManualCopyAction.test.ts",
@@ -3387,7 +3389,8 @@
         "electron/services/PathUtils.ts",
         "electron/services/RelevanceEngineService.ts",
         "src/index.css",
-        "src/index.tsx"
+        "src/index.tsx",
+        "src/utils/constants.ts"
       ]
     ],
     [

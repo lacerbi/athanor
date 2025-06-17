@@ -53,7 +53,7 @@ The context-building algorithm is powered by a series of heuristics that analyze
 
 - **What it is:** Discovering files that are frequently modified and committed together in the project's Git history.
 - **Rationale:** This reveals implicit, functional relationships not captured by static imports. For instance, a change to an API endpoint often accompanies a change to the documentation or a corresponding client-side service.
-- **Implementation:** Requires a `GitService` in the main process to run commands like `git log` to find commits touching a specific file, followed by `git show --name-only` to list all other files in those commits. This analysis should be limited to recent history to remain performant.
+- **Implementation:** This analysis is computationally intensive and is therefore **pre-computed and cached** by the `ProjectGraphService` during its background analysis. The service runs an optimized Git query to fetch recent commit history for the entire project. It then analyzes which files appear together in commits to build a graph of shared commit relationships. The `RelevanceEngineService` consumes this cached data in real-time, avoiding slow on-demand Git commands during context calculation.
 
 ##### **2.5. Project Hub File Analysis**
 
@@ -164,9 +164,9 @@ The visualization of file relevance in the UI is a direct representation of the 
 An expert developer should plan for the following architectural changes:
 
 - **New Main Process Services:**
-  - `RelevanceEngineService.ts`: The central orchestrator that implements the two-phase algorithm.
-  - `ProjectGraphService.ts`: Manages the creation, caching, and querying of the project-wide dependency graph to identify Hub files. This service should also be responsible for the **pre-computation and caching of the file mention analysis** to ensure high performance. This should run in the background.
-  - `GitService.ts`: A dedicated module to interface with the Git command line for commit and activity analysis.
+  - `RelevanceEngineService.ts`: The central orchestrator that implements the two-phase algorithm. It is designed to be a fast, real-time consumer of project data, including pre-computed analysis from other services.
+  - `ProjectGraphService.ts`: Manages the creation, caching, and querying of the project-wide dependency graph. This service is responsible for expensive, static analysis that runs in a background worker, including **pre-computation of file mentions and shared Git commit history**.
+  - `GitService.ts`: A dedicated module to interface with the Git command line. It provides raw Git data (like commit history and file lists) to other services, primarily the `ProjectGraphService`, for background analysis.
   - `DependencyScanner.ts`: A stateless service for performing the fast, regex-based dependency scanning. It will be **language-aware, using a map of file extensions to language-specific regex patterns** to support a polyglot environment.
 - **IPC Communication:**
   - A primary IPC channel, e.g., `ath:recalculate-context`, will be invoked from the renderer whenever the context needs to be updated (file selection changes, task description is edited).
@@ -250,7 +250,7 @@ To manage the complexity of the **Dynamic & Intelligent Context Builder**, the f
     1.  **Intelligent Background Rebuild:** Analysis is automatically triggered off the main thread (using a Node.js `worker_thread`) after a period of file system quiescence (3s) and user inactivity (5s idle or window blur). This prevents UI stutter and runs when the user is not actively engaged.
     2.  **Manual On-Demand Rebuild:** A "Refresh Project Analysis" button is added to the UI, allowing users to force a rebuild at any time.
   - **Caching in `ProjectGraphService.ts`:** The service now includes `saveToCache()` and `loadFromCache()` methods to serialize the graph to `.ath_materials/project_graph.json`. On startup, the cache is loaded, falling back to a full analysis only if the cache is missing or stale.
-- **Outcome:** The feature is now fast and scalable, providing advanced analysis without a recurring performance penalty. The intelligent refresh logic ensures the data is up-to-date without interrupting the user's workflow, making it suitable for large, real-world projects.
+- **Outcome:** The feature is now fast and scalable, providing advanced analysis without a recurring performance penalty. The intelligent refresh logic ensures the data is up-to-date without interrupting the user's workflow, making it suitable for large, real-world projects. A key achievement of this stage was refactoring the "Shared Commit" analysis, moving the expensive Git operations from the real-time scoring engine into the background worker, which was critical for eliminating UI lag and enabling the feature.
 
 #### **Stage 8: Live Activity & User Configuration**
 
