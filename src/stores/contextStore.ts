@@ -44,6 +44,13 @@ export const useContextStore = create<ContextState>((set, get) => ({
       );
     }
 
+    // Add instrumentation to trace undefined taskDescription calls
+    if (taskDescription === undefined && process.env.NODE_ENV !== 'production') {
+      console.debug('[CTX] caller with *undefined* description – stack follows ⬇︎');
+      // eslint-disable-next-line no-console
+      console.trace();
+    }
+
     // Create a key from the current inputs
     const key = JSON.stringify([selectedPaths, taskDescription || '']);
     // If the key is the same as the last one, do nothing.

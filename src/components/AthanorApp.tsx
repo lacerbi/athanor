@@ -29,7 +29,7 @@ const AthanorApp: React.FC = () => {
   const { setChangeAppliedCallback } = useApplyChangesStore();
   const { applicationSettings, loadApplicationSettings } = useSettingsStore();
   const { tabs, activeTabIndex } = useWorkbenchStore();
-  const { fetchContext, clearContext, setIsAnalyzingGraph } = useContextStore();
+  const { clearContext, setIsAnalyzingGraph } = useContextStore();
 
   // Listen for graph analysis events
   useEffect(() => {
@@ -66,15 +66,6 @@ const AthanorApp: React.FC = () => {
     handleCreateProject,
     handleProjectDialogClose,
   } = useFileSystemLifecycle();
-
-  // Fetch context when file selection changes for the active tab
-  useEffect(() => {
-    const activeTab = tabs[activeTabIndex];
-    const selectedFiles = activeTab?.selectedFiles;
-    if (selectedFiles) {
-      fetchContext(selectedFiles);
-    }
-  }, [tabs, activeTabIndex, fetchContext]);
 
   // Clear context when project changes
   useEffect(() => {
