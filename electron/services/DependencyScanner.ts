@@ -15,7 +15,7 @@ const dependencyRegex = {
   // Python (import ..., from ... import ...)
   python: [
     /^import\s+([\w.]+)/gm,
-    /^from\s+([\w.]+)\s+import\s+/gm,
+    /^from\s+([.\w]+)\s+import\s+/gm,
   ],
   // CSS, SCSS, Less (@import)
   css: [

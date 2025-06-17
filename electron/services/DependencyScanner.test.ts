@@ -105,6 +105,18 @@ from new_module import feature
       expect(dependencies).toEqual(['new_module']);
     });
 
+    it('should find relative import statements', () => {
+      const content = `
+from . import models
+from .utils import helper
+from ..config import settings
+from ..package.module import thing
+      `;
+      const dependencies = DependencyScanner.scan(pyFilePath, content);
+      expect(dependencies).toEqual(expect.arrayContaining(['.', '.utils', '..config', '..package.module']));
+      expect(dependencies).toHaveLength(4);
+    });
+
     it('should handle mixed imports and ignore duplicates', () => {
       const content = `
 import services
