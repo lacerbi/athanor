@@ -163,6 +163,8 @@ export const CONTEXT_BUILDER = {
 export const PROJECT_ANALYSIS = {
   // The number of recent commits to check when analyzing for shared file commits.
   MAX_COMMITS_FOR_SHARED_ANALYSIS: 200,
+  // The number of days to look back for the "recent commit activity" heuristic.
+  DAYS_FOR_RECENT_COMMIT_ACTIVITY: 7,
   // Delay in ms after the last file system change before considering the system quiet.
   FILE_SYSTEM_QUIESCENCE_DELAY: 30000, // 30 seconds
   // Delay in ms of user inactivity before triggering analysis.

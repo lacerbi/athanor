@@ -215,6 +215,20 @@ export class RelevanceEngineService {
         });
       }
 
+      // Recent Commit Activity Analysis
+      const recentFiles = this.projectGraphService.getRecentlyCommittedFiles();
+      if (recentFiles.length > 0) {
+        const recentFilesSet = new Set(recentFiles);
+        for (const candidateFile of candidateFiles) {
+          if (recentFilesSet.has(candidateFile)) {
+            addScore(
+              candidateFile,
+              CONTEXT_BUILDER.SCORE_RECENT_COMMIT_ACTIVITY
+            );
+          }
+        }
+      }
+
       const sharedCommitCounts = new Map<string, number>();
       if (isGitRepo) {
         for (const seed of seedBasket) {

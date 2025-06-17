@@ -1,4 +1,4 @@
-// AI Summary: Analyzes the project structure to build a dependency graph, file mention map, and shared commit history.
+// AI Summary: Analyzes the project structure to build a dependency graph, file mention map, shared commit history, and recent activity log.
 // Identifies "hub files" with high in-degrees and provides methods to query relationships,
 // supporting the RelevanceEngineService with deeper contextual insights.
 
@@ -15,6 +15,7 @@ export interface ProjectGraphCache {
   fileMentions: [string, string[]][];
   hubFiles: string[];
   sharedCommitGraph: [string, { file: string; count: number }[]][];
+  recentlyCommittedFiles: string[];
 }
 
 const CACHE_FILENAME = 'project_graph.json';
@@ -30,6 +31,7 @@ export class ProjectGraphService {
   private hubFiles: string[] = [];
   private sharedCommitGraph: Map<string, { file: string; count: number }[]> =
     new Map();
+  private recentlyCommittedFiles: string[] = [];
 
   constructor(
     private readonly fileService: FileService,
@@ -47,6 +49,7 @@ export class ProjectGraphService {
       fileMentions: Array.from(this.fileMentions.entries()),
       hubFiles: this.hubFiles,
       sharedCommitGraph: Array.from(this.sharedCommitGraph.entries()),
+      recentlyCommittedFiles: this.recentlyCommittedFiles,
     };
   }
 
@@ -60,6 +63,7 @@ export class ProjectGraphService {
     this.fileMentions = new Map(data.fileMentions);
     this.hubFiles = data.hubFiles;
     this.sharedCommitGraph = new Map(data.sharedCommitGraph || []);
+    this.recentlyCommittedFiles = data.recentlyCommittedFiles || [];
   }
 
   private getCachePath(): string {
@@ -102,7 +106,8 @@ export class ProjectGraphService {
         !Array.isArray(cacheData.dependentsGraph) ||
         !Array.isArray(cacheData.fileMentions) ||
         !Array.isArray(cacheData.hubFiles) ||
-        !Array.isArray(cacheData.sharedCommitGraph)
+        !Array.isArray(cacheData.sharedCommitGraph) ||
+        !Array.isArray(cacheData.recentlyCommittedFiles)
       ) {
         throw new Error('Invalid cache data format');
       }
@@ -136,6 +141,7 @@ export class ProjectGraphService {
     this.fileMentions.clear();
     this.hubFiles = [];
     this.sharedCommitGraph.clear();
+    this.recentlyCommittedFiles = [];
 
     const allFiles = await this.fileService.getAllFilePaths();
     if (allFiles.length === 0) {
@@ -190,6 +196,9 @@ export class ProjectGraphService {
 
     // Third pass: analyze shared commits
     await this.analyzeSharedCommits();
+
+    // Fourth pass: analyze recent commits
+    await this.analyzeRecentCommits();
 
     // Save the results to cache
     await this.saveGraphToCache();
@@ -260,6 +269,21 @@ export class ProjectGraphService {
     console.log(
       `[ProjectGraphService] Shared commit analysis complete. Found ${filePairCounts.size} co-committed file pairs.`
     );
+  }
+
+  /**
+   * Analyzes recent Git commits to find files that have been recently worked on.
+   */
+  private async analyzeRecentCommits(): Promise<void> {
+    if (!(await this.gitService.isGitRepository())) {
+      this.recentlyCommittedFiles = [];
+      return;
+    }
+    console.log('[ProjectGraphService] Analyzing recent commit activity...');
+    this.recentlyCommittedFiles =
+      await this.gitService.getRecentlyCommittedFiles(
+        PROJECT_ANALYSIS.DAYS_FOR_RECENT_COMMIT_ACTIVITY
+      );
   }
 
   /**
@@ -378,6 +402,14 @@ export class ProjectGraphService {
    */
   public getHubFiles(): string[] {
     return this.hubFiles;
+  }
+
+  /**
+   * Gets the list of recently committed files.
+   * @returns An array of project-relative paths for recently committed files.
+   */
+  public getRecentlyCommittedFiles(): string[] {
+    return this.recentlyCommittedFiles;
   }
 
   /**
