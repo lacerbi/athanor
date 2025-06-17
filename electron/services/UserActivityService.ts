@@ -3,9 +3,7 @@
 // providing a real-time 'actively editing' signal to the RelevanceEngineService.
 
 import { FileService } from './FileService';
-
-const ACTIVITY_WINDOW_MS = 1 * 60 * 60 * 1000; // 1 hour
-const PRUNE_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+import { PROJECT_ANALYSIS } from '../../src/utils/constants';
 
 export class UserActivityService {
   private activeFiles = new Map<string, number>(); // Map<filePath, timestamp>
@@ -15,7 +13,7 @@ export class UserActivityService {
     fileService.on('file-changed', this.handleFileChange);
     this.pruneInterval = setInterval(
       this.pruneActiveFiles,
-      PRUNE_INTERVAL_MS
+      PROJECT_ANALYSIS.USER_ACTIVITY_PRUNE_INTERVAL_MS
     );
   }
 
@@ -29,7 +27,7 @@ export class UserActivityService {
   private pruneActiveFiles = (): void => {
     const now = Date.now();
     for (const [path, timestamp] of this.activeFiles.entries()) {
-      if (now - timestamp > ACTIVITY_WINDOW_MS) {
+      if (now - timestamp > PROJECT_ANALYSIS.USER_ACTIVITY_WINDOW_MS) {
         this.activeFiles.delete(path);
       }
     }

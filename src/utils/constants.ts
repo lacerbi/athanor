@@ -169,4 +169,8 @@ export const PROJECT_ANALYSIS = {
   FILE_SYSTEM_QUIESCENCE_DELAY: 30000, // 30 seconds
   // Delay in ms of user inactivity before triggering analysis.
   USER_INACTIVITY_DELAY: 5000, // 5 seconds
+  // The duration in ms to consider a file "actively edited" after a change.
+  USER_ACTIVITY_WINDOW_MS: 60 * 60 * 1000, // 1 hour
+  // The interval in ms at which to prune the list of actively edited files.
+  USER_ACTIVITY_PRUNE_INTERVAL_MS: 5 * 60 * 1000, // 5 minutes
 };
