@@ -20,6 +20,18 @@ module.exports = {
       name: '@electron-forge/maker-zip',
       platforms: ['win32'],
     },
+    {
+      name: '@electron-forge/maker-deb',
+      config: {
+        options: {
+          icon: 'resources/images/athanor.png'
+        }
+      }
+    },
+    {
+      name: '@electron-forge/maker-rpm',
+      config: {}
+    },
   ],
   plugins: [
     {
