@@ -203,12 +203,12 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
 
   // Google Gemini Models
   {
-    id: 'gemini-2.5-pro-preview-05-06',
+    id: 'gemini-2.5-pro',
     name: 'Gemini 2.5 Pro',
     providerId: 'gemini',
     contextWindow: 1048576,
-    inputPrice: 2.5,
-    outputPrice: 15,
+    inputPrice: 1.25,
+    outputPrice: 10,
     description:
       'Most advanced Gemini model for complex reasoning and multimodal tasks',
     maxTokens: 65536,
@@ -217,21 +217,34 @@ export const SUPPORTED_MODELS: ModelInfo[] = [
     cacheReadsPrice: 0.31,
   },
   {
-    id: 'gemini-2.5-flash-preview-05-20',
+    id: 'gemini-2.5-flash',
     name: 'Gemini 2.5 Flash',
     providerId: 'gemini',
     contextWindow: 1048576,
-    inputPrice: 0.15,
-    outputPrice: 0.6,
+    inputPrice: 0.3,
+    outputPrice: 2.5,
     description:
       'Fast, efficient model with large context and reasoning capabilities',
     maxTokens: 65536,
     supportsImages: true,
-    supportsPromptCache: false,
+    supportsPromptCache: true,
     thinkingConfig: {
       maxBudget: 24576,
-      outputPrice: 3.5,
+      outputPrice: 2.5,
     },
+  },
+  {
+    id: 'gemini-2.5-flash-lite-preview-06-17',
+    name: 'Gemini 2.5 Flash-Lite Preview',
+    providerId: 'gemini',
+    contextWindow: 1000000,
+    inputPrice: 0.1,
+    outputPrice: 0.4,
+    description:
+      'Smallest and most cost effective model, built for at scale usage',
+    maxTokens: 64000,
+    supportsImages: true,
+    supportsPromptCache: true,
   },
   {
     id: 'gemini-2.0-flash',
