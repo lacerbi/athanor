@@ -62,7 +62,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const { loadProjectSettings, loadApplicationSettings, projectSettings } =
     useSettingsStore();
   const { setIsGraphAnalysisInProgress } = useFileSystemStore();
-  const { fetchContext } = useContextStore();
+  const { fetchContext, clearContext } = useContextStore();
 
   // Track previous project settings to detect changes
   const prevProjectSettingsRef = useRef<typeof projectSettings>(undefined);
@@ -143,6 +143,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       const normalizedDir = await window.pathUtils.toUnix(directory);
 
       useFileSystemStore.getState().resetState();
+      clearContext();
       setCurrentDirectory(normalizedDir);
 
       const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
@@ -202,7 +203,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       setShowProjectDialog(false);
       setPendingDirectory(null);
     },
-    [addLog, setupWatcher, loadProjectSettings, clearFileSelection]
+    [addLog, setupWatcher, loadProjectSettings, clearFileSelection, clearContext]
   );
 
   // Centralized function to process a directory - handles both UI and CLI flows
