@@ -20,7 +20,7 @@ export async function createWindow() {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: true,
+      sandbox: process.platform !== 'darwin', // Disable sandbox only on macOS to fix hang issue
     },
   };
 

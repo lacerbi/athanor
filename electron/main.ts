@@ -5,6 +5,7 @@ import { app, BrowserWindow, Menu, nativeTheme, ipcMain } from 'electron';
 import fixPath from 'fix-path';
 import { Worker } from 'worker_threads';
 import * as path from 'path';
+import * as fs from 'fs';
 import { createWindow, mainWindow } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
 import { FileService } from './services/FileService';
@@ -128,7 +129,8 @@ async function buildMenu() {
         : [{ label: 'No Recent Projects', enabled: false }];
 
     // Read package.json for About panel information
-    const packageJson = require('../package.json');
+    const packageJsonPath = path.join(app.getAppPath(), 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
     // Create application menu template
     const menuTemplate: Electron.MenuItemConstructorOptions[] = [
@@ -332,7 +334,8 @@ app.whenReady().then(async () => {
   });
 
   // Read package.json for About panel information
-  const packageJson = require('../package.json');
+  const packageJsonPath = path.join(app.getAppPath(), 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
   // Configure About panel
   app.setAboutPanelOptions({
