@@ -267,7 +267,9 @@ async function buildMenu() {
 
     // NEW DIAGNOSTIC 2: Confirm this line was executed.
     if (DEBUG_MENU) {
-      console.log('[DIAGNOSTIC] Menu.setApplicationMenu() was called successfully.');
+      console.log(
+        '[DIAGNOSTIC] Menu.setApplicationMenu() was called successfully.'
+      );
     }
   } catch (error) {
     console.error('Error building menu:', error);
@@ -276,6 +278,31 @@ async function buildMenu() {
 
 // App lifecycle handlers
 app.whenReady().then(async () => {
+  // --- MINIMAL MENU TEST ---
+  // Let's try to set the simplest possible menu immediately.
+  try {
+    const minimalMenu = Menu.buildFromTemplate([
+      {
+        label: 'TestMenu',
+        submenu: [
+          {
+            label: 'Test Item',
+            click: () => console.log('MINIMAL MENU CLICKED!'),
+          },
+          { type: 'separator' },
+          { role: 'quit' },
+        ],
+      },
+    ]);
+    Menu.setApplicationMenu(minimalMenu);
+    console.log(
+      '[MINIMAL TEST] A hardcoded minimal menu was set successfully.'
+    );
+  } catch (e) {
+    console.error('[MINIMAL TEST] The minimal menu failed to set:', e);
+  }
+  // --- END OF TEST ---
+
   console.log('[DEBUG] App is ready. Starting setup...');
 
   console.log('[DEBUG] Reloading ignore rules...');
@@ -381,7 +408,9 @@ app.whenReady().then(async () => {
   });
   console.log('[DEBUG] About panel configured.');
 
-  console.log('[DEBUG] Setting up menu rebuild listener and building initial menu...');
+  console.log(
+    '[DEBUG] Setting up menu rebuild listener and building initial menu...'
+  );
   // Set up menu rebuild listener and build initial menu
   ipcMain.on('app:rebuild-menu', buildMenu);
   await buildMenu();
