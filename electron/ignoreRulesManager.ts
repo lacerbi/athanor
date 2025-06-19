@@ -8,6 +8,9 @@ import ignore from 'ignore';
 import { FILE_SYSTEM, SETTINGS } from '../src/utils/constants';
 import { PathUtils } from './services/PathUtils';
 
+// Debug configuration
+const DEBUG_IGNORE_RULES = true; // Set to true for detailed logging, false for production
+
 // Configuration constants
 const IGNORE_RULES_DEBOUNCE_MS = 500;
 
@@ -348,6 +351,37 @@ class IgnoreRulesManager {
       if (this.useGitignore) {
         gitignores.forEach(file => this.gitIgnoreRules.add(file.content));
         if (gitignores.length > 0) this.gitRulesLoaded = true;
+      }
+
+      // Debug logging for compiled ignore rules
+      if (DEBUG_IGNORE_RULES) {
+        console.log('--- [ATHANOR DEBUG] Compiled Ignore Rules ---');
+        
+        console.log(`\n[DEBUG] .athignore rules loaded: ${this.athRulesLoaded}`);
+        if (athignores.length > 0) {
+          athignores.forEach(file => {
+            console.log(`  Source: ${file.path === '.' ? 'root' : file.path}/.athignore`);
+            const content = file.content.trim();
+            console.log(`  Content:\n---\n${content}\n---`);
+          });
+        } else {
+          console.log('  No .athignore files were processed.');
+        }
+
+        console.log(`\n[DEBUG] .gitignore processing enabled: ${this.useGitignore}`);
+        if (this.useGitignore) {
+            console.log(`[DEBUG] .gitignore rules loaded: ${this.gitRulesLoaded}`);
+            if (gitignores.length > 0) {
+                gitignores.forEach(file => {
+                    console.log(`  Source: ${file.path === '.' ? 'root' : file.path}/.gitignore`);
+                    const content = file.content.trim();
+                    console.log(`  Content:\n---\n${content}\n---`);
+                });
+            } else {
+                console.log('  No .gitignore files were processed.');
+            }
+        }
+        console.log('\n--- [ATHANOR DEBUG] End of Ignore Rules ---');
       }
 
       console.log(`Ignore rule compilation complete. Processed ${athignores.length} .athignore files and ${gitignores.length} .gitignore files.`);
