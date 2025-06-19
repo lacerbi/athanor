@@ -56,6 +56,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
+  const currentDirectoryRef = useRef<string>('');
 
   const { addLog } = useLogStore();
   const { clearFileSelection } = useWorkbenchStore();
@@ -83,18 +84,20 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         newlyCreatedPath = silentOrNewPath;
         silent = true;
       }
-      if (isRefreshing || !currentDirectory) return;
+      
+      const dir = currentDirectoryRef.current;
+      if (isRefreshing || !dir) return;
 
       setIsRefreshing(true);
       try {
         await window.fileService.reloadIgnoreRules();
         const { mainTree, materialsTree } =
-          await loadAndSetTrees(currentDirectory);
+          await loadAndSetTrees(dir);
         setFilesData(mainTree);
         setResourcesData(materialsTree);
 
         // Load effective configuration with settings
-        await loadAndSetEffectiveConfig(currentDirectory);
+        await loadAndSetEffectiveConfig(dir);
 
         // Load prompts and tasks
         await Promise.all([loadPrompts(), loadTasks()]);
@@ -116,7 +119,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       }
       setIsRefreshing(false);
     },
-    [currentDirectory, isRefreshing, addLog]
+    [isRefreshing, addLog]
   );
 
   const setupWatcher = useCallback(
@@ -145,6 +148,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       useFileSystemStore.getState().resetState();
       clearContext();
       setCurrentDirectory(normalizedDir);
+      currentDirectoryRef.current = normalizedDir;
 
       const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
       // Clear selections for active tab when initializing new project
@@ -284,6 +288,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         } else {
           // No project state - set empty state
           setCurrentDirectory('');
+          currentDirectoryRef.current = '';
           setFilesData(null);
           setResourcesData(null);
           useFileSystemStore.getState().resetState();
@@ -299,6 +304,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
         // On error, set to no project state
         setCurrentDirectory('');
+        currentDirectoryRef.current = '';
         setFilesData(null);
         setResourcesData(null);
         useFileSystemStore.getState().resetState();
