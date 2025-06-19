@@ -195,14 +195,14 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
       );
     });
 
-    it('should skip directories ignored by parent ignore files', async () => {
+    it('should skip directories ignored by parent ignore files (Root Pruning)', async () => {
       // Setup file system structure with ignored directory
       const fileStructure = new Map([
         [
           '/test/project',
           {
             isDirectory: true,
-            files: ['src', 'node_modules', '.athignore', '.ath_materials'],
+            files: ['src', 'node_modules', '.gitignore', '.ath_materials'],
           },
         ],
         [
@@ -216,13 +216,13 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ],
         [
           '/test/project/node_modules/package',
-          { isDirectory: true, files: ['.gitignore'] },
+          { isDirectory: true, files: ['.gitignore'] }, // This should never be read
         ],
       ]);
 
       const ignoreFiles = new Map([
         ['/test/project/.ath_materials/project_settings.json', '{}'],
-        ['/test/project/.athignore', 'node_modules/'],
+        ['/test/project/.gitignore', 'node_modules/'],
       ]);
 
       // Mock fs operations
@@ -252,49 +252,26 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         throw error;
       });
 
-      // Re-import and mock the ignore library to control its behavior
-      jest.resetModules();
-      jest.doMock('ignore', () => {
-        return jest.fn(() => ({
-          add: jest.fn().mockReturnThis(),
-          ignores: jest.fn((path: string) => path === 'node_modules/'),
-          test: jest.fn((path: string) => ({
-            ignored: path === 'node_modules/',
-            unignored: false,
-          }))
-        }));
-      });
-
-      // Re-import ignoreRulesManager to use the mocked ignore library
-      const { ignoreRulesManager: freshManager } = await import(
-        './ignoreRulesManager'
-      );
-
-      // Setup fresh manager
-      freshManager.clearError();
-      freshManager.setBaseDir(testBaseDir);
-
       // Load ignore rules to trigger scanning
-      await freshManager.loadIgnoreRules();
+      await ignoreRulesManager.loadIgnoreRules();
 
-      // Verify that the scanner didn't try to read ignore files in node_modules
+      // Verify that the root .gitignore was read for pruning
       expect(mockFsReadFile).toHaveBeenCalledWith(
-        '/test/project/.athignore',
+        '/test/project/.gitignore',
         'utf-8'
       );
+      // Verify that the scanner did NOT try to read any files inside node_modules
       expect(mockFsReadFile).not.toHaveBeenCalledWith(
         '/test/project/node_modules/package/.gitignore',
         'utf-8'
       );
-
-      // Reset modules back to normal for other tests
-      jest.resetModules();
     });
 
     it('should handle missing ignore files gracefully', async () => {
       // Setup file system structure without ignore files
       const fileStructure = new Map([
-        ['/test/project', { isDirectory: true, files: ['src'] }],
+        ['/test/project', { isDirectory: true, files: ['src', '.ath_materials'] }],
+        ['/test/project/.ath_materials', { isDirectory: true, files: [] }],
         ['/test/project/src', { isDirectory: true, files: ['components'] }],
         [
           '/test/project/src/components',
@@ -318,8 +295,10 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         return (entry?.files ?? []) as any;
       });
 
-      mockFsReadFile.mockImplementation(async () => {
-        throw new Error('File not found');
+      mockFsReadFile.mockImplementation(async (filePath) => {
+        const error = new Error(`ENOENT for read ${filePath}`);
+        (error as NodeJS.ErrnoException).code = 'ENOENT';
+        throw error;
       });
 
       // Should not throw when no ignore files exist
@@ -370,7 +349,9 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         if (content) {
           return content;
         }
-        throw new Error('File not found');
+        const error = new Error(`ENOENT for read ${filePath}`);
+        (error as NodeJS.ErrnoException).code = 'ENOENT';
+        throw error;
       });
 
       // Load ignore rules to trigger scanning
@@ -417,14 +398,26 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         return (entry?.files ?? []) as any;
       });
 
-      mockFsReadFile.mockImplementation(async () => {
-        throw new Error('File not found');
+      mockFsReadFile.mockImplementation(async (filePath) => {
+        // Only project_settings.json should be read
+        if (
+          filePath === '/test/project/.ath_materials/project_settings.json'
+        ) {
+          return '{}';
+        }
+        const error = new Error(`ENOENT for read ${filePath}`);
+        (error as NodeJS.ErrnoException).code = 'ENOENT';
+        throw error;
       });
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
 
-      // Verify that scanner didn't try to read ignore files in .ath_materials
+      // Verify that scanner read project settings but not ignore files in .ath_materials
+      expect(mockFsReadFile).toHaveBeenCalledWith(
+        '/test/project/.ath_materials/project_settings.json',
+        'utf-8'
+      );
       expect(mockFsReadFile).not.toHaveBeenCalledWith(
         '/test/project/.ath_materials/.gitignore',
         'utf-8'
@@ -436,16 +429,12 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
       const fileStructure = new Map([
         ['/test/project', { isDirectory: true, files: ['src', 'restricted'] }],
         ['/test/project/src', { isDirectory: true, files: ['components'] }],
+        // 'restricted' directory is defined, but readdir will fail for it
+        ['/test/project/restricted', { isDirectory: true, files: [] }],
       ]);
 
       // Mock fs operations
-      mockFsAccess.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        if (pathStr === '/test/project/restricted') {
-          throw new Error('Permission denied');
-        }
-        return undefined;
-      });
+      mockFsAccess.mockResolvedValue(undefined); // Allow access check to pass
 
       mockFsStat.mockImplementation(async (filePath) => {
         const pathStr = filePath.toString();
@@ -457,19 +446,29 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
 
       mockFsReaddir.mockImplementation(async (dirPath) => {
         const pathStr = dirPath.toString();
+        // Fail readdir for the 'restricted' directory to trigger the console.warn
+        if (pathStr === '/test/project/restricted') {
+          throw new Error('Permission denied on readdir');
+        }
         const entry = fileStructure.get(pathStr);
         return (entry?.files ?? []) as any;
       });
 
-      mockFsReadFile.mockImplementation(async () => {
-        throw new Error('File not found');
+      mockFsReadFile.mockImplementation(async (filePath) => {
+        const error = new Error(`ENOENT for read ${filePath}`);
+        (error as NodeJS.ErrnoException).code = 'ENOENT';
+        throw error;
       });
 
       // Should not throw when encountering inaccessible directories
       await expect(ignoreRulesManager.loadIgnoreRules()).resolves.not.toThrow();
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Error reading directory restricted'),
+        expect.any(Error)
+      );
     });
 
-    it('should handle malformed project settings gracefully', async () => {
+    it('should handle malformed project settings gracefully and use defaults', async () => {
       // Setup file system structure
       const fileStructure = new Map([
         [
@@ -509,21 +508,29 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         if (content) {
           return content;
         }
-        throw new Error('File not found');
+        const error = new Error(`ENOENT for read ${filePath}`);
+        (error as NodeJS.ErrnoException).code = 'ENOENT';
+        throw error;
       });
 
-      // The current implementation does not gracefully handle malformed JSON and stops.
-      // This test is adjusted to reflect the current behavior.
-      await expect(ignoreRulesManager.loadIgnoreRules()).resolves.not.toThrow();
+      await ignoreRulesManager.loadIgnoreRules();
+
+      // Should not throw, should log a warning, and should proceed with defaults
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Could not read or parse project_settings.json'));
+      
+      // Should have attempted to read project settings
       expect(mockFsReadFile).toHaveBeenCalledWith(
         '/test/project/.ath_materials/project_settings.json',
         'utf-8'
       );
-      expect(mockFsReadFile).toHaveBeenCalledTimes(1);
-      expect(mockFsReadFile).not.toHaveBeenCalledWith(
+      // Should have fallen back to default (useGitignore: true) and read .gitignore
+      expect(mockFsReadFile).toHaveBeenCalledWith(
         '/test/project/.gitignore',
         'utf-8'
       );
+      
+      // Verify the rule from .gitignore was actually loaded
+      expect(ignoreRulesManager.ignores('dist/')).toBe(true);
     });
   });
 
@@ -712,7 +719,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
 
       await expect(
         ignoreRulesManager.addIgnorePattern('*.log')
-      ).rejects.toThrow('Permission denied');
+      ).resolves.toBe(false); // addIgnorePattern now returns false on error
     });
   });
 
@@ -731,6 +738,13 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
 
     it('should track and clear errors', () => {
       expect(ignoreRulesManager.getLastError()).toBeNull();
+      const error = new Error('test error');
+      try {
+        (ignoreRulesManager as any).handleError(error, 'testing');
+      } catch (e) {
+        // expected
+      }
+      expect(ignoreRulesManager.getLastError()).toBe(error);
       ignoreRulesManager.clearError();
       expect(ignoreRulesManager.getLastError()).toBeNull();
     });

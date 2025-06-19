@@ -405,7 +405,9 @@ class IgnoreRulesManager {
 
       return false;
     } catch (error) {
-      this.handleError(error, `adding to ignore file: ${itemPath}`);
+      const errorObj = error instanceof Error ? error : new Error(String(error));
+      this.lastError = errorObj;
+      console.error(`Error during adding to ignore file: ${itemPath}:`, error);
       return false;
     }
   }
