@@ -19,11 +19,16 @@ import {
 } from './services/ProjectGraphService';
 import { PROJECT_ANALYSIS } from '../src/utils/constants';
 
+fixPath(); // Adjusts PATH in packaged Electron app to match the shell PATH
+
 // Create singleton instances
 export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
 export const gitService = new GitService(fileService.getBaseDir());
-export const projectGraphService = new ProjectGraphService(fileService, gitService);
+export const projectGraphService = new ProjectGraphService(
+  fileService,
+  gitService
+);
 export const userActivityService = new UserActivityService(fileService);
 export const relevanceEngine = new RelevanceEngineService(
   fileService,
@@ -356,7 +361,7 @@ app.whenReady().then(async () => {
         console.log('[Main] Analysis complete, graph is now considered fresh.');
         graphIsPotentiallyStale = false;
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('[Main] Automatic project analysis failed:', err);
       });
   };
@@ -368,7 +373,7 @@ app.whenReady().then(async () => {
         `[Main] User inactive for ${
           PROJECT_ANALYSIS.USER_INACTIVITY_DELAY / 1000
         }s. Running analysis.`
-       );
+      );
       runAnalysisAndCatch();
     }, PROJECT_ANALYSIS.USER_INACTIVITY_DELAY);
   };

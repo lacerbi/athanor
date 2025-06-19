@@ -101,6 +101,7 @@
     "chokidar": "^4.0.3",
     "diff": "^7.0.0",
     "diff-match-patch": "^1.0.5",
+    "fix-path": "^4.0.0",
     "ignore": "^7.0.0",
     "js-tiktoken": "^1.0.16",
     "lucide-react": "^0.469.0",
