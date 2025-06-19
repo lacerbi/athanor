@@ -83,55 +83,55 @@ This will clone the Athanor repository into an `athanor` subfolder and install a
 
 If the `npx setup-athanor` command doesn't work, or if you prefer to set up the project manually, follow these steps:
 
-1.  **Clone the Repository**
+1.  **Clone the Repository:**
 
     ```bash
-    git clone [https://github.com/lacerbi/athanor.git](https://github.com/lacerbi/athanor.git)
+    git clone https://github.com/lacerbi/athanor.git
     ```
 
     Alternatively, you can [download the source code](https://github.com/lacerbi/athanor/archive/refs/heads/main.zip) as a ZIP file and extract it.
 
-2.  **Install Dependencies**
+2.  **Install Dependencies:**
     Navigate into the Athanor folder and install the required npm packages:
 
-        ```bash
-        cd athanor
-        npm install
-        ```
+    ```bash
+    cd athanor
+    npm install
+    ```
 
     </details>
 
 ### Running Athanor
 
-First, navigate into the Athanor folder, e.g. `cd athanor`.
+First, navigate into the Athanor folder, e.g., `cd athanor`.
 
-- **Run in Development Mode:**
-  To run the app directly from the source code (slower):
+- **Run in Development Mode (Slower):**
+  You can run the app directly from the source code:
 
   ```bash
   npm start
   ```
 
-- **Compile the Application:**
-  It is recommended to compile Athanor into a standalone application. The `npm run package` command handles this, creating a platform-specific application in the `out/` directory.
+- **Compile the Application (Recommended):**
+  It is recommended to compile Athanor into a standalone application. The `npm run package` command handles this, creating a platform-specific application in the `out/` directory:
 
   ```bash
   npm run package
   ```
 
-  This will create a folder named something like `out/Athanor-win32-x64` (the exact name depends on your operating system and architecture). Inside this folder, you will find the executable to run the application.
+  This will create a folder named something like `out/Athanor-win32-x64` (the exact name depends on your operating system and architecture). Inside this folder, you will find the executable to run the application. You need to run this only once (or whenever you update to a new version of Athanor).
 
   <details>
   <summary><strong>Important: Running the Compiled App for the First Time</strong></summary>
 
   - **On Windows and Linux:**
-    Navigate into the output folder (e.g., `out/Athanor-win32-x64`) and run the `Athanor` executable.
+    Navigate into the output folder (e.g., `out/Athanor-win32-x64`) and run the `Athanor` executable. Since the app was compiled on your machine, you should have no warnings.
 
   - **On macOS:**
     The output folder (e.g., `out/Athanor-darwin-arm64`) will contain `Athanor.app`. Because this application is not signed with an Apple Developer ID, Gatekeeper will block it by default. To run it:
 
-        1.  Right-click the `Athanor.app` icon and select "Open".
-        2.  A dialog will appear warning you that the developer is unidentified. Click the "Open" button to run the app.
+    1.  Right-click the `Athanor.app` icon and select "Open".
+    2.  A dialog will appear warning you that the developer is unidentified. Click the "Open" button to run the app.
 
     You only need to do this the very first time you launch the application. You can also drag `Athanor.app` to your `/Applications` folder for easier access.
     </details>
