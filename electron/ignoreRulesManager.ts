@@ -103,15 +103,6 @@ class IgnoreRulesManager {
    * @returns True if the path should be ignored, false otherwise.
    */
   ignores(pathToCheck: string): boolean {
-    // [DEBUG] Add this block to check the state when 'node_modules' is evaluated.
-    if (pathToCheck.startsWith('node_modules')) {
-      console.log(`[DEBUG] Checking path: ${pathToCheck}`);
-      console.log('[DEBUG] Rules loaded status:', {
-        athRules: this.athRulesLoaded,
-        gitRules: this.gitRulesLoaded,
-      });
-    }
-
     if (!pathToCheck || typeof pathToCheck !== 'string') {
       return false; // Invalid input
     }
@@ -125,21 +116,21 @@ class IgnoreRulesManager {
     }
 
     // Tier 1: Check .athignore rules first (highest precedence)
-    // The .test() method returns {ignored: boolean, unignored: boolean},
-    // allowing us to see if any rule had an opinion.
+  	// The .test() method returns {ignored: boolean, unignored: boolean},
+  	// allowing us to see if any rule had an opinion.
     const athResult = this.athIgnoreRules.test(normalizedPath);
     if (athResult.ignored || athResult.unignored) {
       // An .athignore rule matched. This decision is final.
       return athResult.ignored;
     }
 
-    // Tier 2: Check .gitignore if enabled and Tier 1 had no opinion.
+  	// Tier 2: Check .gitignore if enabled and Tier 1 had no opinion.
     if (this.useGitignore) {
       // We can use the simpler .ignores() here as there's no third tier.
       return this.gitIgnoreRules.ignores(normalizedPath);
     }
 
-    // Default: not ignored if no rules match.
+  	// Default: not ignored if no rules match.
     return false;
   }
 
@@ -220,9 +211,11 @@ class IgnoreRulesManager {
                     rules: gitignoreData.rules,
                     content: gitignoreData.content
                 });
-                if (!hasCurrentRules) {
-                    currentIgnores.add(gitignoreData.rules);
-                }
+                // Add gitignore rules to the local pruner (`currentIgnores`) and ensure the
+                // pruner is activated. This fixes a bug where local .gitignore files
+                // were not used for pruning if a .athignore existed in the same directory.
+                currentIgnores.add(gitignoreData.rules);
+                hasCurrentRules = true;
             }
         }
 
@@ -332,9 +325,11 @@ class IgnoreRulesManager {
         const rootGitignorePath = PathUtils.joinUnix(currentBaseDir, '.gitignore');
         const rootGitignoreData = await this._readIgnoreFile(rootGitignorePath, true);
         if (rootGitignoreData) {
-          if (!hasRootRules) {
-            rootPruningRules.add(rootGitignoreData.rules);
-          }
+          // FIX: Add gitignore rules for pruning regardless of whether athignore exists.
+          // This ensures that rules like `node_modules/` are always used for pruning,
+          // fixing the primary cause of application hangs on project load.
+          rootPruningRules.add(rootGitignoreData.rules);
+          hasRootRules = true;
         }
       }
 
