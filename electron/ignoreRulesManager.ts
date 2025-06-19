@@ -5,8 +5,11 @@
 import * as path from 'path';
 import * as fs from 'fs/promises';
 import ignore from 'ignore';
-import { FILE_SYSTEM } from '../src/utils/constants';
+import { FILE_SYSTEM, SETTINGS } from '../src/utils/constants';
 import { PathUtils } from './services/PathUtils';
+
+// Configuration constants
+const IGNORE_RULES_DEBOUNCE_MS = 500;
 
 /**
  * Represents an ignore file with its location and parsed rules
@@ -65,7 +68,11 @@ class IgnoreRulesManager {
   // Master compiled rulesets
   private athIgnoreRules: ignore.Ignore = ignore();
   private gitIgnoreRules: ignore.Ignore = ignore();
-  private useGitignore = true;
+  private useGitignore = SETTINGS.defaults.project.useGitignore;
+  
+  // State tracking flags for debugging
+  private athRulesLoaded = false;
+  private gitRulesLoaded = false;
 
   // Update base directory and reload rules
   async setBaseDir(newDir: string) {
@@ -82,6 +89,8 @@ class IgnoreRulesManager {
   clearRules() {
     this.athIgnoreRules = ignore();
     this.gitIgnoreRules = ignore();
+    this.athRulesLoaded = false;
+    this.gitRulesLoaded = false;
     console.log('Ignore rules cleared.');
   }
 
@@ -94,6 +103,15 @@ class IgnoreRulesManager {
    * @returns True if the path should be ignored, false otherwise.
    */
   ignores(pathToCheck: string): boolean {
+    // [DEBUG] Add this block to check the state when 'node_modules' is evaluated.
+    if (pathToCheck.startsWith('node_modules')) {
+      console.log(`[DEBUG] Checking path: ${pathToCheck}`);
+      console.log('[DEBUG] Rules loaded status:', {
+        athRules: this.athRulesLoaded,
+        gitRules: this.gitRulesLoaded,
+      });
+    }
+
     if (!pathToCheck || typeof pathToCheck !== 'string') {
       return false; // Invalid input
     }
@@ -145,8 +163,8 @@ class IgnoreRulesManager {
    * Recursively scan for all ignore files in the project directory
    */
   private async _scanForIgnoreFiles(
-    startDir: string, 
-    useGitignore: boolean, 
+    startDir: string,
+    useGitignore: boolean,
     pruningRules?: ignore.Ignore
   ): Promise<{
     athignores: IgnoreFile[],
@@ -154,94 +172,100 @@ class IgnoreRulesManager {
   }> {
     const athignores: IgnoreFile[] = [];
     const gitignores: IgnoreFile[] = [];
-    
+
     const absoluteStartDir =
-      startDir === '.' ? this.baseDir : PathUtils.joinUnix(this.baseDir, startDir);
+        startDir === '.' ? this.baseDir : PathUtils.joinUnix(this.baseDir, startDir);
     if (!absoluteStartDir) return { athignores: [], gitignores: [] };
     const platformStartDir = PathUtils.toPlatform(absoluteStartDir);
-    
+
     try {
-      await fs.access(platformStartDir);
-      const stats = await fs.stat(platformStartDir);
-      if (!stats.isDirectory()) {
-        return { athignores, gitignores };
-      }
+        await fs.access(platformStartDir);
+        const stats = await fs.stat(platformStartDir);
+        if (!stats.isDirectory()) {
+            return { athignores, gitignores };
+        }
     } catch (error) {
-      return { athignores, gitignores };
+        // This catch is for basic directory access and can remain silent
+        return { athignores, gitignores };
     }
 
     const currentIgnores = ignore();
     let hasCurrentRules = false;
 
-    const athignorePath = PathUtils.joinUnix(absoluteStartDir, '.athignore');
-    const athignoreData = await this._readIgnoreFile(athignorePath);
-    if (athignoreData) {
-      athignores.push({
-        path: startDir,
-        rules: athignoreData.rules,
-        content: athignoreData.content,
-      });
-      currentIgnores.add(athignoreData.rules);
-      hasCurrentRules = true;
-    }
-
-    if (useGitignore) {
-      const gitignorePath = PathUtils.joinUnix(absoluteStartDir, '.gitignore');
-      const gitignoreData = await this._readIgnoreFile(gitignorePath, true);
-      if (gitignoreData) {
-        gitignores.push({
-          path: startDir,
-          rules: gitignoreData.rules,
-          content: gitignoreData.content
-        });
-        if (!hasCurrentRules) {
-          currentIgnores.add(gitignoreData.rules);
-        }
-      }
-    }
-
     try {
-      const entries = await fs.readdir(platformStartDir);
-      
-      for (const entry of entries) {
-        const entryPath = PathUtils.toPlatform(
-          PathUtils.joinUnix(absoluteStartDir, entry)
-        );
-        let isDirectory = false;
-        
-        try {
-          const entryStats = await fs.stat(entryPath);
-          isDirectory = entryStats.isDirectory();
-        } catch (error) {
-          continue;
+        const entries = await fs.readdir(platformStartDir);
+
+        // Check for .athignore and read it if it exists
+        if (entries.includes('.athignore')) {
+            const athignorePath = PathUtils.joinUnix(absoluteStartDir, '.athignore');
+            const athignoreData = await this._readIgnoreFile(athignorePath);
+            if (athignoreData) {
+                athignores.push({
+                    path: startDir,
+                    rules: athignoreData.rules,
+                    content: athignoreData.content,
+                });
+                currentIgnores.add(athignoreData.rules);
+                hasCurrentRules = true;
+            }
         }
-        
-        if (!isDirectory) {
-          continue;
+
+        // Check for .gitignore and read it if it exists
+        if (useGitignore && entries.includes('.gitignore')) {
+            const gitignorePath = PathUtils.joinUnix(absoluteStartDir, '.gitignore');
+            const gitignoreData = await this._readIgnoreFile(gitignorePath, true);
+            if (gitignoreData) {
+                gitignores.push({
+                    path: startDir,
+                    rules: gitignoreData.rules,
+                    content: gitignoreData.content
+                });
+                if (!hasCurrentRules) {
+                    currentIgnores.add(gitignoreData.rules);
+                }
+            }
         }
-        
-        const entryRelativePath = startDir === '.' ? entry : PathUtils.joinUnix(startDir, entry);
-        
-        if (startDir === '.' && entry === this.materialsDir) {
-          continue;
+
+        // Now, recurse into subdirectories
+        for (const entry of entries) {
+            const entryPath = PathUtils.toPlatform(
+                PathUtils.joinUnix(absoluteStartDir, entry)
+            );
+            let isDirectory = false;
+
+            try {
+                const entryStats = await fs.stat(entryPath);
+                isDirectory = entryStats.isDirectory();
+            } catch (error) {
+                continue;
+            }
+
+            if (!isDirectory) {
+                continue;
+            }
+
+            const entryRelativePath = startDir === '.' ? entry : PathUtils.joinUnix(startDir, entry);
+
+            if (startDir === '.' && entry === this.materialsDir) {
+                continue;
+            }
+
+            const ignoreTestPath = PathUtils.normalizeForIgnore(entryRelativePath, true);
+            if (ignoreTestPath) {
+                if (pruningRules && pruningRules.ignores(ignoreTestPath)) {
+                    continue;
+                }
+                if (hasCurrentRules && currentIgnores.ignores(ignoreTestPath)) {
+                    continue;
+                }
+            }
+
+            const subResults = await this._scanForIgnoreFiles(entryRelativePath, useGitignore, pruningRules);
+            athignores.push(...subResults.athignores);
+            gitignores.push(...subResults.gitignores);
         }
-        
-        const ignoreTestPath = PathUtils.normalizeForIgnore(entryRelativePath, true);
-        if (ignoreTestPath) {
-          if (pruningRules && pruningRules.ignores(ignoreTestPath)) {
-            continue;
-          }
-          if (hasCurrentRules && currentIgnores.ignores(ignoreTestPath)) {
-            continue;
-          }
-        }
-        
-        const subResults = await this._scanForIgnoreFiles(entryRelativePath, useGitignore, pruningRules);
-        athignores.push(...subResults.athignores);
-        gitignores.push(...subResults.gitignores);
-      }
     } catch (error) {
-      console.warn(`Error reading directory ${startDir}:`, error);
+        console.warn(`Error reading directory ${startDir}:`, error);
     }
 
     return { athignores, gitignores };
@@ -262,8 +286,8 @@ class IgnoreRulesManager {
   // Load ignore rules: scan for all ignore files and sort them
   async loadIgnoreRules() {
     const now = Date.now();
-    if (now - this.lastLoadTime < 500) {
-      return; // Debounce subsequent calls within 500ms
+    if (now - this.lastLoadTime < IGNORE_RULES_DEBOUNCE_MS) {
+      return; // Debounce subsequent calls within configured time
     }
     this.lastLoadTime = now;
 
@@ -274,24 +298,20 @@ class IgnoreRulesManager {
       return;
     }
 
-    this.useGitignore = true;
+    this.useGitignore = SETTINGS.defaults.project.useGitignore; // Start with the default value.
     const projectSettingsPath = PathUtils.toPlatform(
       PathUtils.joinUnix(currentBaseDir, FILE_SYSTEM.materialsDirName, 'project_settings.json')
     );
 
     try {
       const raw = await fs.readFile(projectSettingsPath, 'utf-8');
-      try {
-        const cfg = JSON.parse(raw);
-        this.useGitignore = cfg.useGitignore ?? true;
-      } catch (parseErr) {
-        console.warn('[ignoreRulesManager] Malformed project_settings.json – skipping ignore scan');
-        return;
-      }
-    } catch (readErr: any) {
-      if (readErr.code && readErr.code !== 'ENOENT') {
-        console.warn('[ignoreRulesManager] Cannot read project settings – skipping ignore scan');
-        return;
+      const cfg = JSON.parse(raw);
+      this.useGitignore = cfg.useGitignore ?? SETTINGS.defaults.project.useGitignore;
+    } catch (error: any) {
+      // If the file doesn't exist (ENOENT), that's fine; we just use defaults.
+      // For any other error (parsing, permissions), we'll log a warning and proceed with defaults instead of halting.
+      if (error.code !== 'ENOENT') {
+        console.warn(`[ignoreRulesManager] Could not read or parse project_settings.json. Proceeding with default ignore settings. Error: ${error.message}`);
       }
     }
 
@@ -328,9 +348,11 @@ class IgnoreRulesManager {
       // Add rules to the master instances. The `ignore` library handles overrides correctly
       // when rules are added in this shallow-to-deep order.
       athignores.forEach(file => this.athIgnoreRules.add(file.content));
+      if (athignores.length > 0) this.athRulesLoaded = true;
 
       if (this.useGitignore) {
         gitignores.forEach(file => this.gitIgnoreRules.add(file.content));
+        if (gitignores.length > 0) this.gitRulesLoaded = true;
       }
 
       console.log(`Ignore rule compilation complete. Processed ${athignores.length} .athignore files and ${gitignores.length} .gitignore files.`);
