@@ -57,7 +57,8 @@ Athanor is currently available in developer mode.
 
 **Prerequisites:** Running Athanor will require **Node.js** (latest LTS version, v18.x+).
 
-#### Installing Node.js
+<details>
+<summary><strong>Installing Node.js</strong></summary>
 
 - **Windows**: Download and install from [nodejs.org](https://nodejs.org/)
 - **macOS**: Using Homebrew: `brew install node`
@@ -65,14 +66,75 @@ Athanor is currently available in developer mode.
   - Ubuntu/Debian: `sudo apt update && sudo apt install nodejs npm`
   - Fedora: `sudo dnf install nodejs npm`
   - Or use [NVM](https://github.com/nvm-sh/nvm) (recommended): `nvm install --lts`
+  </details>
 
-### Installation & Running
+### Installing Athanor
 
-1. **Run the command-line installer**: `npx setup-athanor`
-   - This will clone/download Athanor in the `athanor` subfolder from where you run it
-2. **Navigate to the Athanor directory**: `cd athanor`
-3. **Run the application**: `npm start`
-   - You can also compile Athanor into an executable with `npm run package`
+The easiest way to get started is with the command-line installer:
+
+```bash
+npx setup-athanor
+```
+
+This will clone the Athanor repository into an `athanor` subfolder and install all dependencies.
+
+<details>
+<summary><strong>Manual Installation Instructions</strong></summary>
+
+If the `npx setup-athanor` command doesn't work, or if you prefer to set up the project manually, follow these steps:
+
+1.  **Clone the Repository**
+
+    ```bash
+    git clone [https://github.com/lacerbi/athanor.git](https://github.com/lacerbi/athanor.git)
+    ```
+
+    Alternatively, you can [download the source code](https://github.com/lacerbi/athanor/archive/refs/heads/main.zip) as a ZIP file and extract it.
+
+2.  **Install Dependencies**
+    Navigate into the Athanor folder and install the required npm packages:
+
+        ```bash
+        cd athanor
+        npm install
+        ```
+
+    </details>
+
+### Running Athanor
+
+First, navigate into the Athanor folder, e.g. `cd athanor`.
+
+- **Run in Development Mode:**
+  To run the app directly from the source code (slower):
+
+  ```bash
+  npm start
+  ```
+
+- **Compile the Application:**
+  It is recommended to compile Athanor into a standalone application. The `npm run package` command handles this, creating a platform-specific application in the `out/` directory.
+
+  ```bash
+  npm run package
+  ```
+
+  This will create a folder named something like `out/Athanor-win32-x64` (the exact name depends on your operating system and architecture). Inside this folder, you will find the executable to run the application.
+
+  <details>
+  <summary><strong>Important: Running the Compiled App for the First Time</strong></summary>
+
+  - **On Windows and Linux:**
+    Navigate into the output folder (e.g., `out/Athanor-win32-x64`) and run the `Athanor` executable.
+
+  - **On macOS:**
+    The output folder (e.g., `out/Athanor-darwin-arm64`) will contain `Athanor.app`. Because this application is not signed with an Apple Developer ID, Gatekeeper will block it by default. To run it:
+
+        1.  Right-click the `Athanor.app` icon and select "Open".
+        2.  A dialog will appear warning you that the developer is unidentified. Click the "Open" button to run the app.
+
+    You only need to do this the very first time you launch the application. You can also drag `Athanor.app` to your `/Applications` folder for easier access.
+    </details>
 
 ## 💡 Quick Start
 
