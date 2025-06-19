@@ -26,6 +26,7 @@ The most valuable contributions at this stage include:
   - Share your experiences in the [Discussions forum](https://github.com/lacerbi/athanor/discussions).
 
 - **Supporting Athanor:**
+
   - Consider [sponsoring the project on GitHub](https://github.com/sponsors/lacerbi) to support its development.
 
 - **Reporting Bugs:**
@@ -64,7 +65,7 @@ For those interested in exploring the codebase or contributing code:
 
 3.  **Install Dependencies:**
 
-    - Run `npm install` in the project root to install all necessary dependencies (as per Athanor's `package.json`).
+    - Run `npm ci` in the project root to install all necessary dependencies (as per Athanor's `package.json`).
 
 4.  **Recommended Tools & Configuration:**
 
