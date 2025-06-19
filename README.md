@@ -111,7 +111,7 @@ First, navigate into the Athanor folder, e.g., `cd athanor`.
   ```
 
 - **Compile the Application (Recommended):**
-  It is recommended to compile Athanor into a standalone application. The `npm run package` command handles this, creating a platform-specific application in the `out/` directory:
+  It is recommended to compile Athanor into a standalone application:
 
   ```bash
   npm run package
