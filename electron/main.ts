@@ -21,6 +21,9 @@ import {
 } from './services/ProjectGraphService';
 import { PROJECT_ANALYSIS } from '../src/utils/constants';
 
+// Debug flag for menu diagnostics
+const DEBUG_MENU = true;
+
 console.log('[DEBUG] About to call fixPath()...');
 fixPath(); // Adjusts PATH in packaged Electron app to match the shell PATH
 console.log('[DEBUG] fixPath() completed successfully.');
@@ -251,8 +254,21 @@ async function buildMenu() {
       },
     ];
 
+    // NEW DIAGNOSTIC 1: Log the template object to inspect its structure.
+    if (DEBUG_MENU) {
+      console.log(
+        '[DIAGNOSTIC] Final menu template object:',
+        JSON.stringify(menuTemplate, null, 2)
+      );
+    }
+
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
+
+    // NEW DIAGNOSTIC 2: Confirm this line was executed.
+    if (DEBUG_MENU) {
+      console.log('[DIAGNOSTIC] Menu.setApplicationMenu() was called successfully.');
+    }
   } catch (error) {
     console.error('Error building menu:', error);
   }
