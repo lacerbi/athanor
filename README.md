@@ -59,7 +59,9 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
 <summary><strong>Installing Node.js</strong></summary>
 
 - **Windows**: Download and install from [nodejs.org](https://nodejs.org/)
-- **macOS**: Using Homebrew: `brew install node`
+- **macOS**:
+  - Using Homebrew (recommended): `brew install node`
+  - Download and install from [nodejs.org](https://nodejs.org/)
 - **Linux**:
   - Ubuntu/Debian: `sudo apt update && sudo apt install nodejs npm`
   - Fedora: `sudo dnf install nodejs npm`
@@ -94,7 +96,7 @@ If the `npx setup-athanor` command doesn't work, or if you prefer to set up the 
 
     ```bash
     cd athanor
-    npm install
+    npm ci
     ```
 
     </details>
