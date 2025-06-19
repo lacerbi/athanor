@@ -152,13 +152,18 @@ contextBridge.exposeInMainWorld('fileService', {
   
   // Watcher operations
   watch: async (path: string, callback: (event: string, filename: string) => void) => {
-    ipcRenderer.removeAllListeners('fs:change');
-    ipcRenderer.removeAllListeners('fs:error');
+    const changeListener = (_: any, event: string, filename: string) => callback(event, filename);
+    const errorListener = (_: any, error: any) => console.error('File system error:', error);
 
-    ipcRenderer.on('fs:change', (_, event, filename) => callback(event, filename));
-    ipcRenderer.on('fs:error', (_, error) => console.error('File system error:', error));
+    ipcRenderer.on('fs:change', changeListener);
+    ipcRenderer.on('fs:error', errorListener);
 
-    return await ipcRenderer.invoke('fs:watch', path);
+    await ipcRenderer.invoke('fs:watch', path);
+
+    return () => {
+      ipcRenderer.removeListener('fs:change', changeListener);
+      ipcRenderer.removeListener('fs:error', errorListener);
+    };
   },
   cleanupWatchers: () => ipcRenderer.invoke('fs:cleanupWatchers'),
   
@@ -200,17 +205,18 @@ contextBridge.exposeInMainWorld('fileSystem', {
     path: string,
     callback: (event: string, filename: string) => void
   ) => {
-    ipcRenderer.removeAllListeners('fs:change');
-    ipcRenderer.removeAllListeners('fs:error');
+    const changeListener = (_: any, event: string, filename: string) => callback(event, filename);
+    const errorListener = (_: any, error: any) => console.error('File system error:', error);
 
-    ipcRenderer.on('fs:change', (_, event, filename) =>
-      callback(event, filename)
-    );
-    ipcRenderer.on('fs:error', (_, error) =>
-      console.error('File system error:', error)
-    );
+    ipcRenderer.on('fs:change', changeListener);
+    ipcRenderer.on('fs:error', errorListener);
 
-    return await ipcRenderer.invoke('fs:watch', path);
+    await ipcRenderer.invoke('fs:watch', path);
+
+    return () => {
+      ipcRenderer.removeListener('fs:change', changeListener);
+      ipcRenderer.removeListener('fs:error', errorListener);
+    };
   },
   readFile: (
     path: string,

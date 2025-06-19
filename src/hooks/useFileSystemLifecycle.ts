@@ -57,6 +57,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
   const currentDirectoryRef = useRef<string>('');
+  const watcherUnsubscribeRef = useRef<() => void>(() => {});
 
   const { addLog } = useLogStore();
   const { clearFileSelection } = useWorkbenchStore();
@@ -125,7 +126,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const setupWatcher = useCallback(
     async (dir: string) => {
       try {
-        await window.fileService.watch(dir, async () => {
+        // Clean up any existing watcher
+        watcherUnsubscribeRef.current();
+
+        const unsubscribe = await window.fileService.watch(dir, async () => {
           if (refreshTimeoutRef.current) {
             clearTimeout(refreshTimeoutRef.current);
           }
@@ -133,6 +137,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
             refreshFileSystem(true);
           }, 300);
         });
+
+        watcherUnsubscribeRef.current = unsubscribe;
       } catch (error) {
         console.error('Error setting up watcher:', error);
         addLog('Failed to set up file system watcher');
@@ -314,6 +320,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     initializeFileSystem();
 
     return () => {
+      watcherUnsubscribeRef.current();
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
       }

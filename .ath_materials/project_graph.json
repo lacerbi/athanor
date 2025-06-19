@@ -58,6 +58,8 @@
       [
         "electron",
         "../services/RelevanceEngineService",
+        "../services/SettingsService",
+        "../../src/utils/constants",
         "ath:recalculate-context"
       ]
     ],
@@ -423,6 +425,23 @@
       ]
     ],
     [
+      "electron/services/DependencyResolver.test.ts",
+      [
+        "./DependencyResolver",
+        "./FileService",
+        ", async () => {\n        const result = await DependencyResolver.resolve(",
+        ", async () => {\n      const result = await DependencyResolver.resolve("
+      ]
+    ],
+    [
+      "electron/services/DependencyResolver.ts",
+      [
+        "./FileService",
+        "./PathUtils",
+        ".ts"
+      ]
+    ],
+    [
       "electron/services/DependencyScanner.test.ts",
       [
         "./DependencyScanner",
@@ -440,6 +459,7 @@
         "statements",
         "my_module",
         ", () => {\n      const content = `\n# import old_module\nfrom new_module import feature\n      `;\n      const dependencies = DependencyScanner.scan(pyFilePath, content);\n      expect(dependencies).toEqual([",
+        ", () => {\n      const content = `\nfrom . import models\nfrom .utils import helper\nfrom ..config import settings\nfrom ..package.module import thing\n      `;\n      const dependencies = DependencyScanner.scan(pyFilePath, content);\n      expect(dependencies).toEqual(expect.arrayContaining([",
         ", () => {\n      const content = `\nimport services\nfrom services import api\nfrom services.utils import helper\n      `;\n      const dependencies = DependencyScanner.scan(pyFilePath, content);\n      expect(dependencies).toEqual(expect.arrayContaining([",
         ", () => {\n      const cssFilePath =",
         "normalize.css",
@@ -529,9 +549,9 @@
         "./PathUtils",
         "../../common/types/git-service",
         "../../src/utils/constants",
+        "./DependencyResolver",
         "project_graph.json",
-        "[ProjectGraphService] Failed to save graph to cache:",
-        "./"
+        "[ProjectGraphService] Failed to save graph to cache:"
       ]
     ],
     [
@@ -554,7 +574,8 @@
         "./ProjectGraphService",
         "./TaskAnalysisUtils",
         "./UserActivityService",
-        ".ts"
+        "./DependencyResolver",
+        "./"
       ]
     ],
     [
@@ -646,6 +667,10 @@
     ],
     [
       "resources/files/default_athignore",
+      []
+    ],
+    [
+      "resources/images/athanor.icns",
       []
     ],
     [
@@ -1213,7 +1238,7 @@
         "../utils/configUtils",
         "../utils/constants",
         "../types/global",
-        ");\r\n  const [isRefreshing, setIsRefreshing] = useState(false);\r\n  const [appVersion, setAppVersion] = useState<string>("
+        ");\n  const [isRefreshing, setIsRefreshing] = useState(false);\n  const [appVersion, setAppVersion] = useState<string>("
       ]
     ],
     [
@@ -1896,6 +1921,18 @@
       ]
     ],
     [
+      "electron/services/DependencyResolver.test.ts",
+      []
+    ],
+    [
+      "electron/services/DependencyResolver.ts",
+      [
+        "electron/services/DependencyResolver.test.ts",
+        "electron/services/ProjectGraphService.ts",
+        "electron/services/RelevanceEngineService.ts"
+      ]
+    ],
+    [
       "electron/services/DependencyScanner.test.ts",
       []
     ],
@@ -1920,6 +1957,8 @@
         "electron/handlers/fileWatchHandlers.ts",
         "electron/ipcHandlers.ts",
         "electron/main.ts",
+        "electron/services/DependencyResolver.test.ts",
+        "electron/services/DependencyResolver.ts",
         "electron/services/FileService.test.ts",
         "electron/services/ProjectGraphService.ts",
         "electron/services/RelevanceEngineService.ts",
@@ -1950,6 +1989,7 @@
         "electron/handlers/fileOperationHandlers.ts",
         "electron/handlers/fileWatchHandlers.ts",
         "electron/ignoreRulesManager.ts",
+        "electron/services/DependencyResolver.ts",
         "electron/services/FileService.test.ts",
         "electron/services/FileService.ts",
         "electron/services/GitService.ts",
@@ -1984,6 +2024,7 @@
     [
       "electron/services/SettingsService.ts",
       [
+        "electron/handlers/contextHandlers.ts",
         "electron/handlers/coreHandlers.test.ts",
         "electron/handlers/coreHandlers.ts",
         "electron/handlers/settingsHandlers.ts",
@@ -2061,6 +2102,10 @@
     ],
     [
       "resources/files/default_athignore",
+      []
+    ],
+    [
+      "resources/images/athanor.icns",
       []
     ],
     [
@@ -2595,29 +2640,7 @@
     ],
     [
       "src/types/global.d.ts",
-      [
-        "electron/handlers/settingsHandlers.ts",
-        "electron/services/SettingsService.ts",
-        "src/actions/ApplyAiOutputAction.test.ts",
-        "src/actions/ApplyAiOutputAction.ts",
-        "src/commands/applyChangesCommand.ts",
-        "src/commands/parser/applyChangesParser.ts",
-        "src/commands/types.ts",
-        "src/components/action-panel/SendViaApiControls.tsx",
-        "src/components/ActionPanel.tsx",
-        "src/components/ApplicationSettingsPane.tsx",
-        "src/components/FileViewerPanel.tsx",
-        "src/components/ProjectSettingsPane.tsx",
-        "src/hooks/useFileSystemLifecycle.ts",
-        "src/stores/applyChangesStore.ts",
-        "src/stores/fileSystemStore.ts",
-        "src/stores/settingsStore.ts",
-        "src/stores/workbenchStore.ts",
-        "src/utils/buildPrompt.ts",
-        "src/utils/codebaseDocumentation.ts",
-        "src/utils/configUtils.ts",
-        "src/utils/fileOperations.ts"
-      ]
+      []
     ],
     [
       "src/types/promptTypes.ts",
@@ -2671,6 +2694,7 @@
     [
       "src/utils/constants.ts",
       [
+        "electron/handlers/contextHandlers.ts",
         "electron/handlers/coreHandlers.test.ts",
         "electron/handlers/coreHandlers.ts",
         "electron/ignoreRulesManager.ts",
@@ -2842,6 +2866,7 @@
       [
         "electron/main.ts",
         "electron/modules/llm/main/config.ts",
+        "resources/images/athanor.icns",
         "TUTORIAL.md"
       ]
     ],
@@ -2880,6 +2905,7 @@
         "electron/services/PathUtils.ts",
         "package.json",
         "PROJECT.md",
+        "resources/images/athanor.icns",
         "resources/prompts/custom_prompt_designer.md",
         "resources/prompts/custom_task_designer.md",
         "resources/prompts/example_prompt.xml",
@@ -2921,6 +2947,7 @@
         "electron/services/FileService.ts",
         "package.json",
         "PROJECT.md",
+        "resources/images/athanor.icns",
         "src/components/AthanorApp.tsx",
         "src/components/fileExplorer/FileExplorer.tsx",
         "src/components/MainLayout.tsx",
@@ -2936,6 +2963,8 @@
       "electron/handlers/contextHandlers.ts",
       [
         "electron/services/RelevanceEngineService.ts",
+        "electron/services/SettingsService.ts",
+        "src/utils/constants.ts",
         "tests/__mocks__/electron.ts"
       ]
     ],
@@ -3338,11 +3367,44 @@
       ]
     ],
     [
+      "electron/services/DependencyResolver.test.ts",
+      [
+        ".github/ISSUE_TEMPLATE/config.yml",
+        "electron/main.ts",
+        "electron/modules/llm/main/config.ts",
+        "electron/modules/secure-api-storage/common/errors.ts",
+        "src/commands/parser/index.ts",
+        "electron/services/DependencyResolver.ts",
+        "electron/services/FileService.ts",
+        "package.json",
+        "src/index.css",
+        "src/index.tsx",
+        "src/utils/constants.ts"
+      ]
+    ],
+    [
+      "electron/services/DependencyResolver.ts",
+      [
+        ".github/ISSUE_TEMPLATE/config.yml",
+        "electron/modules/llm/main/config.ts",
+        "electron/modules/secure-api-storage/common/errors.ts",
+        "src/commands/parser/index.ts",
+        "electron/services/FileService.ts",
+        "electron/services/PathUtils.ts",
+        "package.json",
+        "src/index.css",
+        "src/index.tsx"
+      ]
+    ],
+    [
       "electron/services/DependencyScanner.test.ts",
       [
+        ".github/ISSUE_TEMPLATE/config.yml",
         "electron/main.ts",
         "src/commands/types.ts",
-        "electron/services/DependencyScanner.ts"
+        "electron/modules/llm/main/config.ts",
+        "electron/services/DependencyScanner.ts",
+        "package.json"
       ]
     ],
     [
@@ -3351,6 +3413,7 @@
         "electron/ignoreRulesManager.ts",
         "electron/services/FileService.ts",
         "electron/services/PathUtils.ts",
+        "resources/images/athanor.icns",
         "tests/__mocks__/electron.ts"
       ]
     ],
@@ -3407,6 +3470,7 @@
         "common/types/git-service.ts",
         "src/commands/types.ts",
         "src/commands/parser/index.ts",
+        "electron/services/DependencyResolver.ts",
         "electron/services/DependencyScanner.ts",
         "electron/services/FileService.ts",
         "electron/services/PathUtils.ts",
@@ -3429,7 +3493,7 @@
       [
         "common/types/git-service.ts",
         "src/commands/types.ts",
-        "src/commands/parser/index.ts",
+        "electron/services/DependencyResolver.ts",
         "electron/services/DependencyScanner.ts",
         "electron/services/FileService.ts",
         "electron/services/PathUtils.ts",
@@ -3437,8 +3501,6 @@
         "electron/services/PromptUtils.ts",
         "electron/services/TaskAnalysisUtils.ts",
         "electron/services/UserActivityService.ts",
-        "src/index.css",
-        "src/index.tsx",
         "src/utils/constants.ts",
         "src/utils/tokenCount.ts"
       ]
@@ -3500,6 +3562,7 @@
       [
         "electron/main.ts",
         "electron/preload.ts",
+        "resources/images/athanor.icns",
         "tests/__mocks__/electron.ts"
       ]
     ],
@@ -3546,6 +3609,7 @@
         "electron/modules/secure-api-storage/common/errors.ts",
         "src/commands/parser/index.ts",
         "electron/preload.ts",
+        "resources/images/athanor.icns",
         "src/index.css",
         "src/index.tsx",
         "tests/__mocks__/electron.ts",
@@ -3570,6 +3634,7 @@
         "electron/main.ts",
         "src/commands/types.ts",
         "electron/modules/llm/main/config.ts",
+        "resources/images/athanor.icns",
         "tests/__mocks__/electron.ts"
       ]
     ],
@@ -3625,6 +3690,7 @@
       [
         "CONTRIBUTING.md",
         "package.json",
+        "resources/images/athanor.icns",
         "src/components/SettingsPanel.tsx",
         "TUTORIAL.md"
       ]
@@ -3645,6 +3711,7 @@
         "electron/main.ts",
         "electron/modules/llm/main/config.ts",
         "README.md",
+        "resources/images/athanor.icns",
         "resources/prompts/prompt_architect.xml",
         "resources/prompts/prompt_autoselect.xml",
         "resources/prompts/prompt_develop.xml",
@@ -3664,6 +3731,7 @@
         "electron/modules/secure-api-storage/common/errors.ts",
         "jest.config.ts",
         "package.json",
+        "resources/images/athanor.icns",
         "resources/prompts/example_task.xml",
         "resources/prompts/prompt_develop.xml",
         "resources/prompts/task_ai_summary.xml",
@@ -3676,13 +3744,15 @@
     [
       "resources/prompts/example_prompt.xml",
       [
-        "electron/main.ts"
+        "electron/main.ts",
+        "resources/images/athanor.icns"
       ]
     ],
     [
       "resources/prompts/example_task.xml",
       [
         "electron/main.ts",
+        "resources/images/athanor.icns",
         "resources/prompts/task_ai_summary.xml",
         "resources/prompts/task_unit_tests.xml"
       ]
@@ -3918,6 +3988,7 @@
       "src/components/action-panel/CustomPromptsHelpModal.tsx",
       [
         "electron/main.ts",
+        "resources/images/athanor.icns",
         "resources/prompts/custom_prompt_designer.md",
         "resources/prompts/custom_task_designer.md",
         "src/actions/ManualCopyAction.ts",
@@ -4281,6 +4352,7 @@
       "src/stores/promptStore.ts",
       [
         "src/commands/types.ts",
+        "resources/images/athanor.icns",
         "src/types/promptTypes.ts"
       ]
     ],
@@ -4298,6 +4370,7 @@
       "src/stores/taskStore.ts",
       [
         "src/commands/types.ts",
+        "resources/images/athanor.icns",
         "src/types/taskTypes.ts"
       ]
     ],
@@ -4344,6 +4417,7 @@
         "electron/main.ts",
         "src/commands/types.ts",
         "src/commands/parser/index.ts",
+        "resources/images/athanor.icns",
         "src/index.css",
         "src/index.tsx",
         "src/stores/logStore.ts",
@@ -4412,6 +4486,7 @@
       "src/utils/constants.ts",
       [
         "src/commands/parser/index.ts",
+        "resources/images/athanor.icns",
         "src/index.css",
         "src/index.tsx"
       ]
@@ -4497,6 +4572,7 @@
         "electron/modules/llm/main/config.ts",
         "electron/modules/secure-api-storage/common/errors.ts",
         "PROJECT.md",
+        "resources/images/athanor.icns",
         "resources/prompts/example_prompt.xml",
         "resources/prompts/example_task.xml",
         "src/commands/descriptions.ts",
@@ -4534,30 +4610,1932 @@
   ],
   "hubFiles": [
     "src/utils/constants.ts",
-    "src/types/global.d.ts",
     "src/utils/fileTree.ts",
     "src/stores/logStore.ts",
-    "src/stores/workbenchStore.ts",
     "electron/services/FileService.ts",
+    "src/stores/workbenchStore.ts",
     "src/stores/fileSystemStore.ts",
     "electron/modules/llm/common/types.ts",
+    "electron/services/PathUtils.ts",
     "src/stores/settingsStore.ts",
     "electron/modules/secure-api-storage/common/types.ts",
-    "electron/services/PathUtils.ts",
     "src/stores/contextStore.ts",
     "src/types/taskTypes.ts",
     "electron/modules/llm/main/clients/types.ts",
     "src/actions/ManualCopyAction.ts",
     "src/stores/applyChangesStore.ts",
     "electron/modules/secure-api-storage/common/providers/ProviderInterface.ts",
-    "src/types/promptTypes.ts",
     "electron/services/SettingsService.ts",
+    "src/types/promptTypes.ts",
     "src/utils/fileSelection.ts"
   ],
   "sharedCommitGraph": [
     [
+      "package-lock.json",
+      [
+        {
+          "file": "package.json",
+          "count": 5
+        },
+        {
+          "file": "resources/images/athanor.icns",
+          "count": 1
+        },
+        {
+          "file": "CHANGELOG.md",
+          "count": 2
+        },
+        {
+          "file": "src/components/FileViewerPanel.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/index.css",
+          "count": 2
+        },
+        {
+          "file": "src/utils/fileTextDetection.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/languageMapping.ts",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/prompts/prompt_test.xml",
+          "count": 1
+        },
+        {
+          "file": ".athignore",
+          "count": 1
+        },
+        {
+          "file": ".github/workflows/pr-checks.yml",
+          "count": 1
+        },
+        {
+          "file": "CONTRIBUTING.md",
+          "count": 1
+        },
+        {
+          "file": "electron/services/PathUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "resources/files/default_athignore",
+          "count": 1
+        },
+        {
+          "file": "scripts/check-dco.sh",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ApplyAiOutputAction.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ManualCopyAction.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/fileExplorer/hooks/.athignore",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_develop.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_writer.xml",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ApplyAiOutputAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/applyChangesCommand.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/parser/applyChangesParser.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/AthanorApp.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/AthanorTabs.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/MainLayout.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/hooks/useFileSystemLifecycle.ts",
+          "count": 1
+        },
+        {
+          "file": "src/hooks/useLogPanelResize.ts",
+          "count": 1
+        },
+        {
+          "file": "src/stores/applyChangesStore.ts",
+          "count": 1
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/fileOperations.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "package.json",
+      [
+        {
+          "file": "package-lock.json",
+          "count": 5
+        },
+        {
+          "file": "resources/images/athanor.icns",
+          "count": 1
+        },
+        {
+          "file": "forge.config.js",
+          "count": 4
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 1
+        },
+        {
+          "file": ".athignore",
+          "count": 6
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 3
+        },
+        {
+          "file": "electron/windowManager.ts",
+          "count": 1
+        },
+        {
+          "file": "webpack.main.config.js",
+          "count": 1
+        },
+        {
+          "file": "webpack.preload.config.js",
+          "count": 1
+        },
+        {
+          "file": "webpack.renderer.config.js",
+          "count": 1
+        },
+        {
+          "file": "CHANGELOG.md",
+          "count": 12
+        },
+        {
+          "file": "src/components/AthanorApp.tsx",
+          "count": 4
+        },
+        {
+          "file": "src/hooks/useFileSystemLifecycle.ts",
+          "count": 7
+        },
+        {
+          "file": ".ath_materials/project_settings.json",
+          "count": 2
+        },
+        {
+          "file": "electron/handlers/coreHandlers.ts",
+          "count": 5
+        },
+        {
+          "file": "electron/ignoreRulesManager.test.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/ignoreRulesManager.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/FileService.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/PathUtils.test.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/PathUtils.ts",
+          "count": 2
+        },
+        {
+          "file": "src/stores/settingsStore.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/handlers/coreHandlers.test.ts",
+          "count": 3
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 4
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 7
+        },
+        {
+          "file": "src/utils/constants.ts",
+          "count": 4
+        },
+        {
+          "file": "PROJECT.md",
+          "count": 3
+        },
+        {
+          "file": "TUTORIAL.md",
+          "count": 5
+        },
+        {
+          "file": "resources/files/default_athignore",
+          "count": 3
+        },
+        {
+          "file": "src/components/ProjectCreationDialog.tsx",
+          "count": 3
+        },
+        {
+          "file": "src/components/ProjectSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/services/fileIgnoreService.ts",
+          "count": 2
+        },
+        {
+          "file": ".ath_materials/TODO.txt",
+          "count": 1
+        },
+        {
+          "file": ".github/workflows/auto-tag.yml",
+          "count": 1
+        },
+        {
+          "file": ".github/workflows/pr-checks.yml",
+          "count": 2
+        },
+        {
+          "file": "README.md",
+          "count": 7
+        },
+        {
+          "file": "CONTRIBUTING.md",
+          "count": 5
+        },
+        {
+          "file": ".github/FUNDING.yml",
+          "count": 1
+        },
+        {
+          "file": ".github/ISSUE_TEMPLATE/bug_report.md",
+          "count": 1
+        },
+        {
+          "file": ".github/ISSUE_TEMPLATE/config.yml",
+          "count": 1
+        },
+        {
+          "file": ".github/ISSUE_TEMPLATE/feature_request.md",
+          "count": 1
+        },
+        {
+          "file": ".gitignore",
+          "count": 1
+        },
+        {
+          "file": "resources/images/athanor_logo.png",
+          "count": 2
+        },
+        {
+          "file": "src/components/FileViewerPanel.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/index.css",
+          "count": 2
+        },
+        {
+          "file": "src/utils/fileTextDetection.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/languageMapping.ts",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/prompts/prompt_test.xml",
+          "count": 1
+        },
+        {
+          "file": "scripts/check-dco.sh",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ApplyAiOutputAction.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ManualCopyAction.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/fileExplorer/hooks/.athignore",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/custom_prompt_designer.md",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/custom_task_designer.md",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/example_prompt.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/example_task.xml",
+          "count": 1
+        },
+        {
+          "file": "src/components/ActionPanel.tsx",
+          "count": 3
+        },
+        {
+          "file": "src/components/action-panel/CustomPromptsHelpModal.tsx",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/task_pr_changelog.xml",
+          "count": 1
+        },
+        {
+          "file": "src/components/FileContextMenu.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/action-panel/VariantsContextMenu.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/stores/workbenchStore.ts",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/README.md",
+          "count": 1
+        },
+        {
+          "file": "public/index.html",
+          "count": 1
+        },
+        {
+          "file": "resources/images/athanor.ico",
+          "count": 1
+        },
+        {
+          "file": "resources/images/athanor.png",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_develop.xml",
+          "count": 4
+        },
+        {
+          "file": "resources/prompts/prompt_writer.xml",
+          "count": 4
+        },
+        {
+          "file": "src/commands/parser/commandParser.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/buildPrompt.ts",
+          "count": 3
+        },
+        {
+          "file": "src/utils/codebaseDocumentation.ts",
+          "count": 3
+        },
+        {
+          "file": "src/utils/configUtils.ts",
+          "count": 2
+        },
+        {
+          "file": "src/utils/projectInfoUtils.ts",
+          "count": 2
+        },
+        {
+          "file": "src/utils/promptTemplates.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ApplyAiOutputAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/applyChangesCommand.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/parser/applyChangesParser.ts",
+          "count": 2
+        },
+        {
+          "file": "src/components/AthanorTabs.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/MainLayout.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/hooks/useLogPanelResize.ts",
+          "count": 1
+        },
+        {
+          "file": "src/stores/applyChangesStore.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/fileOperations.ts",
+          "count": 2
+        },
+        {
+          "file": "athanor.yml",
+          "count": 2
+        },
+        {
+          "file": "src/stores/fileSystemStore.ts",
+          "count": 2
+        },
+        {
+          "file": "resources/prompts/prompt_architect.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_autoselect.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_metaprompt.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_minimal.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_query.xml",
+          "count": 2
+        },
+        {
+          "file": "src/actions/ManualCopyAction.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/fileSystemManager.ts",
+          "count": 1
+        },
+        {
+          "file": "src/services/fileSystemService.ts",
+          "count": 1
+        },
+        {
+          "file": "temp.txt",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "resources/images/athanor.icns",
+      [
+        {
+          "file": "package-lock.json",
+          "count": 1
+        },
+        {
+          "file": "package.json",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "forge.config.js",
+      [
+        {
+          "file": "package.json",
+          "count": 4
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 1
+        },
+        {
+          "file": ".athignore",
+          "count": 2
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/windowManager.ts",
+          "count": 1
+        },
+        {
+          "file": "webpack.main.config.js",
+          "count": 1
+        },
+        {
+          "file": "webpack.preload.config.js",
+          "count": 1
+        },
+        {
+          "file": "webpack.renderer.config.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/README.md",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/project_settings.json",
+          "count": 1
+        },
+        {
+          "file": "PROJECT.md",
+          "count": 1
+        },
+        {
+          "file": "README.md",
+          "count": 1
+        },
+        {
+          "file": "public/index.html",
+          "count": 1
+        },
+        {
+          "file": "resources/images/athanor.ico",
+          "count": 1
+        },
+        {
+          "file": "resources/images/athanor.png",
+          "count": 1
+        },
+        {
+          "file": "resources/images/athanor_logo.png",
+          "count": 1
+        },
+        {
+          "file": "athanor.yml",
+          "count": 1
+        },
+        {
+          "file": "electron/fileSystemManager.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/handlers/coreHandlers.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 1
+        },
+        {
+          "file": "resources/files/default_athignore",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_query.xml",
+          "count": 1
+        },
+        {
+          "file": "src/components/AthanorApp.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/ProjectCreationDialog.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/hooks/useFileSystemLifecycle.ts",
+          "count": 1
+        },
+        {
+          "file": "src/services/fileIgnoreService.ts",
+          "count": 1
+        },
+        {
+          "file": "src/services/fileSystemService.ts",
+          "count": 1
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 1
+        },
+        {
+          "file": "temp.txt",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "electron/modules/llm/main/config.ts",
+      [
+        {
+          "file": "src/config/athanorModelPresets.json",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "src/config/athanorModelPresets.json",
+      [
+        {
+          "file": "electron/modules/llm/main/config.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "electron/services/DependencyResolver.test.ts",
+      [
+        {
+          "file": "electron/services/DependencyResolver.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "electron/services/DependencyResolver.ts",
+      [
+        {
+          "file": "electron/services/DependencyResolver.test.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/ProjectGraphService.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/RelevanceEngineService.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "electron/services/ProjectGraphService.ts",
+      [
+        {
+          "file": "electron/services/DependencyResolver.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/RelevanceEngineService.ts",
+          "count": 3
+        },
+        {
+          "file": "src/utils/constants.ts",
+          "count": 4
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 5
+        },
+        {
+          "file": "common/types/git-service.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 4
+        },
+        {
+          "file": "electron/workers/projectAnalysisWorker.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/DependencyScanner.ts",
+          "count": 1
+        },
+        {
+          "file": "project_graph.json",
+          "count": 1
+        },
+        {
+          "file": "electron/ipcHandlers.ts",
+          "count": 2
+        },
+        {
+          "file": "webpack.main.config.js",
+          "count": 1
+        },
+        {
+          "file": "FEATURE.md",
+          "count": 2
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/FileService.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "electron/services/RelevanceEngineService.ts",
+      [
+        {
+          "file": "electron/services/DependencyResolver.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/ProjectGraphService.ts",
+          "count": 3
+        },
+        {
+          "file": "FEATURE.md",
+          "count": 4
+        },
+        {
+          "file": "electron/handlers/contextHandlers.ts",
+          "count": 4
+        },
+        {
+          "file": "electron/ipcHandlers.ts",
+          "count": 2
+        },
+        {
+          "file": "src/components/ApplicationSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 6
+        },
+        {
+          "file": "src/utils/constants.ts",
+          "count": 7
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 4
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 2
+        },
+        {
+          "file": ".athignore",
+          "count": 1
+        },
+        {
+          "file": "resources/files/default_athignore",
+          "count": 1
+        },
+        {
+          "file": "electron/services/TaskAnalysisUtils.test.ts",
+          "count": 4
+        },
+        {
+          "file": "electron/services/TaskAnalysisUtils.ts",
+          "count": 4
+        },
+        {
+          "file": "src/components/ActionPanel.tsx",
+          "count": 4
+        },
+        {
+          "file": "src/components/action-panel/SelectedFilesDisplay.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
+          "count": 4
+        },
+        {
+          "file": "src/stores/contextStore.ts",
+          "count": 5
+        },
+        {
+          "file": "electron/services/FileService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/index.css",
+          "count": 1
+        },
+        {
+          "file": "src/actions/buildTaskAction.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/PromptUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/PathUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/FileService.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ManualCopyAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/AthanorApp.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/utils/buildPrompt.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/codebaseDocumentation.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      ".ath_materials/TODO.txt",
+      [
+        {
+          "file": "electron/services/DependencyScanner.test.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/DependencyScanner.ts",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 1
+        },
+        {
+          "file": ".github/workflows/auto-tag.yml",
+          "count": 1
+        },
+        {
+          "file": ".github/workflows/pr-checks.yml",
+          "count": 1
+        },
+        {
+          "file": "CHANGELOG.md",
+          "count": 1
+        },
+        {
+          "file": "README.md",
+          "count": 1
+        },
+        {
+          "file": "package.json",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/LICENSE",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/README.md",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/api_cline_compatible.ts",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/clients/anthropic.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/clients/base-llm-client.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/clients/gemini.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/clients/llm-clients-factory.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/clients/openai.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/clients/openrouter.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/clients/response.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/interface/llm-interface.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/interface/memory-manager.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/llm/interface/prompt-utils.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/tailwind.config.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/temp.txt",
+          "count": 1
+        },
+        {
+          "file": "src/components/ApplyChangesPanel.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/MainLayout.tsx",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "electron/services/DependencyScanner.test.ts",
+      [
+        {
+          "file": ".ath_materials/TODO.txt",
+          "count": 1
+        },
+        {
+          "file": "electron/services/DependencyScanner.ts",
+          "count": 2
+        },
+        {
+          "file": "common/types/git-service.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "electron/services/DependencyScanner.ts",
+      [
+        {
+          "file": ".ath_materials/TODO.txt",
+          "count": 1
+        },
+        {
+          "file": "electron/services/DependencyScanner.test.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/ProjectGraphService.ts",
+          "count": 1
+        },
+        {
+          "file": "common/types/git-service.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "FEATURE.md",
+      [
+        {
+          "file": "electron/handlers/contextHandlers.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/ipcHandlers.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/RelevanceEngineService.ts",
+          "count": 4
+        },
+        {
+          "file": "src/components/ApplicationSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 3
+        },
+        {
+          "file": "src/utils/constants.ts",
+          "count": 3
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 3
+        },
+        {
+          "file": ".athignore",
+          "count": 1
+        },
+        {
+          "file": "resources/files/default_athignore",
+          "count": 1
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 3
+        },
+        {
+          "file": "electron/services/ProjectGraphService.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/FileService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/index.css",
+          "count": 1
+        },
+        {
+          "file": "src/stores/contextStore.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/FileService.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/buildTaskAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/ActionPanel.tsx",
+          "count": 1
+        },
+        {
+          "file": "PROJECT.md",
+          "count": 2
+        }
+      ]
+    ],
+    [
+      "electron/handlers/contextHandlers.ts",
+      [
+        {
+          "file": "FEATURE.md",
+          "count": 2
+        },
+        {
+          "file": "electron/ipcHandlers.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/RelevanceEngineService.ts",
+          "count": 4
+        },
+        {
+          "file": "src/components/ApplicationSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 4
+        },
+        {
+          "file": "src/utils/constants.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/buildTaskAction.ts",
+          "count": 2
+        },
+        {
+          "file": "src/components/ActionPanel.tsx",
+          "count": 3
+        },
+        {
+          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/stores/contextStore.ts",
+          "count": 3
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/FileService.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ManualCopyAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/AthanorApp.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/utils/buildPrompt.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/codebaseDocumentation.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "electron/ipcHandlers.ts",
+      [
+        {
+          "file": "FEATURE.md",
+          "count": 2
+        },
+        {
+          "file": "electron/handlers/contextHandlers.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/RelevanceEngineService.ts",
+          "count": 2
+        },
+        {
+          "file": "src/components/ApplicationSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 3
+        },
+        {
+          "file": "src/utils/constants.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 4
+        },
+        {
+          "file": "electron/services/UserActivityService.ts",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 2
+        },
+        {
+          "file": "electron/services/ProjectGraphService.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/workers/projectAnalysisWorker.ts",
+          "count": 1
+        },
+        {
+          "file": "webpack.main.config.js",
+          "count": 1
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 3
+        },
+        {
+          "file": "src/components/AthanorApp.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/components/MainLayout.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/stores/contextStore.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/FileService.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ManualCopyAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/buildTaskAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/ActionPanel.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/utils/buildPrompt.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/codebaseDocumentation.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "src/components/ApplicationSettingsPane.tsx",
+      [
+        {
+          "file": "FEATURE.md",
+          "count": 1
+        },
+        {
+          "file": "electron/handlers/contextHandlers.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/ipcHandlers.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/RelevanceEngineService.ts",
+          "count": 1
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/constants.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "src/types/global.d.ts",
+      [
+        {
+          "file": "FEATURE.md",
+          "count": 3
+        },
+        {
+          "file": "electron/handlers/contextHandlers.ts",
+          "count": 4
+        },
+        {
+          "file": "electron/ipcHandlers.ts",
+          "count": 3
+        },
+        {
+          "file": "electron/services/RelevanceEngineService.ts",
+          "count": 6
+        },
+        {
+          "file": "src/components/ApplicationSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/utils/constants.ts",
+          "count": 6
+        },
+        {
+          "file": "src/components/ActionPanel.tsx",
+          "count": 9
+        },
+        {
+          "file": "src/components/action-panel/SelectedFilesDisplay.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
+          "count": 5
+        },
+        {
+          "file": "src/stores/contextStore.ts",
+          "count": 6
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 2
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 3
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 13
+        },
+        {
+          "file": "electron/services/FileService.ts",
+          "count": 2
+        },
+        {
+          "file": "project_graph.json",
+          "count": 1
+        },
+        {
+          "file": "src/components/AthanorApp.tsx",
+          "count": 6
+        },
+        {
+          "file": "src/components/MainLayout.tsx",
+          "count": 4
+        },
+        {
+          "file": "src/components/FileViewerPanel.tsx",
+          "count": 1
+        },
+        {
+          "file": "electron/services/FileService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/index.css",
+          "count": 4
+        },
+        {
+          "file": "src/actions/buildTaskAction.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/services/GitService.test.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ManualCopyAction.ts",
+          "count": 2
+        },
+        {
+          "file": "src/utils/buildPrompt.ts",
+          "count": 3
+        },
+        {
+          "file": "src/utils/codebaseDocumentation.ts",
+          "count": 3
+        },
+        {
+          "file": "CHANGELOG.md",
+          "count": 4
+        },
+        {
+          "file": "electron/handlers/coreHandlers.test.ts",
+          "count": 3
+        },
+        {
+          "file": "electron/handlers/coreHandlers.ts",
+          "count": 8
+        },
+        {
+          "file": "package.json",
+          "count": 7
+        },
+        {
+          "file": "src/hooks/useFileSystemLifecycle.ts",
+          "count": 7
+        },
+        {
+          "file": ".athignore",
+          "count": 3
+        },
+        {
+          "file": "PROJECT.md",
+          "count": 1
+        },
+        {
+          "file": "TUTORIAL.md",
+          "count": 2
+        },
+        {
+          "file": "electron/ignoreRulesManager.ts",
+          "count": 2
+        },
+        {
+          "file": "resources/files/default_athignore",
+          "count": 2
+        },
+        {
+          "file": "src/components/ProjectCreationDialog.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/components/ProjectSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/services/fileIgnoreService.ts",
+          "count": 2
+        },
+        {
+          "file": "resources/prompts/custom_prompt_designer.md",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/custom_task_designer.md",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/example_prompt.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/example_task.xml",
+          "count": 1
+        },
+        {
+          "file": "src/components/action-panel/CustomPromptsHelpModal.tsx",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_develop.xml",
+          "count": 2
+        },
+        {
+          "file": "resources/prompts/prompt_writer.xml",
+          "count": 2
+        },
+        {
+          "file": "src/commands/parser/commandParser.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/configUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/projectInfoUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/promptTemplates.ts",
+          "count": 1
+        },
+        {
+          "file": "package-lock.json",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ApplyAiOutputAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/applyChangesCommand.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/parser/applyChangesParser.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/AthanorTabs.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/hooks/useLogPanelResize.ts",
+          "count": 1
+        },
+        {
+          "file": "src/stores/applyChangesStore.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/fileOperations.ts",
+          "count": 1
+        },
+        {
+          "file": "athanor.yml",
+          "count": 1
+        },
+        {
+          "file": "electron/fileSystemManager.ts",
+          "count": 1
+        },
+        {
+          "file": "forge.config.js",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_query.xml",
+          "count": 1
+        },
+        {
+          "file": "src/services/fileSystemService.ts",
+          "count": 4
+        },
+        {
+          "file": "temp.txt",
+          "count": 2
+        },
+        {
+          "file": "src/components/FileContextMenu.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/hooks/useFileDrop.ts",
+          "count": 1
+        },
+        {
+          "file": "src/stores/workbenchStore.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/handlers/fileOperationHandlers.ts",
+          "count": 1
+        },
+        {
+          "file": "src/services/promptService.ts",
+          "count": 2
+        },
+        {
+          "file": "src/stores/promptStore.ts",
+          "count": 1
+        },
+        {
+          "file": "src/types/promptTypes.d.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/selectCommand.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/descriptions.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/index.ts",
+          "count": 1
+        },
+        {
+          "file": "src/actions/types.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/descriptions.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/index.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
+      "src/utils/constants.ts",
+      [
+        {
+          "file": "FEATURE.md",
+          "count": 3
+        },
+        {
+          "file": "electron/handlers/contextHandlers.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/ipcHandlers.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/RelevanceEngineService.ts",
+          "count": 7
+        },
+        {
+          "file": "src/components/ApplicationSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/types/global.d.ts",
+          "count": 6
+        },
+        {
+          "file": ".ath_materials/project_graph.json",
+          "count": 5
+        },
+        {
+          "file": "electron/services/UserActivityService.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/ProjectGraphService.ts",
+          "count": 4
+        },
+        {
+          "file": "common/types/git-service.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/GitService.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/main.ts",
+          "count": 4
+        },
+        {
+          "file": "electron/workers/projectAnalysisWorker.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/FileViewerPanel.tsx",
+          "count": 1
+        },
+        {
+          "file": "electron/services/TaskAnalysisUtils.test.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/services/TaskAnalysisUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
+          "count": 3
+        },
+        {
+          "file": "electron/services/PathUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "CHANGELOG.md",
+          "count": 2
+        },
+        {
+          "file": "electron/handlers/coreHandlers.test.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/handlers/coreHandlers.ts",
+          "count": 2
+        },
+        {
+          "file": "electron/preload.ts",
+          "count": 1
+        },
+        {
+          "file": "package.json",
+          "count": 4
+        },
+        {
+          "file": "src/hooks/useFileSystemLifecycle.ts",
+          "count": 3
+        },
+        {
+          "file": ".athignore",
+          "count": 2
+        },
+        {
+          "file": "PROJECT.md",
+          "count": 2
+        },
+        {
+          "file": "TUTORIAL.md",
+          "count": 1
+        },
+        {
+          "file": "electron/ignoreRulesManager.ts",
+          "count": 2
+        },
+        {
+          "file": "resources/files/default_athignore",
+          "count": 1
+        },
+        {
+          "file": "src/components/AthanorApp.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/components/ProjectCreationDialog.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/components/ProjectSettingsPane.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/services/fileIgnoreService.ts",
+          "count": 1
+        },
+        {
+          "file": "athanor.yml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_develop.xml",
+          "count": 2
+        },
+        {
+          "file": "resources/prompts/prompt_writer.xml",
+          "count": 2
+        },
+        {
+          "file": "src/components/ActionPanel.tsx",
+          "count": 6
+        },
+        {
+          "file": "src/stores/fileSystemStore.ts",
+          "count": 2
+        },
+        {
+          "file": "src/utils/buildPrompt.ts",
+          "count": 2
+        },
+        {
+          "file": "src/utils/codebaseDocumentation.ts",
+          "count": 2
+        },
+        {
+          "file": "src/utils/configUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "src/utils/projectInfoUtils.ts",
+          "count": 1
+        },
+        {
+          "file": "README.md",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_architect.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_autoselect.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_metaprompt.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_minimal.xml",
+          "count": 1
+        },
+        {
+          "file": "resources/prompts/prompt_query.xml",
+          "count": 1
+        },
+        {
+          "file": "src/actions/ManualCopyAction.ts",
+          "count": 1
+        },
+        {
+          "file": "src/commands/parser/applyChangesParser.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/MainLayout.tsx",
+          "count": 2
+        },
+        {
+          "file": "src/utils/fileOperations.ts",
+          "count": 1
+        },
+        {
+          "file": "src/hooks/useFileDrop.ts",
+          "count": 1
+        },
+        {
+          "file": "temp.txt",
+          "count": 2
+        },
+        {
+          "file": "src/index.css",
+          "count": 2
+        },
+        {
+          "file": "src/stores/workbenchStore.ts",
+          "count": 1
+        },
+        {
+          "file": "src/components/PromptContextMenu.tsx",
+          "count": 1
+        },
+        {
+          "file": "src/stores/promptStore.ts",
+          "count": 1
+        },
+        {
+          "file": "src/types/promptTypes.ts",
+          "count": 1
+        },
+        {
+          "file": "tailwind.config.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/LICENSE",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/README.md",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/tailwind.config.js",
+          "count": 1
+        },
+        {
+          "file": ".ath_materials/temp.txt",
+          "count": 1
+        },
+        {
+          "file": "electron/filePathManager.ts",
+          "count": 1
+        },
+        {
+          "file": "electron/fileSystemManager.ts",
+          "count": 1
+        },
+        {
+          "file": "src/services/fileSystemService.ts",
+          "count": 1
+        }
+      ]
+    ],
+    [
       ".ath_materials/project_graph.json",
       [
+        {
+          "file": ".ath_materials/TODO.txt",
+          "count": 1
+        },
         {
           "file": "electron/services/UserActivityService.ts",
           "count": 1
@@ -4689,287 +6667,6 @@
         },
         {
           "file": "electron/main.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "src/utils/constants.ts",
-      [
-        {
-          "file": ".ath_materials/project_graph.json",
-          "count": 5
-        },
-        {
-          "file": "electron/services/UserActivityService.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/ProjectGraphService.ts",
-          "count": 4
-        },
-        {
-          "file": "electron/services/RelevanceEngineService.ts",
-          "count": 6
-        },
-        {
-          "file": "common/types/git-service.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/main.ts",
-          "count": 4
-        },
-        {
-          "file": "electron/workers/projectAnalysisWorker.ts",
-          "count": 1
-        },
-        {
-          "file": "FEATURE.md",
-          "count": 2
-        },
-        {
-          "file": "src/components/FileViewerPanel.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 5
-        },
-        {
-          "file": "electron/services/TaskAnalysisUtils.test.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/TaskAnalysisUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
-          "count": 3
-        },
-        {
-          "file": "electron/services/PathUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "CHANGELOG.md",
-          "count": 2
-        },
-        {
-          "file": "electron/handlers/coreHandlers.test.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 3
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 1
-        },
-        {
-          "file": "package.json",
-          "count": 4
-        },
-        {
-          "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 3
-        },
-        {
-          "file": ".athignore",
-          "count": 2
-        },
-        {
-          "file": "PROJECT.md",
-          "count": 2
-        },
-        {
-          "file": "TUTORIAL.md",
-          "count": 1
-        },
-        {
-          "file": "electron/ignoreRulesManager.ts",
-          "count": 2
-        },
-        {
-          "file": "resources/files/default_athignore",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 3
-        },
-        {
-          "file": "src/components/ProjectCreationDialog.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/ProjectSettingsPane.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileIgnoreService.ts",
-          "count": 1
-        },
-        {
-          "file": "athanor.yml",
-          "count": 2
-        },
-        {
-          "file": "resources/prompts/prompt_develop.xml",
-          "count": 2
-        },
-        {
-          "file": "resources/prompts/prompt_writer.xml",
-          "count": 2
-        },
-        {
-          "file": "src/components/ActionPanel.tsx",
-          "count": 6
-        },
-        {
-          "file": "src/stores/fileSystemStore.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/buildPrompt.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/codebaseDocumentation.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/configUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/projectInfoUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "README.md",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_architect.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_autoselect.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_metaprompt.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_minimal.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_query.xml",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ManualCopyAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/parser/applyChangesParser.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/utils/fileOperations.ts",
-          "count": 1
-        },
-        {
-          "file": "src/hooks/useFileDrop.ts",
-          "count": 1
-        },
-        {
-          "file": "temp.txt",
-          "count": 2
-        },
-        {
-          "file": "src/index.css",
-          "count": 2
-        },
-        {
-          "file": "src/stores/workbenchStore.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/PromptContextMenu.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/stores/promptStore.ts",
-          "count": 1
-        },
-        {
-          "file": "src/types/promptTypes.ts",
-          "count": 1
-        },
-        {
-          "file": "tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "electron/filePathManager.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 2
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 2
-        },
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
           "count": 1
         }
       ]
@@ -5131,277 +6828,6 @@
         },
         {
           "file": "electron/handlers/coreHandlers.test.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "electron/services/RelevanceEngineService.ts",
-      [
-        {
-          "file": "electron/main.ts",
-          "count": 4
-        },
-        {
-          "file": "electron/services/ProjectGraphService.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 6
-        },
-        {
-          "file": ".ath_materials/project_graph.json",
-          "count": 2
-        },
-        {
-          "file": ".athignore",
-          "count": 1
-        },
-        {
-          "file": "FEATURE.md",
-          "count": 3
-        },
-        {
-          "file": "resources/files/default_athignore",
-          "count": 1
-        },
-        {
-          "file": "electron/services/TaskAnalysisUtils.test.ts",
-          "count": 4
-        },
-        {
-          "file": "electron/services/TaskAnalysisUtils.ts",
-          "count": 4
-        },
-        {
-          "file": "src/components/ActionPanel.tsx",
-          "count": 4
-        },
-        {
-          "file": "src/components/action-panel/SelectedFilesDisplay.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
-          "count": 4
-        },
-        {
-          "file": "src/stores/contextStore.ts",
-          "count": 5
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 5
-        },
-        {
-          "file": "electron/services/FileService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/index.css",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/contextHandlers.ts",
-          "count": 3
-        },
-        {
-          "file": "src/actions/buildTaskAction.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/services/PromptUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/PathUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/services/FileService.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/ipcHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ManualCopyAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/utils/buildPrompt.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/codebaseDocumentation.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "electron/ipcHandlers.ts",
-      [
-        {
-          "file": "electron/main.ts",
-          "count": 4
-        },
-        {
-          "file": "electron/services/UserActivityService.ts",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/project_graph.json",
-          "count": 2
-        },
-        {
-          "file": "electron/services/ProjectGraphService.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/workers/projectAnalysisWorker.ts",
-          "count": 1
-        },
-        {
-          "file": "webpack.main.config.js",
-          "count": 1
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 3
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/stores/contextStore.ts",
-          "count": 2
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 2
-        },
-        {
-          "file": "FEATURE.md",
-          "count": 1
-        },
-        {
-          "file": "electron/services/FileService.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/contextHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/RelevanceEngineService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ManualCopyAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/buildTaskAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/ActionPanel.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/utils/buildPrompt.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/codebaseDocumentation.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "electron/services/ProjectGraphService.ts",
-      [
-        {
-          "file": "electron/services/RelevanceEngineService.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 4
-        },
-        {
-          "file": ".ath_materials/project_graph.json",
-          "count": 5
-        },
-        {
-          "file": "common/types/git-service.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/main.ts",
-          "count": 4
-        },
-        {
-          "file": "electron/workers/projectAnalysisWorker.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/services/DependencyScanner.ts",
-          "count": 1
-        },
-        {
-          "file": "project_graph.json",
-          "count": 1
-        },
-        {
-          "file": "electron/ipcHandlers.ts",
-          "count": 2
-        },
-        {
-          "file": "webpack.main.config.js",
-          "count": 1
-        },
-        {
-          "file": "FEATURE.md",
-          "count": 2
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/FileService.ts",
           "count": 1
         }
       ]
@@ -5648,87 +7074,6 @@
         {
           "file": "src/components/fileExplorer/hooks/useFileExplorer.ts",
           "count": 1
-        }
-      ]
-    ],
-    [
-      "FEATURE.md",
-      [
-        {
-          "file": ".ath_materials/project_graph.json",
-          "count": 3
-        },
-        {
-          "file": ".athignore",
-          "count": 1
-        },
-        {
-          "file": "electron/services/RelevanceEngineService.ts",
-          "count": 3
-        },
-        {
-          "file": "resources/files/default_athignore",
-          "count": 1
-        },
-        {
-          "file": "electron/main.ts",
-          "count": 3
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/services/ProjectGraphService.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/services/FileService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/index.css",
-          "count": 1
-        },
-        {
-          "file": "src/stores/contextStore.ts",
-          "count": 2
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/ipcHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/FileService.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/contextHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/buildTaskAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/ActionPanel.tsx",
-          "count": 1
-        },
-        {
-          "file": "PROJECT.md",
-          "count": 2
         }
       ]
     ],
@@ -6002,496 +7347,6 @@
       ]
     ],
     [
-      "forge.config.js",
-      [
-        {
-          "file": ".ath_materials/project_graph.json",
-          "count": 1
-        },
-        {
-          "file": ".athignore",
-          "count": 2
-        },
-        {
-          "file": "electron/main.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/windowManager.ts",
-          "count": 1
-        },
-        {
-          "file": "package.json",
-          "count": 3
-        },
-        {
-          "file": "webpack.main.config.js",
-          "count": 1
-        },
-        {
-          "file": "webpack.preload.config.js",
-          "count": 1
-        },
-        {
-          "file": "webpack.renderer.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/project_settings.json",
-          "count": 1
-        },
-        {
-          "file": "PROJECT.md",
-          "count": 1
-        },
-        {
-          "file": "README.md",
-          "count": 1
-        },
-        {
-          "file": "public/index.html",
-          "count": 1
-        },
-        {
-          "file": "resources/images/athanor.ico",
-          "count": 1
-        },
-        {
-          "file": "resources/images/athanor.png",
-          "count": 1
-        },
-        {
-          "file": "resources/images/athanor_logo.png",
-          "count": 1
-        },
-        {
-          "file": "athanor.yml",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 1
-        },
-        {
-          "file": "resources/files/default_athignore",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_query.xml",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/ProjectCreationDialog.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileIgnoreService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 1
-        },
-        {
-          "file": "temp.txt",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "package.json",
-      [
-        {
-          "file": ".ath_materials/project_graph.json",
-          "count": 1
-        },
-        {
-          "file": ".athignore",
-          "count": 6
-        },
-        {
-          "file": "electron/main.ts",
-          "count": 3
-        },
-        {
-          "file": "electron/windowManager.ts",
-          "count": 1
-        },
-        {
-          "file": "forge.config.js",
-          "count": 3
-        },
-        {
-          "file": "webpack.main.config.js",
-          "count": 1
-        },
-        {
-          "file": "webpack.preload.config.js",
-          "count": 1
-        },
-        {
-          "file": "webpack.renderer.config.js",
-          "count": 1
-        },
-        {
-          "file": "CHANGELOG.md",
-          "count": 12
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 4
-        },
-        {
-          "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 7
-        },
-        {
-          "file": ".ath_materials/project_settings.json",
-          "count": 2
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 5
-        },
-        {
-          "file": "electron/ignoreRulesManager.test.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/ignoreRulesManager.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/services/FileService.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/PathUtils.test.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/PathUtils.ts",
-          "count": 2
-        },
-        {
-          "file": "src/stores/settingsStore.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/coreHandlers.test.ts",
-          "count": 3
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 4
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 7
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 4
-        },
-        {
-          "file": "PROJECT.md",
-          "count": 3
-        },
-        {
-          "file": "TUTORIAL.md",
-          "count": 5
-        },
-        {
-          "file": "resources/files/default_athignore",
-          "count": 3
-        },
-        {
-          "file": "src/components/ProjectCreationDialog.tsx",
-          "count": 3
-        },
-        {
-          "file": "src/components/ProjectSettingsPane.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileIgnoreService.ts",
-          "count": 2
-        },
-        {
-          "file": ".ath_materials/TODO.txt",
-          "count": 1
-        },
-        {
-          "file": ".github/workflows/auto-tag.yml",
-          "count": 1
-        },
-        {
-          "file": ".github/workflows/pr-checks.yml",
-          "count": 2
-        },
-        {
-          "file": "README.md",
-          "count": 7
-        },
-        {
-          "file": "CONTRIBUTING.md",
-          "count": 5
-        },
-        {
-          "file": "package-lock.json",
-          "count": 4
-        },
-        {
-          "file": ".github/FUNDING.yml",
-          "count": 1
-        },
-        {
-          "file": ".github/ISSUE_TEMPLATE/bug_report.md",
-          "count": 1
-        },
-        {
-          "file": ".github/ISSUE_TEMPLATE/config.yml",
-          "count": 1
-        },
-        {
-          "file": ".github/ISSUE_TEMPLATE/feature_request.md",
-          "count": 1
-        },
-        {
-          "file": ".gitignore",
-          "count": 1
-        },
-        {
-          "file": "resources/images/athanor_logo.png",
-          "count": 2
-        },
-        {
-          "file": "src/components/FileViewerPanel.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/index.css",
-          "count": 2
-        },
-        {
-          "file": "src/utils/fileTextDetection.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/languageMapping.ts",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/prompts/prompt_test.xml",
-          "count": 1
-        },
-        {
-          "file": "scripts/check-dco.sh",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ApplyAiOutputAction.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ManualCopyAction.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/hooks/.athignore",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/custom_prompt_designer.md",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/custom_task_designer.md",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/example_prompt.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/example_task.xml",
-          "count": 1
-        },
-        {
-          "file": "src/components/ActionPanel.tsx",
-          "count": 3
-        },
-        {
-          "file": "src/components/action-panel/CustomPromptsHelpModal.tsx",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/task_pr_changelog.xml",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileContextMenu.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/action-panel/VariantsContextMenu.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/stores/workbenchStore.ts",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/README.md",
-          "count": 1
-        },
-        {
-          "file": "public/index.html",
-          "count": 1
-        },
-        {
-          "file": "resources/images/athanor.ico",
-          "count": 1
-        },
-        {
-          "file": "resources/images/athanor.png",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_develop.xml",
-          "count": 4
-        },
-        {
-          "file": "resources/prompts/prompt_writer.xml",
-          "count": 4
-        },
-        {
-          "file": "src/commands/parser/commandParser.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/buildPrompt.ts",
-          "count": 3
-        },
-        {
-          "file": "src/utils/codebaseDocumentation.ts",
-          "count": 3
-        },
-        {
-          "file": "src/utils/configUtils.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/projectInfoUtils.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/promptTemplates.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ApplyAiOutputAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/applyChangesCommand.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/parser/applyChangesParser.ts",
-          "count": 2
-        },
-        {
-          "file": "src/components/AthanorTabs.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/hooks/useLogPanelResize.ts",
-          "count": 1
-        },
-        {
-          "file": "src/stores/applyChangesStore.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/fileOperations.ts",
-          "count": 2
-        },
-        {
-          "file": "athanor.yml",
-          "count": 2
-        },
-        {
-          "file": "src/stores/fileSystemStore.ts",
-          "count": 2
-        },
-        {
-          "file": "resources/prompts/prompt_architect.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_autoselect.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_metaprompt.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_minimal.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_query.xml",
-          "count": 2
-        },
-        {
-          "file": "src/actions/ManualCopyAction.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "temp.txt",
-          "count": 1
-        }
-      ]
-    ],
-    [
       "webpack.main.config.js",
       [
         {
@@ -6643,7 +7498,7 @@
         },
         {
           "file": "src/types/global.d.ts",
-          "count": 7
+          "count": 6
         },
         {
           "file": "electron/ipcHandlers.ts",
@@ -6651,7 +7506,7 @@
         },
         {
           "file": "src/components/MainLayout.tsx",
-          "count": 5
+          "count": 4
         },
         {
           "file": "electron/handlers/contextHandlers.ts",
@@ -6699,7 +7554,7 @@
         },
         {
           "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 6
+          "count": 5
         },
         {
           "file": ".athignore",
@@ -6735,7 +7590,7 @@
         },
         {
           "file": "src/utils/constants.ts",
-          "count": 3
+          "count": 2
         },
         {
           "file": "package-lock.json",
@@ -6763,7 +7618,7 @@
         },
         {
           "file": "src/components/AthanorTabs.tsx",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/hooks/useLogPanelResize.ts",
@@ -6783,15 +7638,15 @@
         },
         {
           "file": "athanor.yml",
-          "count": 2
+          "count": 1
         },
         {
           "file": "electron/fileSystemManager.ts",
-          "count": 3
+          "count": 2
         },
         {
           "file": "electron/handlers/coreHandlers.ts",
-          "count": 3
+          "count": 2
         },
         {
           "file": "forge.config.js",
@@ -6803,7 +7658,7 @@
         },
         {
           "file": "src/services/fileSystemService.ts",
-          "count": 3
+          "count": 2
         },
         {
           "file": "temp.txt",
@@ -6847,30 +7702,6 @@
         },
         {
           "file": "electron/filePathManager.ts",
-          "count": 1
-        },
-        {
-          "file": "src/hooks/usePanelResize.ts",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
           "count": 1
         }
       ]
@@ -7457,7 +8288,7 @@
         },
         {
           "file": "src/components/MainLayout.tsx",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/hooks/useFileSystemLifecycle.ts",
@@ -7465,331 +8296,6 @@
         },
         {
           "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorer.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/hooks/useFileExplorer.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "src/types/global.d.ts",
-      [
-        {
-          "file": "electron/services/RelevanceEngineService.ts",
-          "count": 5
-        },
-        {
-          "file": "src/components/ActionPanel.tsx",
-          "count": 9
-        },
-        {
-          "file": "src/components/action-panel/SelectedFilesDisplay.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
-          "count": 5
-        },
-        {
-          "file": "src/stores/contextStore.ts",
-          "count": 6
-        },
-        {
-          "file": ".ath_materials/project_graph.json",
-          "count": 2
-        },
-        {
-          "file": "electron/main.ts",
-          "count": 3
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 14
-        },
-        {
-          "file": "electron/services/FileService.ts",
-          "count": 2
-        },
-        {
-          "file": "project_graph.json",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 7
-        },
-        {
-          "file": "electron/ipcHandlers.ts",
-          "count": 2
-        },
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 5
-        },
-        {
-          "file": "src/components/FileViewerPanel.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 5
-        },
-        {
-          "file": "FEATURE.md",
-          "count": 2
-        },
-        {
-          "file": "electron/services/FileService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/index.css",
-          "count": 4
-        },
-        {
-          "file": "electron/handlers/contextHandlers.ts",
-          "count": 3
-        },
-        {
-          "file": "src/actions/buildTaskAction.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/services/GitService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ManualCopyAction.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/buildPrompt.ts",
-          "count": 3
-        },
-        {
-          "file": "src/utils/codebaseDocumentation.ts",
-          "count": 4
-        },
-        {
-          "file": "CHANGELOG.md",
-          "count": 4
-        },
-        {
-          "file": "electron/handlers/coreHandlers.test.ts",
-          "count": 3
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 8
-        },
-        {
-          "file": "package.json",
-          "count": 7
-        },
-        {
-          "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 8
-        },
-        {
-          "file": ".athignore",
-          "count": 3
-        },
-        {
-          "file": "PROJECT.md",
-          "count": 1
-        },
-        {
-          "file": "TUTORIAL.md",
-          "count": 2
-        },
-        {
-          "file": "electron/ignoreRulesManager.ts",
-          "count": 2
-        },
-        {
-          "file": "resources/files/default_athignore",
-          "count": 2
-        },
-        {
-          "file": "src/components/ProjectCreationDialog.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/components/ProjectSettingsPane.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileIgnoreService.ts",
-          "count": 2
-        },
-        {
-          "file": "resources/prompts/custom_prompt_designer.md",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/custom_task_designer.md",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/example_prompt.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/example_task.xml",
-          "count": 1
-        },
-        {
-          "file": "src/components/action-panel/CustomPromptsHelpModal.tsx",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_develop.xml",
-          "count": 2
-        },
-        {
-          "file": "resources/prompts/prompt_writer.xml",
-          "count": 2
-        },
-        {
-          "file": "src/commands/parser/commandParser.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/configUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/projectInfoUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/promptTemplates.ts",
-          "count": 1
-        },
-        {
-          "file": "package-lock.json",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ApplyAiOutputAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/applyChangesCommand.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/parser/applyChangesParser.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorTabs.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/hooks/useLogPanelResize.ts",
-          "count": 1
-        },
-        {
-          "file": "src/stores/applyChangesStore.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/fileOperations.ts",
-          "count": 1
-        },
-        {
-          "file": "athanor.yml",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 1
-        },
-        {
-          "file": "forge.config.js",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_query.xml",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 4
-        },
-        {
-          "file": "temp.txt",
-          "count": 2
-        },
-        {
-          "file": "src/components/FileContextMenu.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/hooks/useFileDrop.ts",
-          "count": 1
-        },
-        {
-          "file": "src/stores/workbenchStore.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/handlers/fileOperationHandlers.ts",
-          "count": 2
-        },
-        {
-          "file": "src/services/promptService.ts",
-          "count": 2
-        },
-        {
-          "file": "src/stores/promptStore.ts",
-          "count": 1
-        },
-        {
-          "file": "src/types/promptTypes.d.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/selectCommand.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/descriptions.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/index.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/types.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/descriptions.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/index.ts",
-          "count": 1
-        },
-        {
-          "file": "src/hooks/usePanelResize.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/fileTextDetection.ts",
-          "count": 2
-        },
-        {
-          "file": "src/services/xmlParsingService.ts",
           "count": 1
         }
       ]
@@ -7835,7 +8341,7 @@
         },
         {
           "file": "src/components/AthanorApp.tsx",
-          "count": 6
+          "count": 5
         },
         {
           "file": ".ath_materials/project_settings.json",
@@ -7867,7 +8373,7 @@
         },
         {
           "file": "src/types/global.d.ts",
-          "count": 8
+          "count": 7
         },
         {
           "file": "src/utils/constants.ts",
@@ -7927,11 +8433,11 @@
         },
         {
           "file": "src/components/AthanorTabs.tsx",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/components/MainLayout.tsx",
-          "count": 3
+          "count": 2
         },
         {
           "file": "src/hooks/useLogPanelResize.ts",
@@ -8020,35 +8526,6 @@
         {
           "file": "src/commands/selectCommand.ts",
           "count": 1
-        },
-        {
-          "file": "src/hooks/usePanelResize.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "electron/services/DependencyScanner.ts",
-      [
-        {
-          "file": "electron/services/ProjectGraphService.ts",
-          "count": 1
-        },
-        {
-          "file": "common/types/git-service.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/DependencyScanner.test.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.ts",
-          "count": 1
         }
       ]
     ],
@@ -8110,7 +8587,7 @@
         },
         {
           "file": "src/types/global.d.ts",
-          "count": 14
+          "count": 13
         },
         {
           "file": "electron/ipcHandlers.ts",
@@ -8266,7 +8743,7 @@
         },
         {
           "file": "electron/handlers/fileOperationHandlers.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/services/promptService.ts",
@@ -8274,10 +8751,6 @@
         },
         {
           "file": "src/commands/selectCommand.ts",
-          "count": 1
-        },
-        {
-          "file": "src/services/xmlParsingService.ts",
           "count": 1
         }
       ]
@@ -8396,7 +8869,7 @@
         },
         {
           "file": "src/components/AthanorApp.tsx",
-          "count": 5
+          "count": 4
         },
         {
           "file": "src/stores/contextStore.ts",
@@ -8404,7 +8877,7 @@
         },
         {
           "file": "src/types/global.d.ts",
-          "count": 5
+          "count": 4
         },
         {
           "file": "src/components/ApplyChangesPanel.tsx",
@@ -8504,11 +8977,11 @@
         },
         {
           "file": "src/components/AthanorTabs.tsx",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 3
+          "count": 2
         },
         {
           "file": "src/hooks/useLogPanelResize.ts",
@@ -8612,22 +9085,10 @@
         },
         {
           "file": "src/components/fileExplorer/FileExplorerItem.tsx",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorer.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/hooks/useFileExplorer.ts",
-          "count": 1
-        },
-        {
-          "file": "src/hooks/usePanelResize.ts",
           "count": 1
         }
       ]
@@ -8862,7 +9323,7 @@
         },
         {
           "file": "src/types/global.d.ts",
-          "count": 4
+          "count": 3
         },
         {
           "file": "package.json",
@@ -8946,10 +9407,6 @@
         },
         {
           "file": "src/utils/fileOperations.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/fileTextDetection.ts",
           "count": 1
         }
       ]
@@ -9598,75 +10055,6 @@
       ]
     ],
     [
-      "electron/handlers/contextHandlers.ts",
-      [
-        {
-          "file": "FEATURE.md",
-          "count": 1
-        },
-        {
-          "file": "electron/services/RelevanceEngineService.ts",
-          "count": 3
-        },
-        {
-          "file": "src/actions/buildTaskAction.ts",
-          "count": 2
-        },
-        {
-          "file": "src/components/ActionPanel.tsx",
-          "count": 3
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
-          "count": 2
-        },
-        {
-          "file": "src/stores/contextStore.ts",
-          "count": 3
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 3
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 2
-        },
-        {
-          "file": "electron/services/FileService.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/ipcHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/main.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ManualCopyAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/utils/buildPrompt.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/codebaseDocumentation.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
       "src/actions/buildTaskAction.ts",
       [
         {
@@ -10117,27 +10505,6 @@
         },
         {
           "file": "temp.txt",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "electron/services/DependencyScanner.test.ts",
-      [
-        {
-          "file": "common/types/git-service.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/DependencyScanner.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.test.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/services/GitService.ts",
           "count": 1
         }
       ]
@@ -10630,7 +10997,7 @@
         },
         {
           "file": "src/utils/constants.ts",
-          "count": 3
+          "count": 2
         },
         {
           "file": "TUTORIAL.md",
@@ -10666,11 +11033,11 @@
         },
         {
           "file": "athanor.yml",
-          "count": 2
+          "count": 1
         },
         {
           "file": "electron/fileSystemManager.ts",
-          "count": 5
+          "count": 4
         },
         {
           "file": "forge.config.js",
@@ -10686,7 +11053,7 @@
         },
         {
           "file": "src/components/AthanorApp.tsx",
-          "count": 3
+          "count": 2
         },
         {
           "file": "src/components/ProjectCreationDialog.tsx",
@@ -10698,7 +11065,7 @@
         },
         {
           "file": "src/services/fileSystemService.ts",
-          "count": 5
+          "count": 4
         },
         {
           "file": "temp.txt",
@@ -10751,26 +11118,6 @@
         {
           "file": "electron/handlers/fileWatchHandlers.ts",
           "count": 2
-        },
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
-          "count": 1
         }
       ]
     ],
@@ -11289,99 +11636,6 @@
       ]
     ],
     [
-      ".ath_materials/TODO.txt",
-      [
-        {
-          "file": ".github/workflows/auto-tag.yml",
-          "count": 1
-        },
-        {
-          "file": ".github/workflows/pr-checks.yml",
-          "count": 1
-        },
-        {
-          "file": "CHANGELOG.md",
-          "count": 1
-        },
-        {
-          "file": "README.md",
-          "count": 1
-        },
-        {
-          "file": "package.json",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/api_cline_compatible.ts",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/clients/anthropic.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/clients/base-llm-client.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/clients/gemini.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/clients/llm-clients-factory.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/clients/openai.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/clients/openrouter.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/clients/response.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/interface/llm-interface.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/interface/memory-manager.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/llm/interface/prompt-utils.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "src/components/ApplyChangesPanel.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 1
-        }
-      ]
-    ],
-    [
       ".github/workflows/auto-tag.yml",
       [
         {
@@ -11758,127 +12012,6 @@
       ]
     ],
     [
-      "package-lock.json",
-      [
-        {
-          "file": "package.json",
-          "count": 4
-        },
-        {
-          "file": "CHANGELOG.md",
-          "count": 2
-        },
-        {
-          "file": "src/components/FileViewerPanel.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/index.css",
-          "count": 2
-        },
-        {
-          "file": "src/utils/fileTextDetection.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/languageMapping.ts",
-          "count": 1
-        },
-        {
-          "file": ".ath_materials/prompts/prompt_test.xml",
-          "count": 1
-        },
-        {
-          "file": ".athignore",
-          "count": 1
-        },
-        {
-          "file": ".github/workflows/pr-checks.yml",
-          "count": 1
-        },
-        {
-          "file": "CONTRIBUTING.md",
-          "count": 1
-        },
-        {
-          "file": "electron/services/PathUtils.ts",
-          "count": 1
-        },
-        {
-          "file": "resources/files/default_athignore",
-          "count": 1
-        },
-        {
-          "file": "scripts/check-dco.sh",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ApplyAiOutputAction.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ManualCopyAction.test.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/hooks/.athignore",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_develop.xml",
-          "count": 1
-        },
-        {
-          "file": "resources/prompts/prompt_writer.xml",
-          "count": 1
-        },
-        {
-          "file": "src/actions/ApplyAiOutputAction.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/applyChangesCommand.ts",
-          "count": 1
-        },
-        {
-          "file": "src/commands/parser/applyChangesParser.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorTabs.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 1
-        },
-        {
-          "file": "src/hooks/useLogPanelResize.ts",
-          "count": 1
-        },
-        {
-          "file": "src/stores/applyChangesStore.ts",
-          "count": 1
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/fileOperations.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
       ".github/FUNDING.yml",
       [
         {
@@ -12193,14 +12326,6 @@
         },
         {
           "file": "src/utils/languageMapping.ts",
-          "count": 1
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/codebaseDocumentation.ts",
           "count": 1
         }
       ]
@@ -15321,15 +15446,15 @@
         },
         {
           "file": "src/components/AthanorApp.tsx",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/components/MainLayout.tsx",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/hooks/useLogPanelResize.ts",
@@ -15345,14 +15470,10 @@
         },
         {
           "file": "src/types/global.d.ts",
-          "count": 2
-        },
-        {
-          "file": "src/utils/fileOperations.ts",
           "count": 1
         },
         {
-          "file": "src/hooks/usePanelResize.ts",
+          "file": "src/utils/fileOperations.ts",
           "count": 1
         }
       ]
@@ -15645,7 +15766,7 @@
         },
         {
           "file": "src/utils/constants.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/utils/projectInfoUtils.ts",
@@ -15657,11 +15778,11 @@
         },
         {
           "file": "electron/fileSystemManager.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "electron/handlers/coreHandlers.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "electron/preload.ts",
@@ -15681,7 +15802,7 @@
         },
         {
           "file": "src/components/AthanorApp.tsx",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/components/ProjectCreationDialog.tsx",
@@ -15697,7 +15818,7 @@
         },
         {
           "file": "src/services/fileSystemService.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/types/global.d.ts",
@@ -15705,26 +15826,6 @@
         },
         {
           "file": "temp.txt",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
           "count": 1
         }
       ]
@@ -16339,11 +16440,11 @@
         },
         {
           "file": "athanor.yml",
-          "count": 2
+          "count": 1
         },
         {
           "file": "electron/handlers/coreHandlers.ts",
-          "count": 5
+          "count": 4
         },
         {
           "file": "electron/preload.ts",
@@ -16367,7 +16468,7 @@
         },
         {
           "file": "src/components/AthanorApp.tsx",
-          "count": 3
+          "count": 2
         },
         {
           "file": "src/components/ProjectCreationDialog.tsx",
@@ -16383,7 +16484,7 @@
         },
         {
           "file": "src/services/fileSystemService.ts",
-          "count": 3
+          "count": 2
         },
         {
           "file": "src/types/global.d.ts",
@@ -16427,7 +16528,7 @@
         },
         {
           "file": "src/utils/constants.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "electron/handlers/fileOperationHandlers.ts",
@@ -16435,26 +16536,6 @@
         },
         {
           "file": "electron/handlers/fileWatchHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
           "count": 1
         }
       ]
@@ -16468,15 +16549,15 @@
         },
         {
           "file": "athanor.yml",
-          "count": 2
+          "count": 1
         },
         {
           "file": "electron/fileSystemManager.ts",
-          "count": 3
+          "count": 2
         },
         {
           "file": "electron/handlers/coreHandlers.ts",
-          "count": 5
+          "count": 4
         },
         {
           "file": "electron/preload.ts",
@@ -16500,7 +16581,7 @@
         },
         {
           "file": "src/components/AthanorApp.tsx",
-          "count": 3
+          "count": 2
         },
         {
           "file": "src/components/ProjectCreationDialog.tsx",
@@ -16568,7 +16649,7 @@
         },
         {
           "file": "src/utils/constants.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/commands/selectCommand.ts",
@@ -16576,26 +16657,6 @@
         },
         {
           "file": "src/utils/buildPrompt.ts",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
           "count": 1
         }
       ]
@@ -16762,18 +16823,6 @@
         },
         {
           "file": "src/components/FileContextMenu.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorer.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
           "count": 1
         }
       ]
@@ -17268,7 +17317,7 @@
       [
         {
           "file": "electron/preload.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "src/services/fileSystemService.ts",
@@ -17280,7 +17329,7 @@
         },
         {
           "file": "src/types/global.d.ts",
-          "count": 2
+          "count": 1
         },
         {
           "file": "electron/filePathManager.ts",
@@ -17301,10 +17350,6 @@
         {
           "file": "electron/handlers/fileWatchHandlers.ts",
           "count": 2
-        },
-        {
-          "file": "src/services/xmlParsingService.ts",
-          "count": 1
         }
       ]
     ],
@@ -17961,309 +18006,38 @@
           "count": 1
         }
       ]
-    ],
-    [
-      "src/components/fileExplorer/FileExplorer.tsx",
-      [
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/FileExplorerItem.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/fileExplorer/hooks/useFileExplorer.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "src/hooks/usePanelResize.ts",
-      [
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorTabs.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/MainLayout.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/hooks/useFileSystemLifecycle.ts",
-          "count": 1
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      ".ath_resources/LICENSE",
-      [
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "athanor.yml",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      ".ath_resources/README.md",
-      [
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "athanor.yml",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      ".ath_resources/tailwind.config.js",
-      [
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "athanor.yml",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      ".ath_resources/temp.txt",
-      [
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": "athanor.yml",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/components/FileExplorer.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "src/components/FileExplorer.tsx",
-      [
-        {
-          "file": ".ath_resources/LICENSE",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/README.md",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/tailwind.config.js",
-          "count": 1
-        },
-        {
-          "file": ".ath_resources/temp.txt",
-          "count": 1
-        },
-        {
-          "file": "athanor.yml",
-          "count": 1
-        },
-        {
-          "file": "electron/fileSystemManager.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/handlers/coreHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "src/components/AthanorApp.tsx",
-          "count": 1
-        },
-        {
-          "file": "src/services/fileSystemService.ts",
-          "count": 1
-        },
-        {
-          "file": "src/utils/constants.ts",
-          "count": 1
-        }
-      ]
-    ],
-    [
-      "src/services/xmlParsingService.ts",
-      [
-        {
-          "file": "electron/handlers/fileOperationHandlers.ts",
-          "count": 1
-        },
-        {
-          "file": "electron/preload.ts",
-          "count": 1
-        },
-        {
-          "file": "src/types/global.d.ts",
-          "count": 1
-        }
-      ]
     ]
   ],
   "recentlyCommittedFiles": [
+    "src/hooks/useFileSystemLifecycle.ts",
+    "package-lock.json",
+    "package.json",
+    "resources/images/athanor.icns",
+    "forge.config.js",
+    "electron/modules/llm/main/config.ts",
+    "src/config/athanorModelPresets.json",
+    "electron/services/DependencyResolver.test.ts",
+    "electron/services/DependencyResolver.ts",
+    "electron/services/ProjectGraphService.ts",
+    "electron/services/RelevanceEngineService.ts",
+    ".ath_materials/TODO.txt",
+    "electron/services/DependencyScanner.test.ts",
+    "electron/services/DependencyScanner.ts",
+    "FEATURE.md",
+    "electron/handlers/contextHandlers.ts",
+    "electron/ipcHandlers.ts",
+    "src/components/ApplicationSettingsPane.tsx",
+    "src/types/global.d.ts",
+    "src/utils/constants.ts",
     ".ath_materials/project_graph.json",
     "electron/services/UserActivityService.ts",
-    "src/utils/constants.ts",
     "electron/main.ts",
-    "electron/services/RelevanceEngineService.ts",
-    "electron/ipcHandlers.ts",
-    "electron/services/ProjectGraphService.ts",
     ".athignore",
-    "FEATURE.md",
     "resources/files/default_athignore",
     "common/types/git-service.ts",
     "electron/services/GitService.ts",
     "electron/workers/projectAnalysisWorker.ts",
     "electron/windowManager.ts",
-    "forge.config.js",
-    "package.json",
     "webpack.main.config.js",
     "webpack.preload.config.js",
     "webpack.renderer.config.js",
@@ -18274,26 +18048,13 @@
     "electron/services/TaskAnalysisUtils.ts",
     "src/components/action-panel/SelectedFilesDisplay.tsx",
     "src/components/fileExplorer/FileExplorerItem.tsx",
-    "src/types/global.d.ts",
     "electron/ignoreRulesManager.ts",
     "electron/services/FileService.ts",
-    "src/hooks/useFileSystemLifecycle.ts",
-    "electron/services/DependencyScanner.ts",
     "project_graph.json",
     "electron/preload.ts",
     "src/components/MainLayout.tsx",
     "src/utils/buildPrompt.ts",
     "src/utils/codebaseDocumentation.ts",
-    "src/components/ApplyChangesPanel.tsx",
-    "src/components/FileViewerPanel.tsx",
-    "src/hooks/useDarkMode.ts",
-    "src/index.css",
-    "electron/ignoreRulesManager.test.ts",
-    "src/stores/settingsStore.ts",
-    "electron/services/stopwords.ts",
-    "electron/services/wordFilters.ts",
-    "electron/services/FileService.test.ts",
-    "src/stores/fileSystemStore.ts",
-    "src/actions/buildTaskAction.test.ts"
+    "src/components/ApplyChangesPanel.tsx"
   ]
 }

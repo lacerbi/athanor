@@ -382,7 +382,7 @@ declare global {
       watch: (
         path: string,
         callback: (event: string, filename: string) => void
-      ) => Promise<void>;
+      ) => Promise<() => void>;
 
       /**
        * Clean up all active watchers
