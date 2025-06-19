@@ -2,7 +2,7 @@
 // and IPC communication between processes. Handles application lifecycle events, path resolution,
 // and uncaught exception handling with proper cleanup of file watchers.
 import { app, BrowserWindow, Menu, nativeTheme, ipcMain } from 'electron';
-import * as fixPath from 'fix-path';
+import fixPath from 'fix-path';
 import { Worker } from 'worker_threads';
 import * as path from 'path';
 import { createWindow, mainWindow } from './windowManager';
