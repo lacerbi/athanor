@@ -53,8 +53,6 @@ Athanor then assists in efficiently integrating the AI-generated responses back 
 
 ## 🚀 Installation Setup
 
-Athanor is currently available in developer mode.
-
 **Prerequisites:** Running Athanor will require **Node.js** (latest LTS version, v18.x+).
 
 <details>
@@ -119,7 +117,7 @@ First, navigate into the Athanor folder, e.g., `cd athanor`.
   npm run package
   ```
 
-  This will create a folder named something like `out/Athanor-win32-x64` (the exact name depends on your operating system and architecture). Inside this folder, you will find the executable to run the application. You need to run this only once (or whenever you update to a new version of Athanor).
+  This will create a folder named something like `out/Athanor-win32-x64` (the exact name depends on your operating system and architecture). Inside this folder, you will find the executable to run the application. You need to run this only whenever you update to a new version of Athanor.
 
   <details>
   <summary><strong>Important: Running the Compiled App for the First Time</strong></summary>
