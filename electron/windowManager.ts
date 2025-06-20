@@ -20,7 +20,7 @@ export async function createWindow() {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
       nodeIntegration: false,
       contextIsolation: true,
-      sandbox: process.platform !== 'darwin', // Disable sandbox only on macOS to fix hang issue
+      sandbox: false,
     },
   };
 
@@ -29,7 +29,7 @@ export async function createWindow() {
     let iconPath: string;
     const platform = process.platform;
     const appPath = app.getAppPath();
-    
+
     if (platform === 'win32') {
       iconPath = path.join(appPath, 'resources', 'images', 'athanor.ico');
     } else if (platform === 'darwin') {
@@ -38,7 +38,7 @@ export async function createWindow() {
       // Linux and other platforms
       iconPath = path.join(appPath, 'resources', 'images', 'athanor.png');
     }
-    
+
     console.log('Setting dev icon path:', iconPath);
     browserWindowOptions.icon = iconPath;
   }
