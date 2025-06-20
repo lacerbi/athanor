@@ -1,6 +1,6 @@
 // AI Summary: Global type definitions for Athanor. Includes interfaces for Electron bridge (file system, LLM service, UI, API keys, settings),
 // application state (task tabs, panel resizing), core types (FileItem, FileOperation, commands), and external libraries (Tiktoken).
-// Defines window extensions for IPC and custom DragEvent types. Updated to reflect new LLM ModelInfo structure in electronBridge.
+// Defines window extensions for IPC and custom DragEvent types. Updated to include `userActivity` on the electronBridge.
 // Augment DragEvent to include custom file path data
 interface AthanorDataTransfer extends DataTransfer {
   setData(format: 'application/x-athanor-filepath', data: string): void;
@@ -28,10 +28,12 @@ export interface ApplicationSettings {
   minSmartPreviewLines?: number;
   maxSmartPreviewLines?: number;
   thresholdLineLength?: number;
+  maxSmartContextTokens?: number;
   lastSelectedApiPresetId?: string | null;
   lastOpenedProjectPath?: string | null;
   recentProjectPaths?: string[];
   uiTheme?: string;
+  fileViewerWrapEnabled?: boolean;
 
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;
@@ -240,6 +242,21 @@ declare global {
             }
         >;
       };
+      userActivity: () => void;
+      context: {
+        recalculate: (request: {
+          selectedFilePaths: string[];
+          taskDescription?: string;
+        }) => Promise<{
+          userSelected: string[];
+          heuristicSeedFiles: Array<{ path: string; score: number }>;
+          allNeighbors: Array<{ path: string; score: number }>;
+          promptNeighbors: string[];
+        }>;
+      };
+      graph: {
+        forceReanalyze: () => Promise<void>;
+      };
       appShell: {
         /**
          * Opens an external URL in the default browser
@@ -365,7 +382,7 @@ declare global {
       watch: (
         path: string,
         callback: (event: string, filename: string) => void
-      ) => Promise<void>;
+      ) => Promise<() => void>;
 
       /**
        * Clean up all active watchers

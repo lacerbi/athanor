@@ -369,3 +369,7 @@ docs/_site/
 ###############################################################################
 # ATHANOR PROJECT FILES
 ###############################################################################
+# Athanor system files
+/.ath_materials/project_graph.json
+
+# Put other files or folders below

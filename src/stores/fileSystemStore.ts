@@ -38,6 +38,8 @@ interface FileSystemState {
   isRefreshing: boolean;
   setIsRefreshing: (refreshing: boolean) => void;
   resetState: () => void;
+  isGraphAnalysisInProgress: boolean;
+  setIsGraphAnalysisInProgress: (inProgress: boolean) => void;
 }
 
 export const useFileSystemStore = create<FileSystemState>((set, get) => ({
@@ -51,51 +53,61 @@ export const useFileSystemStore = create<FileSystemState>((set, get) => ({
   setEffectiveConfig: (config: AthanorConfig | null) => set({ effectiveConfig: config }),
   
   resetState: () => {
-    return set({      
+    return set({
       // Clear UI state
       previewedFilePath: null,
       isRefreshing: false,
-      
+
       // Clear file system state
       fileTree: [],
-      
+
       // Clear effective configuration
       effectiveConfig: null,
-      
+
       // Keep smart preview and file tree enabled by default
       smartPreviewEnabled: true,
       includeFileTree: true,
       includeProjectInfo: true,
       formatType: DOC_FORMAT.DEFAULT || DOC_FORMAT.XML, // Default to XML format
+      isGraphAnalysisInProgress: false,
     });
   },
 
   // Smart preview setting (true = include non-selected files with truncated preview)
   smartPreviewEnabled: true,
-  toggleSmartPreview: () => set((state) => ({ 
-    smartPreviewEnabled: !state.smartPreviewEnabled 
-  })),
-  
+  toggleSmartPreview: () =>
+    set((state) => ({
+      smartPreviewEnabled: !state.smartPreviewEnabled,
+    })),
+
   // File tree inclusion setting (true = include file tree in generated prompt)
   includeFileTree: true,
-  toggleFileTree: () => set((state) => ({
-    includeFileTree: !state.includeFileTree
-  })),
-  
+  toggleFileTree: () =>
+    set((state) => ({
+      includeFileTree: !state.includeFileTree,
+    })),
+
   // Format type setting (XML or Markdown)
   formatType: DOC_FORMAT.DEFAULT || DOC_FORMAT.XML,
-  toggleFormatType: () => set((state) => ({
-    formatType: state.formatType === DOC_FORMAT.XML ? DOC_FORMAT.MARKDOWN : DOC_FORMAT.XML
-  })),
-  
+  toggleFormatType: () =>
+    set((state) => ({
+      formatType:
+        state.formatType === DOC_FORMAT.XML
+          ? DOC_FORMAT.MARKDOWN
+          : DOC_FORMAT.XML,
+    })),
+
   // Project info inclusion setting (true = include project info in generated prompt)
   includeProjectInfo: true,
-  toggleProjectInfo: () => set((state) => ({
-    includeProjectInfo: !state.includeProjectInfo
-  })),
-
+  toggleProjectInfo: () =>
+    set((state) => ({
+      includeProjectInfo: !state.includeProjectInfo,
+    })),
 
   previewedFilePath: null,
   setPreviewedFilePath: (path: string | null) =>
     set({ previewedFilePath: path }),
+  isGraphAnalysisInProgress: false,
+  setIsGraphAnalysisInProgress: (inProgress: boolean) =>
+    set({ isGraphAnalysisInProgress: inProgress }),
 }));

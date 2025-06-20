@@ -117,8 +117,8 @@ export const useSettingsStore = create<SettingsState>((set, get) => ({
   
   // Application settings actions
   loadApplicationSettings: async () => {
-    // Don't reload if already loaded and not in error state
-    if (get().applicationSettings !== null && !get().applicationSettingsError) {
+    // Don't reload if already loading or already loaded and not in error state
+    if (get().isLoadingApplicationSettings || (get().applicationSettings !== null && !get().applicationSettingsError)) {
       return;
     }
     

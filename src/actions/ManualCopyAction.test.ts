@@ -289,9 +289,9 @@ describe('ManualCopyAction', () => {
       expect(codebaseDocumentationUtils.generateCodebaseDocumentation).toHaveBeenCalledWith(
         [], // fileTree from store
         new Set(['file1.ts', 'file2.js']), // selectedFiles from active tab converted to Set
+        new Set(), // neighboringFiles - manual copy has none
         '/project/root',
-        null,
-        false, // Always exclude non-selected files for manual copy
+        null, // config
         DOC_FORMAT.XML // formatType from store
       );
       expect(mockClipboardWriteText).toHaveBeenCalledWith('mocked file contents\nwith multiple lines');
@@ -330,9 +330,9 @@ describe('ManualCopyAction', () => {
       expect(codebaseDocumentationUtils.generateCodebaseDocumentation).toHaveBeenCalledWith(
         [{ id: '1', name: 'test', type: 'file' }],
         new Set(['single.ts']),
+        new Set(), // neighboringFiles - manual copy has none
         '/project',
-        null,
-        false, // Always false, ignoring smartPreviewEnabled setting
+        null, // config
         DOC_FORMAT.MARKDOWN // formatType = MARKDOWN
       );
     });

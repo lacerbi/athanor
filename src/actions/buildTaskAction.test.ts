@@ -5,10 +5,18 @@ import { FileItem } from '../utils/fileTree';
 import { TaskData } from '../types/taskTypes';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { buildDynamicPrompt } from '../utils/buildPrompt';
+import { useContextStore } from '../stores/contextStore';
 
 // Mock the workbench store
 jest.mock('../stores/workbenchStore', () => ({
   useWorkbenchStore: {
+    getState: jest.fn(),
+  },
+}));
+
+// Mock the context store
+jest.mock('../stores/contextStore', () => ({
+  useContextStore: {
     getState: jest.fn(),
   },
 }));
@@ -41,6 +49,7 @@ describe('buildTaskAction', () => {
   let mockSetIsLoading: jest.Mock;
   let mockBuildDynamicPrompt: jest.Mock;
   let mockGetState: jest.Mock;
+  let mockGetContextState: jest.Mock;
 
   let defaultTask: TaskData;
   let defaultRootItems: FileItem[];
@@ -72,6 +81,12 @@ describe('buildTaskAction', () => {
       setIsGeneratingPrompt: mockSetIsGeneratingPrompt,
       resetGeneratingPrompt: mockResetGeneratingPrompt,
       setTabContent: mockSetTabContent,
+    });
+
+    // Mock context store
+    mockGetContextState = useContextStore.getState as jest.Mock;
+    mockGetContextState.mockReturnValue({
+      promptNeighborPaths: new Set<string>(),
     });
 
     // Mock buildDynamicPrompt
@@ -222,6 +237,7 @@ describe('buildTaskAction', () => {
         defaultTask.variants[0], // default variant
         defaultRootItems,
         Array.from(defaultSelectedItems),
+        [], // neighboringFiles
         '/fake/project/dir',
         'existing task description',
         'existing context',
@@ -264,6 +280,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
+        expect.any(Array),
         expect.anything(),
         expect.anything(),
         expect.anything(),
@@ -377,6 +394,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
+        expect.any(Array),
         expect.anything(),
         'existing task description', // from mocked store state
         'existing context', // from mocked store state
@@ -420,6 +438,7 @@ describe('buildTaskAction', () => {
         complexTask.variants[0], // Should use first variant as default
         expect.anything(),
         expect.anything(),
+        expect.any(Array),
         expect.anything(),
         expect.anything(),
         expect.anything(),
@@ -469,6 +488,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         complexRootItems,
         Array.from(new Set(['/src/components/Button.tsx'])),
+        expect.any(Array),
         expect.anything(),
         expect.anything(),
         expect.anything(),
@@ -491,6 +511,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         Array.from(new Set<string>()),
+        expect.any(Array),
         expect.anything(),
         expect.anything(),
         expect.anything(),

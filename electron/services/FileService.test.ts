@@ -29,7 +29,7 @@ describe('FileService', () => {
   let fileService: FileService;
   let mockChokidarWatcher: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     // Reset mocks
     jest.clearAllMocks();
     
@@ -40,10 +40,12 @@ describe('FileService', () => {
     };
     (chokidar.watch as jest.Mock).mockReturnValue(mockChokidarWatcher);
     
-    // Create FileService instance with initial baseDir
+    // Mock fs.mkdir for directory creation during setBaseDir
+    (fsPromises.mkdir as jest.Mock).mockResolvedValue(undefined);
+    
+    // Create FileService instance and properly initialize with setBaseDir
     fileService = new FileService();
-    // Set baseDir explicitly for testing
-    fileService['baseDir'] = '/test/dir';
+    await fileService.setBaseDir('/test/dir');
   });
 
   afterEach(async () => {

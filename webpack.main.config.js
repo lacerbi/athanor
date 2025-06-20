@@ -1,7 +1,10 @@
 const path = require('path');
 
 module.exports = {
-  entry: './electron/main.ts',
+  entry: {
+    'main/index': './electron/main.ts',
+    projectAnalysisWorker: './electron/workers/projectAnalysisWorker.ts',
+  },
   module: {
     rules: [
       {
@@ -19,7 +22,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, '.webpack'),
-    filename: 'main',
+    filename: '[name].js',
   },
   target: 'electron-main',
 };

@@ -8,6 +8,7 @@ import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useContextStore } from '../stores/contextStore';
 import { loadPrompts, loadTasks } from '../services/promptService';
 import { readAthanorConfig } from '../utils/configUtils';
 import { SETTINGS } from '../utils/constants';
@@ -55,11 +56,15 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
+  const currentDirectoryRef = useRef<string>('');
+  const watcherUnsubscribeRef = useRef<() => void>(() => {});
 
   const { addLog } = useLogStore();
   const { clearFileSelection } = useWorkbenchStore();
   const { loadProjectSettings, loadApplicationSettings, projectSettings } =
     useSettingsStore();
+  const { setIsGraphAnalysisInProgress } = useFileSystemStore();
+  const { fetchContext, clearContext } = useContextStore();
 
   // Track previous project settings to detect changes
   const prevProjectSettingsRef = useRef<typeof projectSettings>(undefined);
@@ -80,18 +85,20 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         newlyCreatedPath = silentOrNewPath;
         silent = true;
       }
-      if (isRefreshing || !currentDirectory) return;
+      
+      const dir = currentDirectoryRef.current;
+      if (isRefreshing || !dir) return;
 
       setIsRefreshing(true);
       try {
         await window.fileService.reloadIgnoreRules();
         const { mainTree, materialsTree } =
-          await loadAndSetTrees(currentDirectory);
+          await loadAndSetTrees(dir);
         setFilesData(mainTree);
         setResourcesData(materialsTree);
 
         // Load effective configuration with settings
-        await loadAndSetEffectiveConfig(currentDirectory);
+        await loadAndSetEffectiveConfig(dir);
 
         // Load prompts and tasks
         await Promise.all([loadPrompts(), loadTasks()]);
@@ -113,13 +120,16 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       }
       setIsRefreshing(false);
     },
-    [currentDirectory, isRefreshing, addLog]
+    [isRefreshing, addLog]
   );
 
   const setupWatcher = useCallback(
     async (dir: string) => {
       try {
-        await window.fileService.watch(dir, async () => {
+        // Clean up any existing watcher
+        watcherUnsubscribeRef.current();
+
+        const unsubscribe = await window.fileService.watch(dir, async () => {
           if (refreshTimeoutRef.current) {
             clearTimeout(refreshTimeoutRef.current);
           }
@@ -127,6 +137,8 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
             refreshFileSystem(true);
           }, 300);
         });
+
+        watcherUnsubscribeRef.current = unsubscribe;
       } catch (error) {
         console.error('Error setting up watcher:', error);
         addLog('Failed to set up file system watcher');
@@ -140,7 +152,9 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       const normalizedDir = await window.pathUtils.toUnix(directory);
 
       useFileSystemStore.getState().resetState();
+      clearContext();
       setCurrentDirectory(normalizedDir);
+      currentDirectoryRef.current = normalizedDir;
 
       const { mainTree, materialsTree } = await loadAndSetTrees(normalizedDir);
       // Clear selections for active tab when initializing new project
@@ -199,13 +213,13 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       setShowProjectDialog(false);
       setPendingDirectory(null);
     },
-    [addLog, setupWatcher, loadProjectSettings, clearFileSelection]
+    [addLog, setupWatcher, loadProjectSettings, clearFileSelection, clearContext]
   );
 
   // Centralized function to process a directory - handles both UI and CLI flows
   const processDirectory = useCallback(
     async (directory: string | null) => {
-      if (!directory) {
+      if (!directory || directory === currentDirectory) {
         return;
       }
 
@@ -226,7 +240,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         setShowProjectDialog(true);
       }
     },
-    [initializeProject, addLog]
+    [initializeProject, addLog, currentDirectory]
   );
 
   const handleCreateProject = useCallback(
@@ -280,6 +294,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         } else {
           // No project state - set empty state
           setCurrentDirectory('');
+          currentDirectoryRef.current = '';
           setFilesData(null);
           setResourcesData(null);
           useFileSystemStore.getState().resetState();
@@ -295,6 +310,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
 
         // On error, set to no project state
         setCurrentDirectory('');
+        currentDirectoryRef.current = '';
         setFilesData(null);
         setResourcesData(null);
         useFileSystemStore.getState().resetState();
@@ -304,6 +320,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     initializeFileSystem();
 
     return () => {
+      watcherUnsubscribeRef.current();
       if (refreshTimeoutRef.current) {
         clearTimeout(refreshTimeoutRef.current);
       }
@@ -379,13 +396,36 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
       'menu:open-path',
       (path: string) => processDirectory(path)
     );
+    const cleanupGraphStarted = window.electron.receive(
+      'graph-analysis:started',
+      () => {
+        addLog('Starting project graph analysis...');
+        setIsGraphAnalysisInProgress(true);
+      }
+    );
+    const cleanupGraphFinished = window.electron.receive(
+      'graph-analysis:finished',
+      () => {
+        addLog('Project graph analysis finished.');
+        setIsGraphAnalysisInProgress(false);
+        
+        // Trigger initial context calculation to populate neighboring files
+        console.log('Graph analysis finished, triggering initial context calculation.');
+        fetchContext([], '').catch(err => {
+          console.error('Initial context calculation failed:', err);
+          addLog('Could not retrieve initial neighboring files.');
+        });
+      }
+    );
 
     // Return a cleanup function that will be called when the component unmounts
     return () => {
       cleanupOpenFolder();
       cleanupOpenPath();
+      cleanupGraphStarted();
+      cleanupGraphFinished();
     };
-  }, [handleOpenFolder, processDirectory]);
+  }, [handleOpenFolder, processDirectory, addLog, setIsGraphAnalysisInProgress]);
 
   const handleProjectDialogClose = () => {
     setShowProjectDialog(false);

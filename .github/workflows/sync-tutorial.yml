@@ -1,0 +1,59 @@
+name: Sync Tutorial File
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  sync-tutorial:
+    name: Sync TUTORIAL.md
+    runs-on: ubuntu-latest
+    permissions:
+      # Required to push changes back to the pull request branch
+      contents: write
+
+    steps:
+      - name: Checkout Athanor repository
+        uses: actions/checkout@v4
+        with:
+          # Checkout the actual PR branch, not a detached head
+          ref: ${{ github.head_ref }}
+
+      - name: Checkout website repository for docs
+        uses: actions/checkout@v4
+        with:
+          repository: lacerbi/athanor-website
+          path: .docs-repo # Clone into a temporary subfolder
+
+      - name: Build TUTORIAL.md from website docs
+        run: |
+          TUTORIAL_FILE_PATH="${{ github.workspace }}/TUTORIAL.md"
+          DOCS_SOURCE_DIR=".docs-repo/docs/tutorial"
+
+          # Write the new header
+          echo "**For the most up-to-date tutorial information, videos and materials, check out the [website](https://athanor.works/).**" > "$TUTORIAL_FILE_PATH"
+          echo "" >> "$TUTORIAL_FILE_PATH"
+          echo "---" >> "$TUTORIAL_FILE_PATH"
+
+          # Find, sort naturally, and concatenate the .md files
+          # 'ls -v' correctly sorts numbers in filenames (e.g., 2 before 10)
+          for file in $(ls -v $DOCS_SOURCE_DIR/*.md); do
+            cat "$file" >> "$TUTORIAL_FILE_PATH"
+            echo "" >> "$TUTORIAL_FILE_PATH" # Add a newline between files
+          done
+          echo "TUTORIAL.md has been rebuilt."
+
+      - name: Commit and push changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add TUTORIAL.md
+
+          # Check if there are staged changes. If so, commit and push.
+          if ! git diff --staged --quiet; then
+            git commit -m "docs(tutorial): Sync TUTORIAL.md from website repository" -m "Signed-off-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+            git push
+            echo "Pushed updated TUTORIAL.md to the PR branch."
+          else
+            echo "TUTORIAL.md is already up-to-date. No changes to commit."
+          fi

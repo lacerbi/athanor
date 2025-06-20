@@ -1,5 +1,6 @@
 // AI Summary: Exposes protected methods for IPC communication and file system operations.
-// Now includes FileService, PathUtils interfaces, and secure API key management.
+// Now includes FileService, PathUtils interfaces, secure API key management, and a `userActivity`
+// event sender for intelligent background processing.
 
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPCChannelNames } from './modules/secure-api-storage/common/types';
@@ -16,7 +17,13 @@ contextBridge.exposeInMainWorld('electron', {
     }
   },
   receive: (channel: string, func: (...args: any[]) => void) => {
-    const validChannels = ['fromMain', 'menu:open-folder', 'menu:open-path'];
+    const validChannels = [
+      'fromMain',
+      'menu:open-folder',
+      'menu:open-path',
+      'graph-analysis:started',
+      'graph-analysis:finished',
+    ];
     if (validChannels.includes(channel)) {
       const listener = (event: any, ...args: any[]) => func(...args);
       ipcRenderer.on(channel, listener);
@@ -91,6 +98,16 @@ contextBridge.exposeInMainWorld('electronBridge', {
     getModels: (providerId: string) => llmServiceRenderer.getModels(providerId as any),
     sendMessage: (request: any) => llmServiceRenderer.sendMessage(request),
   },
+  userActivity: () => ipcRenderer.send('user-activity'),
+  context: {
+    recalculate: (request: {
+      selectedFilePaths: string[];
+      taskDescription?: string;
+    }) => ipcRenderer.invoke('ath:recalculate-context', request),
+  },
+  graph: {
+    forceReanalyze: () => ipcRenderer.invoke('graph:force-reanalyze'),
+  },
   appShell: {
     openExternalURL: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
     openPath: (path: string) => ipcRenderer.invoke('shell:openPath', path),
@@ -135,13 +152,18 @@ contextBridge.exposeInMainWorld('fileService', {
   
   // Watcher operations
   watch: async (path: string, callback: (event: string, filename: string) => void) => {
-    ipcRenderer.removeAllListeners('fs:change');
-    ipcRenderer.removeAllListeners('fs:error');
+    const changeListener = (_: any, event: string, filename: string) => callback(event, filename);
+    const errorListener = (_: any, error: any) => console.error('File system error:', error);
 
-    ipcRenderer.on('fs:change', (_, event, filename) => callback(event, filename));
-    ipcRenderer.on('fs:error', (_, error) => console.error('File system error:', error));
+    ipcRenderer.on('fs:change', changeListener);
+    ipcRenderer.on('fs:error', errorListener);
 
-    return await ipcRenderer.invoke('fs:watch', path);
+    await ipcRenderer.invoke('fs:watch', path);
+
+    return () => {
+      ipcRenderer.removeListener('fs:change', changeListener);
+      ipcRenderer.removeListener('fs:error', errorListener);
+    };
   },
   cleanupWatchers: () => ipcRenderer.invoke('fs:cleanupWatchers'),
   
@@ -183,17 +205,18 @@ contextBridge.exposeInMainWorld('fileSystem', {
     path: string,
     callback: (event: string, filename: string) => void
   ) => {
-    ipcRenderer.removeAllListeners('fs:change');
-    ipcRenderer.removeAllListeners('fs:error');
+    const changeListener = (_: any, event: string, filename: string) => callback(event, filename);
+    const errorListener = (_: any, error: any) => console.error('File system error:', error);
 
-    ipcRenderer.on('fs:change', (_, event, filename) =>
-      callback(event, filename)
-    );
-    ipcRenderer.on('fs:error', (_, error) =>
-      console.error('File system error:', error)
-    );
+    ipcRenderer.on('fs:change', changeListener);
+    ipcRenderer.on('fs:error', errorListener);
 
-    return await ipcRenderer.invoke('fs:watch', path);
+    await ipcRenderer.invoke('fs:watch', path);
+
+    return () => {
+      ipcRenderer.removeListener('fs:change', changeListener);
+      ipcRenderer.removeListener('fs:error', errorListener);
+    };
   },
   readFile: (
     path: string,

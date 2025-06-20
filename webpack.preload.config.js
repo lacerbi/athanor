@@ -14,9 +14,5 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.js'],
   },
-  output: {
-    path: path.resolve(__dirname, '.webpack/renderer/main_window'), // Change this line
-    filename: 'preload.js',
-  },
   target: 'electron-preload',
 };

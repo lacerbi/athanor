@@ -10,6 +10,7 @@ import {
 } from '../utils/contextDetection';
 import * as Icons from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import type { WorkbenchState } from '../types/global';
 import {
   Copy,
   FileText,
@@ -32,6 +33,7 @@ import type { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useLogStore } from '../stores/logStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
+import { useShallow } from 'zustand/react/shallow';
 import { usePromptStore } from '../stores/promptStore';
 import { buildDynamicPrompt } from '../utils/buildPrompt';
 import { FileItem } from '../utils/fileTree';
@@ -39,6 +41,7 @@ import { copyToClipboard } from '../actions/ManualCopyAction';
 import { buildTaskAction } from '../actions';
 import { getActionTooltip, getTaskTooltip } from '../actions';
 import { useTaskStore } from '../stores/taskStore';
+import { useContextStore } from '../stores/contextStore';
 import { useFileDrop } from '../hooks/useFileDrop';
 import { useSettingsStore } from '../stores/settingsStore';
 import { DRAG_DROP, DOC_FORMAT, SETTINGS } from '../utils/constants';
@@ -52,6 +55,10 @@ interface ActionPanelProps {
   setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
   isActive: boolean;
 }
+
+// Stable default values to prevent reference equality issues
+const EMPTY_STRING = '';
+const EMPTY_ARRAY: string[] = [];
 
 const ActionPanel: React.FC<ActionPanelProps> = ({
   rootItems,
@@ -74,6 +81,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
     removeFileFromSelection,
     clearFileSelection,
     reorderFileSelection,
+    toggleFileSelection,
   } = useWorkbenchStore();
 
   // Detect contexts from current task
@@ -153,11 +161,39 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const { addLog } = useLogStore();
   const { prompts, getDefaultVariant, setActiveVariant, getActiveVariant } =
     usePromptStore();
+  const { promptNeighborPaths, fetchContext } = useContextStore();
   const { applicationSettings, saveApplicationSettings } = useSettingsStore();
   const { isGeneratingPrompt, setIsGeneratingPrompt } = useWorkbenchStore();
+  const { isGraphAnalysisInProgress } = useFileSystemStore();
+  const isBusy = isLoading || isGeneratingPrompt || isGraphAnalysisInProgress;
 
   // Determine if experimental features should be shown
   const showExperimentalFeatures = applicationSettings?.enableExperimentalFeatures ?? false;
+
+  // Use a memoized selector to prevent unnecessary re-renders.
+  // This ensures the context-fetching effect only runs when relevant data changes.
+  const { content, selectedFiles } = useWorkbenchStore(
+    useShallow((state: WorkbenchState) => {
+      const tab = state.tabs[state.activeTabIndex];
+      // Use stable default values to prevent reference equality issues
+      return {
+        content: tab?.content ?? EMPTY_STRING,
+        selectedFiles: tab?.selectedFiles ?? EMPTY_ARRAY,
+      };
+    })
+  );
+
+  // Effect: recalculate context when description or selection *really* changes,
+  // but never while a prompt is being generated.
+  useEffect(() => {
+    if (isBusy) return;              // 🚦 NEW GUARD
+
+    const timeoutHandler = setTimeout(() => {
+      fetchContext(selectedFiles, content);
+    }, 500);
+
+    return () => clearTimeout(timeoutHandler);
+  }, [content, selectedFiles, isBusy]);  // note: fetchContext removed from deps
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
@@ -188,6 +224,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         variant,
         rootItems,
         selectedFiles, // Pass ordered array instead of Set
+        Array.from(promptNeighborPaths),
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
         tabs[activeTabIndex].context, // Current tab's context
@@ -310,6 +347,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   removeFileFromSelection={removeFileFromSelection}
                   clearFileSelection={clearFileSelection}
                   reorderFileSelection={reorderFileSelection}
+                  toggleFileSelection={toggleFileSelection}
+                  rootItems={rootItems}
                 />
               </div>
             </div>
@@ -503,7 +542,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         className="icon-btn relative bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
                         title={isUserDefined ? "Custom: " + (prompt.tooltip || prompt.label) : (prompt.tooltip || prompt.label)}
                         onClick={async () => {
-                          if (isLoading || isTaskEmpty) return;
+                          if (isBusy || isTaskEmpty) return;
                           await generatePrompt(prompt, variant);
                         }}
                         onContextMenu={(e) => {
@@ -515,9 +554,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                             y: e.clientY,
                           });
                         }}
-                        disabled={
-                          isLoading || isGeneratingPrompt || isTaskEmpty
-                        }
+                        disabled={isBusy || isTaskEmpty}
                         data-edge={getFloatingLabelPosition(prompt.id)}
                         data-prompt-id={prompt.id}
                         aria-label={prompt.label}
@@ -549,10 +586,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       ? (Icons as any)[task.icon]
                       : null;
                     const isDisabled =
-                      isLoading ||
-                      isGeneratingPrompt ||
-                      (task.requires === 'selected' && hasNoSelection);
-                    const reason = isLoading
+                      isBusy || (task.requires === 'selected' && hasNoSelection);
+                    const reason = isBusy
                       ? 'loading'
                       : hasNoSelection
                         ? 'noSelection'
@@ -637,7 +672,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                   setActiveVariant(contextMenu.promptId, variantId);
 
                   // Only trigger prompt generation if the button is not disabled
-                  if (!isLoading && !isTaskEmpty) {
+                  if (!isBusy && !isTaskEmpty) {
                     await generatePrompt(prompt, variant);
                   }
                 }
@@ -719,7 +754,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
               addLog={addLog}
               setActivePanelTab={setActivePanelTab}
               setParentIsLoading={setIsLoading}
-              isSendingRequest={isGeneratingPrompt}
+              isSendingRequest={isBusy}
               setStoreIsGeneratingPrompt={setIsGeneratingPrompt}
             />
           )}

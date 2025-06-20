@@ -5,6 +5,7 @@ import { FileItem } from '../utils/fileTree';
 import { buildDynamicPrompt } from '../utils/buildPrompt';
 import { TaskData } from '../types/taskTypes';
 import { useWorkbenchStore } from '../stores/workbenchStore';
+import { useContextStore } from '../stores/contextStore';
 
 export interface BuildTaskActionParams {
   task: TaskData;
@@ -57,12 +58,16 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
       throw new Error('No active tab found');
     }
 
+    // Get neighboring files from the context store
+    const { promptNeighborPaths } = useContextStore.getState();
+
     // Build prompt with task content
     const processedTaskDescription = await buildDynamicPrompt(
       task,
       defaultVariant,
       rootItems,
       Array.from(selectedItems), // Convert Set to array for buildDynamicPrompt
+      Array.from(promptNeighborPaths),
       currentDir,
       activeTab.content,
       activeTab.context,

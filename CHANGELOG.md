@@ -9,6 +9,61 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.0] - 2025-06-20
+
+### Added
+
+- **Dynamic & Intelligent Context Builder**: A new core feature that automatically analyzes the project to find and score the most relevant files for a given task. This includes:
+  - A comprehensive scoring engine with heuristics for code dependencies, task keywords, path matching, commit history, and more.
+  - UI visualization of relevance scores in the file explorer.
+  - An interactive display of files selected by the context builder.
+- **Background Project Analysis**:
+  - Project dependency and Git analysis now runs in a background worker thread to keep the UI responsive.
+  - Implemented an intelligent trigger for automatic analysis and a manual "Re-analyze Project" button in the UI.
+- **Build & Platform Support**:
+  - Added build configurations and NPM scripts to support Linux (`.deb`, `.rpm`).
+  - Improved application lifecycle and menu handling for macOS.
+- **UI/UX Enhancements**:
+  - Added a persistent "Word Wrap" toggle button to the File Viewer panel.
+  - Implemented more robust navigation controls (previous/next file) in the "Apply Changes" panel.
+  - Created a new `maxSmartContextTokens` setting for advanced control over AI context size.
+- **Developer Experience**:
+  - Added a GitHub Actions workflow to synchronize `TUTORIAL.md` from the official documentation website.
+
+### Changed
+
+- **Architecture**:
+  - Major refactoring to move project analysis (`ProjectGraphService`) to a background worker, improving UI performance.
+  - The Relevance Engine was updated to consume pre-computed data from the background analysis.
+  - Centralized and improved dependency resolution logic.
+- **Relevance Scoring**:
+  - Refined and balanced scoring weights for path matching and other heuristics.
+  - Improved task description parsing to filter out stopwords and short, meaningless tokens.
+- **UI Layout**:
+  - Refactored the display of selected files for a more compact and clear presentation.
+  - The "Apply Changes" diff panel now has a fixed width for more consistent layout.
+- **Dependencies**:
+  - Updated model information for the Gemini 2.5 family.
+
+### Fixed
+
+- **Performance**:
+  - Resolved a major performance issue causing the application to hang on macOS by refactoring the `ignoreRulesManager`.
+  - Eliminated race conditions that could cause premature file tree display or inconsistent state in the `contextStore`.
+- **macOS**:
+  - Corrected an issue where the application would not function correctly in a packaged state due to an incorrect shell `PATH`.
+  - Fixed bugs related to the application menu bar and window lifecycle on macOS.
+- **Core Functionality**:
+  - Fixed a bug where the `smart-preview` toggle was not working correctly.
+  - Resolved multiple issues with the previous/next diff navigation in the "Apply Changes" panel.
+  - Corrected a bug causing ignore rules to be cleared improperly.
+  - Ensured the context store is cleared correctly when switching projects.
+
+### Tests
+
+- Added comprehensive unit tests for the new `DependencyResolver` and `PythonScanner`.
+- Updated and fixed numerous existing tests for `GitService`, `ignoreRulesManager`, and `buildTaskAction` to align with architectural changes.
+
 ## [0.6.8] - 2025-06-08
 
 ### Fixed

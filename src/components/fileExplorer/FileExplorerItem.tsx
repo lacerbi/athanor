@@ -3,15 +3,21 @@
 import React, { useState } from 'react';
 import { ChevronRight, ChevronDown, File, Scissors, Book } from 'lucide-react';
 import { FileItem, getBaseName, isEmptyFolder } from '../../utils/fileTree';
-import { FILE_SYSTEM, SETTINGS, DRAG_DROP } from '../../utils/constants'; // Re-added FILE_SYSTEM
+import {
+  FILE_SYSTEM,
+  SETTINGS,
+  DRAG_DROP,
+  CONTEXT_BUILDER,
+} from '../../utils/constants';
 import {
   areAllDescendantsSelected,
   areSomeDescendantsSelected,
-  getSelectableDescendants,
 } from '../../utils/fileSelection';
 import { useFileSystemStore } from '../../stores/fileSystemStore';
 import { useWorkbenchStore } from '../../stores/workbenchStore';
 import { useSettingsStore } from '../../stores/settingsStore'; // Added settings store
+import { useContextStore } from '../../stores/contextStore';
+import useDarkMode from '../../hooks/useDarkMode';
 
 interface FileExplorerItemProps {
   item: FileItem;
@@ -33,19 +39,33 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   onContextMenu,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
-  const { previewedFilePath, setPreviewedFilePath, fileTree } = useFileSystemStore();
+  const { previewedFilePath, setPreviewedFilePath, fileTree } =
+    useFileSystemStore();
   const { tabs, activeTabIndex, toggleFileSelection } = useWorkbenchStore();
   const { applicationSettings } = useSettingsStore(); // Get application settings
+  const {
+    selectedFiles: contextSelected,
+    heuristicSeedFiles,
+    neighboringFiles,
+    maxNeighborScore,
+  } = useContextStore();
+  const isDarkMode = useDarkMode();
   const checkboxRef = React.useRef<HTMLInputElement>(null);
 
   const appDefaults = SETTINGS.defaults.application;
   const currentThresholdLineLength =
     applicationSettings?.thresholdLineLength ?? appDefaults.thresholdLineLength;
 
+  // Determine the context tier for visual styling
+  const isContextSelected = contextSelected.has(item.id);
+  const isHeuristicSeed = heuristicSeedFiles.some(seed => seed.path === item.id);
+  const relevanceScore = neighboringFiles.get(item.id);
+  const isNeighboring = relevanceScore !== undefined;
+
   // Get current tab's selected files
   const activeTab = tabs[activeTabIndex];
   const selectedFiles = activeTab?.selectedFiles || [];
-  
+
   // Convert to Set for efficient O(1) lookups in selection checks
   const selectedFilesSet = new Set(selectedFiles);
 
@@ -126,7 +146,54 @@ const FileExplorerItem: React.FC<FileExplorerItemProps> = ({
   return (
     <div className="select-none" style={{ paddingLeft: level ? '25px' : '0' }}>
       <div
-        className="flex items-center py-1 hover:bg-gray-100 dark:hover:bg-gray-700"
+        className={(() => {
+          let className = 'file-item-row flex items-center py-1 rounded-sm';
+          if (isContextSelected) {
+            className += ' bg-blue-100 dark:bg-blue-900/40';
+          } else if (isHeuristicSeed) {
+            className += ' file-item--heuristic-seed';
+          }
+          return className;
+        })()}
+        style={(() => {
+          if (isContextSelected || !isNeighboring || !relevanceScore) {
+            return {};
+          }
+
+          // Apply thresholding: only highlight files with score >= threshold
+          if (relevanceScore < CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) {
+            return {};
+          }
+
+          // Calculate normalized relevance factor (0.0 to 1.0)
+          const range =
+            CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE -
+            CONTEXT_BUILDER.VISUALIZATION_THRESHOLD;
+          if (range <= 0) {
+            return {}; // Prevent division by zero
+          }
+
+          const clampedScore = Math.min(
+            relevanceScore,
+            CONTEXT_BUILDER.MAX_VISUALIZATION_SCORE
+          );
+          const relevanceFactor =
+            (clampedScore - CONTEXT_BUILDER.VISUALIZATION_THRESHOLD) / range;
+
+          // Apply the non-linear transform: f(x) = 1 - (1-x)^2
+          const transformedFactor = 1 - Math.pow(1 - relevanceFactor, 2);
+
+          // Use the same base colors as selection but with scaling opacity
+          if (isDarkMode) {
+            // Dark mode: match dark:bg-blue-900/40 behavior, which is already semi-transparent.
+            const finalAlpha = transformedFactor * 0.4;
+            return { backgroundColor: `rgba(30, 58, 138, ${finalAlpha})` };
+          } else {
+            // Light mode: use blue-100 color with scaling opacity to match bg-blue-100 at max
+            const finalAlpha = transformedFactor;
+            return { backgroundColor: `rgba(219, 234, 254, ${finalAlpha})` };
+          }
+        })()}
         onClick={handleFileClick}
         onContextMenu={(e) => onContextMenu(e, item)}
       >

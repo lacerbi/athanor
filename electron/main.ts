@@ -2,19 +2,113 @@
 // and IPC communication between processes. Handles application lifecycle events, path resolution,
 // and uncaught exception handling with proper cleanup of file watchers.
 import { app, BrowserWindow, Menu, nativeTheme, ipcMain } from 'electron';
+import fixPath from 'fix-path';
+import { Worker } from 'worker_threads';
 import * as path from 'path';
+import * as fs from 'fs';
 import { createWindow, mainWindow } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
 import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
+import { RelevanceEngineService } from './services/RelevanceEngineService';
+import { GitService } from './services/GitService';
+import { UserActivityService } from './services/UserActivityService';
+import {
+  ProjectGraphService,
+  ProjectGraphCache,
+} from './services/ProjectGraphService';
+import { PROJECT_ANALYSIS } from '../src/utils/constants';
+
+// Debug flag for menu diagnostics
+const DEBUG_MENU = false;
+
+fixPath(); // Adjusts PATH in packaged Electron app to match the shell PATH
 
 // Create singleton instances
 export const fileService = new FileService();
 export const settingsService = new SettingsService(fileService);
+export const gitService = new GitService(fileService.getBaseDir());
+export const projectGraphService = new ProjectGraphService(
+  fileService,
+  gitService
+);
+export const userActivityService = new UserActivityService(fileService);
+export const relevanceEngine = new RelevanceEngineService(
+  fileService,
+  gitService,
+  projectGraphService,
+  userActivityService
+);
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
+
+let analysisPromise: Promise<void> | null = null;
+function runProjectAnalysisWorker(): Promise<void> {
+  if (analysisPromise) {
+    console.log('[Main] Analysis worker already running, skipping trigger.');
+    return analysisPromise;
+  }
+
+  analysisPromise = new Promise<void>((resolve, reject) => {
+    console.log('[Main] Spawning project analysis worker...');
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('graph-analysis:started');
+    }
+
+    // Path to worker must be correct after compilation.
+    // NOTE: Webpack is now configured to compile the worker script.
+    // This path points to the compiled worker JS file alongside the main bundle.
+    const worker = new Worker(
+      path.join(__dirname, '../projectAnalysisWorker.js'),
+      {
+        workerData: { baseDir: fileService.getBaseDir() },
+      }
+    );
+
+    worker.on(
+      'message',
+      (message: {
+        success: boolean;
+        data?: ProjectGraphCache;
+        error?: string;
+      }) => {
+        if (message.success && message.data) {
+          projectGraphService.populateGraphFromData(message.data);
+          projectGraphService.saveGraphToCache();
+          console.log(
+            '[Main] Received graph data from worker and updated cache.'
+          );
+        } else {
+          console.error('[Main] Worker reported an error:', message.error);
+        }
+      }
+    );
+
+    worker.on('error', (error: Error) => {
+      console.error('[Main] Worker thread error:', error);
+      // The 'exit' event will still fire, so we don't send 'finished' here
+      // to avoid sending it twice.
+      reject(error);
+    });
+
+    worker.on('exit', (code: number) => {
+      if (code !== 0) {
+        console.error(`[Main] Worker stopped with exit code ${code}`);
+      } else {
+        console.log('[Main] Worker finished successfully.');
+      }
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('graph-analysis:finished');
+      }
+      resolve();
+    });
+  }).finally(() => {
+    analysisPromise = null;
+  });
+  return analysisPromise;
+}
 
 // Get the base directory of the Athanor application
 export function getAppBasePath(): string {
@@ -38,7 +132,8 @@ async function buildMenu() {
         : [{ label: 'No Recent Projects', enabled: false }];
 
     // Read package.json for About panel information
-    const packageJson = require('../package.json');
+    const packageJsonPath = path.join(app.getAppPath(), 'package.json');
+    const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
     // Create application menu template
     const menuTemplate: Electron.MenuItemConstructorOptions[] = [
@@ -157,8 +252,23 @@ async function buildMenu() {
       },
     ];
 
+    // Log the template object to inspect its structure.
+    if (DEBUG_MENU) {
+      console.log(
+        '[DIAGNOSTIC] Final menu template object:',
+        JSON.stringify(menuTemplate, null, 2)
+      );
+    }
+
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
+
+    // Confirm this line was executed.
+    if (DEBUG_MENU) {
+      console.log(
+        '[DIAGNOSTIC] Menu.setApplicationMenu() was called successfully.'
+      );
+    }
   } catch (error) {
     console.error('Error building menu:', error);
   }
@@ -166,8 +276,6 @@ async function buildMenu() {
 
 // App lifecycle handlers
 app.whenReady().then(async () => {
-  await fileService.reloadIgnoreRules();
-
   // Initialize secure API key service
   apiKeyService = new ApiKeyServiceMain(app.getPath('userData'));
 
@@ -176,28 +284,73 @@ app.whenReady().then(async () => {
 
   // Handle CLI argument for opening a project
   const args = process.argv.slice(app.isPackaged ? 1 : 2);
-  const potentialPath = args.find(arg => !arg.startsWith('-'));
-  
+  const potentialPath = args.find((arg) => !arg.startsWith('-'));
+
   if (potentialPath) {
     const absolutePath = path.resolve(potentialPath);
     try {
       // Use fileService to check if the path is a valid directory
       if (await fileService.isDirectory(absolutePath)) {
         fileService.cliPath = fileService.toUnix(absolutePath);
-        console.log(`[Athanor] CLI project path specified: ${fileService.cliPath}`);
+        console.log(
+          `[Athanor] CLI project path specified: ${fileService.cliPath}`
+        );
       } else {
-        console.warn(`[Athanor] CLI path is not a directory, ignoring: ${absolutePath}`);
+        console.warn(
+          `[Athanor] CLI path is not a directory, ignoring: ${absolutePath}`
+        );
       }
     } catch (error) {
       // This can happen if the path does not exist at all
-      console.warn(`[Athanor] Invalid CLI path provided, ignoring: ${absolutePath}`, error);
+      console.warn(
+        `[Athanor] Invalid CLI path provided, ignoring: ${absolutePath}`,
+        error
+      );
     }
   }
+  // Listen for base directory changes to trigger project-wide analysis
+  fileService.on('base-dir-changed', async () => {
+    const loadedFromCache = await projectGraphService.loadGraphFromCache();
+    if (loadedFromCache) {
+      console.log(
+        '[ProjectGraphService] Successfully loaded graph from cache.'
+      );
+      // Still send the finished event so the UI can react
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('graph-analysis:finished');
+      }
+    } else {
+      console.log(
+        '[ProjectGraphService] Cache not found or invalid, starting full analysis.'
+      );
+      runProjectAnalysisWorker().catch((err) => {
+        console.error(
+          'Error running project analysis worker on base-dir-changed:',
+          err
+        );
+      });
+    }
+  });
 
-  setupIpcHandlers(fileService, settingsService, apiKeyService, llmService);
+  setupIpcHandlers(
+    fileService,
+    settingsService,
+    apiKeyService,
+    llmService,
+    relevanceEngine,
+    projectGraphService,
+    userActivityService
+  );
+
+  ipcMain.handle('graph:force-reanalyze', () => {
+    runProjectAnalysisWorker().catch((err) => {
+      console.error('Error running manual project analysis:', err);
+    });
+  });
 
   // Read package.json for About panel information
-  const packageJson = require('../package.json');
+  const packageJsonPath = path.join(app.getAppPath(), 'package.json');
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
 
   // Configure About panel
   app.setAboutPanelOptions({
@@ -215,10 +368,94 @@ app.whenReady().then(async () => {
 
   createWindow();
 
+  // --- Automatic Project Analysis Logic ---
+  let fsDebounceTimer: NodeJS.Timeout | null = null;
+  let inactivityTimer: NodeJS.Timeout | null = null;
+  let isWindowFocused = true;
+  let graphIsPotentiallyStale = false;
+
+  const runAnalysisAndCatch = () => {
+    runProjectAnalysisWorker()
+      .then(() => {
+        console.log('[Main] Analysis complete, graph is now considered fresh.');
+        graphIsPotentiallyStale = false;
+      })
+      .catch((err) => {
+        console.error('[Main] Automatic project analysis failed:', err);
+      });
+  };
+
+  const scheduleInactivityCheck = () => {
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      console.log(
+        `[Main] User inactive for ${
+          PROJECT_ANALYSIS.USER_INACTIVITY_DELAY / 1000
+        }s. Running analysis.`
+      );
+      runAnalysisAndCatch();
+    }, PROJECT_ANALYSIS.USER_INACTIVITY_DELAY);
+  };
+
+  const scheduleAnalysis = () => {
+    fsDebounceTimer = null;
+    console.log('[Main] File system is quiet. Scheduling analysis.');
+    if (!isWindowFocused) {
+      console.log('[Main] Window not focused. Running analysis immediately.');
+      runAnalysisAndCatch();
+    } else {
+      console.log('[Main] Window is focused. Setting inactivity timer.');
+      scheduleInactivityCheck();
+    }
+  };
+
+  fileService.on('file-changed', () => {
+    graphIsPotentiallyStale = true;
+    if (fsDebounceTimer) clearTimeout(fsDebounceTimer);
+    if (inactivityTimer) clearTimeout(inactivityTimer);
+    fsDebounceTimer = setTimeout(
+      scheduleAnalysis,
+      PROJECT_ANALYSIS.FILE_SYSTEM_QUIESCENCE_DELAY
+    );
+  });
+
+  if (mainWindow) {
+    mainWindow.on('focus', () => {
+      isWindowFocused = true;
+      if (inactivityTimer) clearTimeout(inactivityTimer);
+    });
+
+    mainWindow.on('blur', () => {
+      isWindowFocused = false;
+      // If FS is quiet, window is blurred, AND graph is stale, trigger analysis.
+      if (graphIsPotentiallyStale && !fsDebounceTimer) {
+        console.log(
+          '[Main] FS is quiet, graph is stale, and window blurred. Running analysis.'
+        );
+        runAnalysisAndCatch();
+      }
+    });
+  }
+
+  ipcMain.on('user-activity', () => {
+    if (inactivityTimer) {
+      scheduleInactivityCheck();
+    }
+  });
+  // --- End Automatic Project Analysis Logic ---
+
   // Listen for system theme changes and notify renderer
   nativeTheme.on('updated', () => {
-    if (mainWindow && !mainWindow.isDestroyed() && mainWindow.webContents && !mainWindow.webContents.isDestroyed()) {
-      mainWindow.webContents.send('native-theme-updated', nativeTheme.shouldUseDarkColors);
+    if (
+      mainWindow &&
+      !mainWindow.isDestroyed() &&
+      mainWindow.webContents &&
+      !mainWindow.webContents.isDestroyed()
+    ) {
+      mainWindow.webContents.send(
+        'native-theme-updated',
+        nativeTheme.shouldUseDarkColors
+      );
     }
   });
 
@@ -227,12 +464,15 @@ app.whenReady().then(async () => {
       createWindow();
     }
   });
+
+  console.log('App initialization completed successfully.');
 });
 
 app.on('window-all-closed', () => {
   fileService.cleanupWatchers().catch((err) => {
     console.error('Error cleaning up FileService watchers:', err);
   });
+  userActivityService.cleanup();
 
   // Quit on all windows closed (except on macOS)
   if (process.platform !== 'darwin') {

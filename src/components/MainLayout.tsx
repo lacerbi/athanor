@@ -1,5 +1,12 @@
 import React, { useRef } from 'react';
-import { File, FileText, FolderOpen, RefreshCw, ClipboardCopy } from 'lucide-react';
+import {
+  File,
+  FileText,
+  FolderOpen,
+  RefreshCw,
+  ClipboardCopy,
+  Network,
+} from 'lucide-react';
 import { useLogStore, LogEntry } from '../stores/logStore';
 import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
@@ -9,6 +16,7 @@ import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
+import { useContextStore } from '../stores/contextStore';
 import { FileItem } from '../utils/fileTree';
 import { usePanelResize } from '../hooks/usePanelResize';
 import { useLogPanelResize } from '../hooks/useLogPanelResize';
@@ -44,17 +52,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 }) => {
   const { leftPanelWidth, isResizing, resizeRef, startResize } =
     usePanelResize();
-  const { 
-    logPanelHeight, 
-    isResizing: isLogResizing, 
-    resizeRef: logResizeRef, 
-    startResize: startLogResize 
+  const {
+    logPanelHeight,
+    isResizing: isLogResizing,
+    resizeRef: logResizeRef,
+    startResize: startLogResize,
   } = useLogPanelResize();
-  
-  const { 
-    effectiveConfig,
-    fileTree
-  } = useFileSystemStore();
+  const { isAnalyzingGraph } = useContextStore();
+
+  const { effectiveConfig, fileTree } = useFileSystemStore();
   const { tabs, activeTabIndex } = useWorkbenchStore();
 
   // Calculate selection metrics from active workbench tab
@@ -91,7 +97,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                 title="Open folder"
               >
-                <FolderOpen size={20} className="text-gray-600 dark:text-gray-300" />
+                <FolderOpen
+                  size={20}
+                  className="text-gray-600 dark:text-gray-300"
+                />
               </button>
               <button
                 onClick={() => onRefresh()}
@@ -106,6 +115,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                       ? 'text-gray-400 dark:text-gray-500'
                       : 'text-gray-600 dark:text-gray-300'
                   } ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+              </button>
+              <button
+                onClick={() => window.electronBridge.graph.forceReanalyze()}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+                disabled={isAnalyzingGraph || !currentDirectory}
+                title="Refresh project analysis"
+              >
+                <Network
+                  size={20}
+                  className={`${
+                    isAnalyzingGraph || !currentDirectory
+                      ? 'text-gray-400 dark:text-gray-500'
+                      : 'text-gray-600 dark:text-gray-300'
+                  } ${isAnalyzingGraph ? 'animate-spin' : ''}`}
                 />
               </button>
               <button
@@ -129,7 +153,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             <div className="font-medium">
               {effectiveConfig?.project_name || 'Loading...'}
             </div>
-            <div 
+            <div
               className="text-xs text-gray-500 dark:text-gray-400 mt-1 truncate min-w-0"
               style={{ direction: 'rtl', textAlign: 'left' }}
               title={currentDirectory}
@@ -162,11 +186,17 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               className="flex items-center gap-1"
               title="Total lines across selected files"
             >
-              <FileText size={14} className="text-gray-600 dark:text-gray-300" />
+              <FileText
+                size={14}
+                className="text-gray-600 dark:text-gray-300"
+              />
               <span>{selectedLinesTotal}</span>
             </div>
           </div>
-          <div className="text-gray-500 dark:text-gray-400" title="Athanor application version">
+          <div
+            className="text-gray-500 dark:text-gray-400"
+            title="Athanor application version"
+          >
             {appVersion}
           </div>
         </div>
@@ -180,12 +210,12 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       />
 
       {/* Right Panel */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Top panel: tabs */}
         <AthanorTabs activeTab={activeTab} onTabChange={onTabChange} />
 
         {/* Tab content */}
-        <div className="flex-1 min-h-0 overflow-y-auto p-4">
+        <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 min-w-0">
           {activeTab === 'workbench' && (
             <ActionPanel
               rootItems={[filesData]}
@@ -193,7 +223,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               isActive={activeTab === 'workbench'}
             />
           )}
-          {activeTab === 'viewer' && <FileViewerPanel onTabChange={onTabChange} />}
+          {activeTab === 'viewer' && (
+            <FileViewerPanel onTabChange={onTabChange} />
+          )}
           {activeTab === 'apply-changes' && <ApplyChangesPanel />}
           {activeTab === 'settings' && <SettingsPanel />}
         </div>
@@ -221,7 +253,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   [{log.timestamp}] {log.message}
                 </button>
               ) : (
-                <span>[{log.timestamp}] {log.message}</span>
+                <span>
+                  [{log.timestamp}] {log.message}
+                </span>
               )}
             </div>
           ))}

@@ -1,10 +1,12 @@
 // AI Summary: Core file system service coordinating path handling, file operations, watchers,
-// and ignore rules with consistent error handling and path normalization.
+// and ignore rules with consistent error handling and path normalization. Emits 'base-dir-changed'
+// and 'file-changed' events.
 
 import * as fs from 'fs/promises';
 import { Stats, constants, statSync } from 'fs';
 import * as chokidar from 'chokidar';
 import { app } from 'electron';
+import { EventEmitter } from 'events';
 import type { IFileService } from '../../common/types/file-service';
 import { PathUtils } from './PathUtils';
 import { ignoreRulesManager } from '../ignoreRulesManager';
@@ -15,21 +17,16 @@ import { FILE_SYSTEM } from '../../src/utils/constants';
  * It handles path normalization, file reading/writing, directory operations,
  * file watching, and integration with ignore rules.
  */
-export class FileService implements IFileService {
+export class FileService extends EventEmitter implements IFileService {
   public cliPath: string | null = null;
-  private baseDir = PathUtils.normalizeToUnix(process.cwd());
+  private baseDir: string | null = null;
   private watchers = new Map<string, chokidar.FSWatcher>();
-  private materialsDir: string;
+  private materialsDir!: string;
 
   constructor() {
-    // Set up materials directory path
-    this.materialsDir = PathUtils.joinUnix(this.baseDir, FILE_SYSTEM.materialsDirName);
-    
-    // Initialize ignore rules manager
-    ignoreRulesManager.setBaseDir(this.baseDir);
-    this.reloadIgnoreRules().catch(err => {
-      console.error("Initial ignore rule load failed:", err);
-    });
+    super();
+    // Defer initialization until setBaseDir is called.
+    // The baseDir property will be null until a project is opened.
   }
 
   // --- Path Helpers ---
@@ -66,23 +63,24 @@ export class FileService implements IFileService {
    */
   resolve(relativePath: string): string {
     const normalized = this.toUnix(relativePath);
+    const baseDir = this.getBaseDir();
     
     // If already absolute, ensure it's within baseDir
     if (PathUtils.isAbsolute(normalized)) {
-      if (!normalized.startsWith(this.baseDir)) {
+      if (!normalized.startsWith(baseDir)) {
         throw new Error(`Path traversal attempt detected: ${relativePath}`);
       }
       return normalized;
     }
     
     // Join with baseDir
-    const absolutePath = PathUtils.joinUnix(this.baseDir, normalized);
+    const absolutePath = PathUtils.joinUnix(baseDir, normalized);
     
     // Final path traversal check - fixed to correctly handle edge cases
     // The baseDir check should allow paths like "/base/dir" when baseDir is "/base/dir"
-    if (!absolutePath.startsWith(this.baseDir + '/') && absolutePath !== this.baseDir) {
+    if (!absolutePath.startsWith(baseDir + '/') && absolutePath !== baseDir) {
       // Use PathUtils.isPathInside which correctly handles path equality
-      if (!PathUtils.isPathInside(this.baseDir, absolutePath)) {
+      if (!PathUtils.isPathInside(baseDir, absolutePath)) {
         throw new Error(`Path traversal attempt detected: ${relativePath}`);
       }
     }
@@ -127,13 +125,14 @@ export class FileService implements IFileService {
    */
   relativize(absolutePath: string): string {
     const normalizedAbs = this.toUnix(absolutePath);
+    const baseDir = this.getBaseDir();
     
-    if (!normalizedAbs.startsWith(this.baseDir)) {
+    if (!normalizedAbs.startsWith(baseDir)) {
       console.warn(`Attempting to relativize path outside baseDir: ${absolutePath}`);
       return normalizedAbs;
     }
     
-    const relativePath = PathUtils.relative(this.baseDir, normalizedAbs);
+    const relativePath = PathUtils.relative(baseDir, normalizedAbs);
     return relativePath === '' ? '.' : relativePath;
   }
 
@@ -149,24 +148,24 @@ export class FileService implements IFileService {
       return; // No change needed
     }
     
-    // Clean up existing state
-    await this.cleanupWatchers();
-    ignoreRulesManager.clearRules();
+    // If we're changing from an existing project, clean up
+    if (this.baseDir !== null) {
+      await this.cleanupWatchers();
+      ignoreRulesManager.clearRules();
+    }
     
     // Update base directory
     this.baseDir = normalizedDir;
-    ignoreRulesManager.setBaseDir(normalizedDir);
     
-    // Update materials directory path
+    // Perform initial setup or update
+    await ignoreRulesManager.setBaseDir(this.baseDir);
     this.materialsDir = PathUtils.joinUnix(this.baseDir, FILE_SYSTEM.materialsDirName);
-    
-    // Ensure supplementary materials directory exists
     await this.ensureMaterialsDir();
     
-    // Reload ignore rules with new base directory
-    await this.reloadIgnoreRules();
-    
     console.log(`Base directory set to: ${this.baseDir}`);
+    
+    // Emit event for other services to hook into
+    this.emit('base-dir-changed');
   }
 
   /**
@@ -174,7 +173,10 @@ export class FileService implements IFileService {
    * @returns Base directory path
    */
   getBaseDir(): string {
-    return this.baseDir;
+    // The baseDir is now nullable, but many parts of the app expect a string.
+    // This method should only be called after a project is opened.
+    // We return a fallback to prevent crashes, but this indicates a logic issue if null.
+    return this.baseDir ?? PathUtils.normalizeToUnix(process.cwd());
   }
 
   /**
@@ -237,7 +239,7 @@ export class FileService implements IFileService {
       const absDir = PathUtils.dirname(absPath);
       
       // Ensure parent directory exists
-      if (PathUtils.isPathInside(this.baseDir, absPath)) {
+      if (PathUtils.isPathInside(this.getBaseDir(), absPath)) {
         // For paths inside the project, use ensureDir with relative path
         await this.ensureDir(this.relativize(absDir));
       } else {
@@ -346,6 +348,7 @@ export class FileService implements IFileService {
     try {
       const absDir = this.toAbsolute(pathStr);
       const entries = await fs.readdir(this.toOS(absDir));
+      const baseDir = this.getBaseDir();
       
       if (!opts.applyIgnores) {
         return entries;
@@ -354,7 +357,7 @@ export class FileService implements IFileService {
       const filteredEntries: string[] = [];
       
       // Skip ignore rule processing for paths outside the project base directory
-      const isExternalPath = !PathUtils.isPathInside(this.baseDir, absDir);
+      const isExternalPath = !PathUtils.isPathInside(baseDir, absDir);
       
       for (const entry of entries) {
         const entryAbsPath = PathUtils.joinUnix(absDir, entry);
@@ -369,7 +372,7 @@ export class FileService implements IFileService {
         
         // Materials directory is handled separately, skip it in the main tree
         if (entryRelPath === FILE_SYSTEM.materialsDirName && 
-            (pathStr === '' || pathStr === '.' || pathStr === this.baseDir)) {
+            (pathStr === '' || pathStr === '.' || pathStr === baseDir)) {
           continue;
         }
         
@@ -396,6 +399,48 @@ export class FileService implements IFileService {
       console.error(`Error reading directory ${pathStr}:`, error);
       throw error;
     }
+  }
+
+  /**
+   * Get all file paths in the project, respecting ignore rules.
+   * @returns A promise that resolves to an array of project-relative file paths.
+   */
+  async getAllFilePaths(): Promise<string[]> {
+    const allFiles = await this._getAllFilePathsRecursive(this.getBaseDir());
+    return allFiles.sort((a, b) => a.localeCompare(b));
+  }
+
+  /**
+   * Recursively scans a directory to get all file paths.
+   * @param absoluteDir The absolute directory path to scan.
+   * @returns A promise that resolves to an array of project-relative file paths.
+   */
+  private async _getAllFilePathsRecursive(
+    absoluteDir: string
+  ): Promise<string[]> {
+    let allFiles: string[] = [];
+    try {
+      const entries = await this.readdir(absoluteDir, { applyIgnores: true });
+
+      for (const entry of entries) {
+        const entryAbsPath = this.join(absoluteDir, entry);
+        try {
+          const stats = await this.stats(entryAbsPath);
+          if (stats?.isDirectory()) {
+            const subFiles = await this._getAllFilePathsRecursive(entryAbsPath);
+            allFiles.push(...subFiles);
+          } else if (stats?.isFile()) {
+            allFiles.push(this.relativize(entryAbsPath));
+          }
+        } catch (statError) {
+          // Ignore errors for files that might be deleted during the scan (e.g., temp files)
+          console.warn(`Could not stat path ${entryAbsPath}:`, statError);
+        }
+      }
+    } catch (readError) {
+      console.warn(`Could not read directory ${absoluteDir}:`, readError);
+    }
+    return allFiles;
   }
 
   // --- Watcher Management ---
@@ -476,6 +521,7 @@ export class FileService implements IFileService {
         // Only forward valid events
         if (event === 'add' || event === 'change' || event === 'unlink' || 
             event === 'addDir' || event === 'unlinkDir') {
+          this.emit('file-changed', { event, path: relPath });
           callback(event, relPath);
         }
       });

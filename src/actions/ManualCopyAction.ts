@@ -57,9 +57,9 @@ export async function copySelectedFilesContent(
     const { file_contents } = await generateCodebaseDocumentation(
       fileTree,
       selectedItemsSet,
+      new Set<string>(), // No neighboring files in a direct copy action
       rootPath,
-      null,
-      false, // Always exclude non-selected files for manual copy
+      null, // config
       formatType // Use the format preference from the store
     );
 

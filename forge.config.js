@@ -20,6 +20,18 @@ module.exports = {
       name: '@electron-forge/maker-zip',
       platforms: ['win32'],
     },
+    {
+      name: '@electron-forge/maker-deb',
+      config: {
+        options: {
+          icon: 'resources/images/athanor.png'
+        }
+      }
+    },
+    {
+      name: '@electron-forge/maker-rpm',
+      config: {}
+    },
   ],
   plugins: [
     {
@@ -37,14 +49,16 @@ module.exports = {
                 js: './electron/preload.ts',
                 config: './webpack.preload.config.js',
               },
-              prefixNamespace: false,
-              outputTarget: {
-                html: 'index.html',
-                js: 'index.js',
-                preload: 'preload.js',
-              },
             },
           ],
+        },
+        devServer: {
+          client: {
+            overlay: {
+              errors: true,
+              warnings: false, // This will now be respected
+            },
+          },
         },
         port: 3000,
         loggerPort: 9000,
