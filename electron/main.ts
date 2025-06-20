@@ -24,9 +24,7 @@ import { PROJECT_ANALYSIS } from '../src/utils/constants';
 // Debug flag for menu diagnostics
 const DEBUG_MENU = true;
 
-console.log('[DEBUG] About to call fixPath()...');
 fixPath(); // Adjusts PATH in packaged Electron app to match the shell PATH
-console.log('[DEBUG] fixPath() completed successfully.');
 
 // Create singleton instances
 export const fileService = new FileService();
@@ -254,7 +252,7 @@ async function buildMenu() {
       },
     ];
 
-    // NEW DIAGNOSTIC 1: Log the template object to inspect its structure.
+    // Log the template object to inspect its structure.
     if (DEBUG_MENU) {
       console.log(
         '[DIAGNOSTIC] Final menu template object:',
@@ -265,7 +263,7 @@ async function buildMenu() {
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
 
-    // NEW DIAGNOSTIC 2: Confirm this line was executed.
+    // Confirm this line was executed.
     if (DEBUG_MENU) {
       console.log(
         '[DIAGNOSTIC] Menu.setApplicationMenu() was called successfully.'
@@ -278,21 +276,12 @@ async function buildMenu() {
 
 // App lifecycle handlers
 app.whenReady().then(async () => {
-  console.log('[DEBUG] App is ready. Starting setup...');
-
-  console.log('[DEBUG] Reloading ignore rules...');
-  await fileService.reloadIgnoreRules();
-  console.log('[DEBUG] Ignore rules reloaded.');
-
-  console.log('[DEBUG] Initializing services...');
   // Initialize secure API key service
   apiKeyService = new ApiKeyServiceMain(app.getPath('userData'));
 
   // Initialize LLM service with API key service
   llmService = new LLMServiceMain(apiKeyService);
-  console.log('[DEBUG] Services initialized.');
 
-  console.log('[DEBUG] Processing CLI arguments...');
   // Handle CLI argument for opening a project
   const args = process.argv.slice(app.isPackaged ? 1 : 2);
   const potentialPath = args.find((arg) => !arg.startsWith('-'));
@@ -319,9 +308,6 @@ app.whenReady().then(async () => {
       );
     }
   }
-  console.log('[DEBUG] CLI arguments processed.');
-
-  console.log('[DEBUG] Setting up event listeners...');
   // Listen for base directory changes to trigger project-wide analysis
   fileService.on('base-dir-changed', async () => {
     const loadedFromCache = await projectGraphService.loadGraphFromCache();
@@ -345,9 +331,7 @@ app.whenReady().then(async () => {
       });
     }
   });
-  console.log('[DEBUG] Event listeners set up.');
 
-  console.log('[DEBUG] Setting up IPC handlers...');
   setupIpcHandlers(
     fileService,
     settingsService,
@@ -357,17 +341,13 @@ app.whenReady().then(async () => {
     projectGraphService,
     userActivityService
   );
-  console.log('[DEBUG] IPC handlers set up.');
 
-  console.log('[DEBUG] Setting up additional IPC handlers...');
   ipcMain.handle('graph:force-reanalyze', () => {
     runProjectAnalysisWorker().catch((err) => {
       console.error('Error running manual project analysis:', err);
     });
   });
-  console.log('[DEBUG] Additional IPC handlers set up.');
 
-  console.log('[DEBUG] Reading package.json and configuring About panel...');
   // Read package.json for About panel information
   const packageJsonPath = path.join(app.getAppPath(), 'package.json');
   const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -381,21 +361,13 @@ app.whenReady().then(async () => {
     copyright: `Copyright © ${new Date().getFullYear()} ${packageJson.author}`,
     credits: `${packageJson.description}`,
   });
-  console.log('[DEBUG] About panel configured.');
 
-  console.log(
-    '[DEBUG] Setting up menu rebuild listener and building initial menu...'
-  );
   // Set up menu rebuild listener and build initial menu
   ipcMain.on('app:rebuild-menu', buildMenu);
   await buildMenu();
-  console.log('[DEBUG] Menu built.');
 
-  console.log('[DEBUG] Creating window...');
   createWindow();
-  console.log('[DEBUG] Window created.');
 
-  console.log('[DEBUG] Setting up automatic project analysis logic...');
   // --- Automatic Project Analysis Logic ---
   let fsDebounceTimer: NodeJS.Timeout | null = null;
   let inactivityTimer: NodeJS.Timeout | null = null;
@@ -471,9 +443,7 @@ app.whenReady().then(async () => {
     }
   });
   // --- End Automatic Project Analysis Logic ---
-  console.log('[DEBUG] Automatic project analysis logic set up.');
 
-  console.log('[DEBUG] Setting up native theme listener...');
   // Listen for system theme changes and notify renderer
   nativeTheme.on('updated', () => {
     if (
@@ -488,17 +458,14 @@ app.whenReady().then(async () => {
       );
     }
   });
-  console.log('[DEBUG] Native theme listener set up.');
 
-  console.log('[DEBUG] Setting up app activate listener...');
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
     }
   });
-  console.log('[DEBUG] App activate listener set up.');
 
-  console.log('[DEBUG] App initialization completed successfully!');
+  console.log('App initialization completed successfully.');
 });
 
 app.on('window-all-closed', () => {
