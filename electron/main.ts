@@ -22,7 +22,7 @@ import {
 import { PROJECT_ANALYSIS } from '../src/utils/constants';
 
 // Debug flag for menu diagnostics
-const DEBUG_MENU = true;
+const DEBUG_MENU = false;
 
 fixPath(); // Adjusts PATH in packaged Electron app to match the shell PATH
 
