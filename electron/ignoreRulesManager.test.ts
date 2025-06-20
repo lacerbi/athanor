@@ -568,9 +568,18 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     describe('Hierarchical Logic - Parent/Child Overrides', () => {
       it('should handle parent ignores, child un-ignores', async () => {
         const fileStructure = new Map([
-          ['/test/project', { isDirectory: true, files: ['.gitignore', 'src', '.ath_materials'] }],
-          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
-          ['/test/project/src', { isDirectory: true, files: ['.gitignore', 'important.log'] }],
+          [
+            '/test/project',
+            { isDirectory: true, files: ['.gitignore', 'src', '.ath_materials'] },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            { isDirectory: true, files: ['.gitignore', 'important.log'] },
+          ],
         ]);
         const ignoreFiles = new Map([
           ['/test/project/.ath_materials/project_settings.json', '{}'],
@@ -579,10 +588,128 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ]);
         setupFS(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
-        
+
         expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
         expect(ignoreRulesManager.ignores('src/other.log')).toBe(true);
         expect(ignoreRulesManager.ignores('root.log')).toBe(true);
+      });
+
+      it('should correctly scope nested patterns to their own directories', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: [
+                '.gitignore',
+                'src',
+                'docs',
+                'root.log',
+                'root.tmp',
+                '.ath_materials',
+              ],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'component.log', 'component.tmp', 'sub/'],
+            },
+          ],
+          [
+            '/test/project/src/sub',
+            { isDirectory: true, files: ['deep.log'] },
+          ],
+          [
+            '/test/project/docs',
+            { isDirectory: true, files: ['.gitignore', 'guide.md', 'guide.log'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.tmp'], // Ignore all .tmp files
+          ['/test/project/src/.gitignore', '*.log'], // Ignore .log files only within src
+          ['/test/project/docs/.gitignore', 'guide.md'], // Ignore guide.md only within docs
+        ]);
+
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        // Test scoping of src/.gitignore
+        expect(ignoreRulesManager.ignores('src/component.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/sub/deep.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('root.log')).toBe(false); // Was incorrectly true before
+        expect(ignoreRulesManager.ignores('docs/guide.log')).toBe(false); // Was incorrectly true before
+
+        // Test scoping of docs/.gitignore
+        expect(ignoreRulesManager.ignores('docs/guide.md')).toBe(true);
+        expect(ignoreRulesManager.ignores('guide.md')).toBe(false); // if there was a root one
+
+        // Test root .gitignore is still global
+        expect(ignoreRulesManager.ignores('root.tmp')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/component.tmp')).toBe(true);
+      });
+
+      it('should handle various pattern types (slashes, negations) correctly in nested files', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'src', '.ath_materials', 'config.js'],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'build/', 'output', 'config.js', 'lib/'],
+            },
+          ],
+          [
+            '/test/project/src/build',
+            { isDirectory: true, files: ['app.js'] },
+          ],
+          [
+            '/test/project/src/lib',
+            { isDirectory: true, files: ['config.js', 'other.js'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          // Parent rule: ignore all config.js files
+          ['/test/project/.gitignore', 'config.js'],
+          // Child rules in src/
+          ['/test/project/src/.gitignore', 'build/\n/output\n!/config.js'],
+        ]);
+
+        setupFS(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        // 1. Pattern with a trailing slash: `build/` in `src/`. Should ignore `src/build/`.
+        expect(ignoreRulesManager.ignores('src/build/')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/build/app.js')).toBe(true);
+        expect(ignoreRulesManager.ignores('build/')).toBe(false);
+
+        // 2. Pattern with a leading slash: `/output` in `src/`. Should ignore `src/output` only.
+        // Transformed to `src/output`.
+        expect(ignoreRulesManager.ignores('src/output')).toBe(true);
+
+        // 3. Negated pattern `!/config.js` in `src/` should un-ignore a file ignored by parent.
+        // Parent rule `config.js` ignores all files named 'config.js'.
+        // Child rule `!/config.js` is transformed to `!src/config.js`, which is an anchored un-ignore.
+        expect(ignoreRulesManager.ignores('src/config.js')).toBe(false); // Un-ignored by child rule.
+        expect(ignoreRulesManager.ignores('src/lib/config.js')).toBe(true); // Should remain ignored by parent rule.
+        expect(ignoreRulesManager.ignores('config.js')).toBe(true); // A root config.js should still be ignored.
       });
     });
 
