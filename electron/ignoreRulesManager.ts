@@ -50,17 +50,12 @@ interface IgnoreFile {
  * ## Compilation and Override Logic
  *
  * - During `loadIgnoreRules()`, all found ignore files are sorted from shallowest to deepest.
- * - Their contents are added to the master `athIgnoreRules` and `gitIgnoreRules` instances in that order.
- * - The `ignore` library ensures that later rules (from deeper files) correctly override earlier ones from parent directories.
+ * - Their patterns are transformed to be root-relative and then added to the master `athIgnoreRules`
+ * and `gitIgnoreRules` instances in that order. This correctly scopes rules to their
+ * directory of origin while maintaining a centralized, performant ruleset.
+ * - The `ignore` library ensures that later rules (from deeper files) correctly override earlier ones
+ * from parent directories.
  * - This moves the computational complexity from check-time to a one-time load-time operation.
- *
- * ## Path Relativity
- *
- * For performance, this implementation deviates from Git's perfect path-relative behavior. All ignore patterns
- * are treated as if they are in the root directory. For example, a rule `build/` in `src/.gitignore` will be treated
- * as a root-level rule, potentially ignoring a `/build` directory. This is a trade-off for the massive
- * performance gain that solves `EMFILE` errors and application hangs. The most critical rules (e.g., for `node_modules`)
- * are typically in the root `.gitignore` and are unaffected.
  */
 class IgnoreRulesManager {
   private lastError: Error | null = null;
@@ -301,6 +296,57 @@ class IgnoreRulesManager {
     });
   }
 
+  /**
+   * Transforms raw ignore patterns from a specific directory to be root-relative.
+   * @param patterns An array of patterns from the ignore file's content.
+   * @param directoryPath The project-relative path of the directory containing the ignore file.
+   * @returns An array of transformed patterns ready to be added to the master ignore instance.
+   */
+  private _transformPatterns(
+    patterns: string[],
+    directoryPath: string
+  ): string[] {
+    if (directoryPath === '.') {
+      // Patterns in the root directory don't need transformation.
+      return patterns;
+    }
+
+    return patterns
+      .map((rawPattern) => {
+        const pattern = rawPattern.trim();
+        if (pattern === '' || pattern.startsWith('#')) {
+          return null; // Ignore empty lines and comments
+        }
+
+        let isNegated = false;
+        let finalPattern = pattern;
+
+        if (finalPattern.startsWith('!')) {
+          isNegated = true;
+          finalPattern = finalPattern.substring(1);
+        }
+
+        if (finalPattern.startsWith('/')) {
+          // Pattern is already relative to the ignore file's directory root
+          finalPattern = finalPattern.substring(1);
+        } else if (!finalPattern.includes('/')) {
+          // Pattern does not contain a slash, so it should match anywhere in the subdirectory
+          finalPattern = `**/${finalPattern}`;
+        }
+
+        // Join with the directory path to make it relative to the project root
+        let transformed = PathUtils.joinUnix(directoryPath, finalPattern);
+
+        // Re-apply negation if it existed
+        if (isNegated) {
+          transformed = '!' + transformed;
+        }
+
+        return transformed;
+      })
+      .filter((p): p is string => p !== null);
+  }
+
   // Load ignore rules: scan for all ignore files and sort them
   async loadIgnoreRules() {
     const now = Date.now();
@@ -389,11 +435,19 @@ class IgnoreRulesManager {
 
       // Add rules to the master instances. The `ignore` library handles overrides correctly
       // when rules are added in this shallow-to-deep order.
-      athignores.forEach((file) => this.athIgnoreRules.add(file.content));
+      athignores.forEach((file) => {
+        const patterns = file.content.split('\n');
+        const transformed = this._transformPatterns(patterns, file.path);
+        this.athIgnoreRules.add(transformed);
+      });
       if (athignores.length > 0) this.athRulesLoaded = true;
 
       if (this.useGitignore) {
-        gitignores.forEach((file) => this.gitIgnoreRules.add(file.content));
+        gitignores.forEach((file) => {
+          const patterns = file.content.split('\n');
+          const transformed = this._transformPatterns(patterns, file.path);
+          this.gitIgnoreRules.add(transformed);
+        });
         if (gitignores.length > 0) this.gitRulesLoaded = true;
       }
 
