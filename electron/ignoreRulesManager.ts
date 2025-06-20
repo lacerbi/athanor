@@ -326,16 +326,23 @@ class IgnoreRulesManager {
           finalPattern = finalPattern.substring(1);
         }
 
+        let transformed;
         if (finalPattern.startsWith('/')) {
-          // Pattern is already relative to the ignore file's directory root
-          finalPattern = finalPattern.substring(1);
+          // A leading slash anchors the pattern to the ignore file's directory.
+          // e.g., `/foo` in `src/.gitignore` becomes `src/foo`.
+          transformed = PathUtils.joinUnix(
+            directoryPath,
+            finalPattern.substring(1)
+          );
         } else if (!finalPattern.includes('/')) {
-          // Pattern does not contain a slash, so it should match anywhere in the subdirectory
-          finalPattern = `**/${finalPattern}`;
+          // A pattern without a slash matches in any subdirectory.
+          // e.g., `*.log` in `src/` becomes `src/**/*.log`.
+          transformed = PathUtils.joinUnix(directoryPath, '**', finalPattern);
+        } else {
+          // A pattern with a slash is relative to the ignore file's directory.
+          // e.g., `build/*.o` in `src/` becomes `src/build/*.o`.
+          transformed = PathUtils.joinUnix(directoryPath, finalPattern);
         }
-
-        // Join with the directory path to make it relative to the project root
-        let transformed = PathUtils.joinUnix(directoryPath, finalPattern);
 
         // Re-apply negation if it existed
         if (isNegated) {
