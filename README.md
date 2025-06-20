@@ -104,7 +104,7 @@ Because the application is compiled on your machine and not signed by a verified
 </details>
 
 <details>
-<summary><strong>Manual Installation & Alternative Running Methods\</strong></summary>
+<summary><strong>Manual Installation & Alternative Running Methods</strong></summary>
 
 If the `npx` command fails, or if you prefer to set up the project manually, follow these steps.
 
