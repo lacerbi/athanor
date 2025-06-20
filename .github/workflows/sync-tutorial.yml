@@ -51,12 +51,9 @@ jobs:
 
           # Check if there are staged changes. If so, commit and push.
           if ! git diff --staged --quiet; then
-            git commit -m "docs(tutorial): Sync TUTORIAL.md from website repository
-
-Signed-off-by:
-  github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
-  git push
-  echo "Pushed updated TUTORIAL.md to the PR branch."
-  else
-  echo "TUTORIAL.md is already up-to-date. No changes to commit."
-  fi
+            git commit -m "docs(tutorial): Sync TUTORIAL.md from website repository" -m "Signed-off-by: github-actions[bot] <github-actions[bot]@users.noreply.github.com>"
+            git push
+            echo "Pushed updated TUTORIAL.md to the PR branch."
+          else
+            echo "TUTORIAL.md is already up-to-date. No changes to commit."
+          fi
