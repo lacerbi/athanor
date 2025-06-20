@@ -9,6 +9,12 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.1] - 2025-06-20
+
+### Fixed
+
+- Corrected the handling of nested `.gitignore` and `.athignore` files. Ignore patterns are now properly scoped to their containing directory, ensuring file exclusion behavior is consistent with Git's handling of path-relative rules. ([52d42a5](https://github.com/lacerbi/athanor/commit/52d42a5), [4286566](https://github.com/lacerbi/athanor/commit/4286566))
+
 ## [0.7.0] - 2025-06-20
 
 ### Added
