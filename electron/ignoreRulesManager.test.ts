@@ -574,6 +574,97 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         expect(ignoreRulesManager.ignores('temp.log')).toBe(true);
       });
     });
+
+    describe('Nested override scenarios', () => {
+      it('Test A: .athignore should un-ignore a file pattern ignored by a parent .gitignore', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            { isDirectory: true, files: ['.athignore', '.gitignore', 'legacy.bak', 'restore/', '.ath_materials'] },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/restore',
+            { isDirectory: true, files: ['important.bak'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.bak'], // Ignore all .bak files
+          ['/test/project/.athignore', '!restore/important.bak'], // But not this one
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        expect(ignoreRulesManager.ignores('legacy.bak')).toBe(true);
+        expect(ignoreRulesManager.ignores('restore/important.bak')).toBe(false);
+      });
+
+      it('Test B: .athignore ignore should not be undone by a nested .gitignore un-ignore', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            { isDirectory: true, files: ['.athignore', 'dist/', '.ath_materials'] },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/dist',
+            { isDirectory: true, files: ['.gitignore', 'somefile', 'keep.me'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.athignore', 'dist/*'], // Ignore contents of dist
+          ['/test/project/dist/.gitignore', '!keep.me'], // Attempt to un-ignore
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+        
+        // The .athignore rule takes precedence, so the un-ignore in .gitignore has no effect.
+        expect(ignoreRulesManager.ignores('dist/somefile')).toBe(true);
+        expect(ignoreRulesManager.ignores('dist/keep.me')).toBe(true);
+      });
+      
+      it('Test C: .athignore un-ignore should trump a deeper .gitignore re-ignore', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            { isDirectory: true, files: ['.gitignore', 'app.log', 'src/', '.ath_materials'] },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            { isDirectory: true, files: ['.athignore', 'important.log', 'feature/'] },
+          ],
+          [
+            '/test/project/src/feature',
+            { isDirectory: true, files: ['.gitignore', 'important.log'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.log'], // Globally ignore logs
+          ['/test/project/src/.athignore', '!important.log'], // Un-ignore this name inside src/
+          ['/test/project/src/feature/.gitignore', 'important.log'], // Try to re-ignore it
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        expect(ignoreRulesManager.ignores('app.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
+        // The .athignore un-ignore takes precedence over the deeper .gitignore re-ignore
+        expect(ignoreRulesManager.ignores('src/feature/important.log')).toBe(false);
+      });
+    });
   });
 
   describe('addIgnorePattern', () => {

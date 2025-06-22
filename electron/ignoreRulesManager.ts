@@ -100,6 +100,9 @@ class IgnoreRulesManager {
    * @param pathToCheck The project-relative path to check. Must be normalized for ignore checks (e.g., with a trailing slash for directories).
    * @returns True if the path should be ignored, false otherwise.
    */
+  // TODO: The current compiled-rules approach does NOT yet support
+  //       "forced inclusion" (!pattern) inside an already-ignored directory.
+  //       This may be addressed in a future release.
   ignores(pathToCheck: string): boolean {
     if (!pathToCheck || typeof pathToCheck !== 'string') {
       return false; // Invalid input
@@ -176,10 +179,7 @@ class IgnoreRulesManager {
 
     // Check for .athignore and read it if it exists
     if (entries.includes('.athignore')) {
-      const athignorePath = PathUtils.joinUnix(
-        absoluteStartDir,
-        '.athignore'
-      );
+      const athignorePath = PathUtils.joinUnix(absoluteStartDir, '.athignore');
       const athignoreData = await this._readIgnoreFile(athignorePath);
       if (athignoreData) {
         athignores.push({
@@ -194,10 +194,7 @@ class IgnoreRulesManager {
 
     // Check for .gitignore and read it if it exists
     if (useGitignore && entries.includes('.gitignore')) {
-      const gitignorePath = PathUtils.joinUnix(
-        absoluteStartDir,
-        '.gitignore'
-      );
+      const gitignorePath = PathUtils.joinUnix(absoluteStartDir, '.gitignore');
       const gitignoreData = await this._readIgnoreFile(gitignorePath, true);
       if (gitignoreData) {
         gitignores.push({
@@ -234,7 +231,8 @@ class IgnoreRulesManager {
       startDir === '.'
         ? this.baseDir
         : PathUtils.joinUnix(this.baseDir, startDir);
-    if (!absoluteStartDir) return { athignores: allAthIgnores, gitignores: allGitIgnores };
+    if (!absoluteStartDir)
+      return { athignores: allAthIgnores, gitignores: allGitIgnores };
     const platformStartDir = PathUtils.toPlatform(absoluteStartDir);
 
     try {
