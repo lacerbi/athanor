@@ -1,22 +1,17 @@
 // AI Summary: Comprehensive unit tests for the intelligent ignore file scanner covering nested discovery,
 // ignore rule application for pruning, sorting by depth, and integration with project settings.
 
-// Mocks are defined before imports to prevent temporal dead zone errors due to jest.mock hoisting.
-const mockFsAccess = jest.fn();
-const mockFsStat = jest.fn();
-const mockFsReadFile = jest.fn();
-const mockFsReaddir = jest.fn();
-const mockFsWriteFile = jest.fn();
+// Import mock helpers first to ensure mocks are established.
+import {
+  setupMockFs,
+  clearMockFs,
+  mockFsAccess,
+  mockFsReadFile,
+  mockFsWriteFile,
+  mockFsReaddir,
+} from './__tests__/mockFsHelpers';
 
-jest.mock('fs/promises', () => ({
-  __esModule: true,
-  access: mockFsAccess,
-  stat: mockFsStat,
-  readFile: mockFsReadFile,
-  readdir: mockFsReaddir,
-  writeFile: mockFsWriteFile,
-}));
-
+// PathUtils is mocked here because it's a direct dependency of ignoreRulesManager
 jest.mock('./services/PathUtils', () => ({
   __esModule: true,
   PathUtils: {
@@ -82,10 +77,10 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
     console.warn = originalConsoleWarn;
-   });
+  });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    clearMockFs();
 
     // Clear error state to prevent test leakage
     ignoreRulesManager.clearError();
@@ -145,33 +140,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ['/test/project/src/components/.gitignore', '*.stories.ts'],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreFiles.get(pathStr);
-        if (content !== undefined) {
-          return content;
-        }
-        // If a file is not in the map, simulate a "file not found" error.
-        const error = new Error(`ENOENT: no such file or directory, open '${pathStr}'`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, ignoreFiles);
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
@@ -225,32 +194,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ['/test/project/.gitignore', 'node_modules/'],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreFiles.get(pathStr);
-        if (content !== undefined) {
-          return content;
-        }
-        const error = new Error(`ENOENT: no such file or directory, open '${pathStr}'`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, ignoreFiles);
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
@@ -279,27 +223,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure);
 
       // Should not throw when no ignore files exist
       await expect(ignoreRulesManager.loadIgnoreRules()).resolves.not.toThrow();
@@ -327,32 +251,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreFiles.get(pathStr);
-        if (content) {
-          return content;
-        }
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, ignoreFiles);
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
@@ -381,34 +280,11 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
           { isDirectory: true, files: ['project_settings.json', '.gitignore'] },
         ],
       ]);
+      const content = new Map([
+        ['/test/project/.ath_materials/project_settings.json', '{}'],
+      ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        // Only project_settings.json should be read
-        if (
-          filePath === '/test/project/.ath_materials/project_settings.json'
-        ) {
-          return '{}';
-        }
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, content);
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
@@ -433,31 +309,16 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ['/test/project/restricted', { isDirectory: true, files: [] }],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined); // Allow access check to pass
-
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
+      setupMockFs(fileStructure);
+      
+      // Fail readdir for the 'restricted' directory to trigger the console.warn
       mockFsReaddir.mockImplementation(async (dirPath) => {
         const pathStr = dirPath.toString();
-        // Fail readdir for the 'restricted' directory to trigger the console.warn
         if (pathStr === '/test/project/restricted') {
           throw new Error('Permission denied on readdir');
         }
         const entry = fileStructure.get(pathStr);
         return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
       });
 
       // Should not throw when encountering inaccessible directories
@@ -486,32 +347,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ['/test/project/.ath_materials/project_settings.json', 'invalid json{'],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreFiles.get(pathStr);
-        if (content) {
-          return content;
-        }
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, ignoreFiles);
 
       await ignoreRulesManager.loadIgnoreRules();
 
@@ -540,31 +376,6 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
       loadIgnoreRulesSpy.mockRestore();
     });
 
-    const setupFS = (
-      files: Map<string, { isDirectory: boolean; files?: string[] }>,
-      ignoreContent: Map<string, string>
-    ) => {
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = files.get(pathStr);
-        if (!entry) throw new Error('ENOENT for stat');
-        return { isDirectory: () => entry.isDirectory } as Stats;
-      });
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        return (files.get(pathStr)?.files ?? []) as any;
-      });
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreContent.get(pathStr);
-        if (content !== undefined) return content;
-        const error = new Error(`ENOENT for read`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
-    };
-
     describe('Hierarchical Logic - Parent/Child Overrides', () => {
       it('should handle parent ignores, child un-ignores', async () => {
         const fileStructure = new Map([
@@ -586,7 +397,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
           ['/test/project/.gitignore', '*.log'],
           ['/test/project/src/.gitignore', '!important.log'],
         ]);
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
 
         expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
@@ -637,7 +448,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
           ['/test/project/docs/.gitignore', 'guide.md'], // Ignore guide.md only within docs
         ]);
 
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
 
         // Test scoping of src/.gitignore
@@ -692,7 +503,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
           ['/test/project/src/.gitignore', 'build/\n/output\n!/config.js'],
         ]);
 
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
 
         // 1. Pattern with a trailing slash: `build/` in `src/`. Should ignore `src/build/`.
@@ -724,7 +535,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
           ['/test/project/.gitignore', 'config.json'],
           ['/test/project/.athignore', '!config.json'],
         ]);
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
         
         expect(ignoreRulesManager.ignores('config.json')).toBe(false);
@@ -740,7 +551,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
           ['/test/project/.gitignore', '!config.json'],
           ['/test/project/.athignore', 'config.json'],
         ]);
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
         
         expect(ignoreRulesManager.ignores('config.json')).toBe(true);
@@ -756,7 +567,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
           ['/test/project/.gitignore', '*.bak'],
           ['/test/project/.athignore', '*.log'], // No opinion on .bak files
         ]);
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
         
         expect(ignoreRulesManager.ignores('temp.bak')).toBe(true);
@@ -767,8 +578,8 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
 
   describe('addIgnorePattern', () => {
     beforeEach(() => {
-      // Restore the real addIgnorePattern method for these tests
-      jest.restoreAllMocks();
+      // Restore mocks and spies
+      clearMockFs();
 
       // Mock file operations for addIgnorePattern
       mockFsAccess.mockResolvedValue(undefined);
@@ -823,12 +634,12 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
 
     it('should create .athignore file if it does not exist', async () => {
       mockFsAccess.mockRejectedValue(new Error('File not found'));
-      mockFsReadFile.mockResolvedValue('');
-      mockFsWriteFile.mockResolvedValue(undefined);
-
+      mockFsReadFile.mockResolvedValue(''); // read returns empty for the new file
+      
       const result = await ignoreRulesManager.addIgnorePattern('*.log');
 
       expect(result).toBe(true);
+      // It tries to access, fails, then writes an empty file, then reads it, then writes content
       expect(mockFsWriteFile).toHaveBeenCalledWith(
         '/test/project/.athignore',
         '',
