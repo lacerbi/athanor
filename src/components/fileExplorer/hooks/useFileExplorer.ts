@@ -1,7 +1,6 @@
-// AI Summary: Custom hook for managing file explorer state including folder expansion,
-// context menu, and file system operations. Centralizes file explorer logic and state.
+// AI Summary: Custom hook for managing file explorer state including folder expansion (now with recursive actions), context menu, and file system operations. Centralizes file explorer logic and state.
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { FileItem } from '../../../utils/fileTree';
+import { FileItem, getAllDescendantFolderIds } from '../../../utils/fileTree';
 
 export interface ContextMenuState {
   x: number;
@@ -59,6 +58,26 @@ export function useFileExplorer(items: FileItem[], onRefresh: () => void) {
     });
   };
 
+  const handleExpandRecursively = useCallback((item: FileItem) => {
+    if (item.type !== 'folder') return;
+    const descendantIds = getAllDescendantFolderIds(item);
+    setExpandedFolders((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(item.id);
+      descendantIds.forEach((id) => newSet.add(id));
+      return newSet;
+    });
+  }, []);
+
+  const handleCollapseRecursively = useCallback((item: FileItem) => {
+    if (item.type !== 'folder') return;
+    const descendantIds = getAllDescendantFolderIds(item);
+    const idsToRemove = new Set([item.id, ...descendantIds]);
+    setExpandedFolders(
+      (prev) => new Set([...prev].filter((id) => !idsToRemove.has(id)))
+    );
+  }, []);
+
   // Handle context menu
   const handleContextMenu = (e: React.MouseEvent, item: FileItem) => {
     e.preventDefault();
@@ -96,5 +115,7 @@ export function useFileExplorer(items: FileItem[], onRefresh: () => void) {
     toggleFolder,
     handleContextMenu,
     handleCloseContextMenu,
+    handleExpandRecursively,
+    handleCollapseRecursively,
   };
 }

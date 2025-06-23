@@ -9,6 +9,20 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.2] - 2025-06-23
+
+### Added
+
+- Introduce recursive expand and collapse operations for directories in the file explorer's context menu ([a5dc1e4](https://github.com/lacerbi/athanor/commit/a5dc1e4)).
+
+### Fixed
+
+- Strengthen the parsing logic for `UPDATE_DIFF` operations and add related unit tests to improve reliability ([2dbfb3a](https://github.com/lacerbi/athanor/commit/2dbfb3a)).
+- Add support for processing multiple `apply changes` command blocks within a single AI-generated output ([d16705f](https://github.com/lacerbi/athanor/commit/d16705f)).
+- Resolve a performance issue in the `ApplyChangesPanel` by debouncing the scroll handler ([3f1984b](https://github.com/lacerbi/athanor/commit/3f1984b)).
+- Ensure the 'Refactor Code' task prompt correctly incorporates the `threshold_line_length` project setting ([138e2c3](https://github.com/lacerbi/athanor/commit/138e2c3)).
+- Improve the user experience for the new expand/collapse-all feature by refining UI feedback and behavior ([bac964c](https://github.com/lacerbi/athanor/commit/bac964c)).
+
 ## [0.7.1] - 2025-06-20
 
 ### Fixed

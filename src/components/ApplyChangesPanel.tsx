@@ -831,6 +831,13 @@ const ApplyChangesPanel: React.FC = () => {
 
   // Handle scroll to update current index based on the item at the top of the viewport
   useEffect(() => {
+    const container = containerRef.current;
+    if (!container) {
+      return;
+    }
+
+    let debounceTimer: NodeJS.Timeout;
+
     const handleScroll = () => {
       if (
         !containerRef.current ||
@@ -879,17 +886,17 @@ const ApplyChangesPanel: React.FC = () => {
       }
     };
 
-    const container = containerRef.current;
-    if (container) {
-      container.addEventListener('scroll', handleScroll, { passive: true });
-      // Initial check
-      handleScroll();
-    }
+    const debouncedScrollHandler = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(handleScroll, 100);
+    };
+
+    container.addEventListener('scroll', debouncedScrollHandler, { passive: true });
+    handleScroll(); // Initial check
 
     return () => {
-      if (container) {
-        container.removeEventListener('scroll', handleScroll);
-      }
+      clearTimeout(debounceTimer);
+      container.removeEventListener('scroll', debouncedScrollHandler);
     };
   }, [currentIdx, activeOperations.length]);
 
