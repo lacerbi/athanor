@@ -1,6 +1,4 @@
-// AI Summary: Context menu for file/folder operations, including ignore and recursive expand/collapse.
-// Handles path normalization for .athignore entries and distinguishes single-item vs. wildcard ignores.
-// Calls onIgnoreItem with ignoreAll for pattern distinction.
+// AI Summary: Context menu for file/folder operations, featuring "Expand all" and "Collapse all" at the top for directories. Also includes ignore actions and closes automatically on selection.
 
 import React, { useEffect, useState } from 'react';
 import { useLogStore } from '../stores/logStore';
@@ -116,6 +114,31 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
       <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-700 font-medium text-sm text-gray-600 dark:text-gray-300">
         {name}
       </div>
+      {type === 'folder' && (
+        <div className="py-1">
+          <button
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
+            onClick={() => {
+              onExpandRecursively();
+              onClose();
+            }}
+          >
+            Expand all
+          </button>
+          <button
+            className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
+            onClick={() => {
+              onCollapseRecursively();
+              onClose();
+            }}
+          >
+            Collapse all
+          </button>
+        </div>
+      )}
+      {type === 'folder' && (
+        <div className="border-t border-gray-100 dark:border-gray-700" />
+      )}
       <div className="py-1">
         <button
           className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
@@ -130,25 +153,6 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
           Ignore all {type}s with this name
         </button>
       </div>
-      {type === 'folder' && (
-        <>
-          <div className="border-t border-gray-100 dark:border-gray-700" />
-          <div className="py-1">
-            <button
-              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
-              onClick={onExpandRecursively}
-            >
-              Expand Recursively
-            </button>
-            <button
-              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
-              onClick={onCollapseRecursively}
-            >
-              Collapse Recursively
-            </button>
-          </div>
-        </>
-      )}
     </div>
   );
 };
