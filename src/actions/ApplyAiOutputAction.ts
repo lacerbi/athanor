@@ -1,5 +1,5 @@
 // AI Summary: Orchestrates command execution from AI content using dedicated command handlers.
-// Processes SELECT, TASK, and APPLY CHANGES commands through modular command system.
+// Processes SELECT, TASK, and APPLY CHANGES commands through a modular command system, aggregating multiple 'apply changes' blocks.
 import type { FileOperation } from '../types/global';
 import * as commands from '../commands';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
@@ -31,8 +31,39 @@ export async function processAiResponseContent(
       return;
     }
 
-    // Process all commands sequentially
-    for (const command of parsedCommands) {
+    // Filter commands to separate 'apply changes' from others
+    const applyChangesCommands = parsedCommands.filter(
+      (cmd) => cmd.type === commands.COMMAND_TYPES.APPLY_CHANGES
+    );
+    const otherCommands = parsedCommands.filter(
+      (cmd) => cmd.type !== commands.COMMAND_TYPES.APPLY_CHANGES
+    );
+
+    // Aggregate and process all 'apply changes' commands as a single operation
+    if (applyChangesCommands.length > 0) {
+      const combinedContent = applyChangesCommands
+        .map((cmd) => cmd.content)
+        .join('\n');
+      const combinedFullContent = `<ath command="apply changes">${combinedContent}</ath>`;
+
+      const { diffMode } = useApplyChangesStore.getState();
+      const success = await commands.executeApplyChangesCommand({
+        content: combinedContent,
+        fullContent: combinedFullContent,
+        addLog,
+        setOperations,
+        clearOperations,
+        setActiveTab,
+        diffMode,
+      });
+
+      if (!success) {
+        addLog('Failed to execute combined APPLY_CHANGES command');
+      }
+    }
+
+    // Process all other commands sequentially
+    for (const command of otherCommands) {
       let success = false;
 
       switch (command.type) {
@@ -50,20 +81,6 @@ export async function processAiResponseContent(
           });
           break;
 
-        case commands.COMMAND_TYPES.APPLY_CHANGES:
-          // Get current diff mode from store
-          const { diffMode } = useApplyChangesStore.getState();
-          success = await commands.executeApplyChangesCommand({
-            content: command.content,
-            fullContent: command.fullContent,
-            addLog,
-            setOperations,
-            clearOperations,
-            setActiveTab,
-            diffMode,
-          });
-          break;
-
         default:
           addLog(`Unknown command type: ${command.type}`);
           continue;
@@ -76,7 +93,9 @@ export async function processAiResponseContent(
   } catch (err) {
     console.error('Failed to process AI content:', err);
     addLog(
-      `Failed to process AI content: ${err instanceof Error ? err.message : String(err)}`
+      `Failed to process AI content: ${
+        err instanceof Error ? err.message : String(err)
+      }`
     );
   }
 }

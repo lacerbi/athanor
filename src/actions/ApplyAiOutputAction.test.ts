@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 // AI Summary: Comprehensive unit tests for ApplyAiOutputAction covering both processAiResponseContent and applyAiOutput functions.
-// Tests include command parsing, execution scenarios, error handling, and clipboard operations with proper mocking.
+// Tests include command parsing, execution scenarios for single and aggregated commands, error handling, and clipboard operations with proper mocking.
 import { processAiResponseContent, applyAiOutput } from './ApplyAiOutputAction';
 import * as commands from '../commands';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
@@ -173,11 +173,11 @@ describe('ApplyAiOutputAction', () => {
       expect(mockAddLog).toHaveBeenCalledWith('Failed to execute task command');
     });
 
-    it('should execute APPLY_CHANGES command successfully with diffMode', async () => {
+    it('should execute a single APPLY_CHANGES command successfully with diffMode', async () => {
       const mockCommand = {
         type: commands.COMMAND_TYPES.APPLY_CHANGES,
         content: 'file content',
-        fullContent: 'full xml content',
+        fullContent: '<ath command="apply changes">file content</ath>',
       };
       (commands.parseCommand as jest.Mock).mockReturnValue([mockCommand]);
       (commands.executeApplyChangesCommand as jest.Mock).mockResolvedValue(
@@ -192,7 +192,7 @@ describe('ApplyAiOutputAction', () => {
       expect(useApplyChangesStore.getState).toHaveBeenCalled();
       expect(commands.executeApplyChangesCommand).toHaveBeenCalledWith({
         content: 'file content',
-        fullContent: 'full xml content',
+        fullContent: '<ath command="apply changes">file content</ath>',
         addLog: mockAddLog,
         setOperations: mockSetOperations,
         clearOperations: mockClearOperations,
@@ -202,6 +202,74 @@ describe('ApplyAiOutputAction', () => {
       expect(mockAddLog).not.toHaveBeenCalledWith(
         expect.stringContaining('Failed to execute')
       );
+    });
+
+    it('should aggregate multiple APPLY_CHANGES commands into a single execution', async () => {
+      const mockCommands = [
+        {
+          type: commands.COMMAND_TYPES.APPLY_CHANGES,
+          content: 'content 1',
+        },
+        {
+          type: commands.COMMAND_TYPES.APPLY_CHANGES,
+          content: 'content 2',
+        },
+      ];
+      (commands.parseCommand as jest.Mock).mockReturnValue(mockCommands);
+
+      await processAiResponseContent('ai content', mockParams);
+
+      expect(commands.executeApplyChangesCommand).toHaveBeenCalledTimes(1);
+      expect(commands.executeApplyChangesCommand).toHaveBeenCalledWith({
+        content: 'content 1\ncontent 2',
+        fullContent: '<ath command="apply changes">content 1\ncontent 2</ath>',
+        addLog: mockAddLog,
+        setOperations: mockSetOperations,
+        clearOperations: mockClearOperations,
+        setActiveTab: mockSetActiveTab,
+        diffMode: 'strict',
+      });
+      expect(commands.executeSelectCommand).not.toHaveBeenCalled();
+      expect(commands.executeTaskCommand).not.toHaveBeenCalled();
+    });
+
+    it('should process a mix of APPLY_CHANGES and other commands correctly', async () => {
+      const mockCommands = [
+        { type: commands.COMMAND_TYPES.SELECT, content: 'select content' },
+        {
+          type: commands.COMMAND_TYPES.APPLY_CHANGES,
+          content: 'apply content 1',
+        },
+        { type: commands.COMMAND_TYPES.TASK, content: 'task content' },
+        {
+          type: commands.COMMAND_TYPES.APPLY_CHANGES,
+          content: 'apply content 2',
+        },
+      ];
+      (commands.parseCommand as jest.Mock).mockReturnValue(mockCommands);
+
+      await processAiResponseContent('ai content', mockParams);
+
+      // Verify aggregated APPLY_CHANGES call
+      expect(commands.executeApplyChangesCommand).toHaveBeenCalledTimes(1);
+      expect(commands.executeApplyChangesCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: 'apply content 1\napply content 2',
+        })
+      );
+
+      // Verify other command calls
+      expect(commands.executeSelectCommand).toHaveBeenCalledTimes(1);
+      expect(commands.executeSelectCommand).toHaveBeenCalledWith({
+        content: 'select content',
+        addLog: mockAddLog,
+      });
+
+      expect(commands.executeTaskCommand).toHaveBeenCalledTimes(1);
+      expect(commands.executeTaskCommand).toHaveBeenCalledWith({
+        content: 'task content',
+        addLog: mockAddLog,
+      });
     });
 
     it('should handle APPLY_CHANGES command failure', async () => {
@@ -218,7 +286,7 @@ describe('ApplyAiOutputAction', () => {
 
       expect(commands.executeApplyChangesCommand).toHaveBeenCalled();
       expect(mockAddLog).toHaveBeenCalledWith(
-        'Failed to execute apply changes command'
+        'Failed to execute combined APPLY_CHANGES command'
       );
     });
 
@@ -237,58 +305,6 @@ describe('ApplyAiOutputAction', () => {
       expect(commands.executeSelectCommand).not.toHaveBeenCalled();
       expect(commands.executeTaskCommand).not.toHaveBeenCalled();
       expect(commands.executeApplyChangesCommand).not.toHaveBeenCalled();
-    });
-
-    it('should process multiple commands sequentially', async () => {
-      const mockCommands = [
-        { type: commands.COMMAND_TYPES.SELECT, content: 'select content' },
-        { type: commands.COMMAND_TYPES.TASK, content: 'task content' },
-        {
-          type: commands.COMMAND_TYPES.APPLY_CHANGES,
-          content: 'apply content',
-          fullContent: 'full content',
-        },
-      ];
-      (commands.parseCommand as jest.Mock).mockReturnValue(mockCommands);
-
-      await processAiResponseContent('ai content', mockParams);
-
-      expect(commands.executeSelectCommand).toHaveBeenCalledWith({
-        content: 'select content',
-        addLog: mockAddLog,
-      });
-      expect(commands.executeTaskCommand).toHaveBeenCalledWith({
-        content: 'task content',
-        addLog: mockAddLog,
-      });
-      expect(commands.executeApplyChangesCommand).toHaveBeenCalledWith({
-        content: 'apply content',
-        fullContent: 'full content',
-        addLog: mockAddLog,
-        setOperations: mockSetOperations,
-        clearOperations: mockClearOperations,
-        setActiveTab: mockSetActiveTab,
-        diffMode: 'strict',
-      });
-    });
-
-    it('should handle mixed success and failure commands', async () => {
-      const mockCommands = [
-        { type: commands.COMMAND_TYPES.SELECT, content: 'select content' },
-        { type: commands.COMMAND_TYPES.TASK, content: 'task content' },
-      ];
-      (commands.parseCommand as jest.Mock).mockReturnValue(mockCommands);
-      (commands.executeSelectCommand as jest.Mock).mockResolvedValue(true);
-      (commands.executeTaskCommand as jest.Mock).mockResolvedValue(false);
-
-      await processAiResponseContent('ai content', mockParams);
-
-      expect(commands.executeSelectCommand).toHaveBeenCalled();
-      expect(commands.executeTaskCommand).toHaveBeenCalled();
-      expect(mockAddLog).not.toHaveBeenCalledWith(
-        'Failed to execute select command'
-      );
-      expect(mockAddLog).toHaveBeenCalledWith('Failed to execute task command');
     });
 
     it('should handle error during command parsing', async () => {
@@ -339,6 +355,7 @@ describe('ApplyAiOutputAction', () => {
       const mockCommand = {
         type: commands.COMMAND_TYPES.APPLY_CHANGES,
         content: 'content',
+        fullContent: '<ath command="apply changes">content</ath>',
       };
       (commands.parseCommand as jest.Mock).mockReturnValue([mockCommand]);
 
@@ -346,7 +363,7 @@ describe('ApplyAiOutputAction', () => {
 
       expect(commands.executeApplyChangesCommand).toHaveBeenCalledWith({
         content: 'content',
-        fullContent: undefined,
+        fullContent: '<ath command="apply changes">content</ath>',
         addLog: mockAddLog,
         setOperations: mockSetOperations,
         clearOperations: mockClearOperations,
@@ -434,13 +451,12 @@ describe('ApplyAiOutputAction', () => {
       );
     });
 
-    it('should handle complex AI content from clipboard', async () => {
+    it('should handle complex AI content from clipboard with multiple command types', async () => {
       const complexContent = `
         <ath command="select">file1.ts file2.ts</ath>
         <ath command="task">Refactor these files</ath>
-        <ath command="apply changes">
-          <file>...</file>
-        </ath>
+        <ath command="apply changes">content 1</ath>
+        <ath command="apply changes">content 2</ath>
       `;
       (navigator.clipboard.readText as jest.Mock).mockResolvedValue(
         complexContent
@@ -448,7 +464,14 @@ describe('ApplyAiOutputAction', () => {
       const mockCommands = [
         { type: commands.COMMAND_TYPES.SELECT, content: 'file1.ts file2.ts' },
         { type: commands.COMMAND_TYPES.TASK, content: 'Refactor these files' },
-        { type: commands.COMMAND_TYPES.APPLY_CHANGES, content: 'file content' },
+        {
+          type: commands.COMMAND_TYPES.APPLY_CHANGES,
+          content: 'content 1',
+        },
+        {
+          type: commands.COMMAND_TYPES.APPLY_CHANGES,
+          content: 'content 2',
+        },
       ];
       (commands.parseCommand as jest.Mock).mockReturnValue(mockCommands);
 
@@ -456,9 +479,29 @@ describe('ApplyAiOutputAction', () => {
 
       expect(navigator.clipboard.readText).toHaveBeenCalled();
       expect(commands.parseCommand).toHaveBeenCalledWith(complexContent);
-      expect(commands.executeSelectCommand).toHaveBeenCalled();
-      expect(commands.executeTaskCommand).toHaveBeenCalled();
-      expect(commands.executeApplyChangesCommand).toHaveBeenCalled();
+
+      // Check that other commands were called
+      expect(commands.executeSelectCommand).toHaveBeenCalledTimes(1);
+      expect(commands.executeSelectCommand).toHaveBeenCalledWith({
+        content: 'file1.ts file2.ts',
+        addLog: mockAddLog,
+      });
+
+      expect(commands.executeTaskCommand).toHaveBeenCalledTimes(1);
+      expect(commands.executeTaskCommand).toHaveBeenCalledWith({
+        content: 'Refactor these files',
+        addLog: mockAddLog,
+      });
+
+      // Check that apply changes was aggregated and called once
+      expect(commands.executeApplyChangesCommand).toHaveBeenCalledTimes(1);
+      expect(commands.executeApplyChangesCommand).toHaveBeenCalledWith(
+        expect.objectContaining({
+          content: 'content 1\ncontent 2',
+          fullContent:
+            '<ath command="apply changes">content 1\ncontent 2</ath>',
+        })
+      );
     });
   });
 });
