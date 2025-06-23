@@ -28,6 +28,8 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
     toggleFolder,
     handleContextMenu,
     handleCloseContextMenu,
+    handleExpandRecursively,
+    handleCollapseRecursively,
   } = useFileExplorer(items, onRefresh);
 
   return (
@@ -58,6 +60,10 @@ const FileExplorer: React.FC<FileExplorerProps> = ({
           y={contextMenu.y}
           onClose={handleCloseContextMenu}
           onIgnoreItem={handleIgnoreItem}
+          onExpandRecursively={() => handleExpandRecursively(contextMenu.item)}
+          onCollapseRecursively={() =>
+            handleCollapseRecursively(contextMenu.item)
+          }
         />
       )}
     </div>

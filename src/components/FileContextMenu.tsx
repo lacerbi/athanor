@@ -1,7 +1,6 @@
-// AI Summary: Context menu component for file and folder ignore operations.
-// Now ensures no leading slash is added for "ignore all" patterns by stripping leading slashes
-// from the item name. Manages path normalization for .athignore entries and differentiates
-// single-item vs. wildcard ignores. Calls onIgnoreItem with ignoreAll to distinguish patterns.
+// AI Summary: Context menu for file/folder operations, including ignore and recursive expand/collapse.
+// Handles path normalization for .athignore entries and distinguishes single-item vs. wildcard ignores.
+// Calls onIgnoreItem with ignoreAll for pattern distinction.
 
 import React, { useEffect, useState } from 'react';
 import { useLogStore } from '../stores/logStore';
@@ -14,6 +13,8 @@ interface FileContextMenuProps {
   y: number;
   onClose: () => void;
   onIgnoreItem: (itemPath: string, ignoreAll: boolean) => void;
+  onExpandRecursively: () => void;
+  onCollapseRecursively: () => void;
 }
 
 const FileContextMenu: React.FC<FileContextMenuProps> = ({
@@ -24,6 +25,8 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
   y,
   onClose,
   onIgnoreItem,
+  onExpandRecursively,
+  onCollapseRecursively,
 }) => {
   const [position, setPosition] = useState({ x, y });
   const { addLog } = useLogStore();
@@ -127,6 +130,25 @@ const FileContextMenu: React.FC<FileContextMenuProps> = ({
           Ignore all {type}s with this name
         </button>
       </div>
+      {type === 'folder' && (
+        <>
+          <div className="border-t border-gray-100 dark:border-gray-700" />
+          <div className="py-1">
+            <button
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
+              onClick={onExpandRecursively}
+            >
+              Expand Recursively
+            </button>
+            <button
+              className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 dark:focus:bg-gray-700 focus:outline-none dark:text-gray-200"
+              onClick={onCollapseRecursively}
+            >
+              Collapse Recursively
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

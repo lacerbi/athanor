@@ -68,6 +68,23 @@ export function getAllDescendantIds(item: FileItem): string[] {
   return ids;
 }
 
+// Get all descendant folder IDs recursively
+export function getAllDescendantFolderIds(item: FileItem): string[] {
+  if (item.type === 'file' || !item.children) {
+    return [];
+  }
+
+  const folderIds: string[] = [];
+  item.children.forEach((child) => {
+    if (child.type === 'folder') {
+      folderIds.push(child.id);
+      folderIds.push(...getAllDescendantFolderIds(child));
+    }
+  });
+
+  return folderIds;
+}
+
 // Check if folder is empty (no children or only empty folders)
 export function isEmptyFolder(item: FileItem): boolean {
   if (item.type === 'file') return false;
