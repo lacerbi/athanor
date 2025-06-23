@@ -1,22 +1,17 @@
 // AI Summary: Comprehensive unit tests for the intelligent ignore file scanner covering nested discovery,
 // ignore rule application for pruning, sorting by depth, and integration with project settings.
 
-// Mocks are defined before imports to prevent temporal dead zone errors due to jest.mock hoisting.
-const mockFsAccess = jest.fn();
-const mockFsStat = jest.fn();
-const mockFsReadFile = jest.fn();
-const mockFsReaddir = jest.fn();
-const mockFsWriteFile = jest.fn();
+// Import mock helpers first to ensure mocks are established.
+import {
+  setupMockFs,
+  clearMockFs,
+  mockFsAccess,
+  mockFsReadFile,
+  mockFsWriteFile,
+  mockFsReaddir,
+} from './__tests__/mockFsHelpers';
 
-jest.mock('fs/promises', () => ({
-  __esModule: true,
-  access: mockFsAccess,
-  stat: mockFsStat,
-  readFile: mockFsReadFile,
-  readdir: mockFsReaddir,
-  writeFile: mockFsWriteFile,
-}));
-
+// PathUtils is mocked here because it's a direct dependency of ignoreRulesManager
 jest.mock('./services/PathUtils', () => ({
   __esModule: true,
   PathUtils: {
@@ -26,16 +21,14 @@ jest.mock('./services/PathUtils', () => ({
     relative: jest.fn((from: string, to: string) =>
       path.posix.relative(from, to)
     ),
-    normalizeForIgnore: jest.fn(
-      (filePath: string, isDirectory: boolean) => {
-        if (!filePath) return null;
-        let norm = filePath.replace(/\\/g, '/');
-        if (isDirectory && !norm.endsWith('/')) {
-          norm += '/';
-        }
-        return norm;
+    normalizeForIgnore: jest.fn((filePath: string, isDirectory: boolean) => {
+      if (!filePath) return null;
+      let norm = filePath.replace(/\\/g, '/');
+      if (isDirectory && !norm.endsWith('/')) {
+        norm += '/';
       }
-    ),
+      return norm;
+    }),
     getAncestors: jest.fn((filePath) => {
       if (!filePath || filePath === '.') return ['.'];
       const normalized = filePath.replace(/\\/g, '/').replace(/\/$/, '');
@@ -67,6 +60,12 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
   let originalConsoleWarn: typeof console.warn;
   let loadIgnoreRulesSpy: jest.SpyInstance;
 
+  // IMPORTANT: When defining mock file structures, NEVER include trailing slashes 
+  // in directory names within the 'files' arrays. Real Node.js fs.readdir() returns 
+  // directory names WITHOUT trailing slashes (e.g., 'src', not 'src/'). 
+  // Including trailing slashes will cause the mock fs operations to fail silently 
+  // and prevent the scanner from recursing into directories, leading to test failures.
+
   beforeAll(() => {
     // Mock console to prevent logging during tests
     originalConsoleLog = console.log;
@@ -82,10 +81,10 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     console.log = originalConsoleLog;
     console.error = originalConsoleError;
     console.warn = originalConsoleWarn;
-   });
+  });
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    clearMockFs();
 
     // Clear error state to prevent test leakage
     ignoreRulesManager.clearError();
@@ -145,33 +144,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ['/test/project/src/components/.gitignore', '*.stories.ts'],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreFiles.get(pathStr);
-        if (content !== undefined) {
-          return content;
-        }
-        // If a file is not in the map, simulate a "file not found" error.
-        const error = new Error(`ENOENT: no such file or directory, open '${pathStr}'`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, ignoreFiles);
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
@@ -225,32 +198,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ['/test/project/.gitignore', 'node_modules/'],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreFiles.get(pathStr);
-        if (content !== undefined) {
-          return content;
-        }
-        const error = new Error(`ENOENT: no such file or directory, open '${pathStr}'`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, ignoreFiles);
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
@@ -270,7 +218,10 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     it('should handle missing ignore files gracefully', async () => {
       // Setup file system structure without ignore files
       const fileStructure = new Map([
-        ['/test/project', { isDirectory: true, files: ['src', '.ath_materials'] }],
+        [
+          '/test/project',
+          { isDirectory: true, files: ['src', '.ath_materials'] },
+        ],
         ['/test/project/.ath_materials', { isDirectory: true, files: [] }],
         ['/test/project/src', { isDirectory: true, files: ['components'] }],
         [
@@ -279,27 +230,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure);
 
       // Should not throw when no ignore files exist
       await expect(ignoreRulesManager.loadIgnoreRules()).resolves.not.toThrow();
@@ -327,32 +258,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreFiles.get(pathStr);
-        if (content) {
-          return content;
-        }
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, ignoreFiles);
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
@@ -381,34 +287,11 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
           { isDirectory: true, files: ['project_settings.json', '.gitignore'] },
         ],
       ]);
+      const content = new Map([
+        ['/test/project/.ath_materials/project_settings.json', '{}'],
+      ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        // Only project_settings.json should be read
-        if (
-          filePath === '/test/project/.ath_materials/project_settings.json'
-        ) {
-          return '{}';
-        }
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, content);
 
       // Load ignore rules to trigger scanning
       await ignoreRulesManager.loadIgnoreRules();
@@ -433,31 +316,16 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ['/test/project/restricted', { isDirectory: true, files: [] }],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined); // Allow access check to pass
+      setupMockFs(fileStructure);
 
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
+      // Fail readdir for the 'restricted' directory to trigger the console.warn
       mockFsReaddir.mockImplementation(async (dirPath) => {
         const pathStr = dirPath.toString();
-        // Fail readdir for the 'restricted' directory to trigger the console.warn
         if (pathStr === '/test/project/restricted') {
           throw new Error('Permission denied on readdir');
         }
         const entry = fileStructure.get(pathStr);
         return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
       });
 
       // Should not throw when encountering inaccessible directories
@@ -486,38 +354,15 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         ['/test/project/.ath_materials/project_settings.json', 'invalid json{'],
       ]);
 
-      // Mock fs operations
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = fileStructure.get(pathStr);
-        return {
-          isDirectory: () => entry?.isDirectory ?? false,
-        } as Stats;
-      });
-
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        const entry = fileStructure.get(pathStr);
-        return (entry?.files ?? []) as any;
-      });
-
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreFiles.get(pathStr);
-        if (content) {
-          return content;
-        }
-        const error = new Error(`ENOENT for read ${filePath}`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
+      setupMockFs(fileStructure, ignoreFiles);
 
       await ignoreRulesManager.loadIgnoreRules();
 
       // Should not throw, should log a warning, and should proceed with defaults
-      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('Could not read or parse project_settings.json'));
-      
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Could not read or parse project_settings.json')
+      );
+
       // Should have attempted to read project settings
       expect(mockFsReadFile).toHaveBeenCalledWith(
         '/test/project/.ath_materials/project_settings.json',
@@ -528,7 +373,7 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
         '/test/project/.gitignore',
         'utf-8'
       );
-      
+
       // Verify the rule from .gitignore was actually loaded
       expect(ignoreRulesManager.ignores('dist/')).toBe(true);
     });
@@ -540,108 +385,563 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
       loadIgnoreRulesSpy.mockRestore();
     });
 
-    const setupFS = (
-      files: Map<string, { isDirectory: boolean; files?: string[] }>,
-      ignoreContent: Map<string, string>
-    ) => {
-      mockFsAccess.mockResolvedValue(undefined);
-      mockFsStat.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const entry = files.get(pathStr);
-        if (!entry) throw new Error('ENOENT for stat');
-        return { isDirectory: () => entry.isDirectory } as Stats;
-      });
-      mockFsReaddir.mockImplementation(async (dirPath) => {
-        const pathStr = dirPath.toString();
-        return (files.get(pathStr)?.files ?? []) as any;
-      });
-      mockFsReadFile.mockImplementation(async (filePath) => {
-        const pathStr = filePath.toString();
-        const content = ignoreContent.get(pathStr);
-        if (content !== undefined) return content;
-        const error = new Error(`ENOENT for read`);
-        (error as NodeJS.ErrnoException).code = 'ENOENT';
-        throw error;
-      });
-    };
-
     describe('Hierarchical Logic - Parent/Child Overrides', () => {
       it('should handle parent ignores, child un-ignores', async () => {
         const fileStructure = new Map([
-          ['/test/project', { isDirectory: true, files: ['.gitignore', 'src', '.ath_materials'] }],
-          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
-          ['/test/project/src', { isDirectory: true, files: ['.gitignore', 'important.log'] }],
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'src', '.ath_materials'],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            { isDirectory: true, files: ['.gitignore', 'important.log'] },
+          ],
         ]);
         const ignoreFiles = new Map([
           ['/test/project/.ath_materials/project_settings.json', '{}'],
           ['/test/project/.gitignore', '*.log'],
           ['/test/project/src/.gitignore', '!important.log'],
         ]);
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
-        
+
         expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
         expect(ignoreRulesManager.ignores('src/other.log')).toBe(true);
         expect(ignoreRulesManager.ignores('root.log')).toBe(true);
+      });
+
+      it('should correctly scope nested patterns to their own directories', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: [
+                '.gitignore',
+                'src',
+                'docs',
+                'root.log',
+                'root.tmp',
+                '.ath_materials',
+              ],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'component.log', 'component.tmp', 'sub'],
+            },
+          ],
+          ['/test/project/src/sub', { isDirectory: true, files: ['deep.log'] }],
+          [
+            '/test/project/docs',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'guide.md', 'guide.log'],
+            },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.tmp'], // Ignore all .tmp files
+          ['/test/project/src/.gitignore', '*.log'], // Ignore .log files only within src
+          ['/test/project/docs/.gitignore', 'guide.md'], // Ignore guide.md only within docs
+        ]);
+
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        // Test scoping of src/.gitignore
+        expect(ignoreRulesManager.ignores('src/component.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/sub/deep.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('root.log')).toBe(false); // Was incorrectly true before
+        expect(ignoreRulesManager.ignores('docs/guide.log')).toBe(false); // Was incorrectly true before
+
+        // Test scoping of docs/.gitignore
+        expect(ignoreRulesManager.ignores('docs/guide.md')).toBe(true);
+        expect(ignoreRulesManager.ignores('guide.md')).toBe(false); // if there was a root one
+
+        // Test root .gitignore is still global
+        expect(ignoreRulesManager.ignores('root.tmp')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/component.tmp')).toBe(true);
+      });
+
+      it('should handle various pattern types (slashes, negations) correctly in nested files', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'src', '.ath_materials', 'config.js'],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'build', 'output', 'config.js', 'lib'],
+            },
+          ],
+          ['/test/project/src/build', { isDirectory: true, files: ['app.js'] }],
+          [
+            '/test/project/src/lib',
+            { isDirectory: true, files: ['config.js', 'other.js'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          // Parent rule: ignore all config.js files
+          ['/test/project/.gitignore', 'config.js'],
+          // Child rules in src/
+          ['/test/project/src/.gitignore', 'build/\n/output\n!/config.js'],
+        ]);
+
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        // 1. Pattern with a trailing slash: `build/` in `src/`. Should ignore `src/build/`.
+        expect(ignoreRulesManager.ignores('src/build/')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/build/app.js')).toBe(true);
+        expect(ignoreRulesManager.ignores('build/')).toBe(false);
+
+        // 2. Pattern with a leading slash: `/output` in `src/`. Should ignore `src/output` only.
+        // Transformed to `src/output`.
+        expect(ignoreRulesManager.ignores('src/output')).toBe(true);
+
+        // 3. Negated pattern `!/config.js` in `src/` should un-ignore a file ignored by parent.
+        // Parent rule `config.js` ignores all files named 'config.js'.
+        // Child rule `!/config.js` is transformed to `!src/config.js`, which is an anchored un-ignore.
+        expect(ignoreRulesManager.ignores('src/config.js')).toBe(false); // Un-ignored by child rule.
+        expect(ignoreRulesManager.ignores('src/lib/config.js')).toBe(true); // Should remain ignored by parent rule.
+        expect(ignoreRulesManager.ignores('config.js')).toBe(true); // A root config.js should still be ignored.
       });
     });
 
     describe('Athanor-First Precedence', () => {
       it('should prioritize .athignore un-ignore over .gitignore ignore', async () => {
         const fileStructure = new Map([
-          ['/test/project', { isDirectory: true, files: ['.athignore', '.gitignore', 'config.json', '.ath_materials'] }],
-          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: [
+                '.athignore',
+                '.gitignore',
+                'config.json',
+                '.ath_materials',
+              ],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
         ]);
         const ignoreFiles = new Map([
           ['/test/project/.ath_materials/project_settings.json', '{}'],
           ['/test/project/.gitignore', 'config.json'],
           ['/test/project/.athignore', '!config.json'],
         ]);
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
-        
+
         expect(ignoreRulesManager.ignores('config.json')).toBe(false);
       });
 
       it('should prioritize .athignore ignore over .gitignore un-ignore', async () => {
         const fileStructure = new Map([
-          ['/test/project', { isDirectory: true, files: ['.athignore', '.gitignore', 'config.json', '.ath_materials'] }],
-          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: [
+                '.athignore',
+                '.gitignore',
+                'config.json',
+                '.ath_materials',
+              ],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
         ]);
         const ignoreFiles = new Map([
           ['/test/project/.ath_materials/project_settings.json', '{}'],
           ['/test/project/.gitignore', '!config.json'],
           ['/test/project/.athignore', 'config.json'],
         ]);
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
-        
+
         expect(ignoreRulesManager.ignores('config.json')).toBe(true);
       });
 
       it('should fall back to .gitignore when .athignore has no opinion', async () => {
         const fileStructure = new Map([
-          ['/test/project', { isDirectory: true, files: ['.athignore', '.gitignore', 'temp.bak', '.ath_materials'] }],
-          ['/test/project/.ath_materials', { isDirectory: true, files: ['project_settings.json'] }],
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: ['.athignore', '.gitignore', 'temp.bak', '.ath_materials'],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
         ]);
         const ignoreFiles = new Map([
           ['/test/project/.ath_materials/project_settings.json', '{}'],
           ['/test/project/.gitignore', '*.bak'],
           ['/test/project/.athignore', '*.log'], // No opinion on .bak files
         ]);
-        setupFS(fileStructure, ignoreFiles);
+        setupMockFs(fileStructure, ignoreFiles);
         await ignoreRulesManager.loadIgnoreRules();
-        
+
         expect(ignoreRulesManager.ignores('temp.bak')).toBe(true);
         expect(ignoreRulesManager.ignores('temp.log')).toBe(true);
+      });
+    });
+
+    describe('Nested override scenarios', () => {
+      it('Test A: .athignore should un-ignore a file pattern ignored by a parent .gitignore', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: [
+                '.athignore',
+                '.gitignore',
+                'legacy.bak',
+                'restore',
+                '.ath_materials',
+              ],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/restore',
+            { isDirectory: true, files: ['important.bak'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.bak'], // Ignore all .bak files
+          ['/test/project/.athignore', '!restore/important.bak'], // But not this one
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        expect(ignoreRulesManager.ignores('legacy.bak')).toBe(true);
+        expect(ignoreRulesManager.ignores('restore/important.bak')).toBe(false);
+      });
+
+      it('Test B: .athignore ignore should not be undone by a nested .gitignore un-ignore', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: ['.athignore', 'dist', '.ath_materials'],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/dist',
+            { isDirectory: true, files: ['.gitignore', 'somefile', 'keep.me'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.athignore', 'dist/*'], // Ignore contents of dist
+          ['/test/project/dist/.gitignore', '!keep.me'], // Attempt to un-ignore
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        // The .athignore rule takes precedence, so the un-ignore in .gitignore has no effect.
+        expect(ignoreRulesManager.ignores('dist/somefile')).toBe(true);
+        expect(ignoreRulesManager.ignores('dist/keep.me')).toBe(true);
+      });
+
+      // We are building towards 'Test C: .athignore un-ignore should trump a
+      // deeper .gitignore re-ignore' - we use the same file/folder structure
+      // but change the location of ignore files.
+      it('Test C-Root-1: All rules at root level, only .gitignore', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'app.log', 'src', '.ath_materials'],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            { isDirectory: true, files: ['important.log', 'feature'] },
+          ],
+          [
+            '/test/project/src/feature',
+            { isDirectory: true, files: ['important.log'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.log\n!src/important.log'], // Globally ignore logs, but un-ignore src/important.log
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        expect(ignoreRulesManager.ignores('app.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
+        expect(ignoreRulesManager.ignores('src/feature/important.log')).toBe(
+          true
+        );
+      });
+
+      it('Test C-Root-2: All rules at root level, .athignore overrides .gitignore (first case)', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: [
+                '.gitignore',
+                '.athignore',
+                'app.log',
+                'src',
+                '.ath_materials',
+              ],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            { isDirectory: true, files: ['important.log', 'feature'] },
+          ],
+          [
+            '/test/project/src/feature',
+            { isDirectory: true, files: ['important.log'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.log'], // Globally ignore logs
+          ['/test/project/.athignore', '!src/important.log'], // Athignore un-ignores src/important.log (should have precedence)
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        expect(ignoreRulesManager.ignores('app.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
+        expect(ignoreRulesManager.ignores('src/feature/important.log')).toBe(
+          true
+        );
+      });
+
+      it('Test C-Root-3: All rules at root level, .athignore overrides .gitignore (second case)', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: [
+                '.gitignore',
+                '.athignore',
+                'app.log',
+                'src',
+                '.ath_materials',
+              ],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            { isDirectory: true, files: ['important.log', 'feature'] },
+          ],
+          [
+            '/test/project/src/feature',
+            { isDirectory: true, files: ['important.log'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.athignore', '*.log'], // Globally ignore logs
+          ['/test/project/.gitignore', '!src/important.log'], // Athignore has precedence so this should do nothing
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        expect(ignoreRulesManager.ignores('app.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/important.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/feature/important.log')).toBe(
+          true
+        );
+      });
+
+      it('Test C-Root-4: All rules at root level, .athignore overrides .gitignore (third case with glob pattern)', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: [
+                '.gitignore',
+                '.athignore',
+                'app.log',
+                'src',
+                '.ath_materials',
+              ],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            { isDirectory: true, files: ['important.log', 'feature'] },
+          ],
+          [
+            '/test/project/src/feature',
+            { isDirectory: true, files: ['important.log'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.log'], // Globally ignore logs
+          ['/test/project/.athignore', '!src/**/important.log'], // Athignore un-ignores all importance.log files in src/
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        expect(ignoreRulesManager.ignores('app.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
+        expect(ignoreRulesManager.ignores('src/feature/important.log')).toBe(
+          false
+        );
+      });
+
+      it('Test C1: .athignore un-ignore should trump a shallower .gitignore', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'app.log', 'src', '.ath_materials'],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            {
+              isDirectory: true,
+              files: ['.athignore', 'important.log', 'feature'],
+            },
+          ],
+          [
+            '/test/project/src/feature',
+            { isDirectory: true, files: ['important.log'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.log'], // Globally ignore logs
+          ['/test/project/src/.athignore', '!important.log'], // Un-ignore this name inside src/
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        expect(ignoreRulesManager.ignores('app.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
+      });
+
+      it('Test C2: .athignore un-ignore should trump both a shallower .gitignore and a deeper .gitignore re-ignore', async () => {
+        const fileStructure = new Map([
+          [
+            '/test/project',
+            {
+              isDirectory: true,
+              files: ['.gitignore', 'app.log', 'src', '.ath_materials'],
+            },
+          ],
+          [
+            '/test/project/.ath_materials',
+            { isDirectory: true, files: ['project_settings.json'] },
+          ],
+          [
+            '/test/project/src',
+            {
+              isDirectory: true,
+              files: ['.athignore', 'important.log', 'feature'],
+            },
+          ],
+          [
+            '/test/project/src/feature',
+            { isDirectory: true, files: ['.gitignore', 'important.log'] },
+          ],
+        ]);
+        const ignoreFiles = new Map([
+          ['/test/project/.ath_materials/project_settings.json', '{}'],
+          ['/test/project/.gitignore', '*.log'], // Globally ignore logs
+          ['/test/project/src/.athignore', '!important.log'], // Un-ignore this name inside src/
+          ['/test/project/src/feature/.gitignore', 'important.log'], // Try to re-ignore it
+        ]);
+        setupMockFs(fileStructure, ignoreFiles);
+        await ignoreRulesManager.loadIgnoreRules();
+
+        expect(ignoreRulesManager.ignores('app.log')).toBe(true);
+        expect(ignoreRulesManager.ignores('src/important.log')).toBe(false);
+        // The .athignore un-ignore takes precedence over the deeper .gitignore re-ignore
+        expect(ignoreRulesManager.ignores('src/feature/important.log')).toBe(
+          false
+        );
       });
     });
   });
 
   describe('addIgnorePattern', () => {
     beforeEach(() => {
-      // Restore the real addIgnorePattern method for these tests
-      jest.restoreAllMocks();
+      // Restore mocks and spies
+      clearMockFs();
 
       // Mock file operations for addIgnorePattern
       mockFsAccess.mockResolvedValue(undefined);
@@ -696,12 +996,12 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
 
     it('should create .athignore file if it does not exist', async () => {
       mockFsAccess.mockRejectedValue(new Error('File not found'));
-      mockFsReadFile.mockResolvedValue('');
-      mockFsWriteFile.mockResolvedValue(undefined);
+      mockFsReadFile.mockResolvedValue(''); // read returns empty for the new file
 
       const result = await ignoreRulesManager.addIgnorePattern('*.log');
 
       expect(result).toBe(true);
+      // It tries to access, fails, then writes an empty file, then reads it, then writes content
       expect(mockFsWriteFile).toHaveBeenCalledWith(
         '/test/project/.athignore',
         '',
@@ -717,9 +1017,9 @@ describe('IgnoreRulesManager - Intelligent Scanner', () => {
     it('should handle errors gracefully', async () => {
       mockFsReadFile.mockRejectedValue(new Error('Permission denied'));
 
-      await expect(
-        ignoreRulesManager.addIgnorePattern('*.log')
-      ).resolves.toBe(false); // addIgnorePattern now returns false on error
+      await expect(ignoreRulesManager.addIgnorePattern('*.log')).resolves.toBe(
+        false
+      ); // addIgnorePattern now returns false on error
     });
   });
 

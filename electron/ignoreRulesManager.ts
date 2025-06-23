@@ -1,6 +1,6 @@
-// AI Summary: Manages nested ignore rules including intelligent discovery of all .athignore/.gitignore files,
-// rule application with "Athanor-First" precedence, and performance-optimized traversal that uses found rules
-// to prune directory scanning. Implements Git-like nested ignore behavior with comprehensive override capabilities.
+// AI Summary: Manages nested ignore rules by discovering all .athignore/.gitignore files and compiling them
+// into a single, unified ruleset. Enforces "Athanor-First" precedence by loading .gitignore rules before
+// .athignore rules. Uses found rules to prune directory scanning for performance.
 
 import * as path from 'path';
 import * as fs from 'fs/promises';
@@ -28,39 +28,33 @@ interface IgnoreFile {
 
 /**
  * IgnoreRulesManager implements a sophisticated "Deepest Opinion Wins" algorithm
- * for handling hierarchical ignore rules with Athanor's two-tier precedence system.
+ * for handling hierarchical ignore rules with Athanor's precedence system.
  *
- * ## Algorithm Overview: Pre-compiled Rulesets
+ * ## Algorithm Overview: Unified, Pre-compiled Ruleset
  *
- * To solve performance issues, this system uses a two-stage process. First, it discovers
- * all ignore files in the project. Second, it compiles their rules into master rulesets.
- * This makes checking if a file is ignored extremely fast.
+ * To solve performance issues and correctly handle precedence, this system uses a two-stage process.
+ * First, it discovers all ignore files in the project. Second, it compiles their rules into a
+ * **single, unified ruleset**. This makes checking if a file is ignored extremely fast and robust.
  *
- * ## Two-Tier Precedence System
+ * ## Precedence System: Athanor-First
  *
- * The algorithm operates in two distinct tiers, checked in order:
+ * The algorithm enforces "Athanor-First" precedence by controlling the order in which rules
+ * are added to the unified ruleset:
  *
- * **Tier 1: .athignore files (Primary)**
- * - These files have absolute highest precedence.
- * - If the master .athignore ruleset has an opinion, that decision is FINAL.
+ * 1.  **.gitignore files (Secondary)**: If enabled, all `.gitignore` rules are loaded first.
+ * 2.  **.athignore files (Primary)**: All `.athignore` rules are loaded **last**.
  *
- * **Tier 2: .gitignore files (Secondary)**
- * - Only consulted if Tier 1 had no opinion AND useGitignore setting is true.
+ * The `ignore` library's "last rule wins" behavior means that any rule from an `.athignore`
+ * file will correctly override a conflicting rule from a `.gitignore` file.
  *
  * ## Compilation and Override Logic
  *
- * - During `loadIgnoreRules()`, all found ignore files are sorted from shallowest to deepest.
- * - Their contents are added to the master `athIgnoreRules` and `gitIgnoreRules` instances in that order.
- * - The `ignore` library ensures that later rules (from deeper files) correctly override earlier ones from parent directories.
- * - This moves the computational complexity from check-time to a one-time load-time operation.
- *
- * ## Path Relativity
- *
- * For performance, this implementation deviates from Git's perfect path-relative behavior. All ignore patterns
- * are treated as if they are in the root directory. For example, a rule `build/` in `src/.gitignore` will be treated
- * as a root-level rule, potentially ignoring a `/build` directory. This is a trade-off for the massive
- * performance gain that solves `EMFILE` errors and application hangs. The most critical rules (e.g., for `node_modules`)
- * are typically in the root `.gitignore` and are unaffected.
+ * - During `loadIgnoreRules()`, all found ignore files are sorted from shallowest to deepest
+ * within their respective type (`.gitignore` or `.athignore`).
+ * - Their patterns are transformed to be root-relative.
+ * - They are then added to the single `masterIgnoreRules` instance in the correct precedence order.
+ * - This moves the computational complexity from check-time to a one-time load-time operation and
+ * correctly implements all override logic.
  */
 class IgnoreRulesManager {
   private lastError: Error | null = null;
@@ -68,14 +62,9 @@ class IgnoreRulesManager {
   private baseDir = '';
   private lastLoadTime = 0;
 
-  // Master compiled rulesets
-  private athIgnoreRules: ignore.Ignore = ignore();
-  private gitIgnoreRules: ignore.Ignore = ignore();
+  // Master compiled ruleset
+  private masterIgnoreRules: ignore.Ignore = ignore();
   private useGitignore = SETTINGS.defaults.project.useGitignore;
-
-  // State tracking flags for debugging
-  private athRulesLoaded = false;
-  private gitRulesLoaded = false;
 
   // Update base directory and reload rules
   async setBaseDir(newDir: string) {
@@ -90,10 +79,7 @@ class IgnoreRulesManager {
 
   // Clear existing ignore rules
   clearRules() {
-    this.athIgnoreRules = ignore();
-    this.gitIgnoreRules = ignore();
-    this.athRulesLoaded = false;
-    this.gitRulesLoaded = false;
+    this.masterIgnoreRules = ignore();
     console.log('Ignore rules cleared.');
   }
 
@@ -105,6 +91,9 @@ class IgnoreRulesManager {
    * @param pathToCheck The project-relative path to check. Must be normalized for ignore checks (e.g., with a trailing slash for directories).
    * @returns True if the path should be ignored, false otherwise.
    */
+  // TODO: The current compiled-rules approach does NOT yet support
+  //       "forced inclusion" (!pattern) inside an already-ignored directory.
+  //       This may be addressed in a future release.
   ignores(pathToCheck: string): boolean {
     if (!pathToCheck || typeof pathToCheck !== 'string') {
       return false; // Invalid input
@@ -118,23 +107,9 @@ class IgnoreRulesManager {
       return false;
     }
 
-    // Tier 1: Check .athignore rules first (highest precedence)
-    // The .test() method returns {ignored: boolean, unignored: boolean},
-    // allowing us to see if any rule had an opinion.
-    const athResult = this.athIgnoreRules.test(normalizedPath);
-    if (athResult.ignored || athResult.unignored) {
-      // An .athignore rule matched. This decision is final.
-      return athResult.ignored;
-    }
-
-    // Tier 2: Check .gitignore if enabled and Tier 1 had no opinion.
-    if (this.useGitignore) {
-      // We can use the simpler .ignores() here as there's no third tier.
-      return this.gitIgnoreRules.ignores(normalizedPath);
-    }
-
-    // Default: not ignored if no rules match.
-    return false;
+    // With a unified ruleset, a single check is sufficient.
+    // The useGitignore logic is handled during the loading phase.
+    return this.masterIgnoreRules.ignores(normalizedPath);
   }
 
   /**
@@ -144,6 +119,11 @@ class IgnoreRulesManager {
     absolutePath: string,
     isGitignore = false
   ): Promise<Pick<IgnoreFile, 'rules' | 'content'> | null> {
+    // --- PASTE THE NEW DEBUGGING CODE HERE ---
+    console.log(
+      `[READ DEBUG] Attempting to read ignore file at: ${absolutePath}`
+    );
+    // --- END OF DEBUGGING CODE ---
     try {
       const content = await fs.readFile(
         PathUtils.toPlatform(absolutePath),
@@ -153,10 +133,75 @@ class IgnoreRulesManager {
       if (isGitignore) {
         rules.add('.git/');
       }
+      // --- PASTE THE NEW DEBUGGING CODE HERE ---
+      console.log(`[READ DEBUG] Successfully read and parsed: ${absolutePath}`);
+      // --- END OF DEBUGGING CODE ---
       return { rules, content };
     } catch (error) {
+      // --- PASTE THE NEW DEBUGGING CODE HERE ---
+      console.error(
+        `[READ DEBUG] FAILED to read or parse: ${absolutePath}`,
+        error
+      );
+      // --- END OF DEBUGGING CODE ---
       return null;
     }
+  }
+
+  /**
+   * Finds and processes .athignore and .gitignore files in a given directory.
+   * This is a helper for _scanForIgnoreFiles and its logic runs *before* directory pruning.
+   */
+  private async _processIgnoreFilesInDir(
+    startDir: string,
+    absoluteStartDir: string,
+    entries: string[],
+    useGitignore: boolean
+  ): Promise<{
+    athignores: IgnoreFile[];
+    gitignores: IgnoreFile[];
+    currentIgnores: ignore.Ignore;
+    hasCurrentRules: boolean;
+  }> {
+    const athignores: IgnoreFile[] = [];
+    const gitignores: IgnoreFile[] = [];
+    const currentIgnores = ignore();
+    let hasCurrentRules = false;
+
+    // Check for .athignore and read it if it exists
+    if (entries.includes('.athignore')) {
+      const athignorePath = PathUtils.joinUnix(absoluteStartDir, '.athignore');
+      const athignoreData = await this._readIgnoreFile(athignorePath);
+      if (athignoreData) {
+        athignores.push({
+          path: startDir,
+          rules: athignoreData.rules,
+          content: athignoreData.content,
+        });
+        currentIgnores.add(athignoreData.rules);
+        hasCurrentRules = true;
+      }
+    }
+
+    // Check for .gitignore and read it if it exists
+    if (useGitignore && entries.includes('.gitignore')) {
+      const gitignorePath = PathUtils.joinUnix(absoluteStartDir, '.gitignore');
+      const gitignoreData = await this._readIgnoreFile(gitignorePath, true);
+      if (gitignoreData) {
+        gitignores.push({
+          path: startDir,
+          rules: gitignoreData.rules,
+          content: gitignoreData.content,
+        });
+        // Add gitignore rules to the local pruner (`currentIgnores`) and ensure the
+        // pruner is activated. This fixes a bug where local .gitignore files
+        // were not used for pruning if a .athignore existed in the same directory.
+        currentIgnores.add(gitignoreData.rules);
+        hasCurrentRules = true;
+      }
+    }
+
+    return { athignores, gitignores, currentIgnores, hasCurrentRules };
   }
 
   /**
@@ -170,73 +215,45 @@ class IgnoreRulesManager {
     athignores: IgnoreFile[];
     gitignores: IgnoreFile[];
   }> {
-    const athignores: IgnoreFile[] = [];
-    const gitignores: IgnoreFile[] = [];
+    const allAthIgnores: IgnoreFile[] = [];
+    const allGitIgnores: IgnoreFile[] = [];
 
     const absoluteStartDir =
       startDir === '.'
         ? this.baseDir
         : PathUtils.joinUnix(this.baseDir, startDir);
-    if (!absoluteStartDir) return { athignores: [], gitignores: [] };
+    if (!absoluteStartDir)
+      return { athignores: allAthIgnores, gitignores: allGitIgnores };
     const platformStartDir = PathUtils.toPlatform(absoluteStartDir);
 
     try {
       await fs.access(platformStartDir);
       const stats = await fs.stat(platformStartDir);
       if (!stats.isDirectory()) {
-        return { athignores, gitignores };
+        return { athignores: allAthIgnores, gitignores: allGitIgnores };
       }
     } catch (error) {
       // This catch is for basic directory access and can remain silent
-      return { athignores, gitignores };
+      return { athignores: allAthIgnores, gitignores: allGitIgnores };
     }
-
-    const currentIgnores = ignore();
-    let hasCurrentRules = false;
 
     try {
       const entries = await fs.readdir(platformStartDir);
 
-      // Check for .athignore and read it if it exists
-      if (entries.includes('.athignore')) {
-        const athignorePath = PathUtils.joinUnix(
-          absoluteStartDir,
-          '.athignore'
-        );
-        const athignoreData = await this._readIgnoreFile(athignorePath);
-        if (athignoreData) {
-          athignores.push({
-            path: startDir,
-            rules: athignoreData.rules,
-            content: athignoreData.content,
-          });
-          currentIgnores.add(athignoreData.rules);
-          hasCurrentRules = true;
-        }
-      }
+      // Stage 1: Discover and process ignore files in the current directory.
+      // This happens *before* any pruning logic is applied to subdirectories.
+      const processResult = await this._processIgnoreFilesInDir(
+        startDir,
+        absoluteStartDir,
+        entries,
+        useGitignore
+      );
 
-      // Check for .gitignore and read it if it exists
-      if (useGitignore && entries.includes('.gitignore')) {
-        const gitignorePath = PathUtils.joinUnix(
-          absoluteStartDir,
-          '.gitignore'
-        );
-        const gitignoreData = await this._readIgnoreFile(gitignorePath, true);
-        if (gitignoreData) {
-          gitignores.push({
-            path: startDir,
-            rules: gitignoreData.rules,
-            content: gitignoreData.content,
-          });
-          // Add gitignore rules to the local pruner (`currentIgnores`) and ensure the
-          // pruner is activated. This fixes a bug where local .gitignore files
-          // were not used for pruning if a .athignore existed in the same directory.
-          currentIgnores.add(gitignoreData.rules);
-          hasCurrentRules = true;
-        }
-      }
+      allAthIgnores.push(...processResult.athignores);
+      allGitIgnores.push(...processResult.gitignores);
+      const { currentIgnores, hasCurrentRules } = processResult;
 
-      // Now, recurse into subdirectories
+      // Stage 2: Recurse into subdirectories, applying pruning rules.
       for (const entry of entries) {
         const entryPath = PathUtils.toPlatform(
           PathUtils.joinUnix(absoluteStartDir, entry)
@@ -265,6 +282,7 @@ class IgnoreRulesManager {
           entryRelativePath,
           true
         );
+
         if (ignoreTestPath) {
           if (pruningRules && pruningRules.ignores(ignoreTestPath)) {
             continue;
@@ -279,14 +297,14 @@ class IgnoreRulesManager {
           useGitignore,
           pruningRules
         );
-        athignores.push(...subResults.athignores);
-        gitignores.push(...subResults.gitignores);
+        allAthIgnores.push(...subResults.athignores);
+        allGitIgnores.push(...subResults.gitignores);
       }
     } catch (error) {
       console.warn(`Error reading directory ${startDir}:`, error);
     }
 
-    return { athignores, gitignores };
+    return { athignores: allAthIgnores, gitignores: allGitIgnores };
   }
 
   /**
@@ -298,6 +316,62 @@ class IgnoreRulesManager {
       const depthB = b.path === '.' ? 0 : b.path.split('/').length;
 
       return depthA - depthB;
+    });
+  }
+
+  /**
+   * Transforms raw ignore patterns from a specific directory to be root-relative.
+   * @param patterns An array of patterns from the ignore file's content.
+   * @param directoryPath The project-relative path of the directory containing the ignore file.
+   * @returns An array of transformed patterns ready to be added to the master ignore instance.
+   */
+  // electron/ignoreRulesManager.ts
+  private _transformPatterns(
+    patterns: string[],
+    directoryPath: string
+  ): string[] {
+    // Clean the patterns first
+    const cleanedPatterns = patterns
+      .map((rawPattern) => {
+        const pattern = rawPattern.trim();
+        if (pattern === '' || pattern.startsWith('#')) {
+          return null;
+        }
+        return pattern;
+      })
+      .filter((p): p is string => p !== null);
+
+    if (directoryPath === '.') {
+      // Patterns in the root directory don't need path transformation.
+      return cleanedPatterns;
+    }
+
+    // For nested directories, transform the path of each cleaned pattern.
+    return cleanedPatterns.map((pattern) => {
+      let isNegated = false;
+      let finalPattern = pattern;
+
+      if (finalPattern.startsWith('!')) {
+        isNegated = true;
+        finalPattern = finalPattern.substring(1);
+      }
+
+      let transformed;
+      if (finalPattern.startsWith('/')) {
+        transformed = PathUtils.joinUnix(
+          directoryPath,
+          finalPattern.substring(1)
+        );
+      } else if (!finalPattern.includes('/')) {
+        transformed = PathUtils.joinUnix(directoryPath, '**', finalPattern);
+      } else {
+        transformed = PathUtils.joinUnix(directoryPath, finalPattern);
+      }
+
+      if (isNegated) {
+        return '!' + transformed;
+      }
+      return transformed;
     });
   }
 
@@ -387,59 +461,29 @@ class IgnoreRulesManager {
         ? this._sortIgnoreFilesByDepth(scanResults.gitignores)
         : [];
 
-      // Add rules to the master instances. The `ignore` library handles overrides correctly
-      // when rules are added in this shallow-to-deep order.
-      athignores.forEach((file) => this.athIgnoreRules.add(file.content));
-      if (athignores.length > 0) this.athRulesLoaded = true;
+      // Add rules to the master instance. The `ignore` library handles overrides correctly
+      // when rules are added in this order (Git then Athanor).
 
       if (this.useGitignore) {
-        gitignores.forEach((file) => this.gitIgnoreRules.add(file.content));
-        if (gitignores.length > 0) this.gitRulesLoaded = true;
+        gitignores.forEach((file) => {
+          const patterns = file.content.split('\n');
+          const transformed = this._transformPatterns(patterns, file.path);
+          this.masterIgnoreRules.add(transformed);
+        });
       }
 
-      // Debug logging for compiled ignore rules
-      if (DEBUG_IGNORE_RULES) {
-        console.log('--- [ATHANOR DEBUG] Compiled Ignore Rules ---');
-
-        console.log(
-          `\n[DEBUG] .athignore rules loaded: ${this.athRulesLoaded}`
-        );
-        if (athignores.length > 0) {
-          athignores.forEach((file) => {
-            console.log(
-              `  Source: ${file.path === '.' ? 'root' : file.path}/.athignore`
-            );
-            const content = file.content.trim();
-            console.log(`  Content:\n---\n${content}\n---`);
-          });
-        } else {
-          console.log('  No .athignore files were processed.');
-        }
-
-        console.log(
-          `\n[DEBUG] .gitignore processing enabled: ${this.useGitignore}`
-        );
-        if (this.useGitignore) {
-          console.log(
-            `[DEBUG] .gitignore rules loaded: ${this.gitRulesLoaded}`
-          );
-          if (gitignores.length > 0) {
-            gitignores.forEach((file) => {
-              console.log(
-                `  Source: ${file.path === '.' ? 'root' : file.path}/.gitignore`
-              );
-              const content = file.content.trim();
-              console.log(`  Content:\n---\n${content}\n---`);
-            });
-          } else {
-            console.log('  No .gitignore files were processed.');
-          }
-        }
-        console.log('\n--- [ATHANOR DEBUG] End of Ignore Rules ---');
-      }
+      athignores.forEach((file) => {
+        const patterns = file.content.split('\n');
+        const transformed = this._transformPatterns(patterns, file.path);
+        this.masterIgnoreRules.add(transformed);
+      });
 
       console.log(
-        `Ignore rule compilation complete. Processed ${athignores.length} .athignore files and ${gitignores.length} .gitignore files.`
+        `Ignore rule compilation complete. Processed ${
+          athignores.length
+        } .athignore files and ${
+          this.useGitignore ? gitignores.length : 0
+        } .gitignore files into a unified ruleset.`
       );
     } catch (error) {
       console.error('Error during ignore file scan:', error);
