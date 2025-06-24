@@ -7,7 +7,12 @@ module.exports = {
     // Ensure resources directory is not packed into asar
     asarUnpack: ['resources/**/*'],
     // Copy specific resources subfolders
-    extraResource: ['resources/files', 'resources/prompts', 'resources/images'],
+    extraResource: [
+      'resources/files',
+      'resources/prompts',
+      'resources/images',
+      'assets',
+    ],
   },
   makers: [
     {
