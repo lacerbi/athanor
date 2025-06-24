@@ -35,10 +35,20 @@ jobs:
           echo "" >> "$TUTORIAL_FILE_PATH"
           echo "---" >> "$TUTORIAL_FILE_PATH"
 
-          # Find, sort naturally, and concatenate the .md files
+          # Find, sort naturally, and concatenate the .md files, stripping frontmatter
           # 'ls -v' correctly sorts numbers in filenames (e.g., 2 before 10)
           for file in $(ls -v $DOCS_SOURCE_DIR/*.md); do
-            cat "$file" >> "$TUTORIAL_FILE_PATH"
+            # Strip Docusaurus-style frontmatter (a block at the start of the file
+            # enclosed by '---' lines) before appending.
+            # This awk script handles files with and without frontmatter gracefully.
+            awk '
+              # If its the first line and is a ''---'' delimiter, start header mode and skip the line.
+              NR==1 && /^[[:space:]]*---[[:space:]]*$/ { in_header=1; next }
+              # If in header mode and we see the closing ''---'', exit header mode and skip the line.
+              in_header && /^[[:space:]]*---[[:space:]]*$/ { in_header=0; next }
+              # If not in header mode, print the line.
+              !in_header { print }
+            ' "$file" >> "$TUTORIAL_FILE_PATH"
             echo "" >> "$TUTORIAL_FILE_PATH" # Add a newline between files
           done
           echo "TUTORIAL.md has been rebuilt."
