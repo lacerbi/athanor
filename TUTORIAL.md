@@ -1,11 +1,6 @@
 **For the most up-to-date tutorial information, videos and materials, check out the [website](https://athanor.works/).**
 
 ---
----
-id: introduction
-title: Getting Started with Athanor
-sidebar_position: 1
----
 
 # Getting Started with Athanor
 
@@ -156,11 +151,6 @@ Thank you for exploring Athanor!
 
 :::
 
----
-id: project-setup
-title: Project Setup
-sidebar_position: 2
----
 
 # 1. Project Setup
 
@@ -226,11 +216,6 @@ This folder helps keep Athanor-specific files organized without cluttering your 
 
 With your project configured, you're ready to explore Athanor's interface and start creating your first AI prompts!
 
----
-id: navigating-interface
-title: Navigating the Interface
-sidebar_position: 3
----
 
 # 2. Navigating the Interface
 
@@ -325,11 +310,6 @@ The interface adapts to different window sizes and can be resized to fit your wo
 
 Now that you're familiar with the interface, let's dive into creating your first AI prompt!
 
----
-id: prompt-creation
-title: Prompt Creation & Refinement
-sidebar_position: 4
----
 
 # 3. Prompt Creation & Refinement
 
@@ -472,11 +452,6 @@ Ideal for complex features:
 
 Next, learn how to apply the AI's response back to your project!
 
----
-id: applying-changes
-title: Applying AI-Generated Changes
-sidebar_position: 5
----
 
 # 4. Applying AI-Generated Changes
 
@@ -750,11 +725,6 @@ Athanor includes several safety mechanisms:
 
 Ready to explore more advanced features? Let's look at preset tasks next!
 
----
-id: preset-tasks
-title: Preset Tasks
-sidebar_position: 6
----
 
 # 5. Preset Tasks
 
@@ -899,11 +869,6 @@ If the AI misses important aspects:
 
 Ready to explore more advanced features? Let's look at other useful Athanor capabilities!
 
----
-id: other-features
-title: Other Features
-sidebar_position: 7
----
 
 # 6. Other Features
 
@@ -1021,11 +986,6 @@ Athanor includes several other features designed to make your development proces
 
 Ready to learn about customizing Athanor with your own templates? Let's explore advanced customization options!
 
----
-id: customizing-templates
-title: Customizing Prompts and Tasks
-sidebar_position: 8
----
 
 # 7. Customizing Prompts and Tasks
 
@@ -1408,11 +1368,6 @@ See Athanor's default prompts and tasks in [this folder](https://github.com/lace
 
 Ready to see these concepts in action? Let's explore some practical example workflows!
 
----
-id: example-workflows
-title: Example Workflows
-sidebar_position: 9
----
 
 # 8. Example Workflows
 
