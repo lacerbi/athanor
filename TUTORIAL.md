@@ -227,7 +227,7 @@ Athanor's interface is designed to streamline your AI-assisted workflow. Let's e
 
 ## Interface Layout
 
-![Athanor Interface](/img/tutorial/athanor_snapshot.png)
+![Athanor Interface](/resources/images/tutorial/athanor_snapshot.png)
 _Athanor's interface: File explorer (left), task management and prompt generation (right)_
 
 Athanor's interface is primarily divided into three main areas:
@@ -485,7 +485,7 @@ Not using version control while applying automated code modifications can lead t
 
 ## The Apply Changes Workflow
 
-![Apply Changes Interface](/img/tutorial/athanor_snapshot_apply_changes.png)
+![Apply Changes Interface](/resources/images/tutorial/athanor_snapshot_apply_changes.png)
 _'Apply Changes' panel: Review and accept/reject proposed file changes displayed in the diff view_
 
 ### Step 1: Copy AI Response
