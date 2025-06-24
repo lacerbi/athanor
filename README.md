@@ -15,12 +15,12 @@ Open a project folder, select files, specify your task, and quickly create effec
 Athanor then assists in efficiently integrating the AI-generated responses back into your project or codebase, ensuring **you remain in full control of all changes while minimizing tedious copy-paste**.
 
 <p align="center">
-  <img src="./resources/images/athanor_snapshot.png" alt="Athanor AI Workbench Snapshot" width="750">
+  <img src="./resources/images/tutorial/athanor_snapshot.png" alt="Athanor AI Workbench Snapshot" width="750">
   <br>
   <em>Athanor's interface: File explorer (left), task management and prompt generation (right).</em>
 </p>
 <p align="center">
-  <img src="./resources/images/athanor_snapshot_apply_changes.png" alt="Athanor AI Workbench Apply Changes Snapshot" width="750">
+  <img src="./resources/images/tutorial/athanor_snapshot_apply_changes.png" alt="Athanor AI Workbench Apply Changes Snapshot" width="750">
   <br>
   <em>'Apply Changes' panel: Review and accept/reject diffs generated using any AI chat assistant.</em>
 </p>

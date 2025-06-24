@@ -35,6 +35,15 @@ export interface ApplicationSettings {
   uiTheme?: string;
   fileViewerWrapEnabled?: boolean;
 
+  // Window state for implicit persistence
+  windowState?: {
+    width: number;
+    height: number;
+    x: number | undefined;
+    y: number | undefined;
+    isMaximized: boolean;
+  };
+
   // Future expansion: more global settings
   // defaultLargeFileWarningThreshold?: number;
 }

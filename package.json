@@ -1,6 +1,6 @@
 {
   "name": "athanor",
-  "version": "0.7.2",
+  "version": "0.7.3",
   "bugs": {
     "url": "https://github.com/lacerbi/athanor/issues"
   },
@@ -48,7 +48,7 @@
     "@electron-forge/maker-zip": "^7.6.0",
     "@electron-forge/plugin-auto-unpack-natives": "^7.6.0",
     "@electron-forge/plugin-fuses": "^7.6.0",
-    "@electron-forge/plugin-webpack": "^7.6.0",
+    "@electron-forge/plugin-webpack": "^7.8.1",
     "@eslint/js": "^9.17.0",
     "@types/chokidar": "^1.7.5",
     "@types/diff": "^6.0.0",
@@ -86,9 +86,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5.7.2",
     "typescript-eslint": "^8.18.2",
-    "webpack": "^5.97.1",
+    "webpack": "^5.99.9",
     "webpack-cli": "^6.0.1",
-    "webpack-dev-server": "^5.2.0",
+    "webpack-dev-server": "^5.2.2",
     "webpack-merge": "^6.0.1"
   },
   "dependencies": {
@@ -115,6 +115,7 @@
     "zustand": "^5.0.2"
   },
   "overrides": {
-    "prismjs": "1.30.0"
+    "prismjs": "1.30.0",
+    "webpack-dev-server": "^5.2.2"
   }
 }

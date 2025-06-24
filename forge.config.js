@@ -3,17 +3,22 @@ module.exports = {
     name: 'Athanor',
     asar: true,
     prune: true,
-    icon: 'resources/images/athanor',
+    icon: 'assets/athanor',
     // Ensure resources directory is not packed into asar
     asarUnpack: ['resources/**/*'],
     // Copy specific resources subfolders
-    extraResource: ['resources/files', 'resources/prompts', 'resources/images'],
+    extraResource: [
+      'resources/files',
+      'resources/prompts',
+      'resources/images',
+      'assets',
+    ],
   },
   makers: [
     {
       name: '@electron-forge/maker-squirrel',
       config: {
-        setupIcon: 'resources/images/athanor.ico',
+        setupIcon: 'assets/athanor.ico',
       },
     },
     {
@@ -24,13 +29,13 @@ module.exports = {
       name: '@electron-forge/maker-deb',
       config: {
         options: {
-          icon: 'resources/images/athanor.png'
-        }
-      }
+          icon: 'assets/athanor.png',
+        },
+      },
     },
     {
       name: '@electron-forge/maker-rpm',
-      config: {}
+      config: {},
     },
   ],
   plugins: [

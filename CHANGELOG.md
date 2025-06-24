@@ -9,6 +9,25 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.3] - 2025-06-24
+
+### Added
+
+- Implement implicit persistence for window state (size, position) in application settings ([2c9a904](https://github.com/lacerbi/athanor/commit/2c9a904)).
+
+### Changed
+
+- Updated various project dependencies to their latest versions ([3e5344b](https://github.com/lacerbi/athanor/commit/3e5344b), [e91aa01](https://github.com/lacerbi/athanor/commit/e91aa01)).
+
+### Refactor
+
+- Centralized application icons into the `/assets` directory and updated loading logic accordingly ([671f22f](https://github.com/lacerbi/athanor/commit/671f22f), [5f7812f](https://github.com/lacerbi/athanor/commit/5f7812f)).
+
+### Documentation
+
+- Improve the synchronization process for `TUTORIAL.md` by correctly stripping frontmatter and handling separators ([4102932](https://github.com/lacerbi/athanor/commit/4102932), [7d7429b](https://github.com/lacerbi/athanor/commit/7d7429b)).
+- Update image paths within the tutorial documentation ([6cdf9cb](https://github.com/lacerbi/athanor/commit/6cdf9cb)).
+
 ## [0.7.2] - 2025-06-23
 
 ### Added
