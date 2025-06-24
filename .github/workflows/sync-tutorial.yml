@@ -37,7 +37,11 @@ jobs:
 
           # Find, sort naturally, and concatenate the .md files, stripping frontmatter
           # 'ls -v' correctly sorts numbers in filenames (e.g., 2 before 10)
-          for file in $(ls -v $DOCS_SOURCE_DIR/*.md); do
+          # Use array to track files so we can detect the last one
+          files=($(ls -v $DOCS_SOURCE_DIR/*.md))
+          
+          for ((i=0; i<${#files[@]}; i++)); do
+            file="${files[i]}"
             # Strip Docusaurus-style frontmatter (a block at the start of the file
             # enclosed by '---' lines) before appending.
             # This awk script handles files with and without frontmatter gracefully.
@@ -50,6 +54,12 @@ jobs:
               !in_header { print }
             ' "$file" >> "$TUTORIAL_FILE_PATH"
             echo "" >> "$TUTORIAL_FILE_PATH" # Add a newline between files
+            
+            # Add separator after each file except the last one
+            if [ $i -lt $((${#files[@]} - 1)) ]; then
+              echo "---" >> "$TUTORIAL_FILE_PATH"
+              echo "" >> "$TUTORIAL_FILE_PATH"
+            fi
           done
           echo "TUTORIAL.md has been rebuilt."
 
