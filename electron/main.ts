@@ -6,7 +6,7 @@ import fixPath from 'fix-path';
 import { Worker } from 'worker_threads';
 import * as path from 'path';
 import * as fs from 'fs';
-import { createWindow, mainWindow } from './windowManager';
+import { createWindow, mainWindow, getIconPath } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
@@ -277,6 +277,12 @@ async function buildMenu() {
 
 // App lifecycle handlers
 app.whenReady().then(async () => {
+  // Fix macOS development dock icon
+  if (process.platform === 'darwin' && !app.isPackaged) {
+    const icon = getIconPath();
+    app.dock.setIcon(icon);
+  }
+
   // Initialize secure API key service
   apiKeyService = new ApiKeyServiceMain(app.getPath('userData'));
 

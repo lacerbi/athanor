@@ -16,7 +16,7 @@ export let mainWindow: BrowserWindow | null = null;
  * Gets the correct path to the application icon for the current platform.
  * This works in both development and packaged modes.
  */
-function getIconPath(): string {
+export function getIconPath(): string {
   // Select the correct icon file based on the OS
   const platform = process.platform;
   let iconName: string;
