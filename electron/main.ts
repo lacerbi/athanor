@@ -280,7 +280,13 @@ app.whenReady().then(async () => {
   // Fix macOS development dock icon
   if (process.platform === 'darwin' && !app.isPackaged) {
     const icon = getIconPath();
-    app.dock.setIcon(icon);
+    // The call is synchronous, but the error it triggers is an unhandled async rejection later.
+    // A try/catch here is good practice but won't solve the main issue.
+    try {
+      app.dock.setIcon(icon);
+    } catch (e) {
+      console.error('Synchronous error setting dock icon:', e);
+    }
   }
 
   // Initialize secure API key service
@@ -397,17 +403,19 @@ app.whenReady().then(async () => {
       };
 
       try {
-        const currentSettings = (await settingsService.getApplicationSettings()) || {};
+        const currentSettings =
+          (await settingsService.getApplicationSettings()) || {};
         const savedWindowState = currentSettings.windowState;
 
         // Only save if the state has actually changed
-        if (!savedWindowState ||
-            savedWindowState.x !== newWindowState.x ||
-            savedWindowState.y !== newWindowState.y ||
-            savedWindowState.width !== newWindowState.width ||
-            savedWindowState.height !== newWindowState.height ||
-            savedWindowState.isMaximized !== newWindowState.isMaximized) {
-
+        if (
+          !savedWindowState ||
+          savedWindowState.x !== newWindowState.x ||
+          savedWindowState.y !== newWindowState.y ||
+          savedWindowState.width !== newWindowState.width ||
+          savedWindowState.height !== newWindowState.height ||
+          savedWindowState.isMaximized !== newWindowState.isMaximized
+        ) {
           const newSettings: ApplicationSettings = {
             ...currentSettings,
             windowState: newWindowState,
