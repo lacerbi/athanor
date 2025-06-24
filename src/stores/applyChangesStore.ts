@@ -11,6 +11,8 @@ interface ApplyChangesState {
   clearOperations: () => void;
   applyChange: (index: number) => Promise<void>;
   rejectChange: (index: number) => void;
+  applyAllChanges: () => Promise<void>;
+  rejectAllChanges: () => void;
   setChangeAppliedCallback: (callback: ((newlyCreatedPath?: string) => Promise<void>) | null) => void;
   diffMode: 'strict' | 'fuzzy';
   setDiffMode: (mode: 'strict' | 'fuzzy') => void;
@@ -163,6 +165,40 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
 
       const { addLog } = useLogStore.getState();
       addLog(`Rejected operation for file: ${op.file_path}`);
+    },
+
+    rejectAllChanges: () => {
+      const { activeOperations, rejectChange } = get();
+      const { addLog } = useLogStore.getState();
+      addLog('Rejecting all pending changes...');
+      activeOperations.forEach((op, index) => {
+        if (!op.accepted && !op.rejected) {
+          rejectChange(index);
+        }
+      });
+    },
+
+    applyAllChanges: async () => {
+      const { activeOperations, applyChange } = get();
+      const { addLog } = useLogStore.getState();
+      addLog('Applying all pending changes...');
+      // Use a classic for loop to get index and process sequentially with await
+      for (let i = 0; i < activeOperations.length; i++) {
+        const op = activeOperations[i];
+        if (!op.accepted && !op.rejected) {
+          try {
+            // Await each change to process them one by one
+            await applyChange(i);
+          } catch (error) {
+            addLog(
+              `Error applying all changes. Process stopped at file: ${op.file_path}.`
+            );
+            // Stop processing on first error
+            return;
+          }
+        }
+      }
+      addLog('Finished applying all available changes.');
     },
   };
 });

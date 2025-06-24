@@ -9,6 +9,22 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.4] - 2025-06-24
+
+### Added
+
+- "Accept All" and "Reject All" buttons to the Apply Changes panel for bulk handling of AI-suggested modifications ([ccd8609](https://github.com/lacerbi/athanor/commit/ccd8609)).
+- Enhanced prompts to better keep track of edits within the currently active file ([034954a](https://github.com/lacerbi/athanor/commit/034954a)).
+
+### Changed
+
+- Replaced text-based navigation controls in the Apply Changes panel with icons for a cleaner user interface ([cd2f459](https://github.com/lacerbi/athanor/commit/cd2f459)).
+- Moved the "Accept" and "Reject" buttons in the Apply Changes panel to the right side of the control bar for improved layout consistency ([4385c34](https://github.com/lacerbi/athanor/commit/4385c34)).
+
+### Fixed
+
+- Resolved a recurring issue where the application icon failed to display correctly on macOS in development mode ([d628e26](https://github.com/lacerbi/athanor/commit/d628e26), [be999f3](https://github.com/lacerbi/athanor/commit/be999f3)).
+
 ## [0.7.3] - 2025-06-24
 
 ### Added

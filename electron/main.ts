@@ -6,7 +6,7 @@ import fixPath from 'fix-path';
 import { Worker } from 'worker_threads';
 import * as path from 'path';
 import * as fs from 'fs';
-import { createWindow, mainWindow } from './windowManager';
+import { createWindow, mainWindow, getIconPath } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
@@ -277,6 +277,18 @@ async function buildMenu() {
 
 // App lifecycle handlers
 app.whenReady().then(async () => {
+  // Fix macOS development dock icon
+  if (process.platform === 'darwin' && !app.isPackaged) {
+    const icon = getIconPath();
+    // The call is synchronous, but the error it triggers is an unhandled async rejection later.
+    // A try/catch here is good practice but won't solve the main issue.
+    try {
+      app.dock.setIcon(icon);
+    } catch (e) {
+      console.error('Synchronous error setting dock icon:', e);
+    }
+  }
+
   // Initialize secure API key service
   apiKeyService = new ApiKeyServiceMain(app.getPath('userData'));
 
@@ -391,17 +403,19 @@ app.whenReady().then(async () => {
       };
 
       try {
-        const currentSettings = (await settingsService.getApplicationSettings()) || {};
+        const currentSettings =
+          (await settingsService.getApplicationSettings()) || {};
         const savedWindowState = currentSettings.windowState;
 
         // Only save if the state has actually changed
-        if (!savedWindowState ||
-            savedWindowState.x !== newWindowState.x ||
-            savedWindowState.y !== newWindowState.y ||
-            savedWindowState.width !== newWindowState.width ||
-            savedWindowState.height !== newWindowState.height ||
-            savedWindowState.isMaximized !== newWindowState.isMaximized) {
-
+        if (
+          !savedWindowState ||
+          savedWindowState.x !== newWindowState.x ||
+          savedWindowState.y !== newWindowState.y ||
+          savedWindowState.width !== newWindowState.width ||
+          savedWindowState.height !== newWindowState.height ||
+          savedWindowState.isMaximized !== newWindowState.isMaximized
+        ) {
           const newSettings: ApplicationSettings = {
             ...currentSettings,
             windowState: newWindowState,
