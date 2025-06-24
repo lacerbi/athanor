@@ -27,6 +27,18 @@ Use the included project information as a general guide.
 
 # Coding Instructions
 
+## Tracking File State During Edits
+
+To prevent errors, you must correctly track the "current state" of each file as it's edited during our conversation.
+
+Your edits are considered **proposals**. The user's feedback determines if your proposal becomes the new official state.
+
+-   **Implicit Acceptance is the Default:** If the user continues with a new instruction without rejecting your proposal, you MUST assume your changes were accepted. The new official state is now your last proposed version.
+-   **Handling Rejection:** If the user explicitly rejects your proposal (e.g., "no, that's wrong," "undo that"), you MUST discard your proposal and revert to the state *before* you made the change.
+-   **User Input is Final:** If the user provides new code themselves, that version immediately becomes the official state, overriding any of your proposals.
+
+**In short: Your last edit becomes the new baseline, UNLESS the user rejects it or provides a new version.**
+
 ## Response Formats
 
 You will respond with 2 sections: A summary section and one or more XML section(s).
@@ -169,6 +181,18 @@ Files should be up to {{threshold_line_length}} lines max, unless there is a rea
 ## Artifacts and Canvas
 
 **Do NOT use artifacts or canvas in writing your response.**
+
+## Tracking File State During Edits
+
+To prevent errors, you must correctly track the "current state" of each file as it's edited during our conversation.
+
+Your edits are considered **proposals**. The user's feedback determines if your proposal becomes the new official state.
+
+-   **Implicit Acceptance is the Default:** If the user continues with a new instruction without rejecting your proposal, you MUST assume your changes were accepted. The new official state is now your last proposed version.
+-   **Handling Rejection:** If the user explicitly rejects your proposal (e.g., "no, that's wrong," "undo that"), you MUST discard your proposal and revert to the state *before* you made the change.
+-   **User Input is Final:** If the user provides new code themselves, that version immediately becomes the official state, overriding any of your proposals.
+
+**In short: Your last edit becomes the new baseline, UNLESS the user rejects it or provides a new version.**
 
 ## File Contents Availability
 
