@@ -151,6 +151,8 @@ Thank you for exploring Athanor!
 
 :::
 
+---
+
 
 # 1. Project Setup
 
@@ -215,6 +217,8 @@ This folder helps keep Athanor-specific files organized without cluttering your 
 ## Next Steps
 
 With your project configured, you're ready to explore Athanor's interface and start creating your first AI prompts!
+
+---
 
 
 # 2. Navigating the Interface
@@ -309,6 +313,8 @@ The interface adapts to different window sizes and can be resized to fit your wo
 4. **Monitor the Log**: Check the bottom panel for helpful messages and feedback
 
 Now that you're familiar with the interface, let's dive into creating your first AI prompt!
+
+---
 
 
 # 3. Prompt Creation & Refinement
@@ -451,6 +457,8 @@ Ideal for complex features:
 5. **Iterate**: Start with a simple prompt and refine based on results
 
 Next, learn how to apply the AI's response back to your project!
+
+---
 
 
 # 4. Applying AI-Generated Changes
@@ -725,6 +733,8 @@ Athanor includes several safety mechanisms:
 
 Ready to explore more advanced features? Let's look at preset tasks next!
 
+---
+
 
 # 5. Preset Tasks
 
@@ -869,6 +879,8 @@ If the AI misses important aspects:
 
 Ready to explore more advanced features? Let's look at other useful Athanor capabilities!
 
+---
+
 
 # 6. Other Features
 
@@ -985,6 +997,8 @@ Athanor includes several other features designed to make your development proces
   - For bugs or feature requests, visit Athanor's GitHub Issues page. For questions, use GitHub Discussions.
 
 Ready to learn about customizing Athanor with your own templates? Let's explore advanced customization options!
+
+---
 
 
 # 7. Customizing Prompts and Tasks
@@ -1367,6 +1381,8 @@ See Athanor's default prompts and tasks in [this folder](https://github.com/lace
 - Verify the template is in the higher-priority location
 
 Ready to see these concepts in action? Let's explore some practical example workflows!
+
+---
 
 
 # 8. Example Workflows
