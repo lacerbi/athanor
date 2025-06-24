@@ -31,12 +31,12 @@ export async function createWindow() {
     const appPath = app.getAppPath();
 
     if (platform === 'win32') {
-      iconPath = path.join(appPath, 'resources', 'images', 'athanor.ico');
+      iconPath = path.join(appPath, 'assets', 'athanor.ico');
     } else if (platform === 'darwin') {
-      iconPath = path.join(appPath, 'resources', 'images', 'athanor.icns');
+      iconPath = path.join(appPath, 'assets', 'athanor.icns');
     } else {
       // Linux and other platforms
-      iconPath = path.join(appPath, 'resources', 'images', 'athanor.png');
+      iconPath = path.join(appPath, 'assets', 'athanor.png');
     }
 
     console.log('Setting dev icon path:', iconPath);
