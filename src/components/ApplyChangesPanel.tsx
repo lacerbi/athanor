@@ -3,7 +3,20 @@
 // Handles warnings for large files and tracks change approval state.
 import React, { useState, useEffect, useRef } from 'react';
 import { createPatch } from 'diff';
-import { AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowUp,
+  ChevronLeft,
+  ChevronRight,
+  ArrowDown,
+  ChevronsUp,
+  ChevronsDown,
+  ChevronUp,
+  ChevronDown,
+  GitCompare,
+  Check,
+  X,
+} from 'lucide-react';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
@@ -637,10 +650,7 @@ const ApplyChangesPanel: React.FC = () => {
 
         const targetRect = targetElement.getBoundingClientRect();
         const scrollTop =
-          container.scrollTop +
-          targetRect.top -
-          containerRect.top -
-          50; // 50px offset for better visibility;
+          container.scrollTop + targetRect.top - containerRect.top - 50; // 50px offset for better visibility;
         container.scrollTo({ top: scrollTop, behavior: 'smooth' });
 
         manualNavigationTimeoutRef.current = setTimeout(() => {
@@ -717,10 +727,7 @@ const ApplyChangesPanel: React.FC = () => {
 
         const targetRect = targetElement.getBoundingClientRect();
         const scrollTop =
-          container.scrollTop +
-          targetRect.top -
-          containerRect.top -
-          50; // 50px offset for better visibility;
+          container.scrollTop + targetRect.top - containerRect.top - 50; // 50px offset for better visibility;
         container.scrollTo({ top: scrollTop, behavior: 'smooth' });
 
         manualNavigationTimeoutRef.current = setTimeout(() => {
@@ -900,7 +907,9 @@ const ApplyChangesPanel: React.FC = () => {
       debounceTimer = setTimeout(handleScroll, 100);
     };
 
-    container.addEventListener('scroll', debouncedScrollHandler, { passive: true });
+    container.addEventListener('scroll', debouncedScrollHandler, {
+      passive: true,
+    });
     handleScroll(); // Initial check
 
     return () => {
@@ -961,16 +970,18 @@ const ApplyChangesPanel: React.FC = () => {
         >
           <button
             onClick={goTop}
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors"
+            title="Go to top"
+            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors flex items-center gap-1"
           >
-            Top
+            <ChevronsUp size={16} />
           </button>
           <button
             onClick={goPrev}
             disabled={currentIdx <= 0 || activeOperations.length <= 1}
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700"
+            title="Previous file"
+            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700 flex items-center gap-1"
           >
-            Previous
+            <ChevronLeft size={16} />
           </button>
           <button
             onClick={goNext}
@@ -978,37 +989,44 @@ const ApplyChangesPanel: React.FC = () => {
               currentIdx >= activeOperations.length - 1 ||
               activeOperations.length <= 1
             }
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700"
+            title="Next file"
+            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700 flex items-center gap-1"
           >
-            Next
+            <ChevronRight size={16} />
           </button>
           <button
             onClick={goEnd}
             disabled={activeOperations.length === 0}
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700"
+            title="Go to end of current file"
+            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700 flex items-center gap-1"
           >
-            End
+            <ChevronDown size={16} />
           </button>
           <button
             onClick={goBottom}
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors"
+            title="Go to bottom"
+            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors flex items-center gap-1"
           >
-            Bottom
+            <ChevronsDown size={16} />
           </button>
           <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-2" />
           <button
             onClick={goPrevDiff}
             disabled={isPrevDiffDisabled}
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700"
+            title="Previous diff block"
+            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700 flex items-center gap-1"
           >
-            Prev Diff
+            <ChevronLeft size={16} />
+            <GitCompare size={14} />
           </button>
           <button
             onClick={goNextDiff}
             disabled={isNextDiffDisabled}
-            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700"
+            title="Next diff block"
+            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700 flex items-center gap-1"
           >
-            Next Diff
+            <GitCompare size={14} />
+            <ChevronRight size={16} />
           </button>
           <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-2" />
           <button
