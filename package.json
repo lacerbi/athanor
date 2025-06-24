@@ -115,6 +115,7 @@
     "zustand": "^5.0.2"
   },
   "overrides": {
-    "prismjs": "1.30.0"
+    "prismjs": "1.30.0",
+    "webpack-dev-server": "^5.2.2"
   }
 }
