@@ -36,7 +36,10 @@ export function getIconPath(): string {
     return path.join(process.resourcesPath, 'assets', iconName);
   } else {
     // In development, `app.getAppPath()` points to the project root.
-    return path.join(app.getAppPath(), 'assets', iconName);
+    // return path.join(app.getAppPath(), 'assets', iconName);
+    // Use __dirname for a more robust path in development.
+    // __dirname points to .webpack/main in dev. We need to go up two levels to the project root.
+    return path.resolve(__dirname, '../../assets', iconName);
   }
 }
 
@@ -50,15 +53,22 @@ export async function createWindow() {
   // Helper to check if the last saved position is on a visible screen
   const isOnVisibleScreen = (
     state: typeof lastWindowState
-  ): state is { width: number; height: number; x: number; y: number; isMaximized: boolean } => {
-    if (!state || typeof state.x !== 'number' || typeof state.y !== 'number') return false;
+  ): state is {
+    width: number;
+    height: number;
+    x: number;
+    y: number;
+    isMaximized: boolean;
+  } => {
+    if (!state || typeof state.x !== 'number' || typeof state.y !== 'number')
+      return false;
 
     // Capture the narrowed types in local constants to use them in the closure.
     const winX = state.x;
     const winY = state.y;
 
     const displays = screen.getAllDisplays();
-    return displays.some(display => {
+    return displays.some((display) => {
       const { x, y, width, height } = display.bounds;
       // Check if the window's top-left corner is within the display bounds
       return winX >= x && winY >= y && winX < x + width && winY < y + height;
@@ -66,14 +76,20 @@ export async function createWindow() {
   };
 
   const finalBounds = isOnVisibleScreen(lastWindowState)
-    ? { width: lastWindowState.width, height: lastWindowState.height, x: lastWindowState.x, y: lastWindowState.y }
+    ? {
+        width: lastWindowState.width,
+        height: lastWindowState.height,
+        x: lastWindowState.x,
+        y: lastWindowState.y,
+      }
     : defaultSize;
 
   // Create the browser window options
   const browserWindowOptions: Electron.BrowserWindowConstructorOptions = {
     width: finalBounds.width,
     height: finalBounds.height,
-    ...('x' in finalBounds && 'y' in finalBounds && { x: finalBounds.x, y: finalBounds.y }),
+    ...('x' in finalBounds &&
+      'y' in finalBounds && { x: finalBounds.x, y: finalBounds.y }),
     // Use the universal function to set the icon for all cases.
     icon: getIconPath(),
     webPreferences: {
