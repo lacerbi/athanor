@@ -1028,7 +1028,6 @@ const ApplyChangesPanel: React.FC = () => {
             <GitCompare size={14} />
             <ChevronRight size={16} />
           </button>
-          <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-2" />
           <button
             onClick={applyAllChanges}
             disabled={!hasPendingOperations}
@@ -1037,7 +1036,7 @@ const ApplyChangesPanel: React.FC = () => {
                 ? 'Accept all pending changes'
                 : 'No pending changes to accept'
             }
-            className="px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ml-auto px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Accept All
           </button>
@@ -1053,7 +1052,7 @@ const ApplyChangesPanel: React.FC = () => {
           >
             Reject All
           </button>
-          <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
+          <span className="text-xs text-gray-500 dark:text-gray-400 ml-4">
             {activeOperations.length > 0 ? currentIdx + 1 : 0} /{' '}
             {activeOperations.length}
           </span>
