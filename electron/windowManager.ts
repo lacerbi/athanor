@@ -23,7 +23,7 @@ export function getIconPath(): string {
   if (platform === 'win32') {
     iconName = 'athanor.ico';
   } else if (platform === 'darwin') {
-    iconName = 'athanor.icns';
+    iconName = app.isPackaged ? 'athanor.icns' : 'athanor.png';
   } else {
     // Linux and others
     iconName = 'athanor.png';
@@ -36,10 +36,7 @@ export function getIconPath(): string {
     return path.join(process.resourcesPath, 'assets', iconName);
   } else {
     // In development, `app.getAppPath()` points to the project root.
-    // return path.join(app.getAppPath(), 'assets', iconName);
-    // Use __dirname for a more robust path in development.
-    // __dirname points to .webpack/main in dev. We need to go up two levels to the project root.
-    return path.resolve(__dirname, '../../assets', iconName);
+    return path.join(app.getAppPath(), 'assets', iconName);
   }
 }
 
