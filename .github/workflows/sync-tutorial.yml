@@ -61,6 +61,10 @@ jobs:
               echo "" >> "$TUTORIAL_FILE_PATH"
             fi
           done
+          
+          # Replace image paths to match Athanor repository structure
+          sed -i 's|/img/tutorial/|/resources/images/tutorial/|g' "$TUTORIAL_FILE_PATH"
+          
           echo "TUTORIAL.md has been rebuilt."
 
       - name: Commit and push changes
