@@ -364,8 +364,13 @@ const FileOperationItem = React.forwardRef<
 FileOperationItem.displayName = 'FileOperationItem';
 
 const ApplyChangesPanel: React.FC = () => {
-  const { activeOperations, applyChange, rejectChange } =
-    useApplyChangesStore();
+  const {
+    activeOperations,
+    applyChange,
+    rejectChange,
+    applyAllChanges,
+    rejectAllChanges,
+  } = useApplyChangesStore();
   const { fileTree } = useFileSystemStore();
   const [currentIdx, setCurrentIdx] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -379,6 +384,10 @@ const ApplyChangesPanel: React.FC = () => {
   const manualNavigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const hasProject = fileTree.length > 0;
+
+  const hasPendingOperations = activeOperations.some(
+    (op) => !op.accepted && !op.rejected
+  );
 
   // Navigation handlers
   const NAVIGATION_PADDING_ABOVE = 16; // Space above the target element when navigating
@@ -1000,6 +1009,31 @@ const ApplyChangesPanel: React.FC = () => {
             className="px-3 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gray-100 dark:disabled:hover:bg-gray-700"
           >
             Next Diff
+          </button>
+          <div className="border-l border-gray-300 dark:border-gray-600 h-6 mx-2" />
+          <button
+            onClick={applyAllChanges}
+            disabled={!hasPendingOperations}
+            title={
+              hasPendingOperations
+                ? 'Accept all pending changes'
+                : 'No pending changes to accept'
+            }
+            className="px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Accept All
+          </button>
+          <button
+            onClick={rejectAllChanges}
+            disabled={!hasPendingOperations}
+            title={
+              hasPendingOperations
+                ? 'Reject all pending changes'
+                : 'No pending changes to reject'
+            }
+            className="ml-2 px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Reject All
           </button>
           <span className="text-xs text-gray-500 dark:text-gray-400 ml-auto">
             {activeOperations.length > 0 ? currentIdx + 1 : 0} /{' '}
