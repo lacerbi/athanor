@@ -194,7 +194,7 @@ npm ci
 
 </details>
 
-Read the [**full online tutorial**](https://athanor.works/docs/tutorial/introduction) or the [local version](TUTORIAL.MD) for more detailed information.
+Read the [**full online tutorial**](https://athanor.works/docs/tutorial/introduction) or the [local version](TUTORIAL.md) for more detailed information.
 
 ## 👥 Development and Feedback
 
