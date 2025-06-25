@@ -1,0 +1,7 @@
+###############################################################################
+# ATHANOR PROJECT FILES
+###############################################################################
+/.ath_materials/**/*
+!/.ath_materials/prompts/
+!/.ath_materials/prompts/**/*
+!/.ath_materials/project_settings.json

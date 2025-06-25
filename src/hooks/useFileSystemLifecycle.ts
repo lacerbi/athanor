@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { FileItem } from '../utils/fileTree';
 import { buildFileTree } from '../services/fileSystemService';
-import { createAthignoreFile } from '../services/fileIgnoreService';
+import { initializeProjectFiles } from '../services/fileIgnoreService';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useLogStore } from '../stores/logStore';
@@ -53,6 +53,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   const [materialsData, setResourcesData] = useState<FileItem | null>(null);
   const [showProjectDialog, setShowProjectDialog] = useState(false);
   const [pendingDirectory, setPendingDirectory] = useState<string | null>(null);
+  const [pendingGitignoreExists, setPendingGitignoreExists] = useState(false);
 
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const isInitializedRef = useRef(false);
@@ -235,8 +236,10 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
         // Existing project - proceed with loading
         await initializeProject(normalizedDir);
       } else {
-        // New project - show creation dialog
+        // New project - check for .gitignore and show creation dialog
+        const gitignoreExists = await window.fileService.exists('.gitignore');
         setPendingDirectory(normalizedDir);
+        setPendingGitignoreExists(gitignoreExists);
         setShowProjectDialog(true);
       }
     },
@@ -244,13 +247,14 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
   );
 
   const handleCreateProject = useCallback(
-    async (useStandardIgnore: boolean) => {
+    async (useStandardIgnore: boolean, augmentGitignore: boolean) => {
       if (!pendingDirectory) return;
 
       try {
-        // Create .athignore file with selected rules
-        await createAthignoreFile(pendingDirectory, {
+        // Initialize project files with selected options
+        await initializeProjectFiles(pendingDirectory, {
           useStandardIgnore,
+          augmentGitignore,
         });
 
         // Initialize project with new .athignore
@@ -442,6 +446,7 @@ export function useFileSystemLifecycle(): FileSystemLifecycle {
     refreshFileSystem,
     showProjectDialog,
     pendingDirectory,
+    pendingGitignoreExists,
     handleCreateProject,
     handleProjectDialogClose,
   } as FileSystemLifecycle;
