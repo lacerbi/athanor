@@ -51,6 +51,17 @@ When editing existing text or when the user provides a sample/excerpt:
   - Parenthetical asides or footnote style
 - **Cultural & Regional Language**: Match any specific dialect, spelling conventions (US/UK), or cultural expressions
 - **Formatting Conventions**: Follow existing patterns for headings, emphasis, spacing, capitalization
+- **Markup & Environment Usage**: Match the document's formatting approach:
+  - Plain text (no markup)
+  - Markdown (and which flavor - CommonMark, GFM, etc.)
+  - HTML tags and attributes
+  - reStructuredText
+  - AsciiDoc
+  - Wiki markup
+  - Mixed environments (e.g., Markdown with HTML)
+  - Code block languages and formatting
+
+**Note**: The above are examples of stylistic elements to consider. The goal is to **match the writing style holistically** - capturing not just individual elements but the overall feel, flow, and character of the text. Pay attention to subtle patterns and combinations that create the unique voice of the existing content.
 
 If no sample is provided but you're editing existing text, analyze the surrounding content to maintain consistency throughout the document.
 
