@@ -529,7 +529,8 @@ export interface FileSystemLifecycle {
   ) => Promise<void>;
   showProjectDialog: boolean;
   pendingDirectory: string | null;
-  handleCreateProject: (useStandardIgnore: boolean) => Promise<void>;
+  pendingGitignoreExists: boolean;
+  handleCreateProject: (useStandardIgnore: boolean, augmentGitignore: boolean) => Promise<void>;
   handleProjectDialogClose: () => void;
 }
 

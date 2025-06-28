@@ -3,18 +3,22 @@
 // Creates .athignore files with optional standard rules and handles path normalization for ignore patterns.
 interface AthignoreOptions {
   useStandardIgnore: boolean;
+  augmentGitignore?: boolean;
 }
 
 /**
- * createAthignoreFile
- * -------------------
+ * initializeProjectFiles
+ * ----------------------
+ * Initializes project configuration files including .athignore and optionally .gitignore.
  * Creates or overwrites a .athignore file in the user's project directory.
- * Optionally imports .gitignore rules and merges them with the default .athignore template.
+ * Optionally creates a new .gitignore file or appends Athanor-specific rules to an existing one.
  *
- * @param projectPath - The project directory where .athignore should be placed
- * @param options - Controls whether standard ignore rules or .gitignore lines are used
+ * @param projectPath - The project directory where files should be created
+ * @param options - Controls file creation behavior:
+ *   - useStandardIgnore: Whether to include standard ignore rules in .athignore
+ *   - augmentGitignore: Whether to create/augment .gitignore with Athanor-specific rules
  */
-export async function createAthignoreFile(
+export async function initializeProjectFiles(
   projectPath: string,
   options: AthignoreOptions
 ): Promise<void> {
@@ -52,6 +56,45 @@ export async function createAthignoreFile(
 
     // Write the .athignore file
     await window.fileService.write('.athignore', finalContent);
+
+    // Handle .gitignore augmentation if requested
+    if (options.augmentGitignore) {
+      try {
+        // Get path to the gitignore extras file
+        const gitignoreExtrasPath = await window.pathUtils.join(
+          defaultAthignorePath,
+          'files/default_gitignore_extras'
+        );
+        
+        // Read the gitignore extras content
+        const gitignoreExtrasContent = await window.fileService.read(
+          await window.pathUtils.relative(gitignoreExtrasPath),
+          { encoding: 'utf8' }
+        ) as string;
+
+        // Check if .gitignore already exists
+        const gitignoreExists = await window.fileService.exists('.gitignore');
+        
+        let gitignoreContent = '';
+        
+        if (gitignoreExists) {
+          // Read existing .gitignore content
+          const existingContent = await window.fileService.read('.gitignore', { encoding: 'utf8' }) as string;
+          // Append new rules with proper spacing
+          gitignoreContent = existingContent + '\n\n' + gitignoreExtrasContent;
+        } else {
+          // Create new .gitignore with just the extras content
+          gitignoreContent = gitignoreExtrasContent;
+        }
+        
+        // Write the final .gitignore content
+        await window.fileService.write('.gitignore', gitignoreContent);
+        
+      } catch (gitignoreError) {
+        console.error('Error handling .gitignore:', gitignoreError);
+        throw new Error(`Failed to create/update .gitignore: ${gitignoreError}`);
+      }
+    }
   } catch (error) {
     console.error('Error creating .athignore:', error);
     throw error;

@@ -369,7 +369,11 @@ docs/_site/
 ###############################################################################
 # ATHANOR PROJECT FILES
 ###############################################################################
-# Athanor system files
+# Athanor materials folder is visible (as a separate node in the file manager)
+!/.ath_materials/**/*
+
+# Athanor configuration files are hidden
 /.ath_materials/project_graph.json
+/.ath_materials/project_settings.json
 
 # Put other files or folders below

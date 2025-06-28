@@ -63,6 +63,7 @@ const AthanorApp: React.FC = () => {
     refreshFileSystem,
     showProjectDialog,
     pendingDirectory,
+    pendingGitignoreExists,
     handleCreateProject,
     handleProjectDialogClose,
   } = useFileSystemLifecycle();
@@ -236,6 +237,7 @@ const AthanorApp: React.FC = () => {
         onClose={handleProjectDialogClose}
         onCreateProject={handleCreateProject}
         folderName={pendingDirectory ? getBaseName(pendingDirectory) : ''}
+        gitignoreExists={pendingGitignoreExists}
       />
       {filesData && currentDirectory && (
         <MainLayout

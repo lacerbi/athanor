@@ -7,8 +7,9 @@ interface ProjectCreationDialogProps {
   isOpen: boolean;
   // Called when user cancels the dialog - should reset dialog state without re-triggering folder selection
   onClose: () => void;
-  onCreateProject: (useStandardIgnore: boolean) => Promise<void>;
+  onCreateProject: (useStandardIgnore: boolean, augmentGitignore: boolean) => Promise<void>;
   folderName: string;
+  gitignoreExists: boolean;
 }
 
 const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({
@@ -16,8 +17,10 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({
   isOpen,
   onClose,
   onCreateProject,
+  gitignoreExists,
 }) => {
   const [useStandardIgnore, setUseStandardIgnore] = useState(true);
+  const [augmentGitignore, setAugmentGitignore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -25,13 +28,22 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({
   const handleCreate = async () => {
     setIsLoading(true);
     try {
-      await onCreateProject(useStandardIgnore);
+      await onCreateProject(useStandardIgnore, augmentGitignore);
     } catch (error) {
       console.error('Error creating project:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Dynamic text based on .gitignore existence
+  const gitignoreLabel = gitignoreExists 
+    ? 'Append Athanor rules to existing .gitignore'
+    : 'Create .gitignore with Athanor rules';
+  
+  const gitignoreTooltip = gitignoreExists
+    ? 'Add Athanor-specific ignore rules to your existing .gitignore file'
+    : 'Create a new .gitignore file with Athanor-specific ignore rules';
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
@@ -64,6 +76,29 @@ const ProjectCreationDialog: React.FC<ProjectCreationDialogProps> = ({
                 Include default .athignore
               </label>
               <span title="Include a default set of ignore rules for common files and directories like node_modules, .git, etc.">
+                <HelpCircle 
+                  className="h-4 w-4 ml-1 text-gray-400 dark:text-gray-500 cursor-help"
+                />
+              </span>
+            </div>
+          </div>
+          
+          <div className="flex items-start space-x-2">
+            <input
+              type="checkbox"
+              id="augmentGitignore"
+              checked={augmentGitignore}
+              onChange={(e) => setAugmentGitignore(e.target.checked)}
+              className="mt-1 accent-blue-500 dark:accent-blue-400 focus:ring-blue-500 dark:focus:ring-blue-400 dark:focus:ring-offset-gray-800"
+            />
+            <div className="flex items-center">
+              <label
+                htmlFor="augmentGitignore"
+                className="text-sm font-medium leading-none text-gray-900 dark:text-gray-200"
+              >
+                {gitignoreLabel}
+              </label>
+              <span title={gitignoreTooltip}>
                 <HelpCircle 
                   className="h-4 w-4 ml-1 text-gray-400 dark:text-gray-500 cursor-help"
                 />

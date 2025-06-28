@@ -9,6 +9,22 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.5] - 2025-06-28
+
+### Added
+
+- An option is now available in the project creation dialog to append default Athanor ignore rules to the project's `.gitignore` file. ([81b0a65](https://github.com/lacerbi/athanor/commit/81b0a65))
+- Style matching has been introduced to writing prompts to improve the consistency of AI-generated content. ([456ed28](https://github.com/lacerbi/athanor/commit/456ed28))
+
+### Changed
+
+- Updated and expanded the main `PROJECT.md` documentation. ([1f5ceac](https://github.com/lacerbi/athanor/commit/1f5ceac))
+- Created a new `docs/design` directory to better organize design specification documents. ([bb0d6a4](https://github.com/lacerbi/athanor/commit/bb0d6a4))
+
+### Fixed
+
+- Corrected various style comments in the codebase. ([16a92a8](https://github.com/lacerbi/athanor/commit/16a92a8))
+
 ## [0.7.4] - 2025-06-24
 
 ### Added
