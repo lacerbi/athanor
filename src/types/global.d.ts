@@ -293,6 +293,13 @@ declare global {
          */
         confirm: (message: string, title?: string) => Promise<boolean>;
       };
+      shell: {
+        isAvailable: () => Promise<boolean>;
+        start: (cols: number, rows: number) => void;
+        write: (data: string) => void;
+        resize: (cols: number, rows: number) => void;
+        onData: (callback: (data: string) => void) => () => void;
+      };
     };
 
     // New path utilities API

@@ -15,6 +15,7 @@ import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { GitService } from './services/GitService';
 import { UserActivityService } from './services/UserActivityService';
+import { ShellService } from './services/ShellService';
 import {
   ProjectGraphService,
   ProjectGraphCache,
@@ -42,6 +43,7 @@ export const relevanceEngine = new RelevanceEngineService(
   projectGraphService,
   userActivityService
 );
+export const shellService = new ShellService();
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
 
@@ -352,7 +354,8 @@ app.whenReady().then(async () => {
     llmService,
     relevanceEngine,
     projectGraphService,
-    userActivityService
+    userActivityService,
+    shellService
   );
 
   ipcMain.handle('graph:force-reanalyze', () => {
@@ -543,6 +546,7 @@ app.on('window-all-closed', () => {
     console.error('Error cleaning up FileService watchers:', err);
   });
   userActivityService.cleanup();
+  shellService.killShell();
 
   // Quit on all windows closed (except on macOS)
   if (process.platform !== 'darwin') {

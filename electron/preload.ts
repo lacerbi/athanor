@@ -118,6 +118,20 @@ contextBridge.exposeInMainWorld('electronBridge', {
     confirm: (message: string, title?: string): Promise<boolean> =>
       ipcRenderer.invoke(SHOW_CONFIRM_DIALOG_CHANNEL, message, title),
   },
+  shell: {
+    isAvailable: (): Promise<boolean> => ipcRenderer.invoke('shell:is-available'),
+    start: (cols: number, rows: number) => ipcRenderer.send('shell:start', { cols, rows }),
+    write: (data: string) => ipcRenderer.send('shell:write', data),
+    resize: (cols: number, rows: number) => ipcRenderer.send('shell:resize', { cols, rows }),
+    onData: (callback: (data: string) => void) => {
+      const listener = (_event: any, data: string) => callback(data);
+      ipcRenderer.on('shell:data', listener);
+      // Return a cleanup function
+      return () => {
+        ipcRenderer.removeListener('shell:data', listener);
+      };
+    },
+  },
 });
 
 // Expose the new pathUtils API

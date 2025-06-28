@@ -10,6 +10,7 @@ import { setupSettingsHandlers } from './handlers/settingsHandlers';
 import { registerSecureApiKeyIpc } from './handlers/secureApiKeyIpc';
 import { registerLlmIpc } from './handlers/llmIpc';
 import { setupContextHandlers } from './handlers/contextHandlers';
+import { setupShellHandlers } from './handlers/shellHandlers';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
 import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
@@ -17,6 +18,7 @@ import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { ProjectGraphService } from './services/ProjectGraphService';
 import { UserActivityService } from './services/UserActivityService';
+import { ShellService } from './services/ShellService';
 
 export function setupIpcHandlers(
   fileService: FileService,
@@ -25,7 +27,8 @@ export function setupIpcHandlers(
   llmService: LLMServiceMain,
   relevanceEngine: RelevanceEngineService,
   projectGraphService: ProjectGraphService,
-  userActivityService: UserActivityService
+  userActivityService: UserActivityService,
+  shellService: ShellService
 ) {
   setupCoreHandlers(fileService, settingsService);
   setupFileOperationHandlers(fileService);
@@ -34,4 +37,5 @@ export function setupIpcHandlers(
   registerSecureApiKeyIpc(apiKeyService);
   registerLlmIpc(llmService);
   setupContextHandlers(relevanceEngine, settingsService);
+  setupShellHandlers(shellService);
 }

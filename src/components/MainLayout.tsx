@@ -14,6 +14,7 @@ import FileViewerPanel from './FileViewerPanel';
 import ApplyChangesPanel from './ApplyChangesPanel';
 import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
+import CliPanel from './CliPanel';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useContextStore } from '../stores/contextStore';
@@ -228,6 +229,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           )}
           {activeTab === 'apply-changes' && <ApplyChangesPanel />}
           {activeTab === 'settings' && <SettingsPanel />}
+          {activeTab === 'cli' && <CliPanel />}
         </div>
 
         {/* Log panel resize handle */}
