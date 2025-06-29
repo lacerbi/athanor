@@ -295,7 +295,7 @@ declare global {
       };
       shell: {
         isAvailable: () => Promise<boolean>;
-        start: (cols: number, rows: number) => void;
+        start: (cols: number, rows: number, cwd?: string) => void;
         write: (data: string) => void;
         resize: (cols: number, rows: number) => void;
         onData: (callback: (data: string) => void) => () => void;

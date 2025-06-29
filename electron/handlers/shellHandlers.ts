@@ -7,8 +7,8 @@ export function setupShellHandlers(shellService: ShellService) {
     return shellService.isAvailable();
   });
 
-  ipcMain.on('shell:start', (_event, { cols, rows }: { cols: number, rows: number }) => {
-    shellService.startShell(cols, rows);
+  ipcMain.on('shell:start', (_event, options: { cols: number, rows: number, cwd?: string }) => {
+    shellService.startShell(options);
   });
 
   ipcMain.on('shell:write', (_event, data: string) => {

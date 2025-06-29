@@ -120,7 +120,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
   },
   shell: {
     isAvailable: (): Promise<boolean> => ipcRenderer.invoke('shell:is-available'),
-    start: (cols: number, rows: number) => ipcRenderer.send('shell:start', { cols, rows }),
+    start: (cols: number, rows: number, cwd?: string) => ipcRenderer.send('shell:start', { cols, rows, cwd }),
     write: (data: string) => ipcRenderer.send('shell:write', data),
     resize: (cols: number, rows: number) => ipcRenderer.send('shell:resize', { cols, rows }),
     onData: (callback: (data: string) => void) => {

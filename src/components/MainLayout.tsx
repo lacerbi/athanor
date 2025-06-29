@@ -234,7 +234,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
             <SettingsPanel />
           </div>
           <div style={{ display: activeTab === 'cli' ? 'block' : 'none', height: '100%' }}>
-            <CliPanel />
+            <CliPanel key={currentDirectory} currentDirectory={currentDirectory} />
           </div>
         </div>
 
