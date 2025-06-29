@@ -40,6 +40,10 @@ module.exports = {
   ],
   plugins: [
     {
+      name: '@electron-forge/plugin-auto-unpack-natives',
+      config: {},
+    },
+    {
       name: '@electron-forge/plugin-webpack',
       config: {
         mainConfig: './webpack.main.config.js',
@@ -69,10 +73,6 @@ module.exports = {
         loggerPort: 9000,
         nodeIntegration: false,
       },
-    },
-    {
-      name: '@electron-forge/plugin-auto-unpack-natives',
-      config: {},
     },
   ],
 };
