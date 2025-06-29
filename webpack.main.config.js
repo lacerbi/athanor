@@ -1,4 +1,6 @@
+// webpack.main.config.js
 const path = require('path');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: {
@@ -24,6 +26,18 @@ module.exports = {
     path: path.resolve(__dirname, '.webpack'),
     filename: '[name].js',
   },
+  externals: {
+    'node-pty': 'commonjs node-pty',
+  },
+  plugins: [
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: 'node_modules/node-pty',
+          to: 'node_modules/node-pty',
+        },
+      ],
+    }),
+  ],
   target: 'electron-main',
-  externals: { 'node-pty': 'commonjs node-pty' },
 };
