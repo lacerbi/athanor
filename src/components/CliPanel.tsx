@@ -1,75 +1,88 @@
-// AI Summary: Implements a terminal interface using xterm.js, rooted in the project directory. It connects to ShellService via IPC for process management and resizes automatically. A key prop based on currentDirectory ensures it resets on project change.
+// AI Summary: Implements a terminal interface using xterm.js, rooted in the project directory. It connects to the persistent ShellService via IPC. On mount, it retrieves or creates a session ID from a global store, then attaches to that session. On unmount, it detaches, allowing the underlying shell process to persist.
 import React, { useEffect, useRef } from 'react';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 import 'xterm/css/xterm.css'; // Import xterm's CSS
+import { useCliStore } from '../stores/cliStore';
 
 interface CliPanelProps {
   currentDirectory: string;
+  isVisible: boolean;
 }
 
-const CliPanel: React.FC<CliPanelProps> = ({ currentDirectory }) => {
+const CliPanel: React.FC<CliPanelProps> = ({ currentDirectory, isVisible }) => {
   const terminalRef = useRef<HTMLDivElement>(null);
   const termInstanceRef = useRef<{ term: Terminal; fitAddon: FitAddon } | null>(
     null
   );
+  const listenersAttached = useRef(false);
 
+  // Effect to initialize the terminal once per project (due to key={currentDirectory})
   useEffect(() => {
-    if (terminalRef.current && !termInstanceRef.current) {
-      const term = new Terminal({ cursorBlink: true, convertEol: true });
-      const fitAddon = new FitAddon();
-      term.loadAddon(fitAddon);
+    if (!terminalRef.current) return;
+    console.log(`[CliPanel] Initializing terminal for ${currentDirectory}`);
 
-      termInstanceRef.current = { term, fitAddon };
-      term.open(terminalRef.current);
-      fitAddon.fit();
+    const term = new Terminal({ cursorBlink: true, convertEol: true });
+    const fitAddon = new FitAddon();
+    term.loadAddon(fitAddon);
+    termInstanceRef.current = { term, fitAddon };
+    term.open(terminalRef.current);
 
-      // Start backend process in the current project directory
-      window.electronBridge.shell.start(term.cols, term.rows, currentDirectory);
+    (async () => {
+      let sessionId = useCliStore.getState().getSessionId(currentDirectory);
+      if (!sessionId) {
+        sessionId = await window.electronBridge.shell.start(
+          term.cols,
+          term.rows,
+          currentDirectory
+        );
+        useCliStore.getState().setSessionId(currentDirectory, sessionId);
+      }
 
-      // Setup two-way communication
-      term.onData((data) => window.electronBridge.shell.write(data));
-      const cleanupOnData = window.electronBridge.shell.onData((data) =>
-        term.write(data)
-      );
+      window.electronBridge.shell.attach(sessionId);
 
-      // Setup resize listener for window/panel resizing
-      const resizeObserver = new ResizeObserver(() => {
-        // This handles cases where the user resizes the whole window
-        // or the panel divider.
+      if (!listenersAttached.current) {
+        term.onData((data) => {
+          window.electronBridge.shell.write(sessionId, data);
+        });
+        term.onResize(({ cols, rows }) => {
+          window.electronBridge.shell.resize(sessionId, cols, rows);
+        });
+        window.electronBridge.shell.onData((data) => {
+          term.write(data);
+        });
+        listenersAttached.current = true;
+      }
+    })();
+
+    // Return cleanup function for when the project changes (component unmounts)
+    return () => {
+      const sessionId = useCliStore.getState().getSessionId(currentDirectory);
+      if (sessionId) {
+        // We don't kill the shell here, that is handled by the lifecycle hook.
+        // We just detach to stop receiving data.
+        window.electronBridge.shell.detach(sessionId);
+      }
+      termInstanceRef.current?.term.dispose();
+      termInstanceRef.current = null;
+      listenersAttached.current = false;
+    };
+  }, [currentDirectory]);
+
+  // Effect to handle the terminal becoming visible
+  useEffect(() => {
+    if (isVisible && termInstanceRef.current) {
+      const { term, fitAddon } = termInstanceRef.current;
+      // Use a timeout to ensure the DOM element is fully visible and has dimensions
+      setTimeout(() => {
         fitAddon.fit();
-        window.electronBridge.shell.resize(term.cols, term.rows);
-      });
-      resizeObserver.observe(terminalRef.current);
-
-      // Setup intersection observer for tab visibility changes
-      const intersectionObserver = new IntersectionObserver(
-        (entries) => {
-          const [entry] = entries;
-          if (entry.isIntersecting) {
-            // When the panel becomes visible, call fit().
-            // A small timeout here can still be a safeguard to ensure
-            // CSS transitions are complete, but the observer itself
-            // is the primary fix.
-            setTimeout(() => fitAddon.fit(), 10);
-          }
-        },
-        { threshold: 0.1 } // Fire when at least 10% of the element is visible
-      );
-      intersectionObserver.observe(terminalRef.current);
-
-      // Return cleanup function
-      return () => {
-        resizeObserver.disconnect();
-        intersectionObserver.disconnect();
-        cleanupOnData();
-        term.dispose();
-        // Make sure to nullify the ref so the component can re-initialize
-        // if the directory changes (which causes a re-mount).
-        termInstanceRef.current = null;
-      };
+        term.focus();
+        // Force a redraw of the terminal's viewport. This is the key to fixing
+        // rendering corruption from display:none.
+        term.refresh(0, term.rows - 1);
+      }, 50);
     }
-  }, []); // Empty dependency array ensures this runs only once on mount, as component is re-keyed
+  }, [isVisible]);
 
   return (
     <div

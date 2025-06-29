@@ -1,36 +1,68 @@
-// AI Summary: Manages an optional, persistent pseudo-terminal (pty) process using `node-pty`. It gracefully handles cases where `node-pty` is not installed. Provides methods to start (in a specified directory), write to, resize, and kill the shell process, communicating with the renderer process via IPC. The start method includes logic to prevent race conditions when restarting the shell.
+// AI Summary: Manages multiple, persistent pseudo-terminal (pty) sessions, keyed by a unique session ID. It handles cases where `node-pty` isn't installed. It supports a single "attached" UI, buffering output for detached sessions and replaying it on attach. Provides IPC-callable methods to start, write to, resize, attach, detach, and kill shell sessions.
 import * as os from 'os';
+import { randomUUID } from 'crypto';
 import { mainWindow } from '../windowManager';
 
 export class ShellService {
   private nodePtyModule: any = null;
-  private ptyProcess: any | null = null;
+  private ptySessions = new Map<
+    string,
+    { ptyProcess: any; buffer: string[] }
+  >();
+  private attachedSessionId: string | null = null;
 
   constructor() {
     try {
       // Conditionally require node-pty
       this.nodePtyModule = require('node-pty');
-      console.log('[ShellService] node-pty loaded successfully. CLI feature is enabled.');
+      console.log(
+        '[ShellService] node-pty loaded successfully. CLI feature is enabled.'
+      );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      console.warn(`[ShellService] node-pty failed to load, CLI feature will be disabled. Error: ${message}`);
+      console.warn(
+        `[ShellService] node-pty failed to load, CLI feature will be disabled. Error: ${message}`
+      );
       this.nodePtyModule = null;
     }
   }
 
   isAvailable = (): boolean => !!this.nodePtyModule;
 
-  startShell(options: { cols: number; rows: number; cwd?: string }): void {
-    if (!this.isAvailable()) return;
-
-    // If a pty process already exists, kill it before starting a new one.
-    if (this.ptyProcess) {
-      this.ptyProcess.kill();
-      // We don't set this.ptyProcess to null here, to prevent a race condition
-      // where the old process's onExit handler nullifies the new process.
+  attach(sessionId: string) {
+    if (!this.ptySessions.has(sessionId)) {
+      console.warn(
+        `[ShellService] Attempted to attach to non-existent shell session: ${sessionId}`
+      );
+      return;
     }
+    console.log(`[ShellService] Attaching to shell session: ${sessionId}`);
+    this.attachedSessionId = sessionId;
+    const session = this.ptySessions.get(sessionId)!;
+    if (session.buffer.length > 0) {
+      const data = session.buffer.join('');
+      session.buffer = [];
+      mainWindow?.webContents.send('shell:data', data);
+    }
+  }
 
-    const shell = os.platform() === 'win32' ? 'powershell.exe' : (process.env.SHELL || 'bash');
+  detach(sessionId: string) {
+    if (this.attachedSessionId === sessionId) {
+      console.log(`[ShellService] Detaching from shell session: ${sessionId}`);
+      this.attachedSessionId = null;
+    }
+  }
+
+  startShell(options: {
+    cols: number;
+    rows: number;
+    cwd: string;
+  }): string {
+    if (!this.isAvailable()) return '';
+
+    const sessionId = randomUUID();
+    const shell =
+      os.platform() === 'win32' ? 'powershell.exe' : process.env.SHELL || 'bash';
     const ptyProcess = this.nodePtyModule.spawn(shell, [], {
       name: 'xterm-color',
       cols: options.cols || 80,
@@ -39,34 +71,57 @@ export class ShellService {
       env: process.env,
     });
 
-    this.ptyProcess = ptyProcess;
+    const session = { ptyProcess, buffer: [] };
+    this.ptySessions.set(sessionId, session);
+    console.log(`[ShellService] Started new shell session: ${sessionId}`);
 
     ptyProcess.onData((data: string) => {
-      mainWindow?.webContents.send('shell:data', data);
-    });
-    
-    ptyProcess.onExit(() => {
-      // Only nullify the process if the exiting process is the current one.
-      // This prevents an old onExit handler from nullifying a new process.
-      if (this.ptyProcess === ptyProcess) {
-        this.ptyProcess = null;
+      const currentSession = this.ptySessions.get(sessionId);
+      if (this.attachedSessionId === sessionId) {
+        mainWindow?.webContents.send('shell:data', data);
+      } else if (currentSession) {
+        currentSession.buffer.push(data);
       }
     });
+
+    ptyProcess.onExit(() => {
+      console.log(`[ShellService] Shell session exited: ${sessionId}`);
+      this.ptySessions.delete(sessionId);
+      if (this.attachedSessionId === sessionId) {
+        this.attachedSessionId = null;
+      }
+      mainWindow?.webContents.send('shell:exit', sessionId);
+    });
+
+    return sessionId;
   }
 
-  writeToShell(data: string): void {
-    if (!this.isAvailable() || !this.ptyProcess) return;
-    this.ptyProcess.write(data);
+  writeToShell(sessionId: string, data: string): void {
+    if (!this.isAvailable() || !this.ptySessions.has(sessionId)) return;
+    this.ptySessions.get(sessionId)?.ptyProcess.write(data);
   }
 
-  resizeShell(cols: number, rows: number): void {
-    if (!this.isAvailable() || !this.ptyProcess) return;
-    this.ptyProcess.resize(cols, rows);
+  resizeShell(sessionId: string, cols: number, rows: number): void {
+    if (!this.isAvailable() || !this.ptySessions.has(sessionId)) return;
+    this.ptySessions.get(sessionId)?.ptyProcess.resize(cols, rows);
   }
 
-  killShell(): void {
-    if (!this.isAvailable() || !this.ptyProcess) return;
-    this.ptyProcess.kill();
-    this.ptyProcess = null;
+  killShell(sessionId: string): void {
+    if (!this.isAvailable()) return;
+    const session = this.ptySessions.get(sessionId);
+    if (session) {
+      console.log(`[ShellService] Killed shell session: ${sessionId}`);
+      session.ptyProcess.kill();
+      // onExit handler will clean up the session from the map
+    }
+  }
+
+  killAllShells(): void {
+    if (!this.isAvailable()) return;
+    console.log('[ShellService] Killing all active shell sessions.');
+    for (const session of this.ptySessions.values()) {
+      session.ptyProcess.kill();
+    }
+    this.ptySessions.clear();
   }
 }

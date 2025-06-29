@@ -295,10 +295,18 @@ declare global {
       };
       shell: {
         isAvailable: () => Promise<boolean>;
-        start: (cols: number, rows: number, cwd?: string) => void;
-        write: (data: string) => void;
-        resize: (cols: number, rows: number) => void;
+        start: (
+          cols: number,
+          rows: number,
+          cwd: string
+        ) => Promise<string>;
+        write: (sessionId: string, data: string) => void;
+        resize: (sessionId: string, cols: number, rows: number) => void;
         onData: (callback: (data: string) => void) => () => void;
+        onExit: (callback: (sessionId: string) => void) => () => void;
+        attach: (sessionId: string) => void;
+        detach: (sessionId: string) => void;
+        kill: (sessionId: string) => void;
       };
     };
 

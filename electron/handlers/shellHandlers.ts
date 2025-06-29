@@ -1,21 +1,45 @@
-// AI Summary: Defines IPC handlers for shell-related operations. Exposes the ShellService to the renderer process, allowing it to check for availability, start, write to, and resize the pseudo-terminal.
+// AI Summary: Defines IPC handlers for all shell-related functionality. It connects renderer process requests (like starting, writing to, or attaching to a shell) to the corresponding methods in the ShellService, enabling persistent, multi-session terminal management using unique session IDs.
 import { ipcMain } from 'electron';
-import type { ShellService } from '../services/ShellService';
+import { ShellService } from '../services/ShellService';
 
 export function setupShellHandlers(shellService: ShellService) {
   ipcMain.handle('shell:is-available', () => {
     return shellService.isAvailable();
   });
 
-  ipcMain.on('shell:start', (_event, options: { cols: number, rows: number, cwd?: string }) => {
-    shellService.startShell(options);
+  ipcMain.handle(
+    'shell:start',
+    (_, options: { cols: number; rows: number; cwd: string }) => {
+      return shellService.startShell(options);
+    }
+  );
+
+  ipcMain.on('shell:attach', (_, sessionId: string) => {
+    shellService.attach(sessionId);
   });
 
-  ipcMain.on('shell:write', (_event, data: string) => {
-    shellService.writeToShell(data);
+  ipcMain.on('shell:detach', (_, sessionId: string) => {
+    shellService.detach(sessionId);
   });
-  
-  ipcMain.on('shell:resize', (_event, { cols, rows }: { cols: number, rows: number }) => {
-    shellService.resizeShell(cols, rows);
+
+  ipcMain.on(
+    'shell:write',
+    (_, { sessionId, data }: { sessionId: string; data: string }) => {
+      shellService.writeToShell(sessionId, data);
+    }
+  );
+
+  ipcMain.on(
+    'shell:resize',
+    (
+      _,
+      { sessionId, cols, rows }: { sessionId: string; cols: number; rows: number }
+    ) => {
+      shellService.resizeShell(sessionId, cols, rows);
+    }
+  );
+
+  ipcMain.on('shell:kill', (_, sessionId: string) => {
+    shellService.killShell(sessionId);
   });
 }

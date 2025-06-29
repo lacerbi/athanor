@@ -546,7 +546,7 @@ app.on('window-all-closed', () => {
     console.error('Error cleaning up FileService watchers:', err);
   });
   userActivityService.cleanup();
-  shellService.killShell();
+  shellService.killAllShells();
 
   // Quit on all windows closed (except on macOS)
   if (process.platform !== 'darwin') {

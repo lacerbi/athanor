@@ -120,15 +120,28 @@ contextBridge.exposeInMainWorld('electronBridge', {
   },
   shell: {
     isAvailable: (): Promise<boolean> => ipcRenderer.invoke('shell:is-available'),
-    start: (cols: number, rows: number, cwd?: string) => ipcRenderer.send('shell:start', { cols, rows, cwd }),
-    write: (data: string) => ipcRenderer.send('shell:write', data),
-    resize: (cols: number, rows: number) => ipcRenderer.send('shell:resize', { cols, rows }),
+    start: (cols: number, rows: number, cwd: string) =>
+      ipcRenderer.invoke('shell:start', { cols, rows, cwd }),
+    write: (sessionId: string, data: string) =>
+      ipcRenderer.send('shell:write', { sessionId, data }),
+    resize: (sessionId: string, cols: number, rows: number) =>
+      ipcRenderer.send('shell:resize', { sessionId, cols, rows }),
+    attach: (sessionId: string) => ipcRenderer.send('shell:attach', sessionId),
+    detach: (sessionId: string) => ipcRenderer.send('shell:detach', sessionId),
+    kill: (sessionId: string) => ipcRenderer.send('shell:kill', sessionId),
     onData: (callback: (data: string) => void) => {
       const listener = (_event: any, data: string) => callback(data);
       ipcRenderer.on('shell:data', listener);
       // Return a cleanup function
       return () => {
         ipcRenderer.removeListener('shell:data', listener);
+      };
+    },
+    onExit: (callback: (sessionId: string) => void) => {
+      const listener = (_event: any, sessionId: string) => callback(sessionId);
+      ipcRenderer.on('shell:exit', listener);
+      return () => {
+        ipcRenderer.removeListener('shell:exit', listener);
       };
     },
   },
