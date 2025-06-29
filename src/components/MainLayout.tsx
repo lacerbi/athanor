@@ -217,19 +217,25 @@ const MainLayout: React.FC<MainLayoutProps> = ({
 
         {/* Tab content */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 min-w-0">
-          {activeTab === 'workbench' && (
+          <div style={{ display: activeTab === 'workbench' ? 'block' : 'none', height: '100%' }}>
             <ActionPanel
               rootItems={[filesData]}
               setActivePanelTab={onTabChange}
               isActive={activeTab === 'workbench'}
             />
-          )}
-          {activeTab === 'viewer' && (
+          </div>
+          <div style={{ display: activeTab === 'viewer' ? 'block' : 'none', height: '100%' }}>
             <FileViewerPanel onTabChange={onTabChange} />
-          )}
-          {activeTab === 'apply-changes' && <ApplyChangesPanel />}
-          {activeTab === 'settings' && <SettingsPanel />}
-          {activeTab === 'cli' && <CliPanel />}
+          </div>
+          <div style={{ display: activeTab === 'apply-changes' ? 'block' : 'none', height: '100%' }}>
+            <ApplyChangesPanel />
+          </div>
+          <div style={{ display: activeTab === 'settings' ? 'block' : 'none', height: '100%' }}>
+            <SettingsPanel />
+          </div>
+          <div style={{ display: activeTab === 'cli' ? 'block' : 'none', height: '100%' }}>
+            <CliPanel />
+          </div>
         </div>
 
         {/* Log panel resize handle */}
