@@ -27,7 +27,8 @@ module.exports = {
     filename: '[name].js',
   },
   externals: {
-    'node-pty': 'commonjs node-pty',
+    'node-pty': 'commonjs2 node-pty',
+    'node-addon-api': 'commonjs2 node-addon-api',
   },
   plugins: [
     new CopyWebpackPlugin({

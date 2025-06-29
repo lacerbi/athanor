@@ -47,7 +47,7 @@
     "@electron-forge/maker-rpm": "^7.6.0",
     "@electron-forge/maker-squirrel": "^7.6.0",
     "@electron-forge/maker-zip": "^7.6.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.6.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.8.1",
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron-forge/plugin-webpack": "^7.8.1",
     "@eslint/js": "^9.17.0",
@@ -67,6 +67,7 @@
     "cross-env": "^7.0.3",
     "css-loader": "^7.1.2",
     "electron": "^33.2.1",
+    "electron-rebuild": "^3.2.9",
     "electron-squirrel-startup": "^1.0.1",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
@@ -119,7 +120,7 @@
     "zustand": "^5.0.2"
   },
   "optionalDependencies": {
-    "node-pty": "^1.0.0"
+    "node-pty": "microsoft/node-pty#main"
   },
   "overrides": {
     "prismjs": "1.30.0",

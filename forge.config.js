@@ -6,9 +6,11 @@ module.exports = {
     icon: 'assets/athanor',
     asarUnpack: [
       'resources/**/*', // Ensure resources directory is not packed into asar
-      'node_modules/node-pty/**/*',
-      'node_modules/nan/**/*', // node-pty dependency
-      '**/*.node', // All native bindings
+      //'node_modules/node-pty/**/*',
+      //'node_modules/nan/**/*', // node-pty dependency
+      //'**/*.node', // All native bindings
+      //'x64/node_modules/node-pty/**/*',
+      //'**/node_modules/node-pty/**/*',
     ],
     // Copy specific resources subfolders
     extraResource: [
@@ -43,6 +45,10 @@ module.exports = {
     },
   ],
   plugins: [
+    {
+      name: '@electron-forge/plugin-auto-unpack-natives',
+      config: {},
+    },
     {
       name: '@electron-forge/plugin-webpack',
       config: {
