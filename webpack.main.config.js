@@ -25,4 +25,5 @@ module.exports = {
     filename: '[name].js',
   },
   target: 'electron-main',
+  externals: { 'node-pty': 'commonjs node-pty' },
 };

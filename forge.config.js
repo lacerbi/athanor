@@ -70,5 +70,9 @@ module.exports = {
         nodeIntegration: false,
       },
     },
+    {
+      name: '@electron-forge/plugin-auto-unpack-natives',
+      config: {},
+    },
   ],
 };

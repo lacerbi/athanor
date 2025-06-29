@@ -9,6 +9,7 @@
     "start": "electron-forge start",
     "dev": "npm start",
     "package": "cross-env DEBUG=electron-forge:* NODE_ENV=production electron-forge package",
+    "nogpu": "electron-forge start -- --disable-gpu",
     "make": "cross-env NODE_ENV=production electron-forge make",
     "build:win": "cross-env NODE_ENV=production electron-forge make --platform win32",
     "build:linux": "cross-env NODE_ENV=production electron-forge make --platform linux",
