@@ -1,0 +1,71 @@
+/*
+ * ===================================================================================
+ * CUSTOM BUILD CONFIGURATION FOR NODE-PTY ON WINDOWS
+ * ===================================================================================
+ *
+ * What is this file?
+ * This file is a custom TypeScript configuration used in a `postinstall` script
+ * to manually compile the `node-pty` dependency.
+ *
+ * Why does it exist?
+ * The default `npm install` process for `node-pty` fails on our specific Windows
+ * development environment. This is due to two main issues:
+ * 1. Type Conflicts: Our project uses the Jest testing framework, while `node-pty`
+ * uses Mocha. The TypeScript compiler was finding the type definitions for
+ * both, causing fatal conflicts over global names like `describe` and `it`.
+ * 2. Build Environment Pollution: The default `node-pty` tsconfig file explicitly
+ * tries to read from the parent project's `node_modules/@types`, which is the
+ * root cause of the type conflicts.
+ *
+ * This configuration file solves these issues by creating a sandboxed and strict
+ * build environment just for the `node-pty` source code.
+ */
+{
+  // Inherit all the base compiler settings from node-pty's own config.
+  "extends": "./node_modules/node-pty/src/tsconfig.json",
+
+  "compilerOptions": {
+    // Define the source and output directories relative to the project root.
+    "rootDir": "./node_modules/node-pty/src",
+    "outDir": "./node_modules/node-pty/lib",
+
+    // --- CRITICAL OVERRIDE SECTION ---
+
+    // 1. Isolate Type Resolution: This is the most important fix. We override
+    //    the original `typeRoots` to *only* look inside node-pty's own
+    //    node_modules. This severs the link to the parent project's node_modules,
+    //    preventing the Jest/Mocha type conflict.
+    "typeRoots": [
+      "./node_modules/node-pty/node_modules/@types"
+    ],
+
+    // 2. Explicit Type Loading: We explicitly tell the compiler to ONLY load the
+    //    built-in `node` types. We do not include `mocha`, as we are not
+    //    compiling the test files.
+    "types": [
+      "node"
+    ],
+
+    // 3. Suppress Dependency Errors: This is a safety net. It tells TypeScript
+    //    "I trust the type definitions of my dependencies are correct, do not
+    //    type-check them." This suppresses any lingering errors from incompatible
+    //    @types packages (e.g., in @types/diff or @types/ws).
+    "skipLibCheck": true
+  },
+
+  // Define what source files to compile.
+  "include": [
+    "./node_modules/node-pty/src/**/*"
+  ],
+
+  // --- CRITICAL EXCLUSION SECTION ---
+  "exclude": [
+    // We must explicitly ignore node_modules within the compilation scope.
+    "node_modules",
+
+    // 1. Exclude Test Files: This is the second most important fix. By not
+    //    compiling any `*.test.ts` files, we remove the primary reason
+    //    the compiler was trying to load testing framework types in the first place.
+    "**/*.test.ts"
+  ]
+}
