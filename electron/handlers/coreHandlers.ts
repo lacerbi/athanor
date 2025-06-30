@@ -354,7 +354,9 @@ export function setupCoreHandlers(
         'Invalid Link',
         `A request to open a non-web link was blocked for security reasons:\n\n${url}`
       );
-      return;
+      throw new Error(
+        `Blocked a non-web link for security reasons: ${url}`
+      );
     }
 
     // Proactively check for xdg-open on Linux, which is required by shell.openExternal
@@ -368,7 +370,9 @@ export function setupCoreHandlers(
           'Could Not Open Link',
           `Failed to open the link because the 'xdg-open' utility could not be found. This is a common issue in minimal Linux environments like WSL.\n\nPlease install the required package to fix this.\n\nFor Debian/Ubuntu: sudo apt-get install xdg-utils\nFor Fedora/RHEL: sudo dnf install xdg-utils\nFor Arch: sudo pacman -S xdg-utils\n\nThe URL you tried to open was: ${url}`
         );
-        return; // Stop execution
+        throw new Error(
+          '`xdg-utils` is not installed. Cannot open external link.'
+        );
       }
     }
 
@@ -385,6 +389,7 @@ export function setupCoreHandlers(
         'Could Not Open Link',
         `An unexpected error occurred while trying to open the link:\n\n${errorMessage}\n\nThe URL you tried to open was: ${url}`
       );
+      throw error;
     }
   });
 

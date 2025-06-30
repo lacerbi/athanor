@@ -20,6 +20,7 @@ jest.mock('electron', () => ({
   dialog: {
     showMessageBox: jest.fn(),
     showOpenDialog: jest.fn(),
+    showErrorBox: jest.fn(),
   },
   app: {
     getVersion: jest.fn(),
