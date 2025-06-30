@@ -42,4 +42,14 @@ export function setupShellHandlers(shellService: ShellService) {
   ipcMain.on('shell:kill', (_, sessionId: string) => {
     shellService.killShell(sessionId);
   });
+
+  ipcMain.handle('shell:test-functionality', async (_event, cwd: string) => {
+    if (!cwd) {
+      console.warn(
+        '[shellHandlers] Attempted to test shell functionality without a CWD.'
+      );
+      return false;
+    }
+    return shellService.testShellFunctionality(cwd);
+  });
 }

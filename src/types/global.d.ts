@@ -307,6 +307,7 @@ declare global {
         attach: (sessionId: string) => void;
         detach: (sessionId: string) => void;
         kill: (sessionId: string) => void;
+        testFunctionality: (cwd: string) => Promise<boolean>;
       };
     };
 

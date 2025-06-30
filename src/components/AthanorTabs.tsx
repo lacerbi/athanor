@@ -12,23 +12,18 @@ export type TabType = 'workbench' | 'viewer' | 'apply-changes' | 'settings' | 'c
 interface AthanorTabsProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
+  isCliAvailable: boolean;
 }
 
 const AthanorTabs: React.FC<AthanorTabsProps> = ({
   activeTab,
   onTabChange,
+  isCliAvailable,
 }) => {
   const { addLog } = useLogStore();
   const { setOperations, clearOperations, diffMode, setDiffMode } =
     useApplyChangesStore();
   const { applicationSettings } = useSettingsStore();
-  const [isCliAvailable, setIsCliAvailable] = useState(false);
-
-  useEffect(() => {
-    window.electronBridge.shell.isAvailable().then(result => {
-      setIsCliAvailable(result);
-    });
-  }, []);
 
   // Determine if experimental features should be shown
   const showExperimentalFeatures = applicationSettings?.enableExperimentalFeatures ?? false;

@@ -129,6 +129,8 @@ contextBridge.exposeInMainWorld('electronBridge', {
     attach: (sessionId: string) => ipcRenderer.send('shell:attach', sessionId),
     detach: (sessionId: string) => ipcRenderer.send('shell:detach', sessionId),
     kill: (sessionId: string) => ipcRenderer.send('shell:kill', sessionId),
+    testFunctionality: (cwd: string): Promise<boolean> =>
+      ipcRenderer.invoke('shell:test-functionality', cwd),
     onData: (callback: (data: string) => void) => {
       const listener = (_event: any, data: string) => callback(data);
       ipcRenderer.on('shell:data', listener);

@@ -17,6 +17,7 @@ const AthanorApp: React.FC = () => {
   // UI State
   const [activeTab, setActiveTab] = React.useState<TabType>('workbench');
   const [lastTabChangeTime, setLastTabChangeTime] = React.useState<number>(0);
+  const [isCliAvailable, setIsCliAvailable] = React.useState(false);
 
   // Refs
   const logsRef = useRef<HTMLDivElement | null>(null);
@@ -68,14 +69,25 @@ const AthanorApp: React.FC = () => {
     handleProjectDialogClose,
   } = useFileSystemLifecycle();
 
-  // Clear context when project changes
+  // Clear context when project changes & check for CLI availability
   useEffect(() => {
-    // This effect runs when currentDirectory changes.
-    // When a project is closed, currentDirectory becomes null.
-    if (!currentDirectory) {
+    if (currentDirectory) {
+      window.electronBridge.shell
+        .testFunctionality(currentDirectory)
+        .then((result) => {
+          setIsCliAvailable(result);
+          if (result) {
+            addLog('CLI functionality is available for this project.');
+          } else {
+            addLog('CLI functionality is not available.');
+          }
+        });
+    } else {
+      // When a project is closed, currentDirectory becomes null.
       clearContext();
+      setIsCliAvailable(false);
     }
-  }, [currentDirectory, clearContext]);
+  }, [currentDirectory, clearContext, addLog]);
 
   // Auto-scroll logs panel
   useEffect(() => {
@@ -252,6 +264,7 @@ const AthanorApp: React.FC = () => {
           onRefresh={refreshFileSystem}
           logsRef={logsRef}
           logs={logs}
+          isCliAvailable={isCliAvailable}
         />
       )}
     </>
