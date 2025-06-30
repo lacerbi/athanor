@@ -11,6 +11,7 @@ import {
   Trash2,
   Check,
 } from 'lucide-react';
+import LinkifiedText from './LinkifiedText';
 import { ApiKeyServiceRenderer } from '../../electron/modules/secure-api-storage/renderer';
 import type { ApiProvider } from '../../electron/modules/secure-api-storage/common';
 import { ApiKeyStorageError } from '../../electron/modules/secure-api-storage/common';
@@ -233,11 +234,19 @@ const ApiKeyManagementPane: React.FC = () => {
       console.log(`API key saved successfully for ${selectedProvider}`);
     } catch (error) {
       console.error('Failed to save API key:', error);
-      setKeyOpError(
-        error instanceof ApiKeyStorageError
-          ? error.message
-          : 'Failed to save API key.'
-      );
+      let errorMessage = 'Failed to save API key.';
+      if (error instanceof ApiKeyStorageError) {
+        // Check for the specific OS-level encryption error
+        if (error.message.includes('OS-level encryption is not available')) {
+          // TODO: Replace this with the actual URL of the project's repository.
+          const troubleshootingUrl = '[https://github.com/your-org/athanor/blob/main/docs/TROUBLESHOOTING.md#api-key-storage-errors](https://github.com/your-org/athanor/blob/main/docs/TROUBLESHOOTING.md#api-key-storage-errors)';
+          
+          errorMessage = `OS-level encryption is not available. This is a common issue on Linux systems that are missing a "keyring" service. For a detailed guide on how to fix this, please visit: ${troubleshootingUrl}`;
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      setKeyOpError(errorMessage);
     } finally {
       setIsKeyProcessing(false);
     }
@@ -467,7 +476,9 @@ const ApiKeyManagementPane: React.FC = () => {
 
           {/* API Key Operation Error Display */}
           {keyOpError && !isKeyInfoLoading && (
-            <div className="text-red-600 dark:text-red-400 text-sm mt-1">{keyOpError}</div>
+            <div className="text-red-600 dark:text-red-400 text-sm mt-1">
+              <LinkifiedText text={keyOpError} />
+            </div>
           )}
 
           {/* Action Buttons */}
