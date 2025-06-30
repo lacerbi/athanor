@@ -2,6 +2,7 @@
 // Validates paths and updates active tab selection state while providing logging feedback.
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { getFileItemById } from '../utils/fileTree';
 
 export interface SelectCommandParams {
   content: string;
@@ -12,27 +13,46 @@ export async function executeSelectCommand({
   content,
   addLog,
 }: SelectCommandParams): Promise<boolean> {
-  const workbenchStore = useWorkbenchStore.getState();
+  const { setSelection } = useWorkbenchStore.getState();
+  const { fileTree } = useFileSystemStore.getState();
 
-  // Clear existing selections for active tab
-  workbenchStore.clearFileSelection();
-
-  // Split content on whitespace to get file paths
   const filePaths = content
     .trim()
     .split(/\s+/)
-    .filter(path => path.length > 0); // Filter out empty strings
+    .filter((path) => path.length > 0);
 
-  // Select all specified files for active tab
-  // Add files in reverse order so they appear in correct order (newest first)
-  const { fileTree } = useFileSystemStore.getState();
-  filePaths.reverse().forEach(filePath => {
-    workbenchStore.toggleFileSelection(filePath, false, fileTree); // false = not a folder
+  const validFilePaths = filePaths.filter((path) => {
+    const item = getFileItemById(path, fileTree);
+    if (!item) {
+      console.warn(`Select command: file not found in tree: ${path}`);
+      return false;
+    }
+    if (item.type === 'folder') {
+      console.warn(
+        `Select command: attempted to select a folder, which is not allowed: ${path}`
+      );
+      return false;
+    }
+    return true; // It's a file that exists in the tree
   });
 
-  // Log success message with all selected files
-  addLog(
-    `Selected ${filePaths.length} files based on command: ${filePaths.join(' ')}`
-  );
+  // Directly set the validated selection. This is an atomic operation.
+  setSelection(validFilePaths);
+
+  const originalCount = filePaths.length;
+  const validCount = validFilePaths.length;
+
+  if (validCount === originalCount) {
+    if (validCount > 0) {
+      addLog(`Selected ${validCount} file(s) as requested.`);
+    } else {
+      addLog(`Select command found no valid files to select.`);
+    }
+  } else {
+    addLog(
+      `Selected ${validCount} of ${originalCount} requested file(s). Ignored ${originalCount - validCount} invalid or non-existent paths.`
+    );
+  }
+
   return true;
 }
