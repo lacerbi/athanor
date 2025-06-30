@@ -6,10 +6,11 @@
   },
   "main": ".webpack/main",
   "scripts": {
-    "start": "electron-forge start",
+    "_sign-if-mac": "node -e \"if (process.platform === 'darwin') { require('child_process').execSync('bash ./scripts/sign-dev.sh', {stdio: 'inherit'}) }\"",
+    "start": "npm run _sign-if-mac && electron-forge start",
     "dev": "npm start",
     "package": "cross-env DEBUG=electron-forge:* NODE_ENV=production electron-forge package",
-    "nogpu": "electron-forge start -- --disable-gpu",
+    "nogpu": "npm run _sign-if-mac && electron-forge start -- --disable-gpu",
     "make": "cross-env NODE_ENV=production electron-forge make",
     "build:win": "cross-env NODE_ENV=production electron-forge make --platform win32",
     "build:linux": "cross-env NODE_ENV=production electron-forge make --platform linux",

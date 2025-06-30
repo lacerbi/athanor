@@ -4,6 +4,11 @@ module.exports = {
     asar: true,
     prune: true,
     icon: 'assets/athanor',
+    osxSign: {
+      'hardened-runtime': true, // Keep the security features on
+      entitlements: './entitlements.mac.plist', // Use our key for the main app
+      'entitlements-inherit': './entitlements.mac.plist', // Let child processes (our shell) use the key too
+    },
     asarUnpack: [
       'resources/**/*', // Ensure resources directory is not packed into asar
       //'node_modules/node-pty/**/*',
