@@ -47,6 +47,29 @@ Open a terminal and run:
 sudo pacman -S libsecret
 ```
 
+#### Special Case: WSL (Windows Subsystem for Linux)
+
+If you're running Athanor in WSL, installing `libsecret` alone is not sufficient. Even after successful installation, you will still likely encounter the "OS-level encryption is not available" error.
+
+<details>
+<summary><strong>Additional information on WSL compatibility issues</strong></summary>
+
+**Why this happens:** WSL doesn't provide the full Linux desktop environment that keyring services expect. Specifically:
+
+- No native display server (X11/Wayland)
+- No D-Bus session bus running by default
+- No login session management that keyring daemons rely on
+
+**Current Status:** There is no straightforward fix for this limitation. The keyring services that Electron's `safeStorage` API depends on cannot function properly in the WSL environment.
+
+**Workarounds:**
+
+1. **Use native Windows Athanor** for full functionality including secure API key storage
+2. **Run Athanor in WSL without API key storage** - you can still use all other features, just not the direct LLM API integration
+3. **Advanced users only:** Attempt to set up X11 forwarding with a Windows X server and manually initialize gnome-keyring (complex, unreliable, and not recommended)
+
+</details>
+
 ---
 
 **IMPORTANT FINAL STEP (ALL DISTRIBUTIONS):**
