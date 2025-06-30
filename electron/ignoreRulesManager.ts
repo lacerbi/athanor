@@ -120,9 +120,11 @@ class IgnoreRulesManager {
     isGitignore = false
   ): Promise<Pick<IgnoreFile, 'rules' | 'content'> | null> {
     // --- PASTE THE NEW DEBUGGING CODE HERE ---
-    console.log(
-      `[READ DEBUG] Attempting to read ignore file at: ${absolutePath}`
-    );
+    if (DEBUG_IGNORE_RULES) {
+      console.log(
+        `[READ DEBUG] Attempting to read ignore file at: ${absolutePath}`
+      );
+    }
     // --- END OF DEBUGGING CODE ---
     try {
       const content = await fs.readFile(
@@ -134,15 +136,21 @@ class IgnoreRulesManager {
         rules.add('.git/');
       }
       // --- PASTE THE NEW DEBUGGING CODE HERE ---
-      console.log(`[READ DEBUG] Successfully read and parsed: ${absolutePath}`);
+      if (DEBUG_IGNORE_RULES) {
+        console.log(
+          `[READ DEBUG] Successfully read and parsed: ${absolutePath}`
+        );
+      }
       // --- END OF DEBUGGING CODE ---
       return { rules, content };
     } catch (error) {
       // --- PASTE THE NEW DEBUGGING CODE HERE ---
-      console.error(
-        `[READ DEBUG] FAILED to read or parse: ${absolutePath}`,
-        error
-      );
+      if (DEBUG_IGNORE_RULES) {
+        console.error(
+          `[READ DEBUG] FAILED to read or parse: ${absolutePath}`,
+          error
+        );
+      }
       // --- END OF DEBUGGING CODE ---
       return null;
     }

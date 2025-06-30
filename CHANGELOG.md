@@ -9,6 +9,25 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.6] - 2025-06-30
+
+### Added
+
+- **Integrated CLI Tab**: A new panel providing a persistent, integrated shell that runs in the project's directory. This feature is supported on Windows and Linux. ([62c7e9a](https://github.com/lacerbi/athanor/commit/62c7e9a), [b3f04ac](https://github.com/lacerbi/athanor/commit/b3f04ac))
+- **Troubleshooting Guide**: A new `TROUBLESHOOTING.md` file was added to help users resolve common issues. ([5ccd8b6](https://github.com/lacerbi/athanor/commit/5ccd8b6))
+
+### Changed
+
+- **macOS Support**: The CLI Tab feature is now officially marked as **unsupported** on macOS due to native dependency issues. A guide has been added to document the resolution attempts. ([9904172](https://github.com/lacerbi/athanor/commit/9904172))
+- Added a note to the documentation that `electron-store`'s keyring functionality is unlikely to work correctly on WSL. ([f004d99](https://github.com/lacerbi/athanor/commit/f004d99))
+
+### Fixed
+
+- **CLI Stability**: Resolved numerous build and packaging issues related to the `node-pty` native dependency to ensure the CLI works reliably on Windows and Linux. ([a0b14e1](https://github.com/lacerbi/athanor/commit/a0b14e1), [625b28a](https://github.com/lacerbi/athanor/commit/625b28a), [e8e1fc1](https://github.com/lacerbi/athanor/commit/e8e1fc1))
+- **CLI Persistence**: The integrated terminal session is now persistent and correctly managed by the application. ([6ea9bc8](https://github.com/lacerbi/athanor/commit/6ea9bc8), [16992f6](https://github.com/lacerbi/athanor/commit/16992f6))
+- **Error Handling**: Implemented more robust error handling for opening external links on Linux. ([7932371](https://github.com/lacerbi/athanor/commit/7932371))
+- The CLI tab is now automatically removed if the underlying shell process fails to launch, preventing a broken state. ([37df07c](https://github.com/lacerbi/athanor/commit/37df07c))
+
 ## [0.7.5] - 2025-06-28
 
 ### Added

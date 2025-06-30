@@ -1,22 +1,24 @@
 // AI Summary: Handles tab navigation UI and logic with conditional content rendering.
 // Provides consistent tab styling and active state management.
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CircleSlashed, CircleDashed } from 'lucide-react';
 import CommandButton from './CommandButton';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
 
-export type TabType = 'workbench' | 'viewer' | 'apply-changes' | 'settings';
+export type TabType = 'workbench' | 'viewer' | 'apply-changes' | 'settings' | 'cli';
 
 interface AthanorTabsProps {
   activeTab: TabType;
   onTabChange: (tab: TabType) => void;
+  isCliAvailable: boolean;
 }
 
 const AthanorTabs: React.FC<AthanorTabsProps> = ({
   activeTab,
   onTabChange,
+  isCliAvailable,
 }) => {
   const { addLog } = useLogStore();
   const { setOperations, clearOperations, diffMode, setDiffMode } =
@@ -73,6 +75,19 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({
         >
           Settings
         </button>
+        {isCliAvailable && (
+          <button
+            className={`px-4 py-2 rounded ${
+              activeTab === 'cli'
+                ? 'bg-gray-200 dark:bg-gray-700 font-medium'
+                : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+            onClick={() => onTabChange('cli')}
+            title="Open an integrated command-line terminal"
+          >
+            CLI
+          </button>
+        )}
       </div>
       <div className="flex items-center">
         {showExperimentalFeatures && (

@@ -3,14 +3,8 @@
 // Updated for enhanced security - no longer has access to plaintext keys in renderer process.
 
 import React, { useEffect, useState, useCallback } from 'react';
-import {
-  HelpCircle,
-  Eye,
-  EyeOff,
-  Save,
-  Trash2,
-  Check,
-} from 'lucide-react';
+import { HelpCircle, Eye, EyeOff, Save, Trash2, Check } from 'lucide-react';
+import LinkifiedText from './LinkifiedText';
 import { ApiKeyServiceRenderer } from '../../electron/modules/secure-api-storage/renderer';
 import type { ApiProvider } from '../../electron/modules/secure-api-storage/common';
 import { ApiKeyStorageError } from '../../electron/modules/secure-api-storage/common';
@@ -45,7 +39,9 @@ const ApiKeyManagementPane: React.FC = () => {
     try {
       const service = new ApiKeyServiceRenderer();
       setApiKeyService(service);
-      console.log('ApiKeyServiceRenderer initialized successfully with secure API operations');
+      console.log(
+        'ApiKeyServiceRenderer initialized successfully with secure API operations'
+      );
     } catch (error) {
       console.error('Failed to initialize ApiKeyServiceRenderer:', error);
       setKeyOpError(
@@ -101,7 +97,7 @@ const ApiKeyManagementPane: React.FC = () => {
         .then((presets) => {
           // Extract unique provider IDs from presets
           const presetProviderIdSet = new Set<string>(
-            presets.map(preset => preset.providerId)
+            presets.map((preset) => preset.providerId)
           );
 
           // Get providers supported by API key service
@@ -109,14 +105,17 @@ const ApiKeyManagementPane: React.FC = () => {
 
           // Compute intersection: providers in presets AND supported by service
           const newAvailableProviders = actualServiceProviders.filter(
-            provider => presetProviderIdSet.has(provider)
+            (provider) => presetProviderIdSet.has(provider)
           );
 
           setAvailableProviders(newAvailableProviders);
 
           // Update selected provider
           if (newAvailableProviders.length > 0) {
-            if (!selectedProvider || !newAvailableProviders.includes(selectedProvider)) {
+            if (
+              !selectedProvider ||
+              !newAvailableProviders.includes(selectedProvider)
+            ) {
               setSelectedProvider(newAvailableProviders[0]);
             }
           } else {
@@ -127,8 +126,13 @@ const ApiKeyManagementPane: React.FC = () => {
           loadProvidersWithKeys(newAvailableProviders);
         })
         .catch((error) => {
-          console.error('Failed to load Athanor presets for provider filtering:', error);
-          setKeyOpError('Failed to load API providers from preset configuration.');
+          console.error(
+            'Failed to load Athanor presets for provider filtering:',
+            error
+          );
+          setKeyOpError(
+            'Failed to load API providers from preset configuration.'
+          );
           setAvailableProviders([]);
           setSelectedProvider(null);
           setProvidersWithKeys(new Set());
@@ -233,11 +237,20 @@ const ApiKeyManagementPane: React.FC = () => {
       console.log(`API key saved successfully for ${selectedProvider}`);
     } catch (error) {
       console.error('Failed to save API key:', error);
-      setKeyOpError(
-        error instanceof ApiKeyStorageError
-          ? error.message
-          : 'Failed to save API key.'
-      );
+      let errorMessage = 'Failed to save API key.';
+      if (error instanceof ApiKeyStorageError) {
+        // Check for the specific OS-level encryption error
+        if (error.message.includes('OS-level encryption is not available')) {
+          // TODO: Replace this with the actual URL of the project's repository.
+          const troubleshootingUrl =
+            '[https://github.com/lacerbi/athanor/blob/main/docs/TROUBLESHOOTING.md#api-key-storage-errors](https://github.com/lacerbi/athanor/blob/main/docs/TROUBLESHOOTING.md#api-key-storage-errors)';
+
+          errorMessage = `OS-level encryption is not available. This is a common issue on Linux systems that are missing a "keyring" service. For a detailed guide on how to fix this, please visit: ${troubleshootingUrl}`;
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      setKeyOpError(errorMessage);
     } finally {
       setIsKeyProcessing(false);
     }
@@ -332,7 +345,6 @@ const ApiKeyManagementPane: React.FC = () => {
       </div>
 
       <div className="space-y-6">
-
         <div className="space-y-4">
           {/* Provider Selection and API Key Input - Horizontal Layout */}
           <div className="flex items-start space-x-4">
@@ -349,7 +361,9 @@ const ApiKeyManagementPane: React.FC = () => {
                 value={selectedProvider || ''}
                 onChange={handleProviderChange}
                 disabled={
-                  !apiKeyService || areProvidersLoading || availableProviders.length === 0
+                  !apiKeyService ||
+                  areProvidersLoading ||
+                  availableProviders.length === 0
                 }
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:bg-gray-50 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400"
               >
@@ -362,8 +376,7 @@ const ApiKeyManagementPane: React.FC = () => {
                     <option key={provider} value={provider}>
                       {providersWithKeys.has(provider)
                         ? `${provider.charAt(0).toUpperCase() + provider.slice(1)} ✓`
-                        : provider.charAt(0).toUpperCase() +
-                          provider.slice(1)}
+                        : provider.charAt(0).toUpperCase() + provider.slice(1)}
                     </option>
                   ))
                 )}
@@ -458,7 +471,9 @@ const ApiKeyManagementPane: React.FC = () => {
                     currentKeyDisplayInfo?.isStored === true
                   }
                   className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-blue-500 dark:focus:border-blue-400 disabled:bg-gray-50 dark:disabled:bg-gray-600 disabled:text-gray-500 dark:disabled:text-gray-400 ${
-                    currentKeyDisplayInfo?.isStored ? 'text-gray-400 dark:text-gray-500' : ''
+                    currentKeyDisplayInfo?.isStored
+                      ? 'text-gray-400 dark:text-gray-500'
+                      : ''
                   }`}
                 />
               </div>
@@ -467,7 +482,9 @@ const ApiKeyManagementPane: React.FC = () => {
 
           {/* API Key Operation Error Display */}
           {keyOpError && !isKeyInfoLoading && (
-            <div className="text-red-600 dark:text-red-400 text-sm mt-1">{keyOpError}</div>
+            <div className="text-red-600 dark:text-red-400 text-sm mt-1">
+              <LinkifiedText text={keyOpError} />
+            </div>
           )}
 
           {/* Action Buttons */}

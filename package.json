@@ -1,14 +1,16 @@
 {
   "name": "athanor",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "bugs": {
     "url": "https://github.com/lacerbi/athanor/issues"
   },
   "main": ".webpack/main",
   "scripts": {
+    "_sign-if-mac": "node -e \"if (process.platform === 'darwin') { require('child_process').execSync('bash ./scripts/sign-dev.sh', {stdio: 'inherit'}) }\"",
     "start": "electron-forge start",
     "dev": "npm start",
     "package": "cross-env DEBUG=electron-forge:* NODE_ENV=production electron-forge package",
+    "nogpu": "electron-forge start -- --disable-gpu",
     "make": "cross-env NODE_ENV=production electron-forge make",
     "build:win": "cross-env NODE_ENV=production electron-forge make --platform win32",
     "build:linux": "cross-env NODE_ENV=production electron-forge make --platform linux",
@@ -46,7 +48,7 @@
     "@electron-forge/maker-rpm": "^7.6.0",
     "@electron-forge/maker-squirrel": "^7.6.0",
     "@electron-forge/maker-zip": "^7.6.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.6.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.8.1",
     "@electron-forge/plugin-fuses": "^7.6.0",
     "@electron-forge/plugin-webpack": "^7.8.1",
     "@eslint/js": "^9.17.0",
@@ -62,9 +64,11 @@
     "@typescript-eslint/parser": "^8.18.2",
     "autoprefixer": "^10.4.20",
     "concurrently": "^8.2.2",
+    "copy-webpack-plugin": "^13.0.0",
     "cross-env": "^7.0.3",
     "css-loader": "^7.1.2",
     "electron": "^33.2.1",
+    "electron-rebuild": "^3.2.9",
     "electron-squirrel-startup": "^1.0.1",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
@@ -112,7 +116,12 @@
     "stream-browserify": "^3.0.0",
     "timers-browserify": "^2.0.12",
     "xml2js": "^0.6.2",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0",
     "zustand": "^5.0.2"
+  },
+  "optionalDependencies": {
+    "node-pty": "microsoft/node-pty#main"
   },
   "overrides": {
     "prismjs": "1.30.0",

@@ -14,6 +14,7 @@ import FileViewerPanel from './FileViewerPanel';
 import ApplyChangesPanel from './ApplyChangesPanel';
 import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
+import CliPanel from './CliPanel';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useContextStore } from '../stores/contextStore';
@@ -35,6 +36,7 @@ interface MainLayoutProps {
   onRefresh: () => Promise<void>;
   logsRef: React.RefObject<HTMLDivElement | null>;
   logs: LogEntry[];
+  isCliAvailable: boolean;
 }
 
 const MainLayout: React.FC<MainLayoutProps> = ({
@@ -49,6 +51,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   onRefresh,
   logsRef,
   logs,
+  isCliAvailable,
 }) => {
   const { leftPanelWidth, isResizing, resizeRef, startResize } =
     usePanelResize();
@@ -212,22 +215,37 @@ const MainLayout: React.FC<MainLayoutProps> = ({
       {/* Right Panel */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Top panel: tabs */}
-        <AthanorTabs activeTab={activeTab} onTabChange={onTabChange} />
+        <AthanorTabs
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          isCliAvailable={isCliAvailable}
+        />
 
         {/* Tab content */}
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 min-w-0">
-          {activeTab === 'workbench' && (
+          <div style={{ display: activeTab === 'workbench' ? 'block' : 'none', height: '100%' }}>
             <ActionPanel
               rootItems={[filesData]}
               setActivePanelTab={onTabChange}
               isActive={activeTab === 'workbench'}
             />
-          )}
-          {activeTab === 'viewer' && (
+          </div>
+          <div style={{ display: activeTab === 'viewer' ? 'block' : 'none', height: '100%' }}>
             <FileViewerPanel onTabChange={onTabChange} />
-          )}
-          {activeTab === 'apply-changes' && <ApplyChangesPanel />}
-          {activeTab === 'settings' && <SettingsPanel />}
+          </div>
+          <div style={{ display: activeTab === 'apply-changes' ? 'block' : 'none', height: '100%' }}>
+            <ApplyChangesPanel />
+          </div>
+          <div style={{ display: activeTab === 'settings' ? 'block' : 'none', height: '100%' }}>
+            <SettingsPanel />
+          </div>
+          <div style={{ display: activeTab === 'cli' ? 'block' : 'none', height: '100%' }}>
+            <CliPanel
+              key={currentDirectory}
+              currentDirectory={currentDirectory}
+              isVisible={activeTab === 'cli'}
+            />
+          </div>
         </div>
 
         {/* Log panel resize handle */}

@@ -15,6 +15,7 @@ import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { GitService } from './services/GitService';
 import { UserActivityService } from './services/UserActivityService';
+import { ShellService } from './services/ShellService';
 import {
   ProjectGraphService,
   ProjectGraphCache,
@@ -24,8 +25,18 @@ import type { ApplicationSettings } from '../src/types/global';
 
 // Debug flag for menu diagnostics
 const DEBUG_MENU = false;
+const DEBUG_PATH = false;
 
-fixPath(); // Adjusts PATH in packaged Electron app to match the shell PATH
+// Adjusts PATH in packaged Electron app to match the shell PATH
+if (DEBUG_PATH) {
+  console.log('[Main] PATH before fix-path:', process.env.PATH);
+  console.log('[Main] SHELL before fix-path:', process.env.SHELL);
+}
+fixPath();
+if (DEBUG_PATH) {
+  console.log('[Main] PATH after fix-path:', process.env.PATH);
+  console.log('[Main] SHELL after fix-path:', process.env.SHELL);
+}
 
 // Create singleton instances
 export const fileService = new FileService();
@@ -42,6 +53,7 @@ export const relevanceEngine = new RelevanceEngineService(
   projectGraphService,
   userActivityService
 );
+export const shellService = new ShellService();
 export let apiKeyService: ApiKeyServiceMain;
 export let llmService: LLMServiceMain;
 
@@ -352,7 +364,8 @@ app.whenReady().then(async () => {
     llmService,
     relevanceEngine,
     projectGraphService,
-    userActivityService
+    userActivityService,
+    shellService
   );
 
   ipcMain.handle('graph:force-reanalyze', () => {
@@ -543,6 +556,7 @@ app.on('window-all-closed', () => {
     console.error('Error cleaning up FileService watchers:', err);
   });
   userActivityService.cleanup();
+  shellService.killAllShells();
 
   // Quit on all windows closed (except on macOS)
   if (process.platform !== 'darwin') {

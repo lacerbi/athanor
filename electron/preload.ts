@@ -118,6 +118,35 @@ contextBridge.exposeInMainWorld('electronBridge', {
     confirm: (message: string, title?: string): Promise<boolean> =>
       ipcRenderer.invoke(SHOW_CONFIRM_DIALOG_CHANNEL, message, title),
   },
+  shell: {
+    isAvailable: (): Promise<boolean> => ipcRenderer.invoke('shell:is-available'),
+    start: (cols: number, rows: number, cwd: string) =>
+      ipcRenderer.invoke('shell:start', { cols, rows, cwd }),
+    write: (sessionId: string, data: string) =>
+      ipcRenderer.send('shell:write', { sessionId, data }),
+    resize: (sessionId: string, cols: number, rows: number) =>
+      ipcRenderer.send('shell:resize', { sessionId, cols, rows }),
+    attach: (sessionId: string) => ipcRenderer.send('shell:attach', sessionId),
+    detach: (sessionId: string) => ipcRenderer.send('shell:detach', sessionId),
+    kill: (sessionId: string) => ipcRenderer.send('shell:kill', sessionId),
+    testFunctionality: (cwd: string): Promise<boolean> =>
+      ipcRenderer.invoke('shell:test-functionality', cwd),
+    onData: (callback: (data: string) => void) => {
+      const listener = (_event: any, data: string) => callback(data);
+      ipcRenderer.on('shell:data', listener);
+      // Return a cleanup function
+      return () => {
+        ipcRenderer.removeListener('shell:data', listener);
+      };
+    },
+    onExit: (callback: (sessionId: string) => void) => {
+      const listener = (_event: any, sessionId: string) => callback(sessionId);
+      ipcRenderer.on('shell:exit', listener);
+      return () => {
+        ipcRenderer.removeListener('shell:exit', listener);
+      };
+    },
+  },
 });
 
 // Expose the new pathUtils API

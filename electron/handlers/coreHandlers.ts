@@ -2,6 +2,7 @@
 // path conversion, directory access, and ignore rule management. Now uses FileService for all operations.
 
 import { ipcMain, dialog, app, nativeTheme, shell } from 'electron';
+import { execSync } from 'child_process';
 import { mainWindow } from '../windowManager';
 import { FileService } from '../services/FileService';
 import { SettingsService } from '../services/SettingsService';
@@ -346,10 +347,49 @@ export function setupCoreHandlers(
 
   // Add handler for opening external URLs
   ipcMain.handle('shell:openExternal', async (_, url: string) => {
+    // Basic security check to ensure we are only opening web links
+    if (!url || typeof url !== 'string' || !url.startsWith('http')) {
+      console.warn(`Blocking potentially unsafe external link: ${url}`);
+      dialog.showErrorBox(
+        'Invalid Link',
+        `A request to open a non-web link was blocked for security reasons:\n\n${url}`
+      );
+      throw new Error(
+        `Blocked a non-web link for security reasons: ${url}`
+      );
+    }
+
+    // Proactively check for xdg-open on Linux, which is required by shell.openExternal
+    if (process.platform === 'linux') {
+      try {
+        execSync('command -v xdg-open');
+      } catch (error) {
+        // This command fails if xdg-open is not in the PATH
+        console.warn('`xdg-utils` is not installed. Cannot open external link.');
+        dialog.showErrorBox(
+          'Could Not Open Link',
+          `Failed to open the link because the 'xdg-open' utility could not be found. This is a common issue in minimal Linux environments like WSL.\n\nPlease install the required package to fix this.\n\nFor Debian/Ubuntu: sudo apt-get install xdg-utils\nFor Fedora/RHEL: sudo dnf install xdg-utils\nFor Arch: sudo pacman -S xdg-utils\n\nThe URL you tried to open was: ${url}`
+        );
+        throw new Error(
+          '`xdg-utils` is not installed. Cannot open external link.'
+        );
+      }
+    }
+
+    // If the check passed (or not on Linux), proceed with the original call.
+    // Keep the try-catch as a fallback for other potential errors.
     try {
       await shell.openExternal(url);
     } catch (error) {
-      handleError(error, `opening external URL: ${url}`);
+      // This catch block is now a fallback for unexpected errors, as the
+      // common xdg-open case is handled proactively above.
+      console.error(`Failed to open external URL (after check): ${url}`, error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      dialog.showErrorBox(
+        'Could Not Open Link',
+        `An unexpected error occurred while trying to open the link:\n\n${errorMessage}\n\nThe URL you tried to open was: ${url}`
+      );
+      throw error;
     }
   });
 
