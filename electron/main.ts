@@ -26,7 +26,12 @@ import type { ApplicationSettings } from '../src/types/global';
 // Debug flag for menu diagnostics
 const DEBUG_MENU = false;
 
-fixPath(); // Adjusts PATH in packaged Electron app to match the shell PATH
+// Adjusts PATH in packaged Electron app to match the shell PATH
+console.log('[Main] PATH before fix-path:', process.env.PATH);
+console.log('[Main] SHELL before fix-path:', process.env.SHELL);
+fixPath();
+console.log('[Main] PATH after fix-path:', process.env.PATH);
+console.log('[Main] SHELL after fix-path:', process.env.SHELL);
 
 // Create singleton instances
 export const fileService = new FileService();

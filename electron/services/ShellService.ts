@@ -53,47 +53,69 @@ export class ShellService {
     }
   }
 
-  startShell(options: {
-    cols: number;
-    rows: number;
-    cwd: string;
-  }): string {
+  startShell(options: { cols: number; rows: number; cwd: string }): string {
     if (!this.isAvailable()) return '';
 
     const sessionId = randomUUID();
-    const shell =
-      os.platform() === 'win32' ? 'powershell.exe' : process.env.SHELL || 'bash';
-    const ptyProcess = this.nodePtyModule.spawn(shell, [], {
-      name: 'xterm-color',
-      cols: options.cols || 80,
-      rows: options.rows || 30,
-      cwd: options.cwd || os.homedir(),
-      env: process.env,
-    });
+    let shell: string;
 
-    const session = { ptyProcess, buffer: [] };
-    this.ptySessions.set(sessionId, session);
-    console.log(`[ShellService] Started new shell session: ${sessionId}`);
+    if (os.platform() === 'win32') {
+      shell = 'powershell.exe';
+    } else {
+      // On macOS/Linux, prefer the user's default shell if available.
+      // Fall back to a known, absolute path for macOS to avoid PATH issues.
+      // Modern macOS (Catalina+) defaults to /bin/zsh.
+      shell =
+        process.env.SHELL || (os.platform() === 'darwin' ? '/bin/zsh' : 'bash');
+    }
 
-    ptyProcess.onData((data: string) => {
-      const currentSession = this.ptySessions.get(sessionId);
-      if (this.attachedSessionId === sessionId) {
-        mainWindow?.webContents.send('shell:data', data);
-      } else if (currentSession) {
-        currentSession.buffer.push(data);
-      }
-    });
+    console.log(
+      `[ShellService] Attempting to spawn shell: "${shell}" with CWD: "${options.cwd || os.homedir()}"`
+    );
+    console.log(`[ShellService] Current process PATH: ${process.env.PATH}`);
 
-    ptyProcess.onExit(() => {
-      console.log(`[ShellService] Shell session exited: ${sessionId}`);
-      this.ptySessions.delete(sessionId);
-      if (this.attachedSessionId === sessionId) {
-        this.attachedSessionId = null;
-      }
-      mainWindow?.webContents.send('shell:exit', sessionId);
-    });
+    try {
+      const ptyProcess = this.nodePtyModule.spawn(shell, [], {
+        name: 'xterm-color',
+        cols: options.cols || 80,
+        rows: options.rows || 30,
+        cwd: options.cwd || os.homedir(),
+        env: process.env,
+      });
 
-    return sessionId;
+      const session = { ptyProcess, buffer: [] };
+      this.ptySessions.set(sessionId, session);
+      console.log(`[ShellService] Started new shell session: ${sessionId}`);
+
+      ptyProcess.onData((data: string) => {
+        const currentSession = this.ptySessions.get(sessionId);
+        if (this.attachedSessionId === sessionId) {
+          mainWindow?.webContents.send('shell:data', data);
+        } else if (currentSession) {
+          currentSession.buffer.push(data);
+        }
+      });
+
+      ptyProcess.onExit(() => {
+        console.log(`[ShellService] Shell session exited: ${sessionId}`);
+        this.ptySessions.delete(sessionId);
+        if (this.attachedSessionId === sessionId) {
+          this.attachedSessionId = null;
+        }
+        mainWindow?.webContents.send('shell:exit', sessionId);
+      });
+
+      return sessionId;
+    } catch (error) {
+      console.error(
+        '[ShellService] FATAL: node-pty spawn threw a synchronous error.',
+        error
+      );
+      mainWindow?.webContents.send('shell:error', {
+        error: (error as Error).message,
+      });
+      return '';
+    }
   }
 
   writeToShell(sessionId: string, data: string): void {
