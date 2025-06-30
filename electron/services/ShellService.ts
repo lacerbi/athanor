@@ -1,6 +1,7 @@
 // AI Summary: Manages multiple, persistent pseudo-terminal (pty) sessions, keyed by a unique session ID. It handles cases where `node-pty` isn't installed. It supports a single "attached" UI, buffering output for detached sessions and replaying it on attach. Provides IPC-callable methods to start, write to, resize, attach, detach, and kill shell sessions.
 import * as os from 'os';
 import { randomUUID } from 'crypto';
+import { spawn as spawn_child } from 'child_process';
 import { mainWindow } from '../windowManager';
 
 export class ShellService {
@@ -73,6 +74,28 @@ export class ShellService {
       `[ShellService] Attempting to spawn shell: "${shell}" with CWD: "${options.cwd || os.homedir()}"`
     );
     console.log(`[ShellService] Current process PATH: ${process.env.PATH}`);
+
+    // --- DIAGNOSTIC CODE START ---
+    try {
+      console.log('[ShellService] DIAGNOSTIC: Testing with Node child_process.spawn...');
+      const testProcess = spawn_child(shell, [], {
+        cwd: options.cwd || os.homedir(),
+        env: process.env,
+        detached: true, // Important for a simple test
+      });
+      
+      testProcess.on('error', (err) => {
+        console.error('[ShellService] DIAGNOSTIC: child_process.spawn FAILED!', err);
+      });
+
+      testProcess.on('spawn', () => {
+        console.log('[ShellService] DIAGNOSTIC: child_process.spawn SUCCEEDED.');
+        testProcess.kill(); // We don't need it to keep running
+      });
+    } catch (e) {
+      console.error('[ShellService] DIAGNOSTIC: child_process.spawn THREW AN ERROR!', e);
+    }
+    // --- DIAGNOSTIC CODE END ---
 
     try {
       const ptyProcess = this.nodePtyModule.spawn(shell, [], {
