@@ -4,6 +4,9 @@ import { randomUUID } from 'crypto';
 import { spawn as spawn_child } from 'child_process';
 import { mainWindow } from '../windowManager';
 
+// Debug flag for shell diagnostics
+const DEBUG_SHELL = false;
+
 export class ShellService {
   private nodePtyModule: any = null;
   private ptySessions = new Map<
@@ -76,34 +79,36 @@ export class ShellService {
     console.log(`[ShellService] Current process PATH: ${process.env.PATH}`);
 
     // --- DIAGNOSTIC CODE START ---
-    try {
-      console.log(
-        '[ShellService] DIAGNOSTIC: Testing with Node child_process.spawn...'
-      );
-      const testProcess = spawn_child(shell, [], {
-        cwd: options.cwd || os.homedir(),
-        env: process.env,
-        detached: true, // Important for a simple test
-      });
-
-      testProcess.on('error', (err) => {
-        console.error(
-          '[ShellService] DIAGNOSTIC: child_process.spawn FAILED!',
-          err
-        );
-      });
-
-      testProcess.on('spawn', () => {
+    if (DEBUG_SHELL) {
+      try {
         console.log(
-          '[ShellService] DIAGNOSTIC: child_process.spawn SUCCEEDED.'
+          '[ShellService] DIAGNOSTIC: Testing with Node child_process.spawn...'
         );
-        testProcess.kill(); // We don't need it to keep running
-      });
-    } catch (e) {
-      console.error(
-        '[ShellService] DIAGNOSTIC: child_process.spawn THREW AN ERROR!',
-        e
-      );
+        const testProcess = spawn_child(shell, [], {
+          cwd: options.cwd || os.homedir(),
+          env: process.env,
+          detached: true, // Important for a simple test
+        });
+
+        testProcess.on('error', (err) => {
+          console.error(
+            '[ShellService] DIAGNOSTIC: child_process.spawn FAILED!',
+            err
+          );
+        });
+
+        testProcess.on('spawn', () => {
+          console.log(
+            '[ShellService] DIAGNOSTIC: child_process.spawn SUCCEEDED.'
+          );
+          testProcess.kill(); // We don't need it to keep running
+        });
+      } catch (e) {
+        console.error(
+          '[ShellService] DIAGNOSTIC: child_process.spawn THREW AN ERROR!',
+          e
+        );
+      }
     }
     // --- DIAGNOSTIC CODE END ---
 
