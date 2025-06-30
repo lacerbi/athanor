@@ -1,5 +1,5 @@
 #!/bin/bash
-# scripts/sign-dev.sh (Robust, Dynamic Version)
+# scripts/sign-dev.sh (Corrected, Selective Entitlements Version)
 
 # Safety check: Only run on macOS
 if [[ "$(uname)" != "Darwin" ]]; then
@@ -14,19 +14,20 @@ APP_PATH="./node_modules/electron/dist/Electron.app"
 ENTITLEMENTS_PATH="./entitlements.mac.plist"
 SIGNING_IDENTITY="-" # Use ad-hoc signing for local dev
 
-# --- The Dynamic Signing Logic ---
-# For the Hardened Runtime, all executable code must be signed from the inside out.
-# This script finds all nested executable files and .app bundles and signs them individually
-# before signing the main application itself.
+# ------------------------------------------------------------------
+# STEP 1: Sign all nested code WITHOUT entitlements.
+# We sign all the executables and libraries that the main app will use.
+# These components don't need the special pty entitlement themselves.
+# ------------------------------------------------------------------
+echo "--> Signing nested frameworks and helpers (without entitlements)..."
+find "$APP_PATH/Contents/Frameworks" -depth -type f -perm +111 -exec echo "Signing: {}" \; -exec codesign --sign "$SIGNING_IDENTITY" --force --verbose --options runtime {} \;
 
-echo "--> Signing all nested frameworks, helpers, and executables..."
-
-# The 'find' command with '-depth' ensures we sign the deepest items first.
-# We are looking for any file that has execute permissions (+111).
-find "$APP_PATH/Contents/Frameworks" -depth -type f -perm +111 -exec echo "Signing: {}" \; -exec codesign --sign "$SIGNING_IDENTITY" --force --verbose --options runtime --entitlements "$ENTITLEMENTS_PATH" {} \;
-
-echo "--> Signing the main application..."
+# ------------------------------------------------------------------
+# STEP 2: Sign the main application WITH entitlements.
+# This is where we grant the specific permission for the CLI to work.
+# ------------------------------------------------------------------
+echo "--> Signing the main application (with entitlements)..."
 codesign --sign "$SIGNING_IDENTITY" --force --verbose --options runtime --entitlements "$ENTITLEMENTS_PATH" "$APP_PATH"
 
 echo ""
-echo "✅ Development Electron app and all its nested components successfully signed."
+echo "✅ Development Electron app correctly signed."
