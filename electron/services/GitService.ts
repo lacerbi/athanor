@@ -224,9 +224,9 @@ export class GitService implements IGitService {
       return '';
     }
     try {
-      // Use HEAD:./path to be explicit, helps with some git versions
-      const platformPath = PathUtils.toPlatform(filePath);
-      const output = await this.executeGitCommand(`show HEAD:"${platformPath}"`);
+      // Git pathspecs (rev:path) must use forward slashes, even on Windows.
+      // The filePath argument is already in the correct normalized Unix format.
+      const output = await this.executeGitCommand(`show "HEAD:${filePath}"`);
       return output;
     } catch (error) {
       // This is expected for newly added files. Return empty string.

@@ -203,3 +203,8 @@ Athanor follows Electron's recommended **“secure by default”** pattern, sepa
     - Never bypass the IPC bridge for file operations from the renderer process.
     - Validate all paths and operations rigorously in the main process handlers.
     - Handle sensitive data appropriately at each layer.
+
+7.  Testing & Running the App:
+    - Use **`npm run package`** to create local production builds for testing, as this is the standard procedure.
+    - The `npm start` command is for active development with hot-reloading and is deprecated for testing, as it may not reflect the final application behavior.
+    - Note that `npm make` is **unsupported**. Users are expected to compile locally using `npm run package`.
