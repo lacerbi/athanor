@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   File,
   FileText,
@@ -6,6 +6,7 @@ import {
   RefreshCw,
   ClipboardCopy,
   Network,
+  GitCompare,
 } from 'lucide-react';
 import { useLogStore, LogEntry } from '../stores/logStore';
 import FileExplorer from './fileExplorer/FileExplorer';
@@ -16,7 +17,9 @@ import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
 import CliPanel from './CliPanel';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
+import { type FileOperationType } from '../types/global';
 import { useContextStore } from '../stores/contextStore';
 import { FileItem } from '../utils/fileTree';
 import { usePanelResize } from '../hooks/usePanelResize';
@@ -77,11 +80,59 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   };
 
   const { addLog } = useLogStore();
+  const { setOperations, clearOperations } = useApplyChangesStore();
+  const [isLoadingDiffs, setIsLoadingDiffs] = useState(false);
+
   const handleCopySelectedFiles = async () => {
     await copySelectedFilesContent({
       addLog,
       rootPath: currentDirectory,
     });
+  };
+
+  const handleViewGitDiffs = async () => {
+    setIsLoadingDiffs(true);
+    try {
+      const diffData = await window.electronBridge.git.viewDiffs();
+
+      if (diffData.length === 0) {
+        addLog('No uncommitted changes found.');
+        return;
+      }
+
+      const operations = diffData.map((diff) => ({
+        file_path: diff.path,
+        file_operation: (diff.status === 'A'
+          ? 'CREATE'
+          : diff.status === 'D'
+          	? 'DELETE'
+          	: 'UPDATE_FULL') as FileOperationType,
+        old_code: diff.oldCode,
+        new_code: diff.newCode,
+        file_message: `Uncommitted change detected. Status: ${
+          diff.status === 'A'
+            ? 'Added'
+            : diff.status === 'D'
+            	? 'Deleted'
+            	: 'Modified'
+        }`,
+        accepted: false,
+        rejected: false,
+      }));
+
+      clearOperations();
+      setOperations(operations, 'git');
+
+      onTabChange('review');
+    } catch (error) {
+      if (error instanceof Error) {
+      	addLog(`Error fetching Git diffs: ${error.message}`);
+      } else {
+    	addLog(`An unknown error occurred while fetching Git diffs: ${String(error)}`);
+      }
+    } finally {
+      setIsLoadingDiffs(false);
+    }
   };
 
   return (
@@ -135,6 +186,21 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   } ${isAnalyzingGraph ? 'animate-spin' : ''}`}
                 />
               </button>
+              <button
+                onClick={handleViewGitDiffs}
+                disabled={isLoadingDiffs || !currentDirectory}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              	title="View uncommitted changes"
+             >
+                <GitCompare
+                	size={20}
+            	    className={`${
+                  	isLoadingDiffs
+                  	  ? 'animate-spin'
+                  	  : 'text-gray-600 dark:text-gray-300'
+                  }`}
+            	  />
+             </button>
               <button
                 onClick={handleCopySelectedFiles}
                 disabled={selectedFileCount === 0 || !currentDirectory}

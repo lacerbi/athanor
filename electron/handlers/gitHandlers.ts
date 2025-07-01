@@ -19,7 +19,10 @@ export function setupGitHandlers(
       try {
         // New code is the current content on disk (unless deleted)
         if (file.status !== 'D') {
-          newCode = (await fileService.read(file.path)) as string;
+          // Explicitly read as utf8 to ensure a string is returned, not a buffer
+          newCode = (await fileService.read(file.path, {
+            encoding: 'utf8',
+          })) as string;
         }
       } catch (e) {
         // Could fail if file was deleted between git diff and read, which is fine

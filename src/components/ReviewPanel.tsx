@@ -197,6 +197,7 @@ const DiffView: React.FC<{
 interface FileOperationItemProps {
   operation: any;
   index: number;
+  mode: 'ai' | 'git';
   onAccept: (idx: number) => void;
   onReject: (idx: number) => void;
   isActive?: boolean;
@@ -212,6 +213,7 @@ const FileOperationItem = React.forwardRef<
     {
       operation: op,
       index,
+      mode,
       onAccept,
       onReject,
       isActive = false,
@@ -341,19 +343,21 @@ const FileOperationItem = React.forwardRef<
 
         <div className="mt-4 flex justify-between items-center flex-shrink-0">
           <div className="flex gap-2">
-            <button
-              className="px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-              disabled={op.accepted || op.rejected}
-              onClick={() => onAccept(index)}
-            >
-              Accept
-            </button>
+            {mode === 'ai' && (
+              <button
+                className="px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                disabled={op.accepted || op.rejected}
+                onClick={() => onAccept(index)}
+              >
+                Accept
+              </button>
+            )}
             <button
               className="px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
               disabled={op.accepted || op.rejected}
-              onClick={() => onReject(index)}
+            	onClick={() => onReject(index)}
             >
-              Reject
+            	{mode === 'git' ? 'Revert Change' : 'Reject'}
             </button>
           </div>
 
@@ -379,6 +383,7 @@ FileOperationItem.displayName = 'FileOperationItem';
 const ReviewPanel: React.FC = () => {
   const {
     activeOperations,
+    mode,
     applyChange,
     rejectChange,
     applyAllChanges,
@@ -1028,29 +1033,31 @@ const ReviewPanel: React.FC = () => {
             <GitCompare size={14} />
             <ChevronRight size={16} />
           </button>
+          {mode === 'ai' && (
+          	<button
+          	  onClick={applyAllChanges}
+          	  disabled={!hasPendingOperations}
+          	  title={
+          	    hasPendingOperations
+          	      ? 'Accept all pending changes'
+          	      : 'No pending changes to accept'
+          	  }
+          	  className="ml-auto px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          	>
+          	  Accept All
+          	</button>
+          )}
           <button
-            onClick={applyAllChanges}
-            disabled={!hasPendingOperations}
-            title={
-              hasPendingOperations
-                ? 'Accept all pending changes'
-                : 'No pending changes to accept'
-            }
-            className="ml-auto px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          	onClick={rejectAllChanges}
+          	disabled={!hasPendingOperations}
+          	title={
+          	  hasPendingOperations
+          	    ? 'Reject all pending changes'
+          	    : 'No pending changes to reject'
+          	}
+          	className={`${mode === 'ai' ? 'ml-2' : 'ml-auto'} px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            Accept All
-          </button>
-          <button
-            onClick={rejectAllChanges}
-            disabled={!hasPendingOperations}
-            title={
-              hasPendingOperations
-                ? 'Reject all pending changes'
-                : 'No pending changes to reject'
-            }
-            className="ml-2 px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Reject All
+          	{mode === 'git' ? 'Revert All' : 'Reject All'}
           </button>
           <span className="text-xs text-gray-500 dark:text-gray-400 ml-4">
             {activeOperations.length > 0 ? currentIdx + 1 : 0} /{' '}
@@ -1082,13 +1089,14 @@ const ReviewPanel: React.FC = () => {
             <FileOperationItem
               key={`${op.file_path}-${idx}`}
               ref={(el) => {
-                itemRefs.current[idx] = el;
+            	  itemRefs.current[idx] = el;
               }}
               operation={op}
               index={idx}
-              onAccept={applyChange}
-              onReject={rejectChange}
-              isActive={idx === currentIdx}
+              mode={mode}
+            	onAccept={applyChange}
+            	onReject={rejectChange}
+            	isActive={idx === currentIdx}
               onDiffBlocksCalculated={(blocks) => {
                 if (idx === currentIdx) {
                   setCurrentDiffBlocks(blocks);
