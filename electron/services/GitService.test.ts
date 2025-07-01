@@ -325,12 +325,13 @@ D	deleted/file3.ts`;
       const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
       mockFsAccess.mockResolvedValue(undefined);
       mockExecAsync.mockResolvedValueOnce({ stdout: '.git', stderr: '' }); // isGitRepository check
-      mockExecAsync.mockRejectedValueOnce(new Error('Git error'));
+      mockExecAsync.mockRejectedValue(new Error('Git error'));
 
       const changes = await gitService.getUncommittedChanges();
 
       expect(changes).toEqual([]);
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting uncommitted changes:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting tracked uncommitted changes:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting untracked files:', expect.any(Error));
       consoleErrorSpy.mockRestore();
     });
   });
@@ -347,8 +348,7 @@ D	deleted/file3.ts`;
       const content = await gitService.getContentAtHead(filePath);
 
       expect(content).toBe(fileContent);
-      const expectedPath = path.normalize(filePath);
-      expect(mockExecAsync).toHaveBeenCalledWith(`git show HEAD:"${expectedPath}"`, expect.any(Object));
+      expect(mockExecAsync).toHaveBeenCalledWith(`git show "HEAD:${filePath}"`, expect.any(Object));
     });
 
     it('should return an empty string for a new file not in HEAD', async () => {
