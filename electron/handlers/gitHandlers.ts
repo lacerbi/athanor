@@ -32,4 +32,8 @@ export function setupGitHandlers(
     }
     return diffs;
   });
+
+  ipcMain.handle('git:is-repo', () => {
+    return gitService.isGitRepository();
+  });
 }

@@ -271,6 +271,7 @@ declare global {
       };
       git: {
         viewDiffs: () => Promise<GitDiffData[]>;
+        isGitRepository: () => Promise<boolean>;
       };
       appShell: {
         /**

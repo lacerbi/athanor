@@ -110,6 +110,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
   },
   git: {
     viewDiffs: () => ipcRenderer.invoke('git:view-diffs'),
+    isGitRepository: () => ipcRenderer.invoke('git:is-repo'),
   },
   appShell: {
     openExternalURL: (url: string) => ipcRenderer.invoke('shell:openExternal', url),

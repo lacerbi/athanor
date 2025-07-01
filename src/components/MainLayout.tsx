@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   File,
   FileText,
@@ -82,6 +82,29 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   const { addLog } = useLogStore();
   const { setOperations, clearOperations } = useApplyChangesStore();
   const [isLoadingDiffs, setIsLoadingDiffs] = useState(false);
+  const [isGitAvailable, setIsGitAvailable] = useState(false);
+
+  useEffect(() => {
+    if (!currentDirectory) {
+      setIsGitAvailable(false);
+      return;
+    }
+
+    const checkGitStatus = async () => {
+      try {
+        const isRepo = await window.electronBridge.git.isGitRepository();
+        setIsGitAvailable(isRepo);
+      } catch (error) {
+        console.error('Failed to check git status:', error);
+        addLog(
+          'Could not check Git status. Git might not be installed or configured correctly in your PATH.'
+        );
+        setIsGitAvailable(false);
+      }
+    };
+
+    void checkGitStatus();
+  }, [currentDirectory, addLog]);
 
   const handleCopySelectedFiles = async () => {
     await copySelectedFilesContent({
@@ -200,15 +223,23 @@ const MainLayout: React.FC<MainLayoutProps> = ({
               </button>
               <button
                 onClick={handleViewGitDiffs}
-                disabled={isLoadingDiffs || !currentDirectory}
+                disabled={isLoadingDiffs || !currentDirectory || !isGitAvailable}
                 className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
-              	title="View uncommitted changes"
+              	title={
+              	  !currentDirectory
+              	    ? 'Open a project to view git changes'
+              	    : isGitAvailable
+              	    ? 'View uncommitted changes'
+              	    : 'Not a Git repository or Git is not available'
+            	  }
              >
                 <GitCompare
                 	size={20}
             	    className={`${
                   	isLoadingDiffs
                   	  ? 'animate-spin'
+                  	  : !isGitAvailable || !currentDirectory
+                  	  ? 'text-gray-400 dark:text-gray-500'
                   	  : 'text-gray-600 dark:text-gray-300'
                   }`}
             	  />
