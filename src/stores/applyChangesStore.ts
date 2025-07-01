@@ -7,33 +7,41 @@ import { FileOperation, FileOperationType } from '../types/global';
 
 interface ApplyChangesState {
   activeOperations: FileOperation[];
-  setOperations: (ops: FileOperation[]) => void;
+  mode: 'ai' | 'git';
+  setOperations: (ops: FileOperation[], mode?: 'ai' | 'git') => void;
   clearOperations: () => void;
   applyChange: (index: number) => Promise<void>;
-  rejectChange: (index: number) => void;
+  rejectChange: (index: number) => Promise<void>;
   applyAllChanges: () => Promise<void>;
-  rejectAllChanges: () => void;
-  setChangeAppliedCallback: (callback: ((newlyCreatedPath?: string) => Promise<void>) | null) => void;
+  rejectAllChanges: () => Promise<void>;
+  setChangeAppliedCallback: (
+    callback: ((newlyCreatedPath?: string) => Promise<void>) | null
+  ) => void;
   diffMode: 'strict' | 'fuzzy';
   setDiffMode: (mode: 'strict' | 'fuzzy') => void;
 }
 
 export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
-  let onChangeApplied: ((newlyCreatedPath?: string) => Promise<void>) | null = null;
+  let onChangeApplied:
+    | ((newlyCreatedPath?: string) => Promise<void>)
+    | null = null;
 
   return {
     activeOperations: [],
     diffMode: 'strict', // Default to strict mode for more accurate changes
+    mode: 'ai', // Default to AI mode
 
-    setOperations: (ops: FileOperation[]) => {
-      set({ activeOperations: ops });
+    setOperations: (ops: FileOperation[], mode: 'ai' | 'git' = 'ai') => {
+      set({ activeOperations: ops, mode });
     },
 
     clearOperations: () => {
       set({ activeOperations: [] });
     },
 
-    setChangeAppliedCallback: (callback: ((newlyCreatedPath?: string) => Promise<void>) | null) => {
+    setChangeAppliedCallback: (
+      callback: ((newlyCreatedPath?: string) => Promise<void>) | null
+    ) => {
       onChangeApplied = callback;
     },
 
@@ -71,7 +79,7 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
           case 'UPDATE_FULL':
           case 'UPDATE_DIFF':
             try {
-              await window.fileSystem.writeFile(relativePath, op.new_code);
+              await window.fileService.write(relativePath, op.new_code);
               const operationVerb =
                 op.file_operation === 'CREATE'
                   ? 'Created'
@@ -83,7 +91,7 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
               // Additional validation for UPDATE_DIFF
               if (op.file_operation === 'UPDATE_DIFF') {
                 try {
-                  const newContent = await window.fileSystem.readFile(
+                  const newContent = await window.fileService.read(
                     relativePath,
                     { encoding: 'utf8' }
                   );
@@ -109,7 +117,7 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
 
           case 'DELETE':
             try {
-              await window.fileSystem.deleteFile(relativePath);
+              await window.fileService.remove(relativePath);
               addLog(`Deleted file: ${relativePath}`);
             } catch (error) {
               // If operation fails, mark as not accepted and propagate error
@@ -144,38 +152,66 @@ export const useApplyChangesStore = create<ApplyChangesState>((set, get) => {
       } catch (error) {
         console.error(`Error applying change to ${op.file_path}:`, error);
         addLog(
-          `Failed to ${op.file_operation.toLowerCase()} file ${op.file_path}: ${error}`
+          `Failed to ${op.file_operation.toLowerCase()} file ${
+            op.file_path
+          }: ${error}`
         );
         throw error; // Re-throw to let UI handle the error
       }
     },
 
-    rejectChange: (index: number) => {
-      const { activeOperations } = get();
+    rejectChange: async (index: number) => {
+      const { activeOperations, mode } = get();
       if (index < 0 || index >= activeOperations.length) return;
 
       const op = activeOperations[index];
       if (op.accepted || op.rejected) {
         return;
       }
-
-      const newOps = [...activeOperations];
-      newOps[index] = { ...op, rejected: true };
-      set({ activeOperations: newOps });
-
       const { addLog } = useLogStore.getState();
-      addLog(`Rejected operation for file: ${op.file_path}`);
+
+      if (mode === 'git') {
+        // GIT MODE: Revert the file
+        try {
+          if (op.file_operation === 'CREATE') {
+            // Reverting a new file means deleting it
+            await window.fileService.remove(op.file_path);
+            addLog(`Reverted (deleted) new file: ${op.file_path}`);
+          } else {
+            // Reverting a modified or deleted file means writing the old content back
+            await window.fileService.write(op.file_path, op.old_code);
+            addLog(`Reverted changes to file: ${op.file_path}`);
+          }
+          // Mark as rejected in the UI
+          const newOps = [...activeOperations];
+          newOps[index] = { ...op, rejected: true };
+          set({ activeOperations: newOps });
+        } catch (error) {
+        	if (error instanceof Error) {
+        	  addLog(`Failed to revert ${op.file_path}: ${error.message}`);
+      	} else {
+      	  addLog(`An unknown error occurred while reverting ${op.file_path}: ${String(error)}`);
+      	}
+        }
+      } else {
+        // AI MODE: Original logic
+        const newOps = [...activeOperations];
+        newOps[index] = { ...op, rejected: true };
+        set({ activeOperations: newOps });
+        addLog(`Rejected operation for file: ${op.file_path}`);
+      }
     },
 
-    rejectAllChanges: () => {
+    rejectAllChanges: async () => {
       const { activeOperations, rejectChange } = get();
       const { addLog } = useLogStore.getState();
       addLog('Rejecting all pending changes...');
-      activeOperations.forEach((op, index) => {
+      for (let i = 0; i < activeOperations.length; i++) {
+        const op = activeOperations[i];
         if (!op.accepted && !op.rejected) {
-          rejectChange(index);
+          await rejectChange(i);
         }
-      });
+      }
     },
 
     applyAllChanges: async () => {

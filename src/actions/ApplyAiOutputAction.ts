@@ -18,7 +18,7 @@ export async function processAiResponseContent(
     ) => void;
     setOperations: (ops: FileOperation[]) => void;
     clearOperations: () => void;
-    setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+    setActiveTab?: (tab: 'workbench' | 'viewer' | 'review') => void;
   }
 ): Promise<void> {
   const { addLog, setOperations, clearOperations, setActiveTab } = params;
@@ -109,7 +109,7 @@ export async function applyAiOutput(params: {
   ) => void;
   setOperations: (ops: FileOperation[]) => void;
   clearOperations: () => void;
-  setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+  setActiveTab?: (tab: 'workbench' | 'viewer' | 'review') => void;
 }): Promise<void> {
   const { addLog } = params;
 

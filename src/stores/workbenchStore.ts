@@ -166,19 +166,37 @@ export const useWorkbenchStore = create<WorkbenchState>((set, get) => {
         };
       }),
 
-    clearFileSelection: () =>
-      set((state) => {
-        const activeTab = state.tabs[state.activeTabIndex];
-        if (!activeTab) return state;
+    clearFileSelection: () => {
+        set(state => {
+            const { tabs, activeTabIndex } = state;
+            if (!tabs[activeTabIndex] || tabs[activeTabIndex].selectedFiles.length === 0) {
+                return {};
+            }
+            const newTabs = [...tabs];
+            newTabs[activeTabIndex] = {
+                ...tabs[activeTabIndex],
+                selectedFiles: [],
+            };
+            return { tabs: newTabs };
+        });
+    },
 
-        return {
-          tabs: state.tabs.map((tab, i) =>
-            i === state.activeTabIndex
-              ? { ...tab, selectedFiles: [] }
-              : tab
-          ),
-        };
-      }),
+    setSelection: (filePaths: string[]) => {
+        set(state => {
+            const { tabs, activeTabIndex } = state;
+            if (!tabs[activeTabIndex]) {
+                console.warn('setSelection called with no active tab.');
+                return {};
+            }
+            const validatedPaths = filePaths.filter(p => typeof p === 'string');
+            const newTabs = [...tabs];
+            newTabs[activeTabIndex] = {
+                ...tabs[activeTabIndex],
+                selectedFiles: validatedPaths,
+            };
+            return { tabs: newTabs };
+        });
+    },
 
     reorderFileSelection: (sourceIndex: number, destinationIndex: number) =>
       set((state) => {

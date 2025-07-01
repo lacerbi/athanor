@@ -1,13 +1,13 @@
 // AI Summary: Handles tab navigation UI and logic with conditional content rendering.
 // Provides consistent tab styling and active state management.
 import React, { useState, useEffect } from 'react';
-import { CircleSlashed, CircleDashed } from 'lucide-react';
+import { CircleSlashed, CircleDashed, GitCompare } from 'lucide-react';
 import CommandButton from './CommandButton';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useLogStore } from '../stores/logStore';
 import { useSettingsStore } from '../stores/settingsStore';
 
-export type TabType = 'workbench' | 'viewer' | 'apply-changes' | 'settings' | 'cli';
+export type TabType = 'workbench' | 'viewer' | 'review' | 'settings' | 'cli';
 
 interface AthanorTabsProps {
   activeTab: TabType;
@@ -54,15 +54,17 @@ const AthanorTabs: React.FC<AthanorTabsProps> = ({
           File Viewer
         </button>
         <button
-          className={`px-4 py-2 rounded ${
-            activeTab === 'apply-changes'
+          className={`px-4 py-2 rounded flex items-center ${
+            activeTab === 'review'
               ? 'bg-gray-200 dark:bg-gray-700 font-medium'
               : 'hover:bg-gray-100 dark:hover:bg-gray-700'
           }`}
-          onClick={() => onTabChange('apply-changes')}
-          title="Review and apply AI-generated code changes with diff preview"
+          onClick={() => onTabChange('review')}
+          title="Review and apply AI-generated code changes or view uncommitted Git changes"
+          data-test-id="review-tab-button"
         >
-          Apply Changes
+          <GitCompare className="w-4 h-4 mr-2" />
+          Review
         </button>
         <button
           className={`px-4 py-2 rounded ${

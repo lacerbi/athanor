@@ -52,7 +52,7 @@ import SelectedFilesDisplay from './action-panel/SelectedFilesDisplay';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
-  setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+  setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'review') => void;
   isActive: boolean;
 }
 
@@ -168,7 +168,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   const isBusy = isLoading || isGeneratingPrompt || isGraphAnalysisInProgress;
 
   // Determine if experimental features should be shown
-  const showExperimentalFeatures = applicationSettings?.enableExperimentalFeatures ?? false;
+  const showExperimentalFeatures =
+    applicationSettings?.enableExperimentalFeatures ?? false;
 
   // Use a memoized selector to prevent unnecessary re-renders.
   // This ensures the context-fetching effect only runs when relevant data changes.
@@ -186,14 +187,14 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
   // Effect: recalculate context when description or selection *really* changes,
   // but never while a prompt is being generated.
   useEffect(() => {
-    if (isBusy) return;              // 🚦 NEW GUARD
+    if (isBusy) return; // 🚦 NEW GUARD
 
     const timeoutHandler = setTimeout(() => {
       fetchContext(selectedFiles, content);
     }, 500);
 
     return () => clearTimeout(timeoutHandler);
-  }, [content, selectedFiles, isBusy]);  // note: fetchContext removed from deps
+  }, [content, selectedFiles, isBusy]); // note: fetchContext removed from deps
 
   // Handler for generating prompts
   const generatePrompt = async (prompt: PromptData, variant: PromptVariant) => {
@@ -262,8 +263,9 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
             Ready to Work with AI
           </h2>
           <p className="text-gray-600 dark:text-gray-400 mb-6">
-            Open a project folder to start generating prompts and working with AI assistants. 
-            Select files, describe your tasks, and let Athanor help you communicate effectively with AI.
+            Open a project folder to start generating prompts and working with
+            AI assistants. Select files, describe your tasks, and let Athanor
+            help you communicate effectively with AI.
           </p>
           <button
             onClick={() => window.fileService.openFolder()}
@@ -457,7 +459,10 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
                       title="Help with Custom Prompts & Tasks"
                     >
-                      <HelpCircle size={18} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200" />
+                      <HelpCircle
+                        size={18}
+                        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      />
                     </button>
                   </div>
                   <div className="flex items-center gap-2">
@@ -534,13 +539,18 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       : null;
 
                     // Check if this is a user-defined template
-                    const isUserDefined = prompt.source && prompt.source !== 'default';
+                    const isUserDefined =
+                      prompt.source && prompt.source !== 'default';
 
                     return (
                       <button
                         key={prompt.id}
                         className="icon-btn relative bg-blue-500 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-blue-500"
-                        title={isUserDefined ? "Custom: " + (prompt.tooltip || prompt.label) : (prompt.tooltip || prompt.label)}
+                        title={
+                          isUserDefined
+                            ? 'Custom: ' + (prompt.tooltip || prompt.label)
+                            : prompt.tooltip || prompt.label
+                        }
                         onClick={async () => {
                           if (isBusy || isTaskEmpty) return;
                           await generatePrompt(prompt, variant);
@@ -586,7 +596,8 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                       ? (Icons as any)[task.icon]
                       : null;
                     const isDisabled =
-                      isBusy || (task.requires === 'selected' && hasNoSelection);
+                      isBusy ||
+                      (task.requires === 'selected' && hasNoSelection);
                     const reason = isBusy
                       ? 'loading'
                       : hasNoSelection
@@ -594,18 +605,24 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                         : null;
 
                     // Check if this is a user-defined template
-                    const isUserDefined = task.source && task.source !== 'default';
+                    const isUserDefined =
+                      task.source && task.source !== 'default';
 
                     return (
                       <button
                         key={task.id}
                         className="icon-btn relative bg-emerald-500 text-white hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-emerald-500"
-                        title={isUserDefined ? "Custom: " + getTaskTooltip(task, isDisabled, reason) : getTaskTooltip(task, isDisabled, reason)}
+                        title={
+                          isUserDefined
+                            ? 'Custom: ' +
+                              getTaskTooltip(task, isDisabled, reason)
+                            : getTaskTooltip(task, isDisabled, reason)
+                        }
                         onClick={() => {
                           const activeTab = tabs[activeTabIndex];
                           const selectedFiles = activeTab?.selectedFiles || [];
                           const selectedItemsSet = new Set(selectedFiles); // Convert to Set for buildTaskAction compatibility
-                          
+
                           buildTaskAction({
                             task,
                             rootItems,

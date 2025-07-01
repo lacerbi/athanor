@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Development:**
 
-- `npm start` or `npm run dev` - Start development mode (Electron app with hot reload)
-- `npm run package` - Build production application (creates executable in `out/` folder)
-- `npm run make` - Create distributable packages
+- `npm run package` - **(Standard)** Build a local production application (in `out/`). This is the recommended way to test changes.
+- `npm start` or `npm run dev` - **(Deprecated for testing)** Start development mode with hot reload. Do not use.
+- `npm run make` - Unsupported. Do not use.
 
 **Testing & Quality:**
 

@@ -13,6 +13,8 @@ interface AthanorDragEvent extends DragEvent {
 
 export {};
 
+import type { GitDiffData } from '../../common/types/git-service';
+
 // Settings types
 export interface ProjectSettings {
   projectNameOverride?: string;
@@ -90,6 +92,7 @@ export interface WorkbenchState {
   toggleFileSelection: (itemId: string, isFolder: boolean, fileTree: FileItem[]) => void;
   removeFileFromSelection: (itemId: string) => void;
   clearFileSelection: () => void;
+  setSelection: (filePaths: string[]) => void;
   reorderFileSelection: (sourceIndex: number, destinationIndex: number) => void;
 
   // Legacy support and additional state
@@ -265,6 +268,10 @@ declare global {
       };
       graph: {
         forceReanalyze: () => Promise<void>;
+      };
+      git: {
+        viewDiffs: () => Promise<GitDiffData[]>;
+        isGitRepository: () => Promise<boolean>;
       };
       appShell: {
         /**

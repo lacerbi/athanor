@@ -6,7 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import type { IGitService, CommitLog, GitCommitsForFileOptions } from '../../common/types/git-service';
+import type { IGitService, CommitLog, GitCommitsForFileOptions, GitFileStatus } from '../../common/types/git-service';
 import { PathUtils } from './PathUtils';
 
 const execAsync = promisify(exec);
@@ -185,6 +185,75 @@ export class GitService implements IGitService {
     } catch (error) {
       console.error(`Error getting recent commit hashes:`, error);
       return [];
+    }
+  }
+
+  /**
+   * Get uncommitted changes in the repository, including untracked files.
+   * @returns Array of files with their status (Added, Modified, Deleted)
+   */
+  async getUncommittedChanges(): Promise<GitFileStatus[]> {
+    if (!(await this.isGitRepository())) {
+      return [];
+    }
+
+    let trackedChanges: GitFileStatus[] = [];
+    try {
+      // Get modified, staged, and deleted files compared to HEAD
+      const output = await this.executeGitCommand('diff --name-status HEAD');
+      if (output.trim()) {
+        trackedChanges = output
+          .split('\n')
+          .filter(line => line.trim())
+          .map(line => {
+            const [status, path] = line.split('\t');
+            return { status: status.trim() as 'A' | 'M' | 'D', path: PathUtils.normalizeToUnix(path) };
+          });
+      }
+    } catch (error) {
+      console.error('Error getting tracked uncommitted changes:', error);
+      // Don't return, as we might still get untracked files
+    }
+
+    let untrackedChanges: GitFileStatus[] = [];
+    try {
+      // Get new (untracked) files, respecting .gitignore
+      const untrackedOutput = await this.executeGitCommand(
+        'ls-files --others --exclude-standard'
+      );
+      if (untrackedOutput.trim()) {
+        untrackedChanges = untrackedOutput
+          .split('\n')
+          .filter(line => line.trim())
+          .map(path => ({
+            status: 'A' as const, // Untracked files are additions
+            path: PathUtils.normalizeToUnix(path),
+          }));
+      }
+    } catch (error) {
+      console.error('Error getting untracked files:', error);
+    }
+
+    return [...trackedChanges, ...untrackedChanges];
+  }
+
+  /**
+   * Get the content of a file at the HEAD commit
+   * @param filePath Project-relative path to the file
+   * @returns File content as a string, or an empty string if not found or on error
+   */
+  async getContentAtHead(filePath: string): Promise<string> {
+    if (!(await this.isGitRepository())) {
+      return '';
+    }
+    try {
+      // Git pathspecs (rev:path) must use forward slashes, even on Windows.
+      // The filePath argument is already in the correct normalized Unix format.
+      const output = await this.executeGitCommand(`show "HEAD:${filePath}"`);
+      return output;
+    } catch (error) {
+      // This is expected for newly added files. Return empty string.
+      return '';
     }
   }
 

@@ -6,21 +6,24 @@ import { createPatch } from 'diff';
 import {
   AlertTriangle,
   ArrowUp,
+  Bot,
+  Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ArrowDown,
-  ChevronsUp,
   ChevronsDown,
+  ChevronsUp,
   ChevronUp,
-  ChevronDown,
+  DraftingCompass,
   GitCompare,
-  Check,
+  Wrench,
   X,
 } from 'lucide-react';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useLogStore } from '../stores/logStore';
 import { getSmartPreview } from '../utils/codebaseDocumentation';
 import { SETTINGS } from '../utils/constants';
 
@@ -197,6 +200,7 @@ const DiffView: React.FC<{
 interface FileOperationItemProps {
   operation: any;
   index: number;
+  mode: 'ai' | 'git';
   onAccept: (idx: number) => void;
   onReject: (idx: number) => void;
   isActive?: boolean;
@@ -212,6 +216,7 @@ const FileOperationItem = React.forwardRef<
     {
       operation: op,
       index,
+      mode,
       onAccept,
       onReject,
       isActive = false,
@@ -227,6 +232,12 @@ const FileOperationItem = React.forwardRef<
     useEffect(() => {
       const checkWarning = async () => {
         try {
+          // Only show warnings in AI mode - Git mode doesn't need file selection warnings
+          if (mode !== 'ai') {
+            setShowWarning(false);
+            return;
+          }
+
           // If the file is being created, no warning needed
           if (
             !op.file_path ||
@@ -282,6 +293,7 @@ const FileOperationItem = React.forwardRef<
       tabs,
       activeTabIndex,
       applicationSettings,
+      mode,
     ]);
 
     return (
@@ -341,19 +353,21 @@ const FileOperationItem = React.forwardRef<
 
         <div className="mt-4 flex justify-between items-center flex-shrink-0">
           <div className="flex gap-2">
-            <button
-              className="px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
-              disabled={op.accepted || op.rejected}
-              onClick={() => onAccept(index)}
-            >
-              Accept
-            </button>
+            {mode === 'ai' && (
+              <button
+                className="px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
+                disabled={op.accepted || op.rejected}
+                onClick={() => onAccept(index)}
+              >
+                Accept
+              </button>
+            )}
             <button
               className="px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
               disabled={op.accepted || op.rejected}
-              onClick={() => onReject(index)}
+            	onClick={() => onReject(index)}
             >
-              Reject
+            	{mode === 'git' ? 'Revert Change' : 'Reject'}
             </button>
           </div>
 
@@ -376,13 +390,15 @@ const FileOperationItem = React.forwardRef<
 
 FileOperationItem.displayName = 'FileOperationItem';
 
-const ApplyChangesPanel: React.FC = () => {
+const ReviewPanel: React.FC = () => {
   const {
     activeOperations,
+    mode,
     applyChange,
     rejectChange,
     applyAllChanges,
     rejectAllChanges,
+    clearOperations,
   } = useApplyChangesStore();
   const { fileTree } = useFileSystemStore();
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -401,6 +417,36 @@ const ApplyChangesPanel: React.FC = () => {
   const hasPendingOperations = activeOperations.some(
     (op) => !op.accepted && !op.rejected
   );
+
+  // Handle clear operations with confirmation for AI mode
+  const handleClear = () => {
+    const { addLog } = useLogStore.getState();
+    
+    if (mode === 'git') {
+      // Git mode: clear immediately, no confirmation needed
+      clearOperations();
+      addLog('Cleared all changes');
+      return;
+    }
+
+    // AI mode: check for pending operations
+    if (hasPendingOperations) {
+      const pendingCount = activeOperations.filter(
+        (op) => !op.accepted && !op.rejected
+      ).length;
+      
+      const confirmed = window.confirm(
+        `There are ${pendingCount} pending change${pendingCount === 1 ? '' : 's'} that haven't been accepted or rejected.\n\nAre you sure you want to clear all changes? This action cannot be undone.`
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    clearOperations();
+    addLog('Cleared all changes');
+  };
 
   // Navigation handlers
   const NAVIGATION_PADDING_ABOVE = 16; // Space above the target element when navigating
@@ -953,10 +999,41 @@ const ApplyChangesPanel: React.FC = () => {
 
   if (!activeOperations.length) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          No active operations to display.
-        </p>
+      <div className="flex flex-col h-full items-center justify-center p-8">
+        <div className="text-center max-w-lg">
+          <GitCompare className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500" />
+          <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+            No Changes to Review
+          </h2>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            This panel displays AI-proposed changes and uncommitted Git diffs.
+          </p>
+          <div className="mt-6 text-sm text-left space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+            <p className="flex items-start gap-2">
+              <Bot
+                size={18}
+                className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
+            	/>
+            	<span>
+            		<strong>AI changes</strong> appear here after you use the "Apply AI
+            		Output" action. This processes responses from prompts like Coder{' '}
+            		<Wrench size={16} className="inline-block -mt-0.5" /> or Architect{' '}
+            		<DraftingCompass size={16} className="inline-block -mt-0.5" />.
+            	</span>
+            </p>
+            <p className="flex items-start gap-2">
+            	<GitCompare
+            		size={18}
+            		className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
+            	/>
+            	<span>
+            		For <strong>Git changes</strong>, click the{' '}
+            		<GitCompare size={16} className="inline-block -mt-0.5" /> button
+            		above the file explorer.
+            	</span>
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
@@ -1028,29 +1105,48 @@ const ApplyChangesPanel: React.FC = () => {
             <GitCompare size={14} />
             <ChevronRight size={16} />
           </button>
+          {mode === 'ai' && (
+          	<button
+          	  onClick={applyAllChanges}
+          	  disabled={!hasPendingOperations}
+          	  title={
+          	    hasPendingOperations
+          	      ? 'Accept all pending changes'
+          	      : 'No pending changes to accept'
+          	  }
+          	  className="ml-auto px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          	>
+          	  Accept All
+          	</button>
+          )}
           <button
-            onClick={applyAllChanges}
-            disabled={!hasPendingOperations}
-            title={
-              hasPendingOperations
-                ? 'Accept all pending changes'
-                : 'No pending changes to accept'
-            }
-            className="ml-auto px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          	onClick={rejectAllChanges}
+          	disabled={!hasPendingOperations}
+          	title={
+          	  hasPendingOperations
+          	    ? 'Reject all pending changes'
+          	    : 'No pending changes to reject'
+          	}
+          	className={`${mode === 'ai' ? 'ml-2' : 'ml-auto'} px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-            Accept All
+          	{mode === 'git' ? 'Revert All' : 'Reject All'}
           </button>
           <button
-            onClick={rejectAllChanges}
-            disabled={!hasPendingOperations}
+            onClick={handleClear}
+            disabled={activeOperations.length === 0}
             title={
-              hasPendingOperations
-                ? 'Reject all pending changes'
-                : 'No pending changes to reject'
+              activeOperations.length === 0
+                ? 'No changes to clear'
+                : mode === 'git' 
+                  ? 'Clear all changes'
+                  : hasPendingOperations
+                    ? 'Clear all changes (confirmation required)'
+                    : 'Clear all changes'
             }
-            className="ml-2 px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="ml-2 px-3 py-1 bg-gray-500 dark:bg-gray-600 text-white rounded hover:bg-gray-600 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
           >
-            Reject All
+            <X size={16} />
+            Clear
           </button>
           <span className="text-xs text-gray-500 dark:text-gray-400 ml-4">
             {activeOperations.length > 0 ? currentIdx + 1 : 0} /{' '}
@@ -1082,13 +1178,14 @@ const ApplyChangesPanel: React.FC = () => {
             <FileOperationItem
               key={`${op.file_path}-${idx}`}
               ref={(el) => {
-                itemRefs.current[idx] = el;
+            	  itemRefs.current[idx] = el;
               }}
               operation={op}
               index={idx}
-              onAccept={applyChange}
-              onReject={rejectChange}
-              isActive={idx === currentIdx}
+              mode={mode}
+            	onAccept={applyChange}
+            	onReject={rejectChange}
+            	isActive={idx === currentIdx}
               onDiffBlocksCalculated={(blocks) => {
                 if (idx === currentIdx) {
                   setCurrentDiffBlocks(blocks);
@@ -1102,5 +1199,6 @@ const ApplyChangesPanel: React.FC = () => {
     </div>
   );
 };
+ReviewPanel.displayName = 'ReviewPanel';
 
-export default ApplyChangesPanel;
+export default ReviewPanel;

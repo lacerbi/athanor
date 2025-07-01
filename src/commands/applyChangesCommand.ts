@@ -10,7 +10,7 @@ export interface ApplyChangesParams {
   addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
   setOperations: (ops: FileOperation[]) => void;
   clearOperations: () => void;
-  setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+  setActiveTab?: (tab: 'workbench' | 'viewer' | 'review') => void;
   diffMode?: 'strict' | 'fuzzy';
 }
 
@@ -40,7 +40,7 @@ export async function executeApplyChangesCommand({
       clearOperations();
       setOperations(operations);
       if (setActiveTab) {
-        setActiveTab('apply-changes');
+        setActiveTab('review');
       }
       addLog(`Found ${operations.length} file operations`);
       return true;

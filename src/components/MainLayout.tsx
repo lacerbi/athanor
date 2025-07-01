@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   File,
   FileText,
@@ -6,17 +6,20 @@ import {
   RefreshCw,
   ClipboardCopy,
   Network,
+  GitCompare,
 } from 'lucide-react';
 import { useLogStore, LogEntry } from '../stores/logStore';
 import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
 import FileViewerPanel from './FileViewerPanel';
-import ApplyChangesPanel from './ApplyChangesPanel';
+import ReviewPanel from './ReviewPanel';
 import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
 import CliPanel from './CliPanel';
 import { useFileSystemStore } from '../stores/fileSystemStore';
+import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
+import { type FileOperationType } from '../types/global';
 import { useContextStore } from '../stores/contextStore';
 import { FileItem } from '../utils/fileTree';
 import { usePanelResize } from '../hooks/usePanelResize';
@@ -77,11 +80,94 @@ const MainLayout: React.FC<MainLayoutProps> = ({
   };
 
   const { addLog } = useLogStore();
+  const { setOperations, clearOperations } = useApplyChangesStore();
+  const [isLoadingDiffs, setIsLoadingDiffs] = useState(false);
+  const [isGitAvailable, setIsGitAvailable] = useState(false);
+
+  useEffect(() => {
+    if (!currentDirectory) {
+      setIsGitAvailable(false);
+      return;
+    }
+
+    const checkGitStatus = async () => {
+      try {
+        const isRepo = await window.electronBridge.git.isGitRepository();
+        setIsGitAvailable(isRepo);
+      } catch (error) {
+        console.error('Failed to check git status:', error);
+        addLog(
+          'Could not check Git status. Git might not be installed or configured correctly in your PATH.'
+        );
+        setIsGitAvailable(false);
+      }
+    };
+
+    void checkGitStatus();
+  }, [currentDirectory, addLog]);
+
   const handleCopySelectedFiles = async () => {
     await copySelectedFilesContent({
       addLog,
       rootPath: currentDirectory,
     });
+  };
+
+  const handleViewGitDiffs = async () => {
+    setIsLoadingDiffs(true);
+    addLog('Fetching uncommitted Git changes...');
+    try {
+      const diffData = await window.electronBridge.git.viewDiffs();
+
+      if (!diffData || diffData.length === 0) {
+        addLog('No uncommitted changes found.');
+        return;
+      }
+
+      addLog(`Found ${diffData.length} uncommitted change(s).`);
+
+      const operations = diffData.map((diff) => {
+        let operationType: FileOperationType;
+        switch (diff.status) {
+          case 'A':
+            operationType = 'CREATE';
+            break;
+          case 'D':
+            operationType = 'DELETE';
+            break;
+          case 'M':
+          default:
+            operationType = 'UPDATE_FULL';
+            break;
+        }
+        return {
+          file_path: diff.path,
+          file_operation: operationType,
+          old_code: diff.oldCode,
+          new_code: diff.newCode,
+          file_message: `Uncommitted change. Status: ${
+            diff.status === 'A'
+              ? 'Added'
+              : diff.status === 'D'
+              ? 'Deleted'
+              : 'Modified'
+          }`,
+          accepted: false,
+          rejected: false,
+        };
+      });
+
+      clearOperations();
+      setOperations(operations, 'git');
+
+      onTabChange('review');
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error('Error fetching Git diffs:', errorMessage);
+      addLog(`Error fetching Git diffs: ${errorMessage}`);
+    } finally {
+      setIsLoadingDiffs(false);
+    }
   };
 
   return (
@@ -135,6 +221,29 @@ const MainLayout: React.FC<MainLayoutProps> = ({
                   } ${isAnalyzingGraph ? 'animate-spin' : ''}`}
                 />
               </button>
+              <button
+                onClick={handleViewGitDiffs}
+                disabled={isLoadingDiffs || !currentDirectory || !isGitAvailable}
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
+              	title={
+              	  !currentDirectory
+              	    ? 'Open a project to view git changes'
+              	    : isGitAvailable
+              	    ? 'View uncommitted changes'
+              	    : 'Not a Git repository or Git is not available'
+            	  }
+             >
+                <GitCompare
+                	size={20}
+            	    className={`${
+                  	isLoadingDiffs
+                  	  ? 'animate-spin'
+                  	  : !isGitAvailable || !currentDirectory
+                  	  ? 'text-gray-400 dark:text-gray-500'
+                  	  : 'text-gray-600 dark:text-gray-300'
+                  }`}
+            	  />
+             </button>
               <button
                 onClick={handleCopySelectedFiles}
                 disabled={selectedFileCount === 0 || !currentDirectory}
@@ -233,8 +342,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           <div style={{ display: activeTab === 'viewer' ? 'block' : 'none', height: '100%' }}>
             <FileViewerPanel onTabChange={onTabChange} />
           </div>
-          <div style={{ display: activeTab === 'apply-changes' ? 'block' : 'none', height: '100%' }}>
-            <ApplyChangesPanel />
+          <div style={{ display: activeTab === 'review' ? 'block' : 'none', height: '100%' }}>
+            <ReviewPanel />
           </div>
           <div style={{ display: activeTab === 'settings' ? 'block' : 'none', height: '100%' }}>
             <SettingsPanel />

@@ -335,6 +335,9 @@ app.whenReady().then(async () => {
   }
   // Listen for base directory changes to trigger project-wide analysis
   fileService.on('base-dir-changed', async () => {
+    // Update GitService base directory when project changes to fix state sync bug
+    gitService.setBaseDir(fileService.getBaseDir());
+
     const loadedFromCache = await projectGraphService.loadGraphFromCache();
     if (loadedFromCache) {
       console.log(
@@ -365,7 +368,8 @@ app.whenReady().then(async () => {
     relevanceEngine,
     projectGraphService,
     userActivityService,
-    shellService
+    shellService,
+    gitService
   );
 
   ipcMain.handle('graph:force-reanalyze', () => {

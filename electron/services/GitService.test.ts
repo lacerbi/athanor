@@ -20,6 +20,7 @@ jest.mock('util', () => ({
 // Now that mocks are set up, import the modules that will use them.
 import { GitService } from './GitService';
 import * as fs from 'fs/promises';
+import * as path from 'path';
 
 // Mock other dependencies used by GitService.
 jest.mock('fs/promises');
@@ -267,6 +268,105 @@ README.md`;
       const files = await gitService.getRecentlyCommittedFiles(7);
 
       expect(files).toEqual([]);
+      expect(mockExecAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getUncommittedChanges', () => {
+    it('should return a list of uncommitted files', async () => {
+      mockFsAccess.mockResolvedValue(undefined);
+      mockExecAsync.mockResolvedValueOnce({ stdout: '.git', stderr: '' }); // isGitRepository check
+      const mockDiffOutput = `M	src/file1.ts
+A	new/file2.ts
+D	deleted/file3.ts`;
+      mockExecAsync.mockResolvedValueOnce({ stdout: mockDiffOutput, stderr: '' });
+
+      const changes = await gitService.getUncommittedChanges();
+
+      expect(changes).toHaveLength(3);
+      expect(changes).toEqual([
+        { status: 'M', path: 'src/file1.ts' },
+        { status: 'A', path: 'new/file2.ts' },
+        { status: 'D', path: 'deleted/file3.ts' },
+      ]);
+      expect(mockExecAsync).toHaveBeenCalledWith('git diff --name-status HEAD', expect.any(Object));
+    });
+
+    it('should return an empty array for a clean repository', async () => {
+      mockFsAccess.mockResolvedValue(undefined);
+      mockExecAsync.mockResolvedValueOnce({ stdout: '.git', stderr: '' }); // isGitRepository check
+      mockExecAsync.mockResolvedValueOnce({ stdout: ' \n ', stderr: '' }); // No changes, git might output whitespace
+
+      const changes = await gitService.getUncommittedChanges();
+
+      expect(changes).toEqual([]);
+    });
+
+    it('should normalize paths with backslashes', async () => {
+        mockFsAccess.mockResolvedValue(undefined);
+        mockExecAsync.mockResolvedValueOnce({ stdout: '.git', stderr: '' }); // isGitRepository check
+        const mockDiffOutput = `M	src\\windows\\path.ts`;
+        mockExecAsync.mockResolvedValueOnce({ stdout: mockDiffOutput, stderr: '' });
+
+        const changes = await gitService.getUncommittedChanges();
+        expect(changes).toEqual([{ status: 'M', path: 'src/windows/path.ts' }]);
+    });
+
+    it('should return an empty array if not a git repository', async () => {
+      mockFsAccess.mockRejectedValueOnce(new Error('ENOENT'));
+
+      const changes = await gitService.getUncommittedChanges();
+      
+      expect(changes).toEqual([]);
+      expect(mockExecAsync).not.toHaveBeenCalled();
+    });
+
+    it('should handle git command errors gracefully', async () => {
+      const consoleErrorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+      mockFsAccess.mockResolvedValue(undefined);
+      mockExecAsync.mockResolvedValueOnce({ stdout: '.git', stderr: '' }); // isGitRepository check
+      mockExecAsync.mockRejectedValue(new Error('Git error'));
+
+      const changes = await gitService.getUncommittedChanges();
+
+      expect(changes).toEqual([]);
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting tracked uncommitted changes:', expect.any(Error));
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Error getting untracked files:', expect.any(Error));
+      consoleErrorSpy.mockRestore();
+    });
+  });
+
+  describe('getContentAtHead', () => {
+    const filePath = 'src/file1.ts';
+    const fileContent = 'const x = 1;';
+
+    it('should return the content of a file from HEAD', async () => {
+      mockFsAccess.mockResolvedValue(undefined);
+      mockExecAsync.mockResolvedValueOnce({ stdout: '.git', stderr: '' }); // isGitRepository check
+      mockExecAsync.mockResolvedValueOnce({ stdout: fileContent, stderr: '' });
+
+      const content = await gitService.getContentAtHead(filePath);
+
+      expect(content).toBe(fileContent);
+      expect(mockExecAsync).toHaveBeenCalledWith(`git show "HEAD:${filePath}"`, expect.any(Object));
+    });
+
+    it('should return an empty string for a new file not in HEAD', async () => {
+      mockFsAccess.mockResolvedValue(undefined);
+      mockExecAsync.mockResolvedValueOnce({ stdout: '.git', stderr: '' }); // isGitRepository check
+      mockExecAsync.mockRejectedValueOnce(new Error('pathspec... did not match any file(s) known to git'));
+
+      const content = await gitService.getContentAtHead('new/file.ts');
+
+      expect(content).toBe('');
+    });
+
+    it('should return an empty string if not a git repository', async () => {
+      mockFsAccess.mockRejectedValueOnce(new Error('ENOENT'));
+
+      const content = await gitService.getContentAtHead(filePath);
+
+      expect(content).toBe('');
       expect(mockExecAsync).not.toHaveBeenCalled();
     });
   });
