@@ -189,29 +189,52 @@ export class GitService implements IGitService {
   }
 
   /**
-   * Get uncommitted changes in the repository
+   * Get uncommitted changes in the repository, including untracked files.
    * @returns Array of files with their status (Added, Modified, Deleted)
    */
   async getUncommittedChanges(): Promise<GitFileStatus[]> {
     if (!(await this.isGitRepository())) {
       return [];
     }
+
+    let trackedChanges: GitFileStatus[] = [];
     try {
+      // Get modified, staged, and deleted files compared to HEAD
       const output = await this.executeGitCommand('diff --name-status HEAD');
-      if (!output.trim()) {
-        return [];
+      if (output.trim()) {
+        trackedChanges = output
+          .split('\n')
+          .filter(line => line.trim())
+          .map(line => {
+            const [status, path] = line.split('\t');
+            return { status: status.trim() as 'A' | 'M' | 'D', path: PathUtils.normalizeToUnix(path) };
+          });
       }
-      return output
-        .split('\n')
-        .filter(line => line.trim())
-        .map(line => {
-          const [status, path] = line.split('\t');
-          return { status: status.trim() as 'A' | 'M' | 'D', path: PathUtils.normalizeToUnix(path) };
-        });
     } catch (error) {
-      console.error('Error getting uncommitted changes:', error);
-      return [];
+      console.error('Error getting tracked uncommitted changes:', error);
+      // Don't return, as we might still get untracked files
     }
+
+    let untrackedChanges: GitFileStatus[] = [];
+    try {
+      // Get new (untracked) files, respecting .gitignore
+      const untrackedOutput = await this.executeGitCommand(
+        'ls-files --others --exclude-standard'
+      );
+      if (untrackedOutput.trim()) {
+        untrackedChanges = untrackedOutput
+          .split('\n')
+          .filter(line => line.trim())
+          .map(path => ({
+            status: 'A' as const, // Untracked files are additions
+            path: PathUtils.normalizeToUnix(path),
+          }));
+      }
+    } catch (error) {
+      console.error('Error getting untracked files:', error);
+    }
+
+    return [...trackedChanges, ...untrackedChanges];
   }
 
   /**
