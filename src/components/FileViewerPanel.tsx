@@ -87,9 +87,9 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
     const observer = new MutationObserver(() => {
       setIsDarkMode(document.documentElement.classList.contains('dark'));
     });
-    observer.observe(document.documentElement, { 
-      attributes: true, 
-      attributeFilter: ['class'] 
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class'],
     });
     return () => observer.disconnect();
   }, []);
@@ -108,11 +108,13 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
         // Get current directory and OS-specific path
         const dir = await window.fileService.getCurrentDirectory();
         setCurrentDir(dir);
-        
-        const resolvedPath = await window.fileService.resolve(previewedFilePath);
+
+        const resolvedPath =
+          await window.fileService.resolve(previewedFilePath);
         setOsPath(resolvedPath);
 
-        const isDirectory = await window.fileService.isDirectory(previewedFilePath);
+        const isDirectory =
+          await window.fileService.isDirectory(previewedFilePath);
         if (isDirectory) {
           setFileContent('');
           setError('Cannot display folder contents.');
@@ -126,7 +128,9 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
 
         if (!isTextFileResult) {
           setFileContent('');
-          setError('Cannot preview file content (binary or unsupported format)');
+          setError(
+            'Cannot preview file content (binary or unsupported format)'
+          );
           setLineCount(0);
           return;
         }
@@ -155,9 +159,13 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
         <>
           <div className="flex items-center justify-between text-sm mb-2">
             <div className="flex-grow text-gray-600 dark:text-gray-300">
-              <span className="truncate" title={osPath}>{osPath}</span>
+              <span className="truncate" title={osPath}>
+                {osPath}
+              </span>
               {lineCount > 0 && (
-                <span className="text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">({lineCount} lines)</span>
+                <span className="text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
+                  ({lineCount} lines)
+                </span>
               )}
             </div>
             {isText && (
@@ -188,7 +196,7 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
                       void copyToClipboard({
                         content: fileContent,
                         addLog,
-                        isFormatted: false
+                        isFormatted: false,
                       });
                     }
                   }}
@@ -207,7 +215,7 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
                         filePath: previewedFilePath,
                         rootPath: currentDir,
                         addLog,
-                        isFormatted: true
+                        isFormatted: true,
                       });
                     }
                   }}
@@ -221,23 +229,36 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
                   className="px-2 py-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded flex items-center gap-1"
                   onClick={async () => {
                     const { addLog: log } = useLogStore.getState(); // Renamed to avoid conflict
-                    const { setOperations, clearOperations } = useApplyChangesStore.getState();
-                    const clipboardContent = useCommandStore.getState().clipboardContent;
+                    const { setOperations, clearOperations } =
+                      useApplyChangesStore.getState();
+                    const clipboardContent =
+                      useCommandStore.getState().clipboardContent;
 
                     // Use osPath for relativization; ensure it's available.
                     // previewedFilePath is the primary key from the store, osPath is its absolute representation.
-                    if (!previewedFilePath || !osPath || !fileContent || !clipboardContent || typeof clipboardContent !== 'string') {
-                      log('Replace failed: Invalid state (no file/osPath, empty content, or empty/invalid clipboard).');
+                    if (
+                      !previewedFilePath ||
+                      !osPath ||
+                      !fileContent ||
+                      !clipboardContent ||
+                      typeof clipboardContent !== 'string'
+                    ) {
+                      log(
+                        'Replace failed: Invalid state (no file/osPath, empty content, or empty/invalid clipboard).'
+                      );
                       return;
                     }
 
                     try {
-                      const relativePathForOperation = await window.fileService.relativize(osPath);
+                      const relativePathForOperation =
+                        await window.fileService.relativize(osPath);
                       if (!relativePathForOperation) {
-                          log(`Replace failed: Could not determine relative path for ${osPath}.`);
-                          return;
+                        log(
+                          `Replace failed: Could not determine relative path for ${osPath}.`
+                        );
+                        return;
                       }
-                    
+
                       const operation: FileOperation = {
                         file_message: `Replace content of ${relativePathForOperation} with clipboard content.`,
                         file_operation: 'UPDATE_FULL',
@@ -247,21 +268,30 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
                         accepted: false,
                         rejected: false,
                       };
-                    
+
                       clearOperations();
                       setOperations([operation]);
-                    
-                      log(`Prepared to replace ${relativePathForOperation} with clipboard content. Review in Apply Changes tab.`);
-                      
+
+                      log(
+                        `Prepared to replace ${relativePathForOperation} with clipboard content. Review in Apply Changes tab.`
+                      );
+
                       if (onTabChange) {
-                        onTabChange('apply-changes');
+                        onTabChange('review');
                       } else {
-                        console.error("onTabChange callback is not available in FileViewerPanel.");
-                        log("Error: Could not navigate to Apply Changes tab.");
+                        console.error(
+                          'onTabChange callback is not available in FileViewerPanel.'
+                        );
+                        log('Error: Could not navigate to Apply Changes tab.');
                       }
                     } catch (error) {
-                      console.error("Error during replace with clipboard action:", error);
-                      log(`Error preparing replacement for ${osPath}: ${error instanceof Error ? error.message : String(error)}`);
+                      console.error(
+                        'Error during replace with clipboard action:',
+                        error
+                      );
+                      log(
+                        `Error preparing replacement for ${osPath}: ${error instanceof Error ? error.message : String(error)}`
+                      );
                     }
                   }}
                   title="Replace file content with clipboard"
@@ -270,7 +300,8 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
                     !isText ||
                     !!error ||
                     !useCommandStore.getState().clipboardContent ||
-                    typeof useCommandStore.getState().clipboardContent !== 'string'
+                    typeof useCommandStore.getState().clipboardContent !==
+                      'string'
                   }
                 >
                   <ClipboardPaste className="w-4 h-4" />
@@ -287,20 +318,24 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
         </>
       ) : (
         <div className="text-sm text-gray-400 dark:text-gray-500 mb-2">
-          {!previewedFilePath ? 'No file selected for preview' : 'Loading file...'}
+          {!previewedFilePath
+            ? 'No file selected for preview'
+            : 'Loading file...'}
         </div>
       )}
       {isText && !error && fileContent && (
-        <div className={`w-full h-full rounded font-mono text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 scrollbar-thin file-viewer-syntax-highlighter-wrapper relative ${
-          isWrapEnabled ? 'overflow-auto' : 'overflow-hidden'
-        }`}>
+        <div
+          className={`w-full h-full rounded font-mono text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 scrollbar-thin file-viewer-syntax-highlighter-wrapper relative ${
+            isWrapEnabled ? 'overflow-auto' : 'overflow-hidden'
+          }`}
+        >
           <SyntaxHighlighter
             language={getLanguageFromPath(previewedFilePath || '')}
             style={isDarkMode ? atomDark : coy}
             showLineNumbers={true}
             wrapLines={true}
             wrapLongLines={isWrapEnabled}
-            lineNumberStyle={{ 
+            lineNumberStyle={{
               opacity: 0.5,
               color: isDarkMode ? '#6b7280' : '#9ca3af',
               backgroundColor: 'transparent',
@@ -308,7 +343,7 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
               paddingRight: '0.5rem',
               marginRight: '0.5rem',
               minWidth: '2.5rem',
-              textAlign: 'right'
+              textAlign: 'right',
             }}
             customStyle={{
               position: 'absolute',
@@ -325,22 +360,23 @@ const FileViewerPanel: React.FC<FileViewerPanelProps> = ({ onTabChange }) => {
               lineHeight: '1.25rem',
               overflowX: isWrapEnabled ? 'hidden' : 'auto',
               overflowY: 'auto',
-              boxSizing: 'border-box'
+              boxSizing: 'border-box',
             }}
             codeTagProps={{
-              style: { 
-                fontFamily: 'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              style: {
+                fontFamily:
+                  'ui-monospace, SFMono-Regular, "SF Mono", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
                 fontSize: 'inherit',
-                lineHeight: 'inherit'
-              }
+                lineHeight: 'inherit',
+              },
             }}
             lineProps={(lineNumber) => ({
               style: {
                 display: 'block',
                 width: '100%',
                 paddingLeft: isWrapEnabled ? '3.4rem' : '0',
-                textIndent: isWrapEnabled ? '-3.4rem' : '0'
-              }
+                textIndent: isWrapEnabled ? '-3.4rem' : '0',
+              },
             })}
           >
             {fileContent}

@@ -376,7 +376,7 @@ const FileOperationItem = React.forwardRef<
 
 FileOperationItem.displayName = 'FileOperationItem';
 
-const ApplyChangesPanel: React.FC = () => {
+const ReviewPanel: React.FC = () => {
   const {
     activeOperations,
     applyChange,
@@ -1102,5 +1102,6 @@ const ApplyChangesPanel: React.FC = () => {
     </div>
   );
 };
+ReviewPanel.displayName = 'ReviewPanel';
 
-export default ApplyChangesPanel;
+export default ReviewPanel;

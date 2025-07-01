@@ -6,7 +6,7 @@ import { exec } from 'child_process';
 import { promisify } from 'util';
 import * as path from 'path';
 import * as fs from 'fs/promises';
-import type { IGitService, CommitLog, GitCommitsForFileOptions } from '../../common/types/git-service';
+import type { IGitService, CommitLog, GitCommitsForFileOptions, GitFileStatus } from '../../common/types/git-service';
 import { PathUtils } from './PathUtils';
 
 const execAsync = promisify(exec);
@@ -185,6 +185,52 @@ export class GitService implements IGitService {
     } catch (error) {
       console.error(`Error getting recent commit hashes:`, error);
       return [];
+    }
+  }
+
+  /**
+   * Get uncommitted changes in the repository
+   * @returns Array of files with their status (Added, Modified, Deleted)
+   */
+  async getUncommittedChanges(): Promise<GitFileStatus[]> {
+    if (!(await this.isGitRepository())) {
+      return [];
+    }
+    try {
+      const output = await this.executeGitCommand('diff --name-status HEAD');
+      if (!output.trim()) {
+        return [];
+      }
+      return output
+        .split('\n')
+        .filter(line => line.trim())
+        .map(line => {
+          const [status, path] = line.split('\t');
+          return { status: status.trim() as 'A' | 'M' | 'D', path: PathUtils.normalizeToUnix(path) };
+        });
+    } catch (error) {
+      console.error('Error getting uncommitted changes:', error);
+      return [];
+    }
+  }
+
+  /**
+   * Get the content of a file at the HEAD commit
+   * @param filePath Project-relative path to the file
+   * @returns File content as a string, or an empty string if not found or on error
+   */
+  async getContentAtHead(filePath: string): Promise<string> {
+    if (!(await this.isGitRepository())) {
+      return '';
+    }
+    try {
+      // Use HEAD:./path to be explicit, helps with some git versions
+      const platformPath = PathUtils.toPlatform(filePath);
+      const output = await this.executeGitCommand(`show HEAD:"${platformPath}"`);
+      return output;
+    } catch (error) {
+      // This is expected for newly added files. Return empty string.
+      return '';
     }
   }
 

@@ -5,7 +5,6 @@
 Athanor is an **Electron-based desktop application** that integrates AI coding assistants into a developer’s workflow. Its primary goal is to streamline two main flows:
 
 1.  **Intelligent Prompt Creation & Refinement**
-
     - The user describes a task and manually selects a few key "seed" files.
     - Athanor's **Relevance Engine** automatically analyzes the project—leveraging dependencies, Git history, file mentions, and user activity—to identify and include other relevant "neighboring" files.
     - Athanor then generates a comprehensive, context-rich prompt using specialized templates.
@@ -20,49 +19,42 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
 ### Key Features
 
 1.  **Intelligent Context Builder (Relevance Engine)**
-
     - At the core of Athanor is a sophisticated `RelevanceEngineService.ts` that automatically discovers contextually relevant files, going far beyond manual selection.
     - It uses a two-phase scoring engine fueled by multiple heuristics:
-        - **Code Analysis**: Direct dependencies in languages like JavaScript/TypeScript and Python are resolved using `DependencyResolver.ts` and `DependencyScanner.ts`.
-        - **Git History**: `GitService.ts` analyzes commit history to find files that are frequently changed together.
-        - **Project Graph**: Identifies "hub files" (highly interconnected) and files that mention each other.
-        - **User Activity**: `UserActivityService.ts` tracks recently edited files, giving them higher relevance.
-        - **Task Description**: Natural language analysis of the task description identifies keywords and direct path mentions.
+      - **Code Analysis**: Direct dependencies in languages like JavaScript/TypeScript and Python are resolved using `DependencyResolver.ts` and `DependencyScanner.ts`.
+      - **Git History**: `GitService.ts` analyzes commit history to find files that are frequently changed together.
+      - **Project Graph**: Identifies "hub files" (highly interconnected) and files that mention each other.
+      - **User Activity**: `UserActivityService.ts` tracks recently edited files, giving them higher relevance.
+      - **Task Description**: Natural language analysis of the task description identifies keywords and direct path mentions.
     - The engine produces a token-budgeted list of "neighboring files" that are included in the prompt, providing the AI with rich, relevant context. This state is managed in the UI by `contextStore.ts`.
 
 2.  **Project-Wide Analysis & Caching**
-
     - On opening a project, Athanor runs a background analysis using a `projectAnalysisWorker.ts` to build a comprehensive dependency and relationship graph of the entire codebase.
     - This graph, managed by `ProjectGraphService.ts`, powers the Relevance Engine.
     - The resulting graph is cached in the `.ath_materials` folder as `project_graph.json` to ensure fast subsequent loads. The analysis automatically re-runs when file changes are detected after a period of user inactivity.
 
 3.  **Direct LLM API Integration (Optional)**
-
     - While the core workflow is API-key-free, Athanor includes an optional feature for direct communication with LLM providers (OpenAI, Anthropic, Gemini, Mistral).
     - API keys are stored securely using Electron's `safeStorage` via the `ApiKeyServiceMain`.
     - The `LLMServiceMain`, client adapters, and extensive model configuration (`electron/modules/llm/main/config.ts`) manage these interactions.
 
 4.  **Git Integration**
-
     - Athanor deeply integrates with Git repositories via `GitService.ts`.
     - It uses Git to find recently committed files and identify files that share commit history, which are key signals for the Relevance Engine.
     - The service can also retrieve commit history for specific files.
 
 5.  **Dynamic File Explorer**
-
     - Displays a tree of the chosen project directory.
     - Tracks file line counts (for text files) and uses `.athignore` rules to hide excluded paths.
     - Allows multi-select of files and folders; selecting a folder auto-selects its descendants unless hidden.
     - Automatically updates when files are added or removed on disk (Chokidar watchers).
 
 6.  **Ignore Rules Management**
-
     - By default, Athanor automatically processes rules from the project's `.gitignore` file. This behavior can be toggled in the project settings.
     - The `.athignore` file is used for Athanor-specific ignore rules or for overriding `.gitignore` rules (e.g., re-including a file with an exception rule like `!path/to/file`).
     - The main process (via `ignoreRulesManager.ts`) uses the `ignore` library to handle advanced wildcard matching, including an 'ignore all by name' option available via the file explorer's context menu.
 
 7.  **Task & Prompt Management**
-
     - Multiple “task tabs,” managed by `workbenchStore.ts`, each containing:
       - A **task description**: plain-text or markdown instructions.
       - An **AI output** area: displays the generated prompt for the user to copy.
@@ -72,24 +64,20 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
     - The user can dynamically switch between prompt/task _variants_ (e.g., different modes like “Query,” “Coder,” “Architect” or task variations like “Default”, “LaTeX”) using context menus in the Action Panel (`PromptContextMenu.tsx`, `TaskContextMenu.tsx`).
 
 8.  **Clipboard & Code Changes**
-
     - Code blocks or raw text can be copied with consistent line endings and optional code fences.
     - The “apply changes” flow scans for XML blocks from the AI’s output, extracts file operations, and shows them in a diff panel.
 
 9.  **Project Setup & Supplementary Materials**
-
     - On folder selection, Athanor can create a `.athignore` file if it does not exist.
     - A hidden `.ath_materials` folder is automatically created to store extra references (like doc fragments).
     - If a `.gitignore` file exists, its rules are automatically applied by default.
 
 10. **User Interface Layout**
-
     - **Left Panel**: The file explorer with watchers, expansions, checkboxes, and a context menu (right-click to ignore items).
     - **Right Panel**: Tabs for different tasks, a file viewer, and the “Apply Changes” panel that lists AI-proposed modifications. Action Panel controls prompt generation, preset tasks, and configuration toggles (Smart Preview, Include File Tree, Documentation Format).
     - A bottom **log panel** shows messages and clickable events for debugging or re-inspection (`logStore.ts`).
 
 11. **Preset Tasks**
-
     - Pre-defined tasks (e.g., 'AI Summary', 'Refactor Code') available in the Action Panel, loaded from `task_*.xml` files.
 
 12. **Drag and Drop**
@@ -102,7 +90,6 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
 Athanor follows Electron's recommended **“secure by default”** pattern, separating logic between **main** and **renderer** processes:
 
 1.  **Main Process (Electron)**
-
     - **`main.ts`**: Application startup, window creation, and core event handling. It creates singleton instances of services like `FileService` and `SettingsService`.
     - **IPC Handlers**:
       - `ipcHandlers.ts` collects all handlers from `handlers/` (e.g., `coreHandlers.ts`, `fileOperationHandlers.ts`, `fileWatchHandlers.ts`) into a single registration function.
@@ -140,7 +127,7 @@ Athanor follows Electron's recommended **“secure by default”** pattern, sepa
     - **React Components** (`src/components/*`):
       - **`AthanorApp.tsx`** and **`MainLayout.tsx`** define the overall UI layout:
         - File explorer on the left (expanded by `FileExplorer.tsx`).
-        - Action tabs (workbench, viewer, apply-changes) on the right.
+        - Action tabs (workbench, viewer, review) on the right.
       - `ApplyChangesPanel.tsx` is the UI for viewing & applying AI-proposed code modifications.
       - `FileContextMenu.tsx` handles ignoring items and possibly other file actions from the explorer.
       - `ActionPanel.tsx` controls prompt generation and preset tasks, hooking into `promptStore.ts`, `workbenchStore.ts`, and `taskStore.ts`.
@@ -187,32 +174,27 @@ Athanor follows Electron's recommended **“secure by default”** pattern, sepa
 ### Action Points
 
 1.  When working with direct file system operations:
-
     - Use **`FileService.ts`** methods in main process code via the singleton instance.
     - Access through IPC handlers defined in `handlers/` directory.
     - Handle errors appropriately at each layer.
 
 2.  When building UI features:
-
     - Use `fileSystemService.ts` for file tree operations in the renderer.
     - Access through React hooks and components.
     - Handle loading states and error conditions.
 
 3.  For new file system features:
-
     - Add core functionality to **`FileService.ts`** or **`PathUtils.ts`** as appropriate.
     - Create corresponding IPC handlers in `handlers/`.
     - Add interface methods to `preload.ts`.
     - Implement high-level operations in `fileSystemService.ts` if needed for the UI.
 
 4.  TypeScript & Global Types:
-
     - Regularly open and double-check **`src/types/global.d.ts`** to avoid TypeScript mistakes.
     - This file extends the `window` interface to expose `window.fileSystem`, houses core global interfaces (like `FileOperation`), and organizes key application-level types.
     - If an IPC method signature changes in the main process or `preload.ts`, update both the main code **and** `global.d.ts` accordingly.
 
 5.  When debugging:
-
     - Check main process logs for **`FileService.ts`** or **`PathUtils.ts`** issues.
     - Verify IPC communication through preload bridge.
     - Inspect renderer process state using React DevTools, focusing on Zustand stores and `fileSystemService.ts` usage.

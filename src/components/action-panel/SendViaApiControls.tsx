@@ -14,7 +14,7 @@ interface SendViaApiControlsProps {
   applicationSettings: ApplicationSettings | null;
   saveApplicationSettings: (settings: ApplicationSettings) => Promise<void>;
   addLog: (message: string | Omit<LogEntry, 'id' | 'timestamp'>) => void;
-  setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+  setActivePanelTab?: (tab: 'workbench' | 'viewer' | 'review') => void;
   setParentIsLoading: (loading: boolean) => void;
   isSendingRequest: boolean;
   setStoreIsGeneratingPrompt: (loading: boolean) => void;

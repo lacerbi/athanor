@@ -11,7 +11,7 @@ import { useLogStore, LogEntry } from '../stores/logStore';
 import FileExplorer from './fileExplorer/FileExplorer';
 import ActionPanel from './ActionPanel';
 import FileViewerPanel from './FileViewerPanel';
-import ApplyChangesPanel from './ApplyChangesPanel';
+import ReviewPanel from './ReviewPanel';
 import SettingsPanel from './SettingsPanel';
 import AthanorTabs, { TabType } from './AthanorTabs';
 import CliPanel from './CliPanel';
@@ -233,8 +233,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({
           <div style={{ display: activeTab === 'viewer' ? 'block' : 'none', height: '100%' }}>
             <FileViewerPanel onTabChange={onTabChange} />
           </div>
-          <div style={{ display: activeTab === 'apply-changes' ? 'block' : 'none', height: '100%' }}>
-            <ApplyChangesPanel />
+          <div style={{ display: activeTab === 'review' ? 'block' : 'none', height: '100%' }}>
+            <ReviewPanel />
           </div>
           <div style={{ display: activeTab === 'settings' ? 'block' : 'none', height: '100%' }}>
             <SettingsPanel />

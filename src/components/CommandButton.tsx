@@ -8,10 +8,12 @@ import { getCommandDescription } from '../commands';
 import { applyAiOutput } from '../actions/ApplyAiOutputAction';
 
 interface CommandButtonProps {
-  addLog: (message: string | { message: string; onClick: () => Promise<void> }) => void;
+  addLog: (
+    message: string | { message: string; onClick: () => Promise<void> }
+  ) => void;
   setOperations: (ops: any[]) => void;
   clearOperations: () => void;
-  setActiveTab?: (tab: 'workbench' | 'viewer' | 'apply-changes') => void;
+  setActiveTab?: (tab: 'workbench' | 'viewer' | 'review') => void;
 }
 
 const CommandButton: React.FC<CommandButtonProps> = ({
