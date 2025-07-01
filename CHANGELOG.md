@@ -9,6 +9,36 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.7] - 2025-07-01
+
+### Added
+
+- **Git Diff Viewer**: A new "Git" mode in the Review panel allows users to view and revert local file changes (staged and unstaged) directly within the app. ([6d7af8c](https://github.com/lacerbi/athanor/commit/6d7af8c), [4b91851](https://github.com/lacerbi/athanor/commit/4b91851), [9911aab](https://github.com/lacerbi/athanor/commit/9911aab))
+- Added a "Clear" button to the Review panel to easily dismiss its content. ([e7bc3b8](https://github.com/lacerbi/athanor/commit/e7bc3b8))
+- Added a new "architect" prompt for agent-based workflows. ([9ca3712](https://github.com/lacerbi/athanor/commit/9ca3712))
+
+### Changed
+
+- Renamed the "Apply Changes" panel to "Review" to better reflect its dual purpose of handling both AI-suggested changes and Git diffs. ([6d7af8c](https://github.com/lacerbi/athanor/commit/6d7af8c))
+- The Review panel UI now provides more intuitive text and warnings, adapting its guidance based on whether it is in "AI" or "Git" mode. ([e006b8a](https://github.com/lacerbi/athanor/commit/e006b8a))
+
+### Fixed
+
+- The Git diff view now correctly displays changes for newly created and deleted files. ([ff34d74](https://github.com/lacerbi/athanor/commit/ff34d74))
+- Git-related features are now correctly disabled when the opened project is not a Git repository. ([9fe4622](https://github.com/lacerbi/athanor/commit/9fe4622))
+- The application now properly refreshes its Git context when switching between projects. ([fc53c72](https://github.com/lacerbi/athanor/commit/fc53c72))
+- Corrected a path resolution error during application startup. ([d86015e](https://github.com/lacerbi/athanor/commit/d86015e))
+- The "Selected Files" list now correctly filters out folders and non-existent file paths. ([c68b40b](https://github.com/lacerbi/athanor/commit/c68b40b))
+
+### Documentation
+
+- Added a note that `npm run package` is the standard method for creating test builds. ([d86015e](https://github.com/lacerbi/athanor/commit/d86015e))
+- Added a design document for the new Git diff feature. ([d13bd0f](https://github.com/lacerbi/athanor/commit/d13bd0f))
+
+### Tests
+
+- Updated and fixed unit tests to align with recent feature changes and refactoring. ([1ac9e9f](https://github.com/lacerbi/athanor/commit/1ac9e9f))
+
 ## [0.7.6] - 2025-06-30
 
 ### Added
