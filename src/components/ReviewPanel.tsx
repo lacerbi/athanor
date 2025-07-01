@@ -6,15 +6,17 @@ import { createPatch } from 'diff';
 import {
   AlertTriangle,
   ArrowUp,
+  Bot,
+  Check,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ArrowDown,
-  ChevronsUp,
   ChevronsDown,
+  ChevronsUp,
   ChevronUp,
-  ChevronDown,
+  DraftingCompass,
   GitCompare,
-  Check,
+  Wrench,
   X,
 } from 'lucide-react';
 import { useApplyChangesStore } from '../stores/applyChangesStore';
@@ -229,6 +231,12 @@ const FileOperationItem = React.forwardRef<
     useEffect(() => {
       const checkWarning = async () => {
         try {
+          // Only show warnings in AI mode - Git mode doesn't need file selection warnings
+          if (mode !== 'ai') {
+            setShowWarning(false);
+            return;
+          }
+
           // If the file is being created, no warning needed
           if (
             !op.file_path ||
@@ -284,6 +292,7 @@ const FileOperationItem = React.forwardRef<
       tabs,
       activeTabIndex,
       applicationSettings,
+      mode,
     ]);
 
     return (
@@ -958,10 +967,41 @@ const ReviewPanel: React.FC = () => {
 
   if (!activeOperations.length) {
     return (
-      <div className="p-4">
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          No active operations to display.
-        </p>
+      <div className="flex flex-col h-full items-center justify-center p-8">
+        <div className="text-center max-w-lg">
+          <GitCompare className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500" />
+          <h2 className="mt-4 text-xl font-semibold text-gray-900 dark:text-gray-100">
+            No Changes to Review
+          </h2>
+          <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+            This panel displays AI-proposed changes and uncommitted Git diffs.
+          </p>
+          <div className="mt-6 text-sm text-left space-y-3 bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+            <p className="flex items-start gap-2">
+              <Bot
+                size={18}
+                className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
+            	/>
+            	<span>
+            		<strong>AI changes</strong> appear here after you use the "Apply AI
+            		Output" action. This processes responses from prompts like Coder{' '}
+            		<Wrench size={16} className="inline-block -mt-0.5" /> or Architect{' '}
+            		<DraftingCompass size={16} className="inline-block -mt-0.5" />.
+            	</span>
+            </p>
+            <p className="flex items-start gap-2">
+            	<GitCompare
+            		size={18}
+            		className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
+            	/>
+            	<span>
+            		For <strong>Git changes</strong>, click the{' '}
+            		<GitCompare size={16} className="inline-block -mt-0.5" /> button
+            		above the file explorer.
+            	</span>
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
