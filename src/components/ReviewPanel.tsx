@@ -23,6 +23,7 @@ import { useApplyChangesStore } from '../stores/applyChangesStore';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useSettingsStore } from '../stores/settingsStore';
+import { useLogStore } from '../stores/logStore';
 import { getSmartPreview } from '../utils/codebaseDocumentation';
 import { SETTINGS } from '../utils/constants';
 
@@ -397,6 +398,7 @@ const ReviewPanel: React.FC = () => {
     rejectChange,
     applyAllChanges,
     rejectAllChanges,
+    clearOperations,
   } = useApplyChangesStore();
   const { fileTree } = useFileSystemStore();
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -415,6 +417,36 @@ const ReviewPanel: React.FC = () => {
   const hasPendingOperations = activeOperations.some(
     (op) => !op.accepted && !op.rejected
   );
+
+  // Handle clear operations with confirmation for AI mode
+  const handleClear = () => {
+    const { addLog } = useLogStore.getState();
+    
+    if (mode === 'git') {
+      // Git mode: clear immediately, no confirmation needed
+      clearOperations();
+      addLog('Cleared all changes');
+      return;
+    }
+
+    // AI mode: check for pending operations
+    if (hasPendingOperations) {
+      const pendingCount = activeOperations.filter(
+        (op) => !op.accepted && !op.rejected
+      ).length;
+      
+      const confirmed = window.confirm(
+        `There are ${pendingCount} pending change${pendingCount === 1 ? '' : 's'} that haven't been accepted or rejected.\n\nAre you sure you want to clear all changes? This action cannot be undone.`
+      );
+      
+      if (!confirmed) {
+        return;
+      }
+    }
+
+    clearOperations();
+    addLog('Cleared all changes');
+  };
 
   // Navigation handlers
   const NAVIGATION_PADDING_ABOVE = 16; // Space above the target element when navigating
@@ -1098,6 +1130,23 @@ const ReviewPanel: React.FC = () => {
           	className={`${mode === 'ai' ? 'ml-2' : 'ml-auto'} px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
           	{mode === 'git' ? 'Revert All' : 'Reject All'}
+          </button>
+          <button
+            onClick={handleClear}
+            disabled={activeOperations.length === 0}
+            title={
+              activeOperations.length === 0
+                ? 'No changes to clear'
+                : mode === 'git' 
+                  ? 'Clear all changes'
+                  : hasPendingOperations
+                    ? 'Clear all changes (confirmation required)'
+                    : 'Clear all changes'
+            }
+            className="ml-2 px-3 py-1 bg-gray-500 dark:bg-gray-600 text-white rounded hover:bg-gray-600 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+          >
+            <X size={16} />
+            Clear
           </button>
           <span className="text-xs text-gray-500 dark:text-gray-400 ml-4">
             {activeOperations.length > 0 ? currentIdx + 1 : 0} /{' '}
