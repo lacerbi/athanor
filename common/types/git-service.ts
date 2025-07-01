@@ -18,6 +18,11 @@ export interface GitFileStatus {
   status: 'A' | 'M' | 'D'; // Added, Modified, Deleted
 }
 
+export interface GitDiffData extends GitFileStatus {
+  oldCode: string;
+  newCode: string;
+}
+
 export interface IGitService {
   setBaseDir(baseDir: string): void;
   getBaseDir(): string;

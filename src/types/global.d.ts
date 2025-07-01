@@ -13,6 +13,8 @@ interface AthanorDragEvent extends DragEvent {
 
 export {};
 
+import type { GitDiffData } from '../../common/types/git-service';
+
 // Settings types
 export interface ProjectSettings {
   projectNameOverride?: string;
@@ -266,6 +268,9 @@ declare global {
       };
       graph: {
         forceReanalyze: () => Promise<void>;
+      };
+      git: {
+        viewDiffs: () => Promise<GitDiffData[]>;
       };
       appShell: {
         /**

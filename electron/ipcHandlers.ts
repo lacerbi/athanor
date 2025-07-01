@@ -11,8 +11,10 @@ import { registerSecureApiKeyIpc } from './handlers/secureApiKeyIpc';
 import { registerLlmIpc } from './handlers/llmIpc';
 import { setupContextHandlers } from './handlers/contextHandlers';
 import { setupShellHandlers } from './handlers/shellHandlers';
+import { setupGitHandlers } from './handlers/gitHandlers';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
+import { GitService } from './services/GitService';
 import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
@@ -28,7 +30,8 @@ export function setupIpcHandlers(
   relevanceEngine: RelevanceEngineService,
   projectGraphService: ProjectGraphService,
   userActivityService: UserActivityService,
-  shellService: ShellService
+  shellService: ShellService,
+  gitService: GitService
 ) {
   setupCoreHandlers(fileService, settingsService);
   setupFileOperationHandlers(fileService);
@@ -38,4 +41,5 @@ export function setupIpcHandlers(
   registerLlmIpc(llmService);
   setupContextHandlers(relevanceEngine, settingsService);
   setupShellHandlers(shellService);
+  setupGitHandlers(gitService, fileService);
 }

@@ -365,7 +365,8 @@ app.whenReady().then(async () => {
     relevanceEngine,
     projectGraphService,
     userActivityService,
-    shellService
+    shellService,
+    gitService
   );
 
   ipcMain.handle('graph:force-reanalyze', () => {

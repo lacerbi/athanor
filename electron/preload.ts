@@ -108,6 +108,9 @@ contextBridge.exposeInMainWorld('electronBridge', {
   graph: {
     forceReanalyze: () => ipcRenderer.invoke('graph:force-reanalyze'),
   },
+  git: {
+    viewDiffs: () => ipcRenderer.invoke('git:view-diffs'),
+  },
   appShell: {
     openExternalURL: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
     openPath: (path: string) => ipcRenderer.invoke('shell:openPath', path),
