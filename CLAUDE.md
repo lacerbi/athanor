@@ -39,6 +39,11 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - `RelevanceEngineService.ts` - Intelligent context discovery using multiple heuristics
 - `ProjectGraphService.ts` - Background project analysis and dependency mapping
 - `GitService.ts` - Git repository analysis for relevance scoring
+- `UserActivityService.ts` - Real-time file activity tracking for relevance signals
+- `SettingsService.ts` - Project and application settings management
+- `ShellService.ts` - Terminal/CLI session management with persistent PTY sessions
+- `TaskAnalysisUtils.ts` - Task description analysis and keyword extraction
+- `DependencyResolver.ts` / `DependencyScanner.ts` - Language-aware dependency analysis
 
 ### Critical File System Patterns
 
@@ -63,6 +68,10 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - `promptStore.ts` - Prompt templates and variants
 - `taskStore.ts` - Task templates and variants
 - `applyChangesStore.ts` - AI-generated file change management
+- `settingsStore.ts` - Project and application settings state
+- `logStore.ts` - Application log management with interactive entries
+- `commandStore.ts` - Clipboard and command validation state
+- `cliStore.ts` - Terminal session state management
 
 ### Project Structure Insights
 
@@ -71,18 +80,47 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - Relevance Engine uses Git history, dependencies, file mentions, and user activity
 - Project analysis runs in background worker thread (`projectAnalysisWorker.ts`)
 - Results cached in `.ath_materials/project_graph.json`
+- Two-phase scoring engine with multiple heuristics for relevance
+- Automatic re-analysis when file changes are detected after inactivity
 
 **AI Integration:**
 
 - Optional direct API integration via secure storage (`electron/modules/secure-api-storage/`)
 - Primary workflow: copy prompts to external AI, paste responses back
 - XML command parsing for applying AI-generated changes
+- Modular LLM provider system (`electron/modules/llm/`) supporting:
+  - Anthropic Claude API
+  - OpenAI GPT models
+  - Google Gemini models
+  - Mistral models (API key storage only)
+- Type-safe IPC channels for LLM operations
+- Extensive model configuration and client adapters
 
 **File Management:**
 
 - Supports `.athignore` and `.gitignore` patterns
 - Chokidar file watchers for real-time updates
 - Path normalization via `PathUtils.ts`
+- Agent task creation in `.ath_materials` directory
+
+**CLI/Terminal Support:**
+
+- Integrated terminal via `node-pty` and `xterm.js`
+- Multi-session support with persistent terminals
+- Platform-specific shell detection (PowerShell on Windows, zsh/bash on Unix)
+- Managed by `ShellService.ts` and `cliStore.ts`
+
+**Additional Features:**
+
+- **Tooltips**: Contextual help throughout the UI via hover tooltips
+- **Drag and Drop**: File paths can be dragged from explorer to task/context areas
+- **Context Suggestions**: Automatic context suggestions based on task content
+- **Preset Tasks**: Pre-defined task templates loaded from `task_*.xml` files
+- **Token Budgeting**: Intelligent file inclusion based on token limits
+- **Smart Preview**: Configurable preview of file contents in prompts
+- **Documentation Format**: Multiple format options for file inclusion
+- **Ignore Rules**: Advanced pattern matching with `.athignore` and `.gitignore`
+- **Project Settings**: Stored in `.ath_materials/project_settings.json`
 
 ## Testing Considerations
 
@@ -108,6 +146,22 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 4. Update `src/types/global.d.ts` type definitions
 5. Implement UI-level operations in `fileSystemService.ts`
 
+**When adding new IPC handlers:**
+
+1. Create handler functions in appropriate file in `electron/handlers/`
+2. Export from `ipcHandlers.ts` for registration
+3. Add corresponding methods to `preload.ts`
+4. Update type definitions in `src/types/global.d.ts`
+
+**Important UI Patterns:**
+
+- **Left Panel**: File explorer with context menus and ignore functionality
+- **Right Panel**: Task tabs, file viewer, and Apply Changes panel
+- **Bottom Panel**: Log viewer with clickable entries for debugging
+- **Action Panel**: Controls for prompt generation, preset tasks, and settings toggles
+- **Task Templates**: XML-based templates in `resources/prompts/`
+- **Prompt Variants**: Context menu for switching between prompt modes (Query, Coder, Architect)
+
 **Security considerations:**
 
 - Never bypass IPC bridge for file operations
@@ -131,3 +185,8 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - **ignore** - .gitignore/.athignore parsing
 - **js-tiktoken** - Token counting for prompts
 - **Jest + ts-jest** - Testing framework
+- **@anthropic-ai/sdk** - Anthropic Claude API integration
+- **openai** - OpenAI API integration
+- **@google/genai** - Google Gemini API integration
+- **node-pty** - Terminal emulation support
+- **xterm & xterm-addon-fit** - Terminal rendering in UI
