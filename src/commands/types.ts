@@ -6,9 +6,10 @@ export const COMMAND_TYPES = {
   SELECT: 'select',
   TASK: 'task',
   APPLY_CHANGES: 'apply changes',
+  AGENT_TASK: 'agent task',
 } as const;
 
-export type CommandType = typeof COMMAND_TYPES[keyof typeof COMMAND_TYPES];
+export type CommandType = (typeof COMMAND_TYPES)[keyof typeof COMMAND_TYPES];
 
 // Re-export common types used across commands
 export type { FileOperation } from '../types/global';

@@ -81,6 +81,13 @@ export async function processAiResponseContent(
           });
           break;
 
+        case commands.COMMAND_TYPES.AGENT_TASK:
+          success = await commands.executeAgentTaskCommand({
+            content: command.content,
+            addLog,
+          });
+          break;
+
         default:
           addLog(`Unknown command type: ${command.type}`);
           continue;
