@@ -9,6 +9,31 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+### Added
+
+- A new `agent_task` command for advanced, agent-based workflows, including clickable log entries and dynamic prompt updates. ([a69b80c](https://github.com/lacerbi/athanor/commit/a69b80c), [94aa97f](https://github.com/lacerbi/athanor/commit/94aa97f), [67ba73e](https://github.com/lacerbi/athanor/commit/67ba73e))
+- Enhanced `CREATE` file operation to allow overwriting existing files with a clear user warning. ([4e2027a](https://github.com/lacerbi/athanor/commit/4e2027a))
+- Listeners for `Ctrl+C`/`Ctrl+V` to improve clipboard interaction. ([7743aa8](https://github.com/lacerbi/athanor/commit/7743aa8))
+
+### Changed
+
+- Updated the agentic architect prompt for better performance. ([4e2027a](https://github.com/lacerbi/athanor/commit/4e2027a))
+
+### Fixed
+
+- Corrected paste behavior within the application. ([bfb3a3e](https://github.com/lacerbi/athanor/commit/bfb3a3e))
+- Added `ELECTRON_USE_DESKTOP_GL` environment flag to mitigate potential rendering issues. ([87ba6e3](https://github.com/lacerbi/athanor/commit/87ba6e3))
+- Minor text clarifications in the Review panel for better usability. ([ef6d6d5](https://github.com/lacerbi/athanor/commit/ef6d6d5))
+
+### Documentation
+
+- Added `GEMINI.md` and updated `CLAUDE.md` to provide guidance for different AI models. ([b2f15cb](https://github.com/lacerbi/athanor/commit/b2f15cb), [fdc032d](https://github.com/lacerbi/athanor/commit/fdc032d))
+- Clarified that Prettier is used for code formatting. ([c02b34a](https://github.com/lacerbi/athanor/commit/c02b34a))
+
+### Tests
+
+- Fixed and updated unit tests to align with the new `agent_task` command. ([8050594](https://github.com/lacerbi/athanor/commit/8050594))
+
 ## [0.7.7] - 2025-07-01
 
 ### Added
