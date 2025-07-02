@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - `npm test` - Run Jest unit tests (includes both main and renderer process tests)
 - `npm run test:watch` - Run tests in watch mode
-- `npm run lint` - Run ESLint on TypeScript/React code
+- `npm run lint` - **Note: Currently non-functional** due to ESLint configuration incompatibility (`.eslintrc.js` uses old format incompatible with ESLint 9+). Prettier is used for code formatting.
 
 **Platform-specific builds:**
 
@@ -117,7 +117,7 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 **Code style:**
 
 - TypeScript 5+ with strict typing
-- ESLint + Prettier configuration
+- Prettier for code formatting (ESLint config exists but is incompatible with ESLint 9+)
 - TailwindCSS 3 + Material-UI components
 - Conventional Commits for commit messages
 
