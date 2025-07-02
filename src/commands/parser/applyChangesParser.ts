@@ -265,8 +265,18 @@ export async function parseXmlContent(
       try {
         let oldCode = '';
         let processedNewCode = '';
-        const operation = block.operation;
+        let operation = block.operation;
         const path = block.path;
+        let warning: string | undefined;
+
+        if (operation === 'CREATE') {
+          const fileExists = await window.fileService.exists(path);
+          if (fileExists) {
+            operation = 'UPDATE_FULL';
+            warning = `File already exists. Operation changed from CREATE to a full update.`;
+            addLog(`Warning for ${path}: ${warning}`);
+          }
+        }
 
         // Track failed UPDATE_DIFF operations
         if (operation === 'UPDATE_DIFF') {
@@ -276,9 +286,9 @@ export async function parseXmlContent(
         // Get existing file content if needed
         if (operation !== 'CREATE') {
           try {
-            const isDir = await window.fileSystem.isDirectory(path);
+            const isDir = await window.fileService.isDirectory(path);
             if (!isDir) {
-              oldCode = (await window.fileSystem.readFile(path, {
+              oldCode = (await window.fileService.read(path, {
                 encoding: 'utf8',
               })) as string;
             } else {
@@ -329,6 +339,7 @@ export async function parseXmlContent(
           accepted: false,
           rejected: false,
           diff_blocks: operation === 'UPDATE_DIFF' ? [] : undefined,
+          warning: warning,
         });
       } catch (error) {
         console.error(`Error processing file ${block.path}:`, error);
@@ -338,7 +349,7 @@ export async function parseXmlContent(
 
     // If there were any failed UPDATE_DIFF operations, create a clickable log entry
     if (failedDiffPaths.length > 0) {
-      const currentDir = await window.fileSystem.getCurrentDirectory();
+      const currentDir = await window.fileService.getCurrentDirectory();
       // Create a clickable log entry by passing an object
       addLog({
         message: `${failedDiffPaths.length} UPDATE_DIFF operation(s) failed - Click to copy files`,

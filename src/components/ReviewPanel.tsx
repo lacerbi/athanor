@@ -14,7 +14,7 @@ import {
   ChevronsDown,
   ChevronsUp,
   ChevronUp,
-  DraftingCompass,
+  Pen,
   GitCompare,
   Wrench,
   X,
@@ -341,6 +341,13 @@ const FileOperationItem = React.forwardRef<
           </div>
         </div>
 
+        {op.warning && (
+          <div className="flex items-start gap-2 p-3 my-2 text-sm rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
+            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <p>{op.warning}</p>
+          </div>
+        )}
+
         <div className="min-w-0 w-full">
           <DiffView
             oldText={op.old_code}
@@ -365,9 +372,14 @@ const FileOperationItem = React.forwardRef<
             <button
               className="px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:bg-gray-300 dark:disabled:bg-gray-600 disabled:cursor-not-allowed"
               disabled={op.accepted || op.rejected}
-            	onClick={() => onReject(index)}
+              onClick={() => onReject(index)}
+              title={
+                mode === 'git'
+                  ? 'Revert change to the last commit'
+                  : 'Reject change'
+              }
             >
-            	{mode === 'git' ? 'Revert Change' : 'Reject'}
+              {mode === 'git' ? 'Revert Change' : 'Reject'}
             </button>
           </div>
 
@@ -421,7 +433,7 @@ const ReviewPanel: React.FC = () => {
   // Handle clear operations with confirmation for AI mode
   const handleClear = () => {
     const { addLog } = useLogStore.getState();
-    
+
     if (mode === 'git') {
       // Git mode: clear immediately, no confirmation needed
       clearOperations();
@@ -434,11 +446,11 @@ const ReviewPanel: React.FC = () => {
       const pendingCount = activeOperations.filter(
         (op) => !op.accepted && !op.rejected
       ).length;
-      
+
       const confirmed = window.confirm(
         `There are ${pendingCount} pending change${pendingCount === 1 ? '' : 's'} that haven't been accepted or rejected.\n\nAre you sure you want to clear all changes? This action cannot be undone.`
       );
-      
+
       if (!confirmed) {
         return;
       }
@@ -1013,24 +1025,24 @@ const ReviewPanel: React.FC = () => {
               <Bot
                 size={18}
                 className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
-            	/>
-            	<span>
-            		<strong>AI changes</strong> appear here after you use the "Apply AI
-            		Output" action. This processes responses from prompts like Coder{' '}
-            		<Wrench size={16} className="inline-block -mt-0.5" /> or Architect{' '}
-            		<DraftingCompass size={16} className="inline-block -mt-0.5" />.
-            	</span>
+              />
+              <span>
+                <strong>AI changes</strong> appear here after you use the "Apply
+                AI Output" action. This processes responses from prompts like
+                Coder <Wrench size={16} className="inline-block -mt-0.5" /> or
+                Writer <Pen size={16} className="inline-block -mt-0.5" />.
+              </span>
             </p>
             <p className="flex items-start gap-2">
-            	<GitCompare
-            		size={18}
-            		className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
-            	/>
-            	<span>
-            		For <strong>Git changes</strong>, click the{' '}
-            		<GitCompare size={16} className="inline-block -mt-0.5" /> button
-            		above the file explorer.
-            	</span>
+              <GitCompare
+                size={18}
+                className="text-gray-500 dark:text-gray-400 flex-shrink-0 mt-0.5"
+              />
+              <span>
+                For <strong>Git changes</strong>, click the{' '}
+                <GitCompare size={16} className="inline-block -mt-0.5" /> button
+                above the file explorer.
+              </span>
             </p>
           </div>
         </div>
@@ -1106,30 +1118,32 @@ const ReviewPanel: React.FC = () => {
             <ChevronRight size={16} />
           </button>
           {mode === 'ai' && (
-          	<button
-          	  onClick={applyAllChanges}
-          	  disabled={!hasPendingOperations}
-          	  title={
-          	    hasPendingOperations
-          	      ? 'Accept all pending changes'
-          	      : 'No pending changes to accept'
-          	  }
-          	  className="ml-auto px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          	>
-          	  Accept All
-          	</button>
+            <button
+              onClick={applyAllChanges}
+              disabled={!hasPendingOperations}
+              title={
+                hasPendingOperations
+                  ? 'Accept all pending changes'
+                  : 'No pending changes to accept'
+              }
+              className="ml-auto px-3 py-1 bg-green-500 dark:bg-green-600 text-white rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Accept All
+            </button>
           )}
           <button
-          	onClick={rejectAllChanges}
-          	disabled={!hasPendingOperations}
-          	title={
-          	  hasPendingOperations
-          	    ? 'Reject all pending changes'
-          	    : 'No pending changes to reject'
-          	}
-          	className={`${mode === 'ai' ? 'ml-2' : 'ml-auto'} px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+            onClick={rejectAllChanges}
+            disabled={!hasPendingOperations}
+            title={
+              mode === 'git'
+                ? 'Revert all changes to the last commit'
+                : hasPendingOperations
+                  ? 'Reject all pending changes'
+                  : 'No pending changes to reject'
+            }
+            className={`${mode === 'ai' ? 'ml-2' : 'ml-auto'} px-3 py-1 bg-red-500 dark:bg-red-600 text-white rounded hover:bg-red-600 dark:hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed`}
           >
-          	{mode === 'git' ? 'Revert All' : 'Reject All'}
+            {mode === 'git' ? 'Revert All' : 'Reject All'}
           </button>
           <button
             onClick={handleClear}
@@ -1137,7 +1151,7 @@ const ReviewPanel: React.FC = () => {
             title={
               activeOperations.length === 0
                 ? 'No changes to clear'
-                : mode === 'git' 
+                : mode === 'git'
                   ? 'Clear all changes'
                   : hasPendingOperations
                     ? 'Clear all changes (confirmation required)'
@@ -1178,14 +1192,14 @@ const ReviewPanel: React.FC = () => {
             <FileOperationItem
               key={`${op.file_path}-${idx}`}
               ref={(el) => {
-            	  itemRefs.current[idx] = el;
+                itemRefs.current[idx] = el;
               }}
               operation={op}
               index={idx}
               mode={mode}
-            	onAccept={applyChange}
-            	onReject={rejectChange}
-            	isActive={idx === currentIdx}
+              onAccept={applyChange}
+              onReject={rejectChange}
+              isActive={idx === currentIdx}
               onDiffBlocksCalculated={(blocks) => {
                 if (idx === currentIdx) {
                   setCurrentDiffBlocks(blocks);

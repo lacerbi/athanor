@@ -229,6 +229,7 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
         await window.fileSystem.getCurrentDirectory(),
         tabs[activeTabIndex].content, // Current tab's content
         tabs[activeTabIndex].context, // Current tab's context
+        activeTab.name, // Pass the active tab's name
         formatType, // Pass the current format type
         smartPreviewConfig, // Pass the smart preview configuration from settings
         currentThresholdLineLength // Pass the current threshold line length

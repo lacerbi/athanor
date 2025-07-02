@@ -5,9 +5,11 @@
 export { executeSelectCommand } from './selectCommand';
 export { executeTaskCommand } from './taskCommand';
 export { executeApplyChangesCommand } from './applyChangesCommand';
+export { executeAgentTaskCommand } from './agentTaskCommand';
 export type { SelectCommandParams } from './selectCommand';
 export type { TaskCommandParams } from './taskCommand';
 export type { ApplyChangesParams } from './applyChangesCommand';
+export type { AgentTaskCommandParams } from './agentTaskCommand';
 
 // Command types and constants
 export { COMMAND_TYPES } from './types';

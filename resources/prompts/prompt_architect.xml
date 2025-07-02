@@ -479,36 +479,50 @@ The purpose is to:
 - All verification steps must be executable from the command line
 - Consider that the agent needs precise, unambiguous instructions
 
-The XML block should include:
+The XML block should be formatted as follows:
 
-1. An XML tag <ath command="task"></ath>
-  * The task_description slightly edited and rewritten for clarity (do not omit parts)
-  * An extended, thorough answer and analysis
-  * A high-level overview of the implementation strategy
-  * Break down the implementation into logical commits if the task is complex
-    - Each commit should focus on one self-contained piece of functionality
-    - Each commit should result in working (though potentially incomplete) code
-    - Each commit should modify a reasonable number of files (typically 1-3)
-    - Each commit should have a clear, specific purpose
-  * For each commit, provide:
-    - A clear description of what the commit achieves
-    - Files that will be modified
-    - Detailed step-by-step implementation instructions
-    - Any dependencies on previous commits
-    - **CLI-based verification commands** appropriate for the programming language and task
-  * For a simple task, one commit might be enough
+```xml
+<ath command="agent task">
+<file_name>{{task_tab_name}}.md</file_name>
+<task_content>
+[Full Plan here]
+</file_content>
+</ath>
+```
 
-2. A XML tag <ath command="select"></ath> with a list of all relevant files 
-  * List all the files that the developer will need to read in full, change or delete from the file_tree provided above
-  * Consider broadly which files might be useful to see for the feature, even if not immediately related
-  * These might include preloaders, utility or global constant files, etc.
-  * If in doubt whether you need to include a file, include it
-  * This list may match the list of highlighted (*) files above (if any), but might include additional files, or remove some which are clearly not needed
-  * Use the relative path of each file
+Use the provided task file name `{{task_tab_name}}.md`
+
+The full plan will contain:
+* The task_description slightly edited and rewritten for clarity (do not omit parts)
+* An extended, thorough answer and analysis
+* A high-level overview of the implementation strategy
+* Break down the implementation into logical commits if the task is complex
+  - Each commit should focus on one self-contained piece of functionality
+  - Each commit should result in working (though potentially incomplete) code
+  - Each commit should modify a reasonable number of files (typically 1-3)
+  - Each commit should have a clear, specific purpose
+* For each commit, provide:
+  - A clear description of what the commit achieves
+  - Files that will be modified
+  - Detailed step-by-step implementation instructions
+  - Any dependencies on previous commits
+  - **CLI-based verification commands** appropriate for the programming language and task
+* For a simple task, one commit might be enough
+
+At the end of the full plan, list "Relevant Files":
+
+* List all the files that the developer will need to read in full, change or delete from the file_tree provided above
+* Consider broadly which files might be useful to see for the feature, even if not immediately related
+* These might include preloaders, utility or global constant files, etc.
+* If in doubt whether you need to include a file, include it
+* This list may match the list of highlighted (*) files above (if any), but might include additional files, or remove some which are clearly not needed
+* Use the relative path of each file
 
 <example>
 ```xml
-<ath command="task">
+<ath command="agent task">
+<file_name>{{task_tab_name}}.md</file_name>
+<task_content>
 # Task
 [Task description, rewritten for clarity]
 
@@ -548,10 +562,12 @@ The XML block should include:
   - API endpoints respond (if applicable)
 
 [Additional commits as needed...]
-</ath>
 
-<ath command="select">
-file1 file2 [...]
+# Relevant Files
+file1
+file2
+...
+</task_content>
 </ath>
 ```
 </example>

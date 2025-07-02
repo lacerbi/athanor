@@ -158,7 +158,8 @@ Athanor follows Electron's recommended **“secure by default”** pattern, sepa
 - **Webpack & electron-forge**: Build, package, and run the Electron application.
 - **TailwindCSS 3 + Lucide Icons**: Provides a flexible styling system and icon library for a clean UI.
 - **Material-UI (MUI) 5**: Partially integrated for certain UI elements (used in some components).
-- **ESLint / Prettier**: Linting & formatting for consistent code style.
+- **Prettier**: Code formatting for consistent style (configured via `.prettierrc`).
+- **ESLint**: Currently non-functional due to incompatible configuration format (`.eslintrc.js` uses old format incompatible with ESLint 9+). The `npm run lint` command will not work properly.
 - **Jest & ts-jest**: Provide the unit testing framework. Tests are typically colocated with the source code they validate (e.g., `FileService.test.ts` alongside `FileService.ts`).
 - **Testing Mocks**: Key dependencies, including Electron itself (via `tests/__mocks__/electron.ts`) and Node.js modules like `fs/promises`, are mocked to ensure isolated and reliable unit tests.
 

@@ -23,6 +23,19 @@ import {
 import { PROJECT_ANALYSIS } from '../src/utils/constants';
 import type { ApplicationSettings } from '../src/types/global';
 
+// --- WSL Graphics Fix Start ---
+// This addresses a specific rendering issue on WSL where Electron may default
+// to an incompatible graphics backend, causing a blank screen.
+// By checking for a custom environment variable, we allow affected users to opt-in
+// to forcing the 'desktop' OpenGL backend without affecting other users.
+if (process.env.ELECTRON_USE_DESKTOP_GL === '1') {
+  console.log(
+    '[Main] ELECTRON_USE_DESKTOP_GL=1 detected. Applying --use-gl=desktop switch.'
+  );
+  app.commandLine.appendSwitch('use-gl', 'desktop');
+}
+// --- WSL Graphics Fix End ---
+
 // Debug flag for menu diagnostics
 const DEBUG_MENU = false;
 const DEBUG_PATH = false;

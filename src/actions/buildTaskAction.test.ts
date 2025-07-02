@@ -241,6 +241,7 @@ describe('buildTaskAction', () => {
         '/fake/project/dir',
         'existing task description',
         'existing context',
+        'Task 1', // activeTabName
         undefined, // passedFormatTypeOverride
         undefined, // smartPreviewConfigInput
         200 // currentThresholdLineLength
@@ -284,6 +285,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
+        'Task 1',
         undefined,
         undefined,
         150 // should use the passed value
@@ -398,6 +400,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         'existing task description', // from mocked store state
         'existing context', // from mocked store state
+        'Task 1',
         undefined,
         undefined,
         expect.anything()
@@ -442,6 +445,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
+        'Task 1',
         undefined,
         undefined,
         expect.anything()
@@ -492,6 +496,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
+        'Task 1',
         undefined,
         undefined,
         expect.anything()
@@ -515,6 +520,7 @@ describe('buildTaskAction', () => {
         expect.anything(),
         expect.anything(),
         expect.anything(),
+        'Task 1',
         undefined,
         undefined,
         expect.anything()
