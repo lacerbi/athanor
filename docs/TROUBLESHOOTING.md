@@ -70,10 +70,32 @@ If you're running Athanor in WSL, installing `libsecret` alone is not sufficient
 
 </details>
 
----
-
-**IMPORTANT FINAL STEP (ALL DISTRIBUTIONS):**
+#### **IMPORTANT FINAL STEP (ALL DISTRIBUTIONS):**
 
 After the installation is complete, **you must log out and log back in**, or simply restart your computer. This ensures the newly installed keyring service is active and available to all applications, including Athanor.
 
 After restarting, when you first try to save a key, your system might prompt you to create a new default keyring and set a password for it. This is a one-time setup. Once completed, Athanor will be able to store API keys securely.
+
+---
+
+## Linux/WSL Graphics Issue (Blank Screen)
+
+### Problem: The application window is blank or black on startup
+
+When launching Athanor on certain Linux desktop environments or within the Windows Subsystem for Linux (WSL), the application may start, but the window remains completely blank. You may see a black or white screen instead of the user interface.
+
+### Cause
+
+This issue typically occurs when Electron, the framework used by Athanor, fails to automatically select the correct graphics rendering backend for your system. The default choice may be incompatible with your graphics driver setup, especially within the virtualized environment of WSL.
+
+### Solution
+
+You can resolve this by instructing Athanor to use a specific, more compatible graphics backend called "Desktop OpenGL." This is done by setting an environment variable before launching the application.
+
+1.  Open your shell's configuration file. This is usually `~/.bashrc`, `~/.zshrc`, or `~/.profile`, depending on your shell.
+2.  Add the following line to the end of the file:
+    ```bash
+    export ELECTRON_USE_DESKTOP_GL=1
+    ```
+3.  Save the file and restart your terminal, or run `source ~/.bashrc` (or the equivalent for your shell) to apply the changes.
+4.  Launch Athanor from the terminal. It should now start correctly with the UI visible.
