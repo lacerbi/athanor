@@ -341,6 +341,13 @@ const FileOperationItem = React.forwardRef<
           </div>
         </div>
 
+        {op.warning && (
+          <div className="flex items-start gap-2 p-3 my-2 text-sm rounded-md bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800">
+            <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <p>{op.warning}</p>
+          </div>
+        )}
+
         <div className="min-w-0 w-full">
           <DiffView
             oldText={op.old_code}
