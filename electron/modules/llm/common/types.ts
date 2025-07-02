@@ -1,7 +1,7 @@
 // AI Summary: Core type definitions for the LLM interaction module.
 // Defines request/response structures, settings, provider/model info, and error handling types.
 
-import type { ApiProvider } from '../../secure-api-storage/common/types';
+import type { ApiProvider } from 'genai-key-storage-lite';
 
 /**
  * API provider ID type - reuses the secure storage provider types

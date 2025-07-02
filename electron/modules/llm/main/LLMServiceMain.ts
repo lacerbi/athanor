@@ -1,7 +1,7 @@
 // AI Summary: Main process service for LLM operations, integrating with ApiKeyServiceMain for secure key access.
 // Orchestrates LLM requests through provider-specific client adapters with proper error handling.
 
-import type { ApiKeyServiceMain } from '../../secure-api-storage/main';
+import type { ApiKeyServiceMain } from 'genai-key-storage-lite';
 import type {
   LLMChatRequest,
   LLMResponse,

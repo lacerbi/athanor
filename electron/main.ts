@@ -10,7 +10,10 @@ import { createWindow, mainWindow, getIconPath } from './windowManager';
 import { setupIpcHandlers } from './ipcHandlers';
 import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
-import { ApiKeyServiceMain } from './modules/secure-api-storage/main';
+import {
+  ApiKeyServiceMain,
+  registerSecureApiKeyIpc,
+} from 'genai-key-storage-lite';
 import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { GitService } from './services/GitService';
@@ -319,6 +322,9 @@ app.whenReady().then(async () => {
 
   // Initialize LLM service with API key service
   llmService = new LLMServiceMain(apiKeyService);
+
+  // Register IPC handlers from the external package
+  registerSecureApiKeyIpc(apiKeyService);
 
   // Handle CLI argument for opening a project
   const args = process.argv.slice(app.isPackaged ? 1 : 2);

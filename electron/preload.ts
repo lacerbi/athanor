@@ -3,7 +3,7 @@
 // event sender for intelligent background processing.
 
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPCChannelNames } from './modules/secure-api-storage/common/types';
+import { createApiKeyManagerBridge } from 'genai-key-storage-lite/preload';
 
 // Channel name for confirmation dialog (must match coreHandlers.ts)
 const SHOW_CONFIRM_DIALOG_CHANNEL = 'dialog:show-confirm-dialog';
@@ -80,19 +80,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
   // WARNING: For renderer-side logic, always prefer using actions from the
   // relevant Zustand store over calling these IPC functions directly. This ensures the
   // application's in-memory state remains synchronized with the file on disk.
-  secureApiKeyManager: {
-    storeKey: (providerId: string, apiKey: string) => 
-      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_STORE, { providerId, apiKey }),
-    // getKey: REMOVED for security - plaintext keys should never be accessible to renderer
-    deleteKey: (providerId: string) => 
-      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_DELETE, providerId),
-    isKeyStored: (providerId: string) => 
-      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_IS_STORED, providerId),
-    getStoredProviderIds: () => 
-      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_STORED_PROVIDERS),
-    getApiKeyDisplayInfo: (providerId: string) => 
-      ipcRenderer.invoke(IPCChannelNames.SECURE_API_KEY_GET_DISPLAY_INFO, providerId),
-  },
+  secureApiKeyManager: createApiKeyManagerBridge(),
   llmService: {
     getProviders: () => llmServiceRenderer.getProviders(),
     getModels: (providerId: string) => llmServiceRenderer.getModels(providerId as any),
