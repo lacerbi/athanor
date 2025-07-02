@@ -16,6 +16,8 @@ const CliPanel: React.FC<CliPanelProps> = ({ currentDirectory, isVisible }) => {
     null
   );
   const listenersAttached = useRef(false);
+  const lastPasteTime = useRef(0);
+  const isPasting = useRef(false);
 
   // Effect to initialize the terminal once per project (due to key={currentDirectory})
   useEffect(() => {
@@ -35,19 +37,44 @@ const CliPanel: React.FC<CliPanelProps> = ({ currentDirectory, isVisible }) => {
         navigator.clipboard.writeText(term.getSelection());
         return false; // Prevent default terminal behavior
       }
-      // Handle Ctrl+V (paste)
+      // Handle Ctrl+V (paste) - only on keydown to prevent double execution
       if (event.ctrlKey && event.key === 'v') {
-        navigator.clipboard.readText().then((text) => {
-          if (text) {
-            // Send the pasted text to the terminal
-            const sessionId = useCliStore
-              .getState()
-              .getSessionId(currentDirectory);
-            if (sessionId) {
-              window.electronBridge.shell.write(sessionId, text);
+        if (event.type !== 'keydown') {
+          return false; // Ignore keyup events
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (isPasting.current) {
+          console.log('[CliPanel] Already processing paste, ignoring');
+          return false;
+        }
+
+        isPasting.current = true;
+        console.log('[CliPanel] Processing paste event');
+
+        navigator.clipboard
+          .readText()
+          .then((text) => {
+            if (text) {
+              // Send the pasted text to the terminal
+              const sessionId = useCliStore
+                .getState()
+                .getSessionId(currentDirectory);
+              if (sessionId) {
+                window.electronBridge.shell.write(sessionId, text);
+              }
             }
-          }
-        });
+            // Reset the flag after a delay
+            setTimeout(() => {
+              isPasting.current = false;
+            }, 100);
+          })
+          .catch((err) => {
+            console.error('[CliPanel] Failed to read clipboard:', err);
+            isPasting.current = false;
+          });
         return false; // Prevent default terminal behavior
       }
       return true; // Let other keys pass through
@@ -68,6 +95,11 @@ const CliPanel: React.FC<CliPanelProps> = ({ currentDirectory, isVisible }) => {
 
       if (!listenersAttached.current) {
         term.onData((data) => {
+          // Skip if we're handling a paste operation
+          if (isPasting.current) {
+            console.log('[CliPanel] Skipping onData during paste operation');
+            return;
+          }
           window.electronBridge.shell.write(sessionId, data);
         });
         term.onResize(({ cols, rows }) => {
