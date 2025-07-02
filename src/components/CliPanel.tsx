@@ -28,6 +28,31 @@ const CliPanel: React.FC<CliPanelProps> = ({ currentDirectory, isVisible }) => {
     termInstanceRef.current = { term, fitAddon };
     term.open(terminalRef.current);
 
+    // Add custom key event handler for copy/paste
+    term.attachCustomKeyEventHandler((event) => {
+      // Handle Ctrl+C (copy)
+      if (event.ctrlKey && event.key === 'c' && term.hasSelection()) {
+        navigator.clipboard.writeText(term.getSelection());
+        return false; // Prevent default terminal behavior
+      }
+      // Handle Ctrl+V (paste)
+      if (event.ctrlKey && event.key === 'v') {
+        navigator.clipboard.readText().then((text) => {
+          if (text) {
+            // Send the pasted text to the terminal
+            const sessionId = useCliStore
+              .getState()
+              .getSessionId(currentDirectory);
+            if (sessionId) {
+              window.electronBridge.shell.write(sessionId, text);
+            }
+          }
+        });
+        return false; // Prevent default terminal behavior
+      }
+      return true; // Let other keys pass through
+    });
+
     (async () => {
       let sessionId = useCliStore.getState().getSessionId(currentDirectory);
       if (!sessionId) {
