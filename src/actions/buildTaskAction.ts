@@ -71,6 +71,7 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
       currentDir,
       activeTab.content,
       activeTab.context,
+      activeTab.name,
       undefined, // passedFormatTypeOverride
       undefined, // smartPreviewConfigInput
       currentThresholdLineLength

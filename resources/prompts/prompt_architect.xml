@@ -483,12 +483,14 @@ The XML block should be formatted as follows:
 
 ```xml
 <ath command="agent task">
-<file_name>TASK.md</file_name>
+<file_name>{{task_tab_name}}.md</file_name>
 <task_content>
 [Full Plan here]
 </file_content>
 </ath>
 ```
+
+Use the provided task file name `{{task_tab_name}}.md`
 
 The full plan will contain:
 * The task_description slightly edited and rewritten for clarity (do not omit parts)
@@ -519,7 +521,7 @@ At the end of the full plan, list "Relevant Files":
 <example>
 ```xml
 <ath command="agent task">
-<file_name>TASK.md</file_name>
+<file_name>{{task_tab_name}}.md</file_name>
 <task_content>
 # Task
 [Task description, rewritten for clarity]

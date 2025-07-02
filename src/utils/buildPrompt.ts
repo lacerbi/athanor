@@ -23,6 +23,7 @@ export interface PromptVariables {
   selected_files?: string;
   selected_files_with_info?: string;
   task_context?: string;
+  task_tab_name?: string;
   threshold_line_length?: number;
   include_ai_summaries?: boolean;
 }
@@ -92,9 +93,10 @@ export async function buildDynamicPrompt(
   rootPath: string,
   taskDescription: string = '',
   taskContext: string = '',
+  activeTabName: string,
   passedFormatTypeOverride?: string,
   smartPreviewConfigInput?: { minLines: number; maxLines: number },
-  currentThresholdLineLength?: number // Added new parameter
+  currentThresholdLineLength?: number
 ): Promise<string> {
   // Get the store settings and effective configuration
   const {
@@ -179,6 +181,12 @@ export async function buildDynamicPrompt(
     ? `\n<task_context>\n${taskContext.trim()}\n</task_context>`
     : '';
 
+  // Sanitize and format the tab name
+  const formattedTabName = (activeTabName || '')
+    .toUpperCase()
+    .replace(/\s+/g, '_') // Replace whitespace with underscores
+    .replace(/[^A-Z0-9_]/g, ''); // Remove any remaining non-alphanumeric characters except underscore
+
   // Create a copy of codebaseDoc to avoid modifying the original
   const codebaseContent = { ...codebaseDoc };
 
@@ -193,6 +201,7 @@ export async function buildDynamicPrompt(
     project_info: projectInfoForPrompt,
     task_description: taskDescription,
     task_context: formattedTaskContext,
+    task_tab_name: formattedTabName,
     selected_files: getSelectedFilesList(items, selectedFiles, rootPath),
     selected_files_with_info: getSelectedFilesWithInfo(
       items,
