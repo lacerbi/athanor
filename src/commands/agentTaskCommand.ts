@@ -35,7 +35,7 @@ export async function executeAgentTaskCommand({
 
     await window.fileService.write(filePath, taskContent);
 
-    const instruction = `Review and execute the instructions in ${displayPath}`;
+    const instruction = `- Read the instructions in ${displayPath}\n- Think about the task and then execute it`;
     addLog({
       message: `Agent task created: ${displayPath}. Click to copy instruction.`,
       onClick: async () => {

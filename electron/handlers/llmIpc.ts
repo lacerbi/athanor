@@ -47,5 +47,19 @@ export function registerLlmIpc(llmService: LLMServiceMain): void {
     }
   });
 
+  // Handler for checking if an API key is available from any source
+  ipcMain.handle(
+    LLM_IPC_CHANNELS.IS_KEY_AVAILABLE,
+    async (event, providerId: ApiProviderId): Promise<boolean> => {
+      try {
+        return await llmService.isKeyAvailable(providerId);
+      } catch (error) {
+        console.error('Error in IS_KEY_AVAILABLE handler:', error);
+        // Return false on error to prevent UI from assuming a key exists
+        return false; 
+      }
+    }
+  );
+
   console.log('LLM IPC handlers registered successfully');
 }

@@ -78,6 +78,16 @@ export class LLMServiceRenderer {
       };
     }
   }
+
+  /**
+   * Checks if an API key is available from any source (secure storage or ENV).
+   * 
+   * @param providerId - The provider ID to check for
+   * @returns Promise resolving to true if a key is available, false otherwise
+   */
+  async isKeyAvailable(providerId: ApiProviderId): Promise<boolean> {
+    return ipcRenderer.invoke(LLM_IPC_CHANNELS.IS_KEY_AVAILABLE, providerId);
+  }
 }
 
 // Export singleton instance for use in preload

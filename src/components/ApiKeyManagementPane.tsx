@@ -5,9 +5,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { HelpCircle, Eye, EyeOff, Save, Trash2, Check } from 'lucide-react';
 import LinkifiedText from './LinkifiedText';
-import { ApiKeyServiceRenderer } from '../../electron/modules/secure-api-storage/renderer';
-import type { ApiProvider } from '../../electron/modules/secure-api-storage/common';
-import { ApiKeyStorageError } from '../../electron/modules/secure-api-storage/common';
+import { ApiKeyServiceRenderer } from 'genai-key-storage-lite/renderer';
+// Once common export is added to the package, use these imports:
+import type { ApiProvider } from 'genai-key-storage-lite/common';
+import { ApiKeyStorageError } from 'genai-key-storage-lite/common';
 import { getAllAthanorPresets } from '../services/athanorPresetService';
 
 const ApiKeyManagementPane: React.FC = () => {
@@ -37,7 +38,9 @@ const ApiKeyManagementPane: React.FC = () => {
   // Initialize API Key Service
   useEffect(() => {
     try {
-      const service = new ApiKeyServiceRenderer();
+      const service = new ApiKeyServiceRenderer(
+        window.electronBridge.secureApiKeyManager as any
+      );
       setApiKeyService(service);
       console.log(
         'ApiKeyServiceRenderer initialized successfully with secure API operations'
@@ -105,7 +108,7 @@ const ApiKeyManagementPane: React.FC = () => {
 
           // Compute intersection: providers in presets AND supported by service
           const newAvailableProviders = actualServiceProviders.filter(
-            (provider) => presetProviderIdSet.has(provider)
+            (provider: ApiProvider) => presetProviderIdSet.has(provider)
           );
 
           setAvailableProviders(newAvailableProviders);
@@ -241,11 +244,11 @@ const ApiKeyManagementPane: React.FC = () => {
       if (error instanceof ApiKeyStorageError) {
         // Check for the specific OS-level encryption error
         if (error.message.includes('OS-level encryption is not available')) {
-          // TODO: Replace this with the actual URL of the project's repository.
           const troubleshootingUrl =
             '[https://github.com/lacerbi/athanor/blob/main/docs/TROUBLESHOOTING.md#api-key-storage-errors](https://github.com/lacerbi/athanor/blob/main/docs/TROUBLESHOOTING.md#api-key-storage-errors)';
-
-          errorMessage = `OS-level encryption is not available. This is a common issue on Linux systems that are missing a "keyring" service. For a detailed guide on how to fix this, please visit: ${troubleshootingUrl}`;
+          
+          // New, more helpful message:
+          errorMessage = `OS-level encryption is not available. This is common on Linux. You can either install a keyring service (see ${troubleshootingUrl}) or use an environment variable as a fallback by setting ATHANOR_${selectedProvider.toUpperCase()}_API_KEY.`;
         } else {
           errorMessage = error.message;
         }

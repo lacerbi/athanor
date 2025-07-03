@@ -253,6 +253,11 @@ declare global {
               object: 'error';
             }
         >;
+
+        /**
+         * Checks if an API key is available from any source (secure storage or ENV).
+         */
+        isKeyAvailable: (providerId: string) => Promise<boolean>;
       };
       userActivity: () => void;
       context: {

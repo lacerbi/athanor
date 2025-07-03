@@ -70,6 +70,32 @@ If you're running Athanor in WSL, installing `libsecret` alone is not sufficient
 
 </details>
 
+### Recommended Workaround: Using Environment Variables
+
+For any environment where secure storage is unavailable (including WSL and minimal Linux distributions), Athanor supports API keys via environment variables as a fallback. This is the recommended solution.
+
+**How it works:**
+
+1.  Set an environment variable in your shell's configuration file (e.g., `~/.bashrc`, `~/.zshrc`, or `~/.profile`).
+2.  Use the naming convention `ATHANOR_<PROVIDER_ID>_API_KEY`. The provider ID must be in uppercase.
+3.  Restart your terminal or source the configuration file.
+4.  Launch Athanor from that terminal session.
+
+**Examples:**
+
+```bash
+# For OpenAI
+export ATHANOR_OPENAI_API_KEY="sk-..."
+
+# For Anthropic
+export ATHANOR_ANTHROPIC_API_KEY="sk-ant-..."
+
+# For Gemini
+export ATHANOR_GOOGLE_API_KEY="..."
+```
+
+When Athanor starts, it will detect these environment variables and enable the "Send via API" functionality for the corresponding providers, even if the OS keyring service is not available.
+
 #### **IMPORTANT FINAL STEP (ALL DISTRIBUTIONS):**
 
 After the installation is complete, **you must log out and log back in**, or simply restart your computer. This ensures the newly installed keyring service is active and available to all applications, including Athanor.

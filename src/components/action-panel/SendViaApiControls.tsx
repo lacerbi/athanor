@@ -55,13 +55,13 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
         const filtered: AthanorModelPreset[] = [];
 
         for (const preset of allPresets) {
-          // Check if API key is stored for the provider
-          if (window.electronBridge?.secureApiKeyManager) {
-            const isStored =
-              await window.electronBridge.secureApiKeyManager.isKeyStored(
+          // Check if API key is available from any source for the provider
+          if (window.electronBridge?.llmService) {
+            const isAvailable =
+              await window.electronBridge.llmService.isKeyAvailable(
                 preset.providerId
               );
-            if (isStored) {
+            if (isAvailable) {
               filtered.push(preset);
             }
           }
