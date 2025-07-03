@@ -279,35 +279,47 @@ export class LLMServiceMain {
 
       // Use ApiKeyServiceMain to securely access the API key and make the request
       try {
+        // First, try to get the key from secure storage.
+        console.log(
+          `Attempting to use key from secure storage for ${request.providerId}...`
+        );
         const result = await this.apiKeyService.withDecryptedKey(
           request.providerId,
-          async (apiKey: string) => {
+          (apiKey: string) => {
             console.log(
               `Making LLM request with ${clientAdapter.constructor.name} for provider: ${request.providerId}`
             );
-            return await clientAdapter.sendMessage(internalRequest, apiKey);
+            return clientAdapter.sendMessage(internalRequest, apiKey);
           }
         );
-
+        
         console.log(
           `LLM request completed successfully for model: ${request.modelId}`
         );
         return result;
-      } catch (keyError) {
-        // Handle API key related errors from withDecryptedKey
-        console.error('API key error in sendMessage:', keyError);
 
-        return {
-          provider: request.providerId,
-          model: request.modelId,
-          error: {
-            message: `API key error: ${keyError instanceof Error ? keyError.message : 'Unknown key error'}`,
-            code: 'API_KEY_ERROR',
-            type: 'authentication_error',
-            providerError: keyError,
-          },
-          object: 'error',
-        };
+      } catch (storageError) {
+        console.warn(
+          `Secure storage failed for ${request.providerId}: ${storageError instanceof Error ? storageError.message : String(storageError)}. Attempting ENV fallback.`
+        );
+
+        // If secure storage fails, try the environment variable.
+        const envVarName = `ATHANOR_${request.providerId.toUpperCase()}_API_KEY`;
+        const apiKeyFromEnv = process.env[envVarName];
+
+        if (apiKeyFromEnv) {
+          console.log(
+            `Found key for ${request.providerId} in environment variable.`
+          );
+          // The sendMessage call to the adapter can also throw, which will be caught by the outer catch block.
+          return await clientAdapter.sendMessage(internalRequest, apiKeyFromEnv);
+        }
+
+        // If we are here, both methods failed. Re-throw the original error to be handled by the outer catch.
+        console.error(
+          `API key for ${request.providerId} not found in secure storage or environment variables.`
+        );
+        throw storageError;
       }
     } catch (error) {
       console.error('Error in LLMServiceMain.sendMessage:', error);
@@ -317,9 +329,11 @@ export class LLMServiceMain {
         model: request.modelId,
         error: {
           message:
-            error instanceof Error ? error.message : 'Unknown error occurred',
-          code: 'INTERNAL_ERROR',
-          type: 'internal_error',
+            error instanceof Error
+              ? `API key error for ${request.providerId}: ${error.message}. Check secure storage or the ATHANOR_${request.providerId.toUpperCase()}_API_KEY environment variable.`
+              : 'Unknown error occurred during API key retrieval or message sending.',
+          code: 'API_KEY_ERROR',
+          type: 'authentication_error',
           providerError: error,
         },
         object: 'error',
@@ -469,6 +483,30 @@ export class LLMServiceMain {
   ): void {
     this.clientAdapters.set(providerId, adapter);
     console.log(`Registered client adapter for provider: ${providerId}`);
+  }
+
+  /**
+   * Checks if an API key is available from any source (secure storage or ENV).
+   * @param providerId The provider ID to check for
+   * @returns Promise resolving to true if a key is available, false otherwise.
+   */
+  async isKeyAvailable(providerId: ApiProviderId): Promise<boolean> {
+    if (!providerId) {
+      return false;
+    }
+
+    // First, check if the key is in the secure OS storage.
+    const isStored = await this.apiKeyService.isKeyStored(providerId);
+    if (isStored) {
+      return true; // Found it in secure storage
+    }
+
+    // If not found, check for an environment variable as a fallback.
+    const envVarName = `ATHANOR_${providerId.toUpperCase()}_API_KEY`;
+    const apiKeyFromEnv = process.env[envVarName];
+
+    // Return true only if the environment variable is set to a non-empty string.
+    return !!apiKeyFromEnv;
   }
 
   /**
