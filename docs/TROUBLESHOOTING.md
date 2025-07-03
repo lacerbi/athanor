@@ -91,7 +91,10 @@ export ATHANOR_OPENAI_API_KEY="sk-..."
 export ATHANOR_ANTHROPIC_API_KEY="sk-ant-..."
 
 # For Gemini
-export ATHANOR_GOOGLE_API_KEY="..."
+export ATHANOR_GEMINI_API_KEY="..."
+
+# For Mistral
+export ATHANOR_MISTRAL_API_KEY="..."
 ```
 
 When Athanor starts, it will detect these environment variables and enable the "Send via API" functionality for the corresponding providers, even if the OS keyring service is not available.

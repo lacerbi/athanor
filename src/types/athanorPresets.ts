@@ -1,5 +1,5 @@
 // AI Summary: Defines TypeScript interface for Athanor model presets, combining provider/model references with custom LLM settings.
-import type { ApiProviderId, LLMSettings } from '../../electron/modules/llm/common/types';
+import type { ApiProviderId, LLMSettings } from 'genai-lite';
 
 /**
  * Represents an Athanor-specific model preset with pre-configured LLM settings

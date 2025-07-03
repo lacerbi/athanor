@@ -36,7 +36,7 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
 3.  **Direct LLM API Integration (Optional)**
     - While the core workflow is API-key-free, Athanor includes an optional feature for direct communication with LLM providers (OpenAI, Anthropic, Gemini, Mistral).
     - API keys are stored securely using Electron's `safeStorage` via the `ApiKeyServiceMain`.
-    - The `LLMServiceMain`, client adapters, and extensive model configuration (`electron/modules/llm/main/config.ts`) manage these interactions.
+    - The `LLMService` from the external `genai-lite` package manages these interactions with a custom ApiKeyProvider that supports both secure storage and environment variable fallbacks.
 
 4.  **Git Integration**
     - Athanor deeply integrates with Git repositories via `GitService.ts`.
@@ -116,8 +116,10 @@ Athanor follows Electron's recommended **“secure by default”** pattern, sepa
       - A lightweight service that listens for file changes from `FileService` to identify which files are being actively edited, providing a real-time relevance signal.
     - **Dependency Resolver/Scanner (`DependencyResolver.ts`, `DependencyScanner.ts`)**:
       - Utilities used by the Project Graph Service to perform language-aware dependency analysis for JavaScript/TypeScript and Python.
-    - **LLM & API Key Services (`electron/modules/`)**:
-      - A dedicated module for handling optional, direct LLM API calls (`LLMServiceMain`) and secure storage of API keys (`ApiKeyServiceMain`).
+    - **LLM & API Key Services**:
+      - LLM functionality provided by external `genai-lite` package with custom ApiKeyProvider
+      - Secure API key storage via `genai-key-storage-lite` package (`ApiKeyServiceMain`)
+      - Shared IPC channel types in `common/types/llm.ts`
 
 2.  **Renderer Process (React)**
     - **`src/services/fileSystemService.ts`**:
@@ -154,7 +156,7 @@ Athanor follows Electron's recommended **“secure by default”** pattern, sepa
 - **Chokidar**: Watches the local file system for changes in the open folder.
 - **ignore**: Reads `.athignore` and `.gitignore` to filter out hidden or excluded files in the Explorer.
 - **js-tiktoken**: Used for accurate token counting in prompts.
-- **LLM SDKs**: Optional integration with `@anthropic-ai/sdk`, `@google/genai`, `openai`.
+- **genai-lite**: Unified LLM integration supporting Claude, GPT, Gemini, and Mistral models.
 - **Webpack & electron-forge**: Build, package, and run the Electron application.
 - **TailwindCSS 3 + Lucide Icons**: Provides a flexible styling system and icon library for a clean UI.
 - **Material-UI (MUI) 5**: Partially integrated for certain UI elements (used in some components).

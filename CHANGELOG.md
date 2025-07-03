@@ -9,6 +9,26 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.10] - 2025-07-03
+
+### Changed
+
+- **Migrated to External LLM Module**: Replaced integrated LLM implementation (`electron/modules/llm/`) with external `genai-lite` package (^0.1.0) for better maintainability and separation of concerns. This significant refactoring maintains full backward compatibility while simplifying the codebase.
+- **Improved API Key Handling**: Enhanced the ApiKeyProvider to support both secure storage and environment variable fallbacks seamlessly.
+- **Centralized IPC Constants**: Moved LLM IPC channel constants to `common/types/llm.ts` for better code organization and reusability.
+- **Updated Build Configuration**: Modified webpack configurations to include the new `common/` directory for TypeScript compilation.
+
+### Fixed
+
+- **Environment Variable Support**: Restored environment variable fallback functionality that was temporarily lost during the initial genai-lite migration.
+- **Documentation Error**: Corrected environment variable name from `ATHANOR_GOOGLE_API_KEY` to `ATHANOR_GEMINI_API_KEY` to match the actual provider ID.
+
+### Documentation
+
+- Updated `CLAUDE.md` and `PROJECT.md` to reflect the new architecture using `genai-lite`.
+- Added documentation for the `common/types/` directory pattern for shared types.
+- Added Mistral to the list of supported environment variables in troubleshooting guide.
+
 ## [0.7.9] - 2025-07-03
 
 ### Added

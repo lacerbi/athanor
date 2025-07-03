@@ -72,8 +72,8 @@ contextBridge.exposeInMainWorld('settingsService', {
     ipcRenderer.invoke('settings:save-application', settings),
 });
 
-// Import LLM service renderer
-import { llmServiceRenderer } from './modules/llm/renderer/LLMServiceRenderer';
+// Import LLM IPC channels
+import { LLM_IPC_CHANNELS } from '../common/types/llm';
 
 // Expose secure API key management and LLM service
 contextBridge.exposeInMainWorld('electronBridge', {
@@ -82,10 +82,10 @@ contextBridge.exposeInMainWorld('electronBridge', {
   // application's in-memory state remains synchronized with the file on disk.
   secureApiKeyManager: createApiKeyManagerBridge(),
   llmService: {
-    getProviders: () => llmServiceRenderer.getProviders(),
-    getModels: (providerId: string) => llmServiceRenderer.getModels(providerId as any),
-    sendMessage: (request: any) => llmServiceRenderer.sendMessage(request),
-    isKeyAvailable: (providerId: string) => llmServiceRenderer.isKeyAvailable(providerId as any),
+    getProviders: () => ipcRenderer.invoke(LLM_IPC_CHANNELS.GET_PROVIDERS),
+    getModels: (providerId: string) => ipcRenderer.invoke(LLM_IPC_CHANNELS.GET_MODELS, providerId),
+    sendMessage: (request: any) => ipcRenderer.invoke(LLM_IPC_CHANNELS.SEND_MESSAGE, request),
+    isKeyAvailable: (providerId: string) => ipcRenderer.invoke(LLM_IPC_CHANNELS.IS_KEY_AVAILABLE, providerId),
   },
   userActivity: () => ipcRenderer.send('user-activity'),
   context: {

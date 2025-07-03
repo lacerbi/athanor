@@ -2,19 +2,17 @@
 // Registers handlers for getting providers/models and sending messages to LLMs.
 
 import { ipcMain } from 'electron';
-import type { LLMServiceMain } from '../modules/llm/main/LLMServiceMain';
-import type { 
-  LLMChatRequest, 
-  ApiProviderId 
-} from '../modules/llm/common/types';
-import { LLM_IPC_CHANNELS } from '../modules/llm/common/types';
+import type { LLMService, LLMChatRequest, ApiProviderId } from 'genai-lite';
+import type { ApiKeyServiceMain } from 'genai-key-storage-lite';
+import { LLM_IPC_CHANNELS } from '../../common/types/llm';
 
 /**
  * Registers IPC handlers for LLM operations
  * 
  * @param llmService - The main process LLM service instance
+ * @param apiKeyService - The API key service for checking key availability
  */
-export function registerLlmIpc(llmService: LLMServiceMain): void {
+export function registerLlmIpc(llmService: LLMService, apiKeyService: ApiKeyServiceMain): void {
   console.log('Registering LLM IPC handlers');
 
   // Handler for getting supported providers
@@ -52,7 +50,21 @@ export function registerLlmIpc(llmService: LLMServiceMain): void {
     LLM_IPC_CHANNELS.IS_KEY_AVAILABLE,
     async (event, providerId: ApiProviderId): Promise<boolean> => {
       try {
-        return await llmService.isKeyAvailable(providerId);
+        // First check if key exists in storage
+        const hasStoredKey = await apiKeyService.withDecryptedKey(
+          providerId as any,
+          async () => true
+        ).catch(() => false);
+        
+        if (hasStoredKey) {
+          return true;
+        }
+        
+        // Fall back to checking environment variables
+        const envVarName = `ATHANOR_${providerId.toUpperCase()}_API_KEY`;
+        const hasEnvKey = !!process.env[envVarName];
+        
+        return hasEnvKey;
       } catch (error) {
         console.error('Error in IS_KEY_AVAILABLE handler:', error);
         // Return false on error to prevent UI from assuming a key exists
