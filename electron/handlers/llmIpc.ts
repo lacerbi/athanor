@@ -50,12 +50,21 @@ export function registerLlmIpc(llmService: LLMService, apiKeyService: ApiKeyServ
     LLM_IPC_CHANNELS.IS_KEY_AVAILABLE,
     async (event, providerId: ApiProviderId): Promise<boolean> => {
       try {
-        // Check if key exists by trying to use it
-        const hasKey = await apiKeyService.withDecryptedKey(
+        // First check if key exists in storage
+        const hasStoredKey = await apiKeyService.withDecryptedKey(
           providerId as any,
           async () => true
         ).catch(() => false);
-        return hasKey;
+        
+        if (hasStoredKey) {
+          return true;
+        }
+        
+        // Fall back to checking environment variables
+        const envVarName = `ATHANOR_${providerId.toUpperCase()}_API_KEY`;
+        const hasEnvKey = !!process.env[envVarName];
+        
+        return hasEnvKey;
       } catch (error) {
         console.error('Error in IS_KEY_AVAILABLE handler:', error);
         // Return false on error to prevent UI from assuming a key exists

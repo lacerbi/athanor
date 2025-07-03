@@ -326,8 +326,10 @@ app.whenReady().then(async () => {
       // Use withDecryptedKey to securely access the key only when needed.
       return await apiKeyService.withDecryptedKey(providerId as any, async (key) => key);
     } catch {
-      // If key is not found or decryption fails, return null.
-      return null;
+      // If key is not found or decryption fails, check environment variables
+      const envVarName = `ATHANOR_${providerId.toUpperCase()}_API_KEY`;
+      const envKey = process.env[envVarName];
+      return envKey || null;
     }
   };
   llmService = new LLMService(electronKeyProvider);
