@@ -174,12 +174,7 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - Prettier for code formatting (ESLint config exists but is incompatible with ESLint 9+)
 - TailwindCSS 3 + Material-UI components
 - Conventional Commits for commit messages
-- **DCO Sign-off Required**: All commits must be signed with DCO. Use `git commit -s` or configure git:
-  ```bash
-  git config user.name "lacerbi"
-  git config user.email "luigi.acerbi@gmail.com"
-  ```
-  Then always commit with the `-s` flag: `git commit -s -m "your message"`
+- **DCO Sign-off Required**: All commits must be signed with DCO. Always use `git commit -s` when committing. If git config is not set (check with `git config user.name` and `git config user.email`), inform the user that these need to be configured before committing. For fixing unsigned commits, use `git rebase --signoff` or `git commit --amend -s`
 
 ## Key Dependencies
 
