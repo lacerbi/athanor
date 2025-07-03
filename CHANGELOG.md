@@ -9,6 +9,24 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.9] - 2025-07-03
+
+### Added
+
+- **API Key Environment Variable Fallback**: Implemented fallback support for API keys via environment variables when secure keyring storage is unavailable (e.g., on WSL systems). Keys can now be provided as `ATHANOR_<PROVIDER>_API_KEY` environment variables. ([0f8d36d](https://github.com/lacerbi/athanor/commit/0f8d36d), [9c06b83](https://github.com/lacerbi/athanor/commit/9c06b83), [fdbb0a0](https://github.com/lacerbi/athanor/commit/fdbb0a0))
+
+### Changed
+
+- **Refactored API Key Storage**: Replaced internal API key module with external `genai-key-storage-lite` module for better maintainability and separation of concerns. ([6574652](https://github.com/lacerbi/athanor/commit/6574652))
+- Modified copied task instructions to add thinking capability. ([b493937](https://github.com/lacerbi/athanor/commit/b493937))
+
+### Documentation
+
+- Updated troubleshooting guide with instructions for using environment variable fallback for API keys, including examples for different providers. ([7385e5c](https://github.com/lacerbi/athanor/commit/7385e5c))
+- Added design documentation for porting to the new API key module. ([4dbb8ff](https://github.com/lacerbi/athanor/commit/4dbb8ff))
+
+## [0.7.8] - 2025-07-02
+
 ### Added
 
 - A new `agent_task` command for advanced, agent-based workflows, including clickable log entries and dynamic prompt updates. ([a69b80c](https://github.com/lacerbi/athanor/commit/a69b80c), [94aa97f](https://github.com/lacerbi/athanor/commit/94aa97f), [67ba73e](https://github.com/lacerbi/athanor/commit/67ba73e))
