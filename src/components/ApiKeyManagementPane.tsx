@@ -244,11 +244,11 @@ const ApiKeyManagementPane: React.FC = () => {
       if (error instanceof ApiKeyStorageError) {
         // Check for the specific OS-level encryption error
         if (error.message.includes('OS-level encryption is not available')) {
-          // TODO: Replace this with the actual URL of the project's repository.
           const troubleshootingUrl =
             '[https://github.com/lacerbi/athanor/blob/main/docs/TROUBLESHOOTING.md#api-key-storage-errors](https://github.com/lacerbi/athanor/blob/main/docs/TROUBLESHOOTING.md#api-key-storage-errors)';
-
-          errorMessage = `OS-level encryption is not available. This is a common issue on Linux systems that are missing a "keyring" service. For a detailed guide on how to fix this, please visit: ${troubleshootingUrl}`;
+          
+          // New, more helpful message:
+          errorMessage = `OS-level encryption is not available. This is common on Linux. You can either install a keyring service (see ${troubleshootingUrl}) or use an environment variable as a fallback by setting ATHANOR_${selectedProvider.toUpperCase()}_API_KEY.`;
         } else {
           errorMessage = error.message;
         }
