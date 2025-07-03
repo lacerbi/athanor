@@ -6,7 +6,10 @@ module.exports = {
     rules: [
       {
         test: /\.ts$/,
-        include: [path.resolve(__dirname, 'electron')],
+        include: [
+          path.resolve(__dirname, 'electron'),
+          path.resolve(__dirname, 'common'),
+        ],
         use: [{ loader: 'ts-loader' }],
       },
     ],

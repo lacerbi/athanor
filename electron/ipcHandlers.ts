@@ -15,7 +15,7 @@ import { FileService } from './services/FileService';
 import { SettingsService } from './services/SettingsService';
 import { GitService } from './services/GitService';
 import { ApiKeyServiceMain } from 'genai-key-storage-lite';
-import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
+import type { LLMService } from 'genai-lite';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { ProjectGraphService } from './services/ProjectGraphService';
 import { UserActivityService } from './services/UserActivityService';
@@ -25,7 +25,7 @@ export function setupIpcHandlers(
   fileService: FileService,
   settingsService: SettingsService,
   apiKeyService: ApiKeyServiceMain,
-  llmService: LLMServiceMain,
+  llmService: LLMService,
   relevanceEngine: RelevanceEngineService,
   projectGraphService: ProjectGraphService,
   userActivityService: UserActivityService,
@@ -36,7 +36,7 @@ export function setupIpcHandlers(
   setupFileOperationHandlers(fileService);
   setupFileWatchHandlers(fileService);
   setupSettingsHandlers(settingsService);
-  registerLlmIpc(llmService);
+  registerLlmIpc(llmService, apiKeyService);
   setupContextHandlers(relevanceEngine, settingsService);
   setupShellHandlers(shellService);
   setupGitHandlers(gitService, fileService);

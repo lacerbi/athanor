@@ -14,7 +14,7 @@ import {
   ApiKeyServiceMain,
   registerSecureApiKeyIpc,
 } from 'genai-key-storage-lite';
-import { LLMServiceMain } from './modules/llm/main/LLMServiceMain';
+import { LLMService, type ApiKeyProvider } from 'genai-lite';
 import { RelevanceEngineService } from './services/RelevanceEngineService';
 import { GitService } from './services/GitService';
 import { UserActivityService } from './services/UserActivityService';
@@ -71,7 +71,7 @@ export const relevanceEngine = new RelevanceEngineService(
 );
 export const shellService = new ShellService();
 export let apiKeyService: ApiKeyServiceMain;
-export let llmService: LLMServiceMain;
+export let llmService: LLMService;
 
 let analysisPromise: Promise<void> | null = null;
 function runProjectAnalysisWorker(): Promise<void> {
@@ -320,8 +320,17 @@ app.whenReady().then(async () => {
   // Initialize secure API key service
   apiKeyService = new ApiKeyServiceMain(app.getPath('userData'));
 
-  // Initialize LLM service with API key service
-  llmService = new LLMServiceMain(apiKeyService);
+  // Initialize LLM service with a custom key provider
+  const electronKeyProvider: ApiKeyProvider = async (providerId) => {
+    try {
+      // Use withDecryptedKey to securely access the key only when needed.
+      return await apiKeyService.withDecryptedKey(providerId as any, async (key) => key);
+    } catch {
+      // If key is not found or decryption fails, return null.
+      return null;
+    }
+  };
+  llmService = new LLMService(electronKeyProvider);
 
   // Register IPC handlers from the external package
   registerSecureApiKeyIpc(apiKeyService);
