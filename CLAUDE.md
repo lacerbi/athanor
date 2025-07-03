@@ -88,13 +88,14 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - Optional direct API integration via secure storage (`electron/modules/secure-api-storage/`)
 - Primary workflow: copy prompts to external AI, paste responses back
 - XML command parsing for applying AI-generated changes
-- Modular LLM provider system (`electron/modules/llm/`) supporting:
+- LLM functionality provided by external `genai-lite` package supporting:
   - Anthropic Claude API
   - OpenAI GPT models
   - Google Gemini models
-  - Mistral models (API key storage only)
-- Type-safe IPC channels for LLM operations
-- Extensive model configuration and client adapters
+  - Mistral models
+- Type-safe IPC channels for LLM operations via `common/types/llm.ts`
+- Custom ApiKeyProvider supporting both secure storage and environment variables
+- Environment variable fallback: `ATHANOR_<PROVIDER>_API_KEY`
 
 **File Management:**
 
@@ -153,6 +154,11 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 3. Add corresponding methods to `preload.ts`
 4. Update type definitions in `src/types/global.d.ts`
 
+**When working with shared types:**
+
+- Use `common/types/` for types shared between main and renderer processes
+- Update webpack configs to include new directories when needed
+
 **Important UI Patterns:**
 
 - **Left Panel**: File explorer with context menus and ignore functionality
@@ -186,8 +192,6 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - **ignore** - .gitignore/.athignore parsing
 - **js-tiktoken** - Token counting for prompts
 - **Jest + ts-jest** - Testing framework
-- **@anthropic-ai/sdk** - Anthropic Claude API integration
-- **openai** - OpenAI API integration
-- **@google/genai** - Google Gemini API integration
+- **genai-lite** - Unified LLM integration supporting Claude, GPT, Gemini, and Mistral
 - **node-pty** - Terminal emulation support
 - **xterm & xterm-addon-fit** - Terminal rendering in UI
