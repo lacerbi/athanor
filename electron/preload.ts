@@ -85,6 +85,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
     getProviders: () => llmServiceRenderer.getProviders(),
     getModels: (providerId: string) => llmServiceRenderer.getModels(providerId as any),
     sendMessage: (request: any) => llmServiceRenderer.sendMessage(request),
+    isKeyAvailable: (providerId: string) => llmServiceRenderer.isKeyAvailable(providerId as any),
   },
   userActivity: () => ipcRenderer.send('user-activity'),
   context: {
