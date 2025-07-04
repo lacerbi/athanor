@@ -27,6 +27,7 @@ import {
   Info,
   FileQuestion,
   HelpCircle,
+  Bot,
 } from 'lucide-react';
 import PromptContextMenu from './action-panel/PromptContextMenu';
 import type { PromptData, PromptVariant } from '../types/promptTypes';
@@ -49,6 +50,7 @@ import type { ApplicationSettings } from '../types/global';
 import SendViaApiControls from './action-panel/SendViaApiControls';
 import CustomPromptsHelpModal from './action-panel/CustomPromptsHelpModal';
 import SelectedFilesDisplay from './action-panel/SelectedFilesDisplay';
+import { executeAgentTaskCommand } from '../commands/agentTaskCommand';
 
 interface ActionPanelProps {
   rootItems: FileItem[];
@@ -344,6 +346,39 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 >
                   <Copy className="w-4 h-4 mr-1" />
                   Copy
+                </button>
+                <button
+                  onClick={async () => {
+                    const taskContent = tabs[activeTabIndex].content;
+                    if (!taskContent.trim()) {
+                      addLog('No task description to create agent task');
+                      return;
+                    }
+                    
+                    // Generate filename from tab name using same logic as buildPrompt.ts
+                    const tabName = tabs[activeTabIndex].name;
+                    const formattedTabName = tabName
+                      .toUpperCase()
+                      .replace(/\s+/g, '_') // Replace whitespace with underscores
+                      .replace(/[^A-Z0-9_]/g, ''); // Remove any remaining non-alphanumeric characters except underscore
+                    const fileName = `${formattedTabName}.md`;
+                    
+                    // Create the XML content for the agent task command
+                    const xmlContent = `<athanor_command>agent task</athanor_command>
+<file_name>${fileName}</file_name>
+<task_content>${taskContent}</task_content>`;
+                    
+                    await executeAgentTaskCommand({
+                      content: xmlContent,
+                      addLog,
+                    });
+                  }}
+                  className="flex items-center px-2 py-1 text-sm text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+                  title="Create agent task file for AI assistants"
+                  disabled={isTaskEmpty}
+                >
+                  <Bot className="w-4 h-4 mr-1" />
+                  Task
                 </button>
                 <SelectedFilesDisplay
                   selectedFiles={tabs[activeTabIndex]?.selectedFiles || []}
