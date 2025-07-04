@@ -1,8 +1,9 @@
 // AI Summary: Command handler for creating agent tasks.
 // Parses file_name and task_content from an XML block, writes the content to a file in the .ath_materials directory,
-// and logs a clickable success message that copies an instruction to the clipboard.
+// updates the workbench task description, and logs a clickable success message that copies an instruction to the clipboard.
 import { extractTagContent } from '../utils/extractTagContent';
 import { copyToClipboard } from '../actions';
+import { useWorkbenchStore } from '../stores/workbenchStore';
 
 export interface AgentTaskCommandParams {
   content: string;
@@ -34,6 +35,10 @@ export async function executeAgentTaskCommand({
     const displayPath = await window.pathUtils.relative(filePath);
 
     await window.fileService.write(filePath, taskContent);
+
+    // Also update the workbench task description
+    const workbenchStore = useWorkbenchStore.getState();
+    workbenchStore.resetTaskDescription(taskContent);
 
     const instruction = `- Read the instructions in ${displayPath}\n- Think about the task and then execute it`;
     addLog({
