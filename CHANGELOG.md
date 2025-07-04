@@ -9,6 +9,29 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.11] - 2025-07-04
+
+### Added
+
+- **Task Button for Agent Task Files**: Added a new "Task" button in the ActionPanel that creates agent task files in `.ath_materials` directory, making it easier to generate task descriptions for AI coding assistants. ([40acc63](https://github.com/lacerbi/athanor/commit/40acc63))
+- **Supplementary Materials Section**: Added support for a dedicated "Supplementary Materials" section in AI prompts. Files from `.ath_materials` directory now appear in a separate section, keeping reference materials distinct from main project files. Includes new `{{supplementary_section}}` placeholder in all prompt templates. ([782c610](https://github.com/lacerbi/athanor/commit/782c610))
+- **Repository Context Mapping**: Added "Build Context Map" task template that generates hierarchical summaries (`.summary_short.md` and `.summary_long.md`) for efficient codebase navigation by AI agents. ([d528115](https://github.com/lacerbi/athanor/commit/d528115))
+- **Comprehensive Repository Summaries**: Generated summary files throughout the codebase covering all major directories and components, with instructions added to AI assistant files. ([ce20fdf](https://github.com/lacerbi/athanor/commit/ce20fdf))
+
+### Changed
+
+- **Agent Task Command Enhancement**: Agent task command now triggers task description updates for better workflow integration. ([8a33f90](https://github.com/lacerbi/athanor/commit/8a33f90))
+
+### Fixed
+
+- **Task Template File Extension**: Renamed `task_build_repomap.md` to `task_build_repomap.xml` to match expected format. ([7b0c23b](https://github.com/lacerbi/athanor/commit/7b0c23b))
+
+### Documentation
+
+- Updated prompt documentation and examples to include the new `{{supplementary_section}}` placeholder. ([eae04bf](https://github.com/lacerbi/athanor/commit/eae04bf), [cfd596d](https://github.com/lacerbi/athanor/commit/cfd596d))
+- Updated repository mapping task documentation. ([30bab77](https://github.com/lacerbi/athanor/commit/30bab77))
+- Removed XML content from `PROJECT.md` to avoid parsing issues. ([2b915a7](https://github.com/lacerbi/athanor/commit/2b915a7))
+
 ## [0.7.10] - 2025-07-03
 
 ### Changed
