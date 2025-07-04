@@ -32,6 +32,7 @@
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -90,6 +91,7 @@
 > -   `{{file_contents}}`: The content of selected files.
 > -   `{{file_tree}}`: A textual representation of the project's directory structure.
 > -   `{{codebase_legend}}`: Legend for symbols in file tree/contents.
+> -   `{{supplementary_section}}`: Supplementary materials from .ath_materials directory (if any selected).
 > For most projects, the default `<project>` block provided above should be fine as is.
 > 
 > ### 4. `<system_prompt>` Block:
