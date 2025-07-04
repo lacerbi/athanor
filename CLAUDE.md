@@ -195,3 +195,17 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - **genai-lite** - Unified LLM integration supporting Claude, GPT, Gemini, and Mistral
 - **node-pty** - Terminal emulation support
 - **xterm & xterm-addon-fit** - Terminal rendering in UI
+
+---
+
+## **IMPORTANT: Project Structure Context**
+
+In each directory, you'll find:
+
+- `.summary_short.md`: One-line descriptions of the directory and its files
+- `.summary_long.md`: Detailed analysis of components, dependencies, and architecture
+
+**ALWAYS START ANY TASK BY READING THE SUMMARY FILES.**
+Start with `.summary_short.md` broadly, then consult `.summary_long.md` for relevant folders.
+
+Last Context Build: 2025-07-04

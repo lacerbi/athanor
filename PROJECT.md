@@ -13,7 +13,7 @@ Athanor is an **Electron-based desktop application** that integrates AI coding a
 
 2.  **Applying AI-Generated Changes**
     - The user copies the AI’s response from the assistant back into the clipboard.
-    - Athanor parses custom XML-like commands (e.g., `<ath command="apply changes">...`) to figure out how to create, modify, or delete specific files.
+    - Athanor parses custom XML-like commands (e.g., `ath command="apply changes"...`) to figure out how to create, modify, or delete specific files.
     - The user can preview diffs, accept or reject each change, and finalize changes to disk.
 
 ### Key Features

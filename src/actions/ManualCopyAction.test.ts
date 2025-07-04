@@ -290,6 +290,7 @@ describe('ManualCopyAction', () => {
         [], // fileTree from store
         new Set(['file1.ts', 'file2.js']), // selectedFiles from active tab converted to Set
         new Set(), // neighboringFiles - manual copy has none
+        new Set(), // supplementaryFiles - manual copy has none
         '/project/root',
         null, // config
         DOC_FORMAT.XML // formatType from store
@@ -331,6 +332,7 @@ describe('ManualCopyAction', () => {
         [{ id: '1', name: 'test', type: 'file' }],
         new Set(['single.ts']),
         new Set(), // neighboringFiles - manual copy has none
+        new Set(), // supplementaryFiles - manual copy has none
         '/project',
         null, // config
         DOC_FORMAT.MARKDOWN // formatType = MARKDOWN

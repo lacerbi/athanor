@@ -190,3 +190,16 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - **@google/genai** - Google Gemini API integration
 - **node-pty** - Terminal emulation support
 - **xterm & xterm-addon-fit** - Terminal rendering in UI
+
+## Project Structure Context
+
+This project has been analyzed and documented with hierarchical summaries.
+In each directory, you'll find:
+
+- `.summary_short.md`: One-line descriptions of the directory and its files
+- `.summary_long.md`: Detailed analysis of components, dependencies, and architecture
+
+**Important:** Always read these files **first** to quickly understand any part of the project, before reading source files.
+Start with `.summary_short.md` for navigation, then consult `.summary_long.md` for details.
+
+Last Context Build: 2025-07-04

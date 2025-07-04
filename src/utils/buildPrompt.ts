@@ -26,6 +26,7 @@ export interface PromptVariables {
   task_tab_name?: string;
   threshold_line_length?: number;
   include_ai_summaries?: boolean;
+  supplementary_section?: string;
 }
 
 // Get list of selected files with relative paths and line counts, preserving order
@@ -158,8 +159,13 @@ export async function buildDynamicPrompt(
     }
   }
 
+  // Partition selected files into regular and supplementary
+  const regularSelectedIds = selectedFiles.filter(id => !id.startsWith('materials:'));
+  const supplementarySelectedIds = selectedFiles.filter(id => id.startsWith('materials:'));
+
   // Convert file arrays to Sets for efficient lookup
-  const selectedItemsSet = new Set(selectedFiles);
+  const selectedItemsSet = new Set(regularSelectedIds);
+  const supplementaryItemsSet = new Set(supplementarySelectedIds);
   const neighboringItemsSet = new Set(neighboringFiles);
 
   // Generate codebase documentation
@@ -167,6 +173,7 @@ export async function buildDynamicPrompt(
     items,
     selectedItemsSet,
     neighboringItemsSet,
+    supplementaryItemsSet,
     rootPath,
     config,
     actualFormatType, // Use the derived actualFormatType
@@ -195,6 +202,11 @@ export async function buildDynamicPrompt(
     codebaseContent.file_tree = '';
   }
 
+  // Construct the supplementary section with header if there's content
+  const supplementarySection = codebaseDoc.supplementary_contents?.trim()
+    ? `\n\n## Supplementary Materials\n\nThe following files are reference material for the current task.\n\n${codebaseDoc.supplementary_contents.trim()}\n`
+    : '';
+
   // Prepare variables for template
   const variables: PromptVariables = {
     project_name: config.project_name,
@@ -213,6 +225,7 @@ export async function buildDynamicPrompt(
       : '',
     threshold_line_length: activeThresholdLineLength,
     include_ai_summaries: includeAiSummaries,
+    supplementary_section: supplementarySection,
     ...codebaseContent, // Contains file_contents and modified file_tree
   };
 

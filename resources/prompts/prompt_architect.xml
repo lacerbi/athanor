@@ -19,6 +19,7 @@
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -143,6 +144,7 @@ Ensure to write valid XML by opening and closing all tags as appropriate
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -238,6 +240,7 @@ file1 file2 [...]
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -450,6 +453,7 @@ To get started on the design, could you give me a bit more **background** on thi
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
