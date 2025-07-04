@@ -43,6 +43,7 @@ You MUST ensure the generated XML strictly adheres to the structure exemplified 
 </file_contents>
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -95,6 +96,7 @@ Here are the primary variables available for use in your prompt templates:
 - `{{selected_files}}`: A newline-separated list of the relative paths of all files currently selected by the user.
 - `{{selected_files_with_info}}`: A newline-separated list of selected files, including their relative paths and line counts (e.g., `path/to/file.js (120 lines)`).
 - `{{threshold_line_length}}`: A number representing the configured line length threshold, which can be used in prompts that instruct an AI about file length limits (e.g., as seen in `prompt_develop.xml`). This value is sourced from application settings.
+- `{{supplementary_section}}`: A formatted section containing supplementary materials from the `.ath_materials` directory (if any files from that directory are selected). This section appears with its own header and is separate from the main file contents.
 
 **Usage:**
 You would typically include these within the relevant blocks of your `prompt_*.xml` file. For example, the standard `<project>` block uses `{{project_name}}`, `{{project_info}}`, `{{file_contents}}`, `{{file_tree}}`, and `{{codebase_legend}}`. The `{{task_description}}` and `{{task_context}}` variables are typically placed within the `<current_task><task_description>...</task_description></current_task>` element.
@@ -292,6 +294,7 @@ tooltip="This prompt explains the structure of Athanor prompt files.">
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -411,6 +414,7 @@ tooltip="By default, plan a feature over multiple steps (commits)">
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -545,6 +549,7 @@ tooltip="Use this to plan simple features or to give to strong coding models tha
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -729,6 +734,7 @@ tooltip="Default prompt to be used with any LLM coding assistant">
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
@@ -1051,6 +1057,7 @@ instructing them to select the files from the Athanor file manager.
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <current_task>
@@ -1097,6 +1104,7 @@ tooltip="Default prompt to query the project">
 
 {{file_tree}}
 {{codebase_legend}}
+{{supplementary_section}}
 </project>
 
 <system_prompt>
