@@ -17,6 +17,7 @@
 {{file_contents}}
 </file_contents>
 {{file_tree}}
+{{supplementary_section}}
 </project>
 
 <task>

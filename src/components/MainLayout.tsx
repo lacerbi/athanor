@@ -334,7 +334,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
         <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 min-w-0">
           <div style={{ display: activeTab === 'workbench' ? 'block' : 'none', height: '100%' }}>
             <ActionPanel
-              rootItems={[filesData]}
+              rootItems={materialsData ? [filesData, materialsData] : [filesData]}
               setActivePanelTab={onTabChange}
               isActive={activeTab === 'workbench'}
             />

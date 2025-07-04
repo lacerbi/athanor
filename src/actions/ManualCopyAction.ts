@@ -58,6 +58,7 @@ export async function copySelectedFilesContent(
       fileTree,
       selectedItemsSet,
       new Set<string>(), // No neighboring files in a direct copy action
+      new Set<string>(), // No supplementary files in a direct copy action
       rootPath,
       null, // config
       formatType // Use the format preference from the store

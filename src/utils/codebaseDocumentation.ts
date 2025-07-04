@@ -150,36 +150,37 @@ export function formatSingleFile(
   }
 }
 
-// Generate full codebase documentation
-export async function generateCodebaseDocumentation(
-  items: FileItem[],
-  selectedItems: Set<string>,
-  neighboringItems: Set<string>,
+// Helper function to generate file content strings
+async function generateFileContentString(
+  fileItems: FileItem[],
+  selectedItemsSet: Set<string>,
+  neighboringItemsSet: Set<string>,
+  supplementaryItemsSet: Set<string>,
   rootPath: string,
+  format: string,
+  smartPreviewConfig: { minLines: number; maxLines: number },
+  thresholdLineLength: number,
+  includeNonSelected: boolean,
   config: AthanorConfig | null,
-  formatType: string = DOC_FORMAT.MARKDOWN,
-  projectInfoFilePath?: string,
-  smartPreviewConfig: { minLines: number; maxLines: number } = { minLines: 10, maxLines: 20 },
-  currentThresholdLineLength?: number, // Added, to be passed down if needed
-  enableSmartPreview: boolean = true
-): Promise<{ file_contents: string; file_tree: string }> {
-  const rawFileTreeContent = generateFileTree(items, selectedItems);
-  const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>\n`;
-  let fileContents = '';
+  projectInfoFilePath?: string
+): Promise<{ regularContent: string; supplementaryContent: string }> {
+  const regularFileContents: string[] = [];
+  const supplementaryFileContents: string[] = [];
 
   // Process each file
   const processItem = async (item: FileItem): Promise<void> => {
     if (item.type === 'file') {
-      const isSelected = selectedItems.has(item.id);
-      const isNeighboring = neighboringItems.has(item.id);
+      const isSelected = selectedItemsSet.has(item.id);
+      const isNeighbor = neighboringItemsSet.has(item.id);
+      const isSupplementary = supplementaryItemsSet.has(item.id);
 
       // If it's a neighboring file and smart previews are turned off, skip it entirely.
-      if (isNeighboring && !isSelected && !enableSmartPreview) {
+      if (isNeighbor && !isSelected && !includeNonSelected) {
         return;
       }
 
-      // Only include content for selected or neighboring files
-      if (!isSelected && !isNeighboring) {
+      // Only include content for selected, neighboring, or supplementary files
+      if (!isSelected && !isNeighbor && !isSupplementary) {
         return;
       }
 
@@ -190,9 +191,14 @@ export async function generateCodebaseDocumentation(
           : item.path;
         
         // Add placeholder message instead of duplicating content
-        fileContents += (fileContents ? '\n' : '') +
-          `# ${relativePath}${isSelected ? ' *' : ''}\n\n` +
+        const placeholderContent = `# ${relativePath}${isSelected ? ' *' : ''}\n\n` +
           `The content of this file is fully reported above inside \`<project_info>\` tags.\n`;
+        
+        if (isSupplementary) {
+          supplementaryFileContents.push(placeholderContent);
+        } else {
+          regularFileContents.push(placeholderContent);
+        }
         return;
       }
 
@@ -210,14 +216,25 @@ export async function generateCodebaseDocumentation(
         const contentString = content.toString();
 
         // Use full content for selected files, smart preview for neighboring files
-        const processedContent = isSelected
+        const processedContent = isSelected || isSupplementary
           ? contentString
           : getSmartPreview(contentString, smartPreviewConfig);
 
         if (processedContent) {
-          fileContents +=
-            (fileContents ? '\n' : '') +
-            formatSingleFile(item.path, processedContent, rootPath, isSelected, formatType, currentThresholdLineLength);
+          const formattedContent = formatSingleFile(
+            item.path, 
+            processedContent, 
+            rootPath, 
+            isSelected || isSupplementary, 
+            format, 
+            thresholdLineLength
+          );
+          
+          if (isSupplementary) {
+            supplementaryFileContents.push(formattedContent);
+          } else if (isSelected || isNeighbor) {
+            regularFileContents.push(formattedContent);
+          }
         }
       } catch (error) {
         console.error(`Error reading file ${item.path}:`, error);
@@ -231,12 +248,51 @@ export async function generateCodebaseDocumentation(
     }
   };
 
-  for (const item of sortItems(items)) {
+  for (const item of sortItems(fileItems)) {
     await processItem(item);
   }
 
   return {
-    file_contents: fileContents,
+    regularContent: regularFileContents.join('\n'),
+    supplementaryContent: supplementaryFileContents.join('\n'),
+  };
+}
+
+// Generate full codebase documentation
+export async function generateCodebaseDocumentation(
+  items: FileItem[],
+  selectedItems: Set<string>,
+  neighboringItems: Set<string>,
+  supplementaryItemsSet: Set<string>,
+  rootPath: string,
+  config: AthanorConfig | null,
+  formatType: string = DOC_FORMAT.MARKDOWN,
+  projectInfoFilePath?: string,
+  smartPreviewConfig: { minLines: number; maxLines: number } = { minLines: 10, maxLines: 20 },
+  currentThresholdLineLength?: number, // Added, to be passed down if needed
+  enableSmartPreview: boolean = true
+): Promise<{ file_contents: string; supplementary_contents: string; file_tree: string }> {
+  const rawFileTreeContent = generateFileTree(items, selectedItems);
+  const fileTreeContent = `<file_tree>\n${rawFileTreeContent}</file_tree>\n`;
+
+  // Use the new helper function to generate content
+  const { regularContent, supplementaryContent } = await generateFileContentString(
+    items,
+    selectedItems,
+    neighboringItems,
+    supplementaryItemsSet,
+    rootPath,
+    formatType,
+    smartPreviewConfig,
+    currentThresholdLineLength || 200, // Use default if not provided
+    enableSmartPreview,
+    config,
+    projectInfoFilePath
+  );
+
+  return {
+    file_contents: regularContent,
+    supplementary_contents: supplementaryContent,
     file_tree: fileTreeContent,
   };
 }
