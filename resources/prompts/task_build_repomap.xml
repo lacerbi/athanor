@@ -9,7 +9,6 @@ tooltip="Generate hierarchical repo map with summaries for agentic context build
 id="comprehensive"
 label="Comprehensive Scan"
 tooltip="Full recursive scan with short and long summaries">
-
 # Task: Build Hierarchical Context for Agentic Coding
 
 ## Overview
@@ -178,16 +177,15 @@ Look for and update agentic documentation files in the project root or .ath_mate
    Example section to add:
 
    ```markdown
-   ## Project Structure Context
+   ## **IMPORTANT: Project Structure Context**
 
-   This project has been analyzed and documented with hierarchical summaries.
    In each directory, you'll find:
 
    - `.summary_short.md`: One-line descriptions of the directory and its files
    - `.summary_long.md`: Detailed analysis of components, dependencies, and architecture
 
-   **Important:** Always read these files **first** to quickly understand any part of the project, before reading source files.
-   Start with `.summary_short.md` for navigation, then consult `.summary_long.md` for details.
+   **ALWAYS START ANY TASK BY READING THE SUMMARY FILES.**
+   Start with `.summary_short.md` broadly, then consult `.summary_long.md` for relevant folders.
 
    Last Context Build: [timestamp]
    ```
