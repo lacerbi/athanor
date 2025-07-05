@@ -22,6 +22,9 @@ module.exports = {
   },
   resolve: {
     extensions: ['.ts', '.js'],
+    alias: {
+      'genai-lite/utils': path.resolve(__dirname, 'node_modules/genai-lite/dist/utils/index.js'),
+    },
   },
   output: {
     path: path.resolve(__dirname, '.webpack'),
