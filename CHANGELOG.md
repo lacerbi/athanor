@@ -9,6 +9,24 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.12] - 2025-07-05
+
+### Changed
+
+- **Migrated to genai-lite v0.1.3 Preset System**: Refactored model preset management to use genai-lite's configurable preset system with 'replace' mode. This eliminates code duplication while maintaining full control over Athanor's model configurations. ([275e792](https://github.com/lacerbi/athanor/commit/275e792))
+  - Removed local `AthanorModelPreset` type and `athanorPresetService`
+  - Added IPC channel for fetching presets from the LLM service
+  - Updated UI components to use genai-lite's `ModelPreset` type
+  - Configuration now centralized through `src/config/athanorModelPresets.json`
+
+### Fixed
+
+- **Build Configuration**: Added JSON module resolution support to TypeScript and webpack configurations to properly handle preset configuration imports.
+
+### Dependencies
+
+- Updated `genai-lite` from v0.1.1 to v0.1.3
+
 ## [0.7.11] - 2025-07-04
 
 ### Added
