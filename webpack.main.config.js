@@ -18,10 +18,20 @@ module.exports = {
         ],
         use: [{ loader: 'ts-loader' }],
       },
+      {
+        test: /\.json$/,
+        include: [
+          path.resolve(__dirname, 'src/config'),
+        ],
+        type: 'json',
+      },
     ],
   },
   resolve: {
-    extensions: ['.ts', '.js'],
+    extensions: ['.ts', '.js', '.json'],
+    alias: {
+      'genai-lite/utils': path.resolve(__dirname, 'node_modules/genai-lite/dist/utils/index.js'),
+    },
   },
   output: {
     path: path.resolve(__dirname, '.webpack'),

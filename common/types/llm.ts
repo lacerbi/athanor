@@ -7,6 +7,7 @@ export const LLM_IPC_CHANNELS = {
   GET_MODELS: 'llm:get-models',
   SEND_MESSAGE: 'llm:send-message',
   IS_KEY_AVAILABLE: 'llm:is-key-available',
+  GET_PRESETS: 'llm:get-presets',
 } as const;
 
 /**

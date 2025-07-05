@@ -6,7 +6,8 @@ import type { IGitService } from '../../common/types/git-service';
 import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
 import { CONTEXT_BUILDER, SETTINGS } from '../../src/utils/constants';
-import * as PromptUtils from './PromptUtils';
+// @ts-ignore - webpack module resolution issue
+import { countTokens, getSmartPreview } from 'genai-lite/utils';
 import { ProjectGraphService } from './ProjectGraphService';
 import { analyzeTaskDescription } from './TaskAnalysisUtils';
 import { UserActivityService } from './UserActivityService';
@@ -354,11 +355,11 @@ export class RelevanceEngineService {
         const content = (await this.fileService.read(filePath, {
           encoding: 'utf-8',
         })) as string;
-        const preview = PromptUtils.getSmartPreview(
+        const preview = getSmartPreview(
           content,
           smartPreviewConfig
         );
-        const tokenCount = PromptUtils.countTokens(preview);
+        const tokenCount = countTokens(preview);
 
         if (currentTokens + tokenCount <= options.maxNeighborTokens) {
           promptNeighbors.push(filePath);

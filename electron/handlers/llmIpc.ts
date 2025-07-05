@@ -1,5 +1,5 @@
 // AI Summary: IPC handlers for LLM operations, routing requests between renderer and main process.
-// Registers handlers for getting providers/models and sending messages to LLMs.
+// Registers handlers for getting providers/models, sending messages to LLMs, and fetching presets.
 
 import { ipcMain } from 'electron';
 import type { LLMService, LLMChatRequest, ApiProviderId } from 'genai-lite';
@@ -72,6 +72,16 @@ export function registerLlmIpc(llmService: LLMService, apiKeyService: ApiKeyServ
       }
     }
   );
+
+  // Handler for getting configured presets
+  ipcMain.handle(LLM_IPC_CHANNELS.GET_PRESETS, async () => {
+    try {
+      return llmService.getPresets();
+    } catch (error) {
+      console.error('Error in GET_PRESETS handler:', error);
+      throw error;
+    }
+  });
 
   console.log('LLM IPC handlers registered successfully');
 }

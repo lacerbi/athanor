@@ -1,10 +1,10 @@
 // AI Summary: Component for managing "Send via API" functionality including LLM preset selection,
 // API key validation, and sending prompts to LLM services with response processing.
+// Uses genai-lite for model presets via the IPC bridge.
 import React, { useState, useEffect, useRef } from 'react';
 import { Info } from 'lucide-react';
-import type { AthanorModelPreset } from '../../types/athanorPresets';
+import type { ModelPreset } from 'genai-lite';
 import type { ApplicationSettings, LogEntry } from '../../types/global';
-import { getAllAthanorPresets } from '../../services/athanorPresetService';
 import { processAiResponseContent } from '../../actions/ApplyAiOutputAction';
 import { useApplyChangesStore } from '../../stores/applyChangesStore';
 
@@ -33,7 +33,7 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
 }) => {
   // State for LLM preset selection
   const [availablePresets, setAvailablePresets] = useState<
-    AthanorModelPreset[]
+    ModelPreset[]
   >([]);
   const [isLoadingPresets, setIsLoadingPresets] = useState(false);
 
@@ -51,8 +51,8 @@ const SendViaApiControls: React.FC<SendViaApiControlsProps> = ({
 
       setIsLoadingPresets(true);
       try {
-        const allPresets = await getAllAthanorPresets();
-        const filtered: AthanorModelPreset[] = [];
+        const allPresets = await window.electronBridge.llmService.getPresets();
+        const filtered: ModelPreset[] = [];
 
         for (const preset of allPresets) {
           // Check if API key is available from any source for the provider

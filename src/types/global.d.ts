@@ -258,6 +258,11 @@ declare global {
          * Checks if an API key is available from any source (secure storage or ENV).
          */
         isKeyAvailable: (providerId: string) => Promise<boolean>;
+
+        /**
+         * Gets the configured model presets
+         */
+        getPresets: () => Promise<import('genai-lite').ModelPreset[]>;
       };
       userActivity: () => void;
       context: {

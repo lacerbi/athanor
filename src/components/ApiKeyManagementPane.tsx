@@ -1,6 +1,7 @@
 // AI Summary: Dedicated component for secure API key management with provider selection,
 // key storage/deletion, validation, and display functionality. Uses secure storage via IPC bridge.
 // Updated for enhanced security - no longer has access to plaintext keys in renderer process.
+// Fetches model presets from genai-lite LLM service to determine available providers.
 
 import React, { useEffect, useState, useCallback } from 'react';
 import { HelpCircle, Eye, EyeOff, Save, Trash2, Check } from 'lucide-react';
@@ -9,7 +10,6 @@ import { ApiKeyServiceRenderer } from 'genai-key-storage-lite/renderer';
 // Once common export is added to the package, use these imports:
 import type { ApiProvider } from 'genai-key-storage-lite/common';
 import { ApiKeyStorageError } from 'genai-key-storage-lite/common';
-import { getAllAthanorPresets } from '../services/athanorPresetService';
 
 const ApiKeyManagementPane: React.FC = () => {
   // API Key Management state
@@ -96,7 +96,7 @@ const ApiKeyManagementPane: React.FC = () => {
       setKeyOpError(null);
 
       // Fetch Athanor presets and filter providers
-      getAllAthanorPresets()
+      window.electronBridge.llmService.getPresets()
         .then((presets) => {
           // Extract unique provider IDs from presets
           const presetProviderIdSet = new Set<string>(

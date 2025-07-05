@@ -6,9 +6,10 @@ import { generateCodebaseDocumentation } from './codebaseDocumentation';
 import { DOC_FORMAT, FILE_SYSTEM, SETTINGS } from './constants';
 import {
   loadTemplateContent,
-  substituteVariables,
   extractTaskDescription,
 } from './promptTemplates';
+// @ts-ignore - webpack module resolution issue
+import { renderTemplate } from 'genai-lite/utils';
 import { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { AthanorConfig } from '../types/global';
@@ -230,5 +231,5 @@ export async function buildDynamicPrompt(
   };
 
   // Use the variant content directly
-  return substituteVariables(variant.content, variables);
+  return renderTemplate(variant.content, variables);
 }
