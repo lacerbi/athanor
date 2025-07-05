@@ -86,6 +86,7 @@ contextBridge.exposeInMainWorld('electronBridge', {
     getModels: (providerId: string) => ipcRenderer.invoke(LLM_IPC_CHANNELS.GET_MODELS, providerId),
     sendMessage: (request: any) => ipcRenderer.invoke(LLM_IPC_CHANNELS.SEND_MESSAGE, request),
     isKeyAvailable: (providerId: string) => ipcRenderer.invoke(LLM_IPC_CHANNELS.IS_KEY_AVAILABLE, providerId),
+    getPresets: () => ipcRenderer.invoke(LLM_IPC_CHANNELS.GET_PRESETS),
   },
   userActivity: () => ipcRenderer.send('user-activity'),
   context: {
