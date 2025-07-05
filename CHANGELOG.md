@@ -19,13 +19,18 @@ _(Future changes will go here)_
   - Updated UI components to use genai-lite's `ModelPreset` type
   - Configuration now centralized through `src/config/athanorModelPresets.json`
 
+- **Migrated Template Rendering to genai-lite**: Refactored to use genai-lite's `renderTemplate` function for variable substitution in prompts. ([ac7d986](https://github.com/lacerbi/athanor/commit/ac7d986))
+  - Removed local `substituteVariables` function from `promptTemplates.ts`
+  - Updated `buildPrompt.ts` to use `renderTemplate` from genai-lite
+  - Template rendering now provided by the shared library
+
 ### Fixed
 
 - **Build Configuration**: Added JSON module resolution support to TypeScript and webpack configurations to properly handle preset configuration imports.
 
 ### Dependencies
 
-- Updated `genai-lite` from v0.1.1 to v0.1.3
+- Updated `genai-lite` from v0.1.1 to v0.1.4
 
 ## [0.7.11] - 2025-07-04
 
