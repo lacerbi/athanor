@@ -8,7 +8,8 @@ import {
   loadTemplateContent,
   extractTaskDescription,
 } from './promptTemplates';
-import { renderTemplate } from 'genai-lite';
+// @ts-ignore - webpack module resolution issue
+import { renderTemplate } from 'genai-lite/utils';
 import { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { AthanorConfig } from '../types/global';
