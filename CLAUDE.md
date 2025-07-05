@@ -182,6 +182,15 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 - Conventional Commits for commit messages
 - **DCO Sign-off Required**: All commits must be signed with DCO. Always use `git commit -s` when committing. If git config is not set (check with `git config user.name` and `git config user.email`), inform the user that these need to be configured before committing. For fixing unsigned commits, use `git rebase --signoff` or `git commit --amend -s`
 
+**Important Notes on External Package Imports:**
+
+When importing from `genai-lite` or similar external packages in the renderer process (`src/` directory):
+- Use the package's exported paths as defined in their `package.json` exports field (e.g., `genai-lite/utils`)
+- Add `// @ts-ignore - webpack module resolution issue` if TypeScript complains
+- Do NOT use deep imports like `genai-lite/dist/utils/templateEngine` as webpack will reject these
+- Check existing imports in the codebase for the correct pattern (e.g., see `RelevanceEngineService.ts`)
+- Main process imports (`electron/` directory) typically work without issues
+
 ## Key Dependencies
 
 - **Electron 33+** - Desktop app framework
