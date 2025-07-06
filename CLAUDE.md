@@ -185,9 +185,9 @@ Athanor is an Electron desktop application for AI-assisted development workflows
 **Important Notes on External Package Imports:**
 
 When importing from `genai-lite` or similar external packages in the renderer process (`src/` directory):
-- Use the package's exported paths as defined in their `package.json` exports field (e.g., `genai-lite/utils`)
+- Use the package's exported paths as defined in their `package.json` exports field (e.g., `genai-lite/prompting`)
 - Add `// @ts-ignore - webpack module resolution issue` if TypeScript complains
-- Do NOT use deep imports like `genai-lite/dist/utils/templateEngine` as webpack will reject these
+- Do NOT use deep imports like `genai-lite/dist/prompting/template` as webpack will reject these
 - Check existing imports in the codebase for the correct pattern (e.g., see `RelevanceEngineService.ts`)
 - Main process imports (`electron/` directory) typically work without issues
 

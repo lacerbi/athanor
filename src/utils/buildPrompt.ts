@@ -9,7 +9,7 @@ import {
   extractTaskDescription,
 } from './promptTemplates';
 // @ts-ignore - webpack module resolution issue
-import { renderTemplate } from 'genai-lite/utils';
+import { renderTemplate } from 'genai-lite/prompting';
 import { PromptData, PromptVariant } from '../types/promptTypes';
 import { useFileSystemStore } from '../stores/fileSystemStore';
 import { AthanorConfig } from '../types/global';
