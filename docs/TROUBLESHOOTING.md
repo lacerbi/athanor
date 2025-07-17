@@ -117,14 +117,17 @@ When launching Athanor on certain Linux desktop environments or within the Windo
 
 This issue typically occurs when Electron, the framework used by Athanor, fails to automatically select the correct graphics rendering backend for your system. The default choice may be incompatible with your graphics driver setup, especially within the virtualized environment of WSL.
 
-### Solution
+### Quick Solution
 
-You can resolve this by instructing Athanor to use a specific, more compatible graphics backend called "Desktop OpenGL." This is done by setting an environment variable before launching the application.
+Set the `ELECTRON_USE_DESKTOP_GL` environment variable before launching Athanor:
 
-1.  Open your shell's configuration file. This is usually `~/.bashrc`, `~/.zshrc`, or `~/.profile`, depending on your shell.
-2.  Add the following line to the end of the file:
-    ```bash
-    export ELECTRON_USE_DESKTOP_GL=1
-    ```
-3.  Save the file and restart your terminal, or run `source ~/.bashrc` (or the equivalent for your shell) to apply the changes.
-4.  Launch Athanor from the terminal. It should now start correctly with the UI visible.
+```bash
+export ELECTRON_USE_DESKTOP_GL=1
+./athanor
+```
+
+Or add it to your shell configuration file (`~/.bashrc`, `~/.zshrc`, etc.) to make it permanent.
+
+### Detailed Information
+
+For a comprehensive guide on this issue, including technical details, alternative solutions, and implementation notes for developers, see [WSL OpenGL/GPU Rendering Fix for Electron Apps](./guides/wsl-opengl-fix.md).
