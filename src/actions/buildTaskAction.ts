@@ -6,6 +6,7 @@ import { buildDynamicPrompt } from '../utils/buildPrompt';
 import { TaskData } from '../types/taskTypes';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { useContextStore } from '../stores/contextStore';
+import { useTaskStore } from '../stores/taskStore';
 
 export interface BuildTaskActionParams {
   task: TaskData;
@@ -46,9 +47,10 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     // Get current directory for path resolution
     const currentDir = await window.fileSystem.getCurrentDirectory();
 
-    // Get the default variant from task
-    const defaultVariant = task.variants[0];
-    if (!defaultVariant) {
+    // Get the active or default variant from the task store
+    const { getDefaultVariant } = useTaskStore.getState();
+    const variant = getDefaultVariant(task.id);
+    if (!variant) {
       throw new Error(`No variant found for task ${task.id}`);
     }
 
@@ -64,7 +66,7 @@ export async function buildTaskAction(params: BuildTaskActionParams): Promise<vo
     // Build prompt with task content
     const processedTaskDescription = await buildDynamicPrompt(
       task,
-      defaultVariant,
+      variant,
       rootItems,
       Array.from(selectedItems), // Convert Set to array for buildDynamicPrompt
       Array.from(promptNeighborPaths),

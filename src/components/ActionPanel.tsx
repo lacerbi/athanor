@@ -756,6 +756,35 @@ const ActionPanel: React.FC<ActionPanelProps> = ({
                 useTaskStore
                   .getState()
                   .setActiveVariant(taskContextMenu.taskId, variantId);
+
+                // Find the full task data object
+                const task = useTaskStore
+                  .getState()
+                  .tasks.find((t) => t.id === taskContextMenu.taskId);
+
+                if (task) {
+                  // Determine if the button would be disabled
+                  const isDisabled =
+                    isBusy || (task.requires === 'selected' && hasNoSelection);
+
+                  // If not disabled, trigger the buildTaskAction immediately
+                  if (!isDisabled) {
+                    const activeTab = tabs[activeTabIndex];
+                    const selectedFiles = activeTab?.selectedFiles || [];
+                    const selectedItemsSet = new Set(selectedFiles);
+
+                    buildTaskAction({
+                      task,
+                      rootItems,
+                      selectedItems: selectedItemsSet,
+                      addLog,
+                      setIsLoading,
+                      currentThresholdLineLength:
+                        applicationSettings?.thresholdLineLength ??
+                        SETTINGS.defaults.application.thresholdLineLength,
+                    });
+                  }
+                }
               }
               setTaskContextMenu(null);
             }}
