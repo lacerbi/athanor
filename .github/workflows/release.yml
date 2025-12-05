@@ -1,12 +1,61 @@
 name: Release
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows: ["Auto Tag"]
+    types:
+      - completed
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to release (e.g., v0.7.14)'
+        required: true
+        type: string
 
 jobs:
+  check-tag:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    outputs:
+      tag: ${{ steps.get-tag.outputs.tag }}
+      should_release: ${{ steps.get-tag.outputs.should_release }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get tag
+        id: get-tag
+        run: |
+          # Use input tag for manual dispatch, otherwise detect latest
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          fi
+
+          if [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            # Check if release already exists
+            if gh release view "$TAG" &>/dev/null; then
+              echo "Release $TAG already exists, skipping"
+              echo "should_release=false" >> $GITHUB_OUTPUT
+            else
+              echo "tag=$TAG" >> $GITHUB_OUTPUT
+              echo "should_release=true" >> $GITHUB_OUTPUT
+              echo "Will create release for $TAG"
+            fi
+          else
+            echo "No valid semver tag found: $TAG"
+            echo "should_release=false" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build:
+    needs: check-tag
+    if: ${{ needs.check-tag.outputs.should_release == 'true' }}
     strategy:
       matrix:
         include:
@@ -22,6 +71,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check-tag.outputs.tag }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -51,7 +102,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    needs: build
+    needs: [check-tag, build]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -73,6 +124,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ github.ref_name }} \
+          gh release create ${{ needs.check-tag.outputs.tag }} \
             --generate-notes \
             artifacts/**/*
