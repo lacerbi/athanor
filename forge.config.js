@@ -51,7 +51,13 @@ module.exports = {
     },
     {
       name: '@electron-forge/maker-zip',
-      platforms: ['win32'],
+      platforms: ['darwin', 'win32'],
+    },
+    {
+      name: '@electron-forge/maker-dmg',
+      config: {
+        icon: 'assets/athanor.icns',
+      },
     },
     {
       name: '@electron-forge/maker-deb',
