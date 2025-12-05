@@ -123,6 +123,4 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create ${{ needs.check-tag.outputs.tag }} \
-            --generate-notes \
-            $(find artifacts -type f)
+          find artifacts -type f -print0 | xargs -r -0 gh release create ${{ needs.check-tag.outputs.tag }} --generate-notes
