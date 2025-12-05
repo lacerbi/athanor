@@ -96,7 +96,6 @@ jobs:
             out/make/**/*.exe
             out/make/**/*.nupkg
             out/make/**/*.zip
-            out/make/**/*.dmg
             out/make/**/*.deb
             out/make/**/*.rpm
           if-no-files-found: error
