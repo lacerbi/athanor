@@ -6,6 +6,7 @@ import { TaskData } from '../types/taskTypes';
 import { useWorkbenchStore } from '../stores/workbenchStore';
 import { buildDynamicPrompt } from '../utils/buildPrompt';
 import { useContextStore } from '../stores/contextStore';
+import { useTaskStore } from '../stores/taskStore';
 
 // Mock the workbench store
 jest.mock('../stores/workbenchStore', () => ({
@@ -17,6 +18,13 @@ jest.mock('../stores/workbenchStore', () => ({
 // Mock the context store
 jest.mock('../stores/contextStore', () => ({
   useContextStore: {
+    getState: jest.fn(),
+  },
+}));
+
+// Mock the task store
+jest.mock('../stores/taskStore', () => ({
+  useTaskStore: {
     getState: jest.fn(),
   },
 }));
@@ -50,6 +58,7 @@ describe('buildTaskAction', () => {
   let mockBuildDynamicPrompt: jest.Mock;
   let mockGetState: jest.Mock;
   let mockGetContextState: jest.Mock;
+  let mockGetTaskState: jest.Mock;
 
   let defaultTask: TaskData;
   let defaultRootItems: FileItem[];
@@ -63,6 +72,20 @@ describe('buildTaskAction', () => {
     mockSetTabContent = jest.fn();
     mockAddLog = jest.fn();
     mockSetIsLoading = jest.fn();
+
+    // Set up default task data early so it can be used by mocks
+    defaultTask = {
+      id: 'test-task',
+      label: 'Test Task',
+      order: 1,
+      variants: [
+        {
+          id: 'default',
+          label: 'Default',
+          content: 'Task template content',
+        },
+      ],
+    };
 
     // Mock workbench store
     mockGetState = useWorkbenchStore.getState as jest.Mock;
@@ -89,6 +112,26 @@ describe('buildTaskAction', () => {
       promptNeighborPaths: new Set<string>(),
     });
 
+    // Mock task store
+    mockGetTaskState = useTaskStore.getState as jest.Mock;
+    mockGetTaskState.mockReturnValue({
+      getDefaultVariant: jest.fn((taskId: string) => {
+        if (taskId === 'test-task') {
+          return defaultTask.variants[0];
+        }
+        if (taskId === 'complex-task') {
+          // This task is defined inline in one of the tests. We'll hardcode its expected variant.
+          return {
+            id: 'variant1',
+            label: 'Variant One',
+            tooltip: 'First variant',
+            content: 'First variant content',
+          };
+        }
+        return undefined;
+      }),
+    });
+
     // Mock buildDynamicPrompt
     mockBuildDynamicPrompt = buildDynamicPrompt as jest.Mock;
     mockBuildDynamicPrompt.mockResolvedValue('processed prompt content');
@@ -96,20 +139,7 @@ describe('buildTaskAction', () => {
     // Mock getCurrentDirectory
     mockGetCurrentDirectory.mockResolvedValue('/fake/project/dir');
 
-    // Set up default test data
-    defaultTask = {
-      id: 'test-task',
-      label: 'Test Task',
-      order: 1,
-      variants: [
-        {
-          id: 'default',
-          label: 'Default',
-          content: 'Task template content',
-        },
-      ],
-    };
-
+    // Set up remaining default test data
     defaultRootItems = [
       {
         id: '/src/file1.ts',
@@ -300,6 +330,8 @@ describe('buildTaskAction', () => {
         variants: [],
       };
       const params = { ...defaultParams, task: taskWithNoVariants };
+      (useTaskStore.getState() as any).getDefaultVariant.mockReturnValue(undefined);
+
 
       await buildTaskAction(params);
 
@@ -348,6 +380,7 @@ describe('buildTaskAction', () => {
         variants: [],
       };
       const params = { ...defaultParams, task: taskWithNoVariants };
+      (useTaskStore.getState() as any).getDefaultVariant.mockReturnValue(undefined);
 
       // Make setTabContent also throw to test multiple error conditions
       mockSetTabContent.mockImplementation(() => {
@@ -438,7 +471,12 @@ describe('buildTaskAction', () => {
 
       expect(mockBuildDynamicPrompt).toHaveBeenCalledWith(
         complexTask,
-        complexTask.variants[0], // Should use first variant as default
+        { // from the mock
+          id: 'variant1',
+          label: 'Variant One',
+          tooltip: 'First variant',
+          content: 'First variant content',
+        },
         expect.anything(),
         expect.anything(),
         expect.any(Array),

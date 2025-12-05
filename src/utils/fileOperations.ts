@@ -102,7 +102,12 @@ export async function processFileUpdate(
     // Stage 1: Try exact match replacement first
     if (processedContent.includes(block.search)) {
       // Found exact match, perform simple replacement
-      processedContent = processedContent.replace(block.search, block.replace);
+      // Use a replacer function () => block.replace to ensure the replacement
+      // string is treated literally and special characters like '$' are not interpreted.
+      processedContent = processedContent.replace(
+        block.search,
+        () => block.replace
+      );
       continue;
     }
 

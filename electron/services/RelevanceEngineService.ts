@@ -7,7 +7,7 @@ import { DependencyScanner } from './DependencyScanner';
 import { PathUtils } from './PathUtils';
 import { CONTEXT_BUILDER, SETTINGS } from '../../src/utils/constants';
 // @ts-ignore - webpack module resolution issue
-import { countTokens, getSmartPreview } from 'genai-lite/utils';
+import { countTokens, getSmartPreview } from 'genai-lite/prompting';
 import { ProjectGraphService } from './ProjectGraphService';
 import { analyzeTaskDescription } from './TaskAnalysisUtils';
 import { UserActivityService } from './UserActivityService';

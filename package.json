@@ -1,6 +1,6 @@
 {
   "name": "athanor",
-  "version": "0.7.12",
+  "version": "0.7.14",
   "bugs": {
     "url": "https://github.com/lacerbi/athanor/issues"
   },
@@ -107,7 +107,7 @@
     "diff-match-patch": "^1.0.5",
     "fix-path": "^4.0.0",
     "genai-key-storage-lite": "^0.1.4",
-    "genai-lite": "^0.1.4",
+    "genai-lite": "^0.2.0",
     "ignore": "^7.0.0",
     "js-tiktoken": "^1.0.16",
     "lucide-react": "^0.469.0",
@@ -127,6 +127,7 @@
   },
   "overrides": {
     "prismjs": "1.30.0",
-    "webpack-dev-server": "^5.2.2"
+    "webpack-dev-server": "^5.2.2",
+    "jws": "^4.0.1"
   }
 }
