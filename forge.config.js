@@ -1,6 +1,7 @@
 module.exports = {
   packagerConfig: {
     name: 'Athanor',
+    executableName: 'athanor',
     asar: true,
     prune: true,
     icon: 'assets/athanor',
