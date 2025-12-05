@@ -126,4 +126,4 @@ jobs:
         run: |
           gh release create ${{ needs.check-tag.outputs.tag }} \
             --generate-notes \
-            artifacts/**/*
+            $(find artifacts -type f)
