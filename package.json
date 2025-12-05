@@ -1,6 +1,6 @@
 {
   "name": "athanor",
-  "version": "0.7.13",
+  "version": "0.7.14",
   "bugs": {
     "url": "https://github.com/lacerbi/athanor/issues"
   },
@@ -127,6 +127,7 @@
   },
   "overrides": {
     "prismjs": "1.30.0",
-    "webpack-dev-server": "^5.2.2"
+    "webpack-dev-server": "^5.2.2",
+    "jws": "^4.0.1"
   }
 }
