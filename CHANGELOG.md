@@ -9,6 +9,39 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.19] - 2026-03-30
+
+### Fixed
+
+- **Security Vulnerabilities**: Ran `npm audit fix` to patch transitive dependency vulnerabilities (ajv, brace-expansion, flatted, lodash, minimatch, webpack, yaml, and others)
+
+## [0.7.18] - 2025-12-05
+
+### Added
+
+- **Automated Release Workflow**: Added GitHub Actions workflow for fully automated cross-platform releases. When version bumps are merged to main, releases are automatically built and published with all platform artifacts.
+  - Triggered automatically via Auto Tag workflow
+  - Manual dispatch option for ad-hoc releases
+  - Builds for Windows, Linux, and macOS in parallel
+
+### Fixed
+
+- **Security Vulnerabilities**: Upgraded multiple dependencies to address security alerts:
+  - `jws` ^4.0.1 - fixes improper signature verification vulnerability
+  - `form-data` - fixes critical unsafe random function vulnerability
+  - `glob` - fixes high severity command injection vulnerability
+  - `node-forge` - fixes high severity ASN.1 vulnerabilities
+
+- **Linux Build**: Added `executableName: 'athanor'` to fix deb/rpm package creation
+
+### Changed
+
+- **macOS Distribution**: Removed DMG maker (incompatible with CI runners); macOS users can use the zip file which contains the same app bundle
+
+### Dependencies
+
+- Added `jws` override to force patched version across transitive dependencies
+
 ## [0.7.12] - 2025-07-05
 
 ### Changed
