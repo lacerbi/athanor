@@ -9,6 +9,12 @@ and this project aims to adhere to [Semantic Versioning](https://semver.org/spec
 
 _(Future changes will go here)_
 
+## [0.7.19] - 2026-03-30
+
+### Fixed
+
+- **Security Vulnerabilities**: Ran `npm audit fix` to patch transitive dependency vulnerabilities (ajv, brace-expansion, flatted, lodash, minimatch, webpack, yaml, and others)
+
 ## [0.7.18] - 2025-12-05
 
 ### Added
